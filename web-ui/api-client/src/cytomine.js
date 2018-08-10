@@ -95,7 +95,7 @@ export default class Cytomine {
      * Logout from Cytomine
      */
     async logout() {
-        await axios.put(`${this._host}/j_spring_security_logout`);
+        await axios.get(`${this._host}/logout`, {withCredentials: true});
     }
 
     /**

@@ -1,7 +1,7 @@
 import * as utils from "./utils.js";
 import {User, UserCollection} from "@";
 
-describe.only("User", function() {
+describe("User", function() {
 
     let name = utils.randomString();
     let email = name + "@cytomine.coop";
