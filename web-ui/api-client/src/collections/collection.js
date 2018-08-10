@@ -34,6 +34,14 @@ export default class Collection {
         return this._data.values();
     }
 
+    get array() {
+        return this._data;
+    }
+
+    forEach(callback, thisArg) {
+        this._data.forEach(callback, thisArg);
+    }
+
     /**
      * Populate the instance with the properties of the provided object (useful for collections accepting custom
      * parameters in addition to max and offset)

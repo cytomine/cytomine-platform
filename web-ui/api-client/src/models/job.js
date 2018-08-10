@@ -53,6 +53,15 @@ export default class Job extends Model {
     }
 
     /** @inheritdoc */
+    clone() {
+        let clone = super.clone();
+        // Reattribute the collection properties so that they are processed through _setCollection method
+        clone.jobParameters = JSON.parse(JSON.stringify(this.jobParameters.array));
+        // -----
+        return clone;
+    }
+
+    /** @inheritdoc */
     async save() {
         if(this.isNew()) {
             let properties = this.getPublicProperties();

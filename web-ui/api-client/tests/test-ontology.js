@@ -1,5 +1,5 @@
 import * as utils from "./utils.js";
-import {Ontology, OntologyCollection, User} from "@";
+import {Ontology, OntologyCollection, User, TermCollection} from "@";
 
 describe("Ontology", function() {
 
@@ -19,6 +19,23 @@ describe("Ontology", function() {
             id = ontology.id;
             expect(id).to.exist;
             expect(ontology.name).to.equal(name);
+        });
+    });
+
+    describe("Clone", function() {
+        it("Clone", async function() {
+            let fetchedOntology = await utils.getOntology();
+            let clone = fetchedOntology.clone();
+            expect(clone).to.be.an.instanceof(Ontology);
+
+            expect(clone.children).to.be.an.instanceof(TermCollection);
+            expect(clone.children).to.not.equal(fetchedOntology.children);
+            expect(clone.children).to.deep.equal(fetchedOntology.children);
+
+            if(fetchedOntology.children.length > 0) {
+                expect(clone.children.get(0)).to.not.equal(fetchedOntology.children.get(0));
+                expect(clone.children.get(0)).to.deep.equal(fetchedOntology.children.get(0));
+            }
         });
     });
 

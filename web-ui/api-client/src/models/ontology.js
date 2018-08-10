@@ -32,11 +32,33 @@ export default class Ontology extends Model {
 
     /** @type {TermCollection} */
     get children() {
-        return this._terms;
+        return this._children;
     }
 
-    set children(terms) {
-        this._setCollection(terms, "_terms", TermCollection);
+    set children(children) {
+        this._setCollection(children, "_children", TermCollection);
+    }
+
+    /**
+     * @type {TermCollection}
+     * Alias for children property
+     * */
+    get terms() {
+        return this._children;
+    }
+
+    set terms(terms) {
+        this._setCollection(terms, "_children", TermCollection);
+    }
+
+    /** @inheritdoc */
+    clone() {
+        let clone = super.clone();
+        // Reattribute the collection properties so that they are processed through _setCollection method
+        clone.projects = JSON.parse(JSON.stringify(this.projects.array));
+        clone.children = JSON.parse(JSON.stringify(this.children.array));
+        // -----
+        return clone;
     }
 
     /**

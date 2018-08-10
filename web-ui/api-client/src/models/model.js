@@ -51,6 +51,15 @@ export default class Model {
     }
 
     /**
+     * Deep clone the object
+     *
+     * @returns {this} the clone of the object
+     */
+    clone() {
+        return new this.constructor(JSON.parse(JSON.stringify(this)));
+    }
+
+    /**
      * Set a property of the model as a collection of other models
      *
      * @param {null|Collection|Array<Model>} value  The value to assign to the property
