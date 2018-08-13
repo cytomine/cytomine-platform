@@ -125,6 +125,17 @@ export default class User extends Model {
         return data.total;
     }
 
+    /**
+     * Regenerate API keys.
+     *
+     * @returns {this} The updated user (with new API keys)
+     */
+    async regenerateKeys() {
+        this.publicKey = "";
+        this.privateKey = "";
+        return this.update();
+    }
+
     // TODO: uncomment once issue in core is solved (ID parameter not correctly handled)
     // /**
     //  * @static Fetch the API keys of the provided user

@@ -68,6 +68,11 @@ describe("User", function() {
             expect(keys.privateKey).to.exist;
         });
 
+        it("Regenerate keys", async function() {
+            await user.regenerateKeys();
+            // TODO: once bug in backend preventing from fetching keys is solved, check the values of the keys
+        });
+
         it("Fetch friends", async function() {
             let friends = await user.fetchFriends();
             expect(friends).to.be.instanceof(UserCollection);
