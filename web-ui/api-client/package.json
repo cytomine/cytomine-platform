@@ -19,8 +19,8 @@
     "license": "Apache-2.0",
     "dependencies": {
         "axios": "^0.18.0",
-        "babel-polyfill": "^6.26.0",
-        "detect-browser": "^3.0.0"
+        "detect-browser": "^3.0.0",
+        "idempotent-babel-polyfill": "^6.26.0-1"
     },
     "devDependencies": {
         "babel-core": "^6.26.3",

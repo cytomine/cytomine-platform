@@ -1,7 +1,3 @@
-if (!global._babelPolyfill && !window._babelPolyfill) { // https://github.com/babel/babel/issues/4019
-    require("babel-polyfill");
-}
-
 export {default as Cytomine} from "./cytomine.js";
 
 export {default as AbstractImage} from "./models/abstract-image.js";
