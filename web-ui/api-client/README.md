@@ -1,6 +1,6 @@
-# Cytomine Java client
+# Cytomine Javascript Client
 
-When using our software, we kindly ask you to cite our website url and related publications in all your work (publications, studies, oral presentations,...). In particular, we recommend to cite (Marée et al., Bioinformatics 2016) paper, and to use our logo when appropriate. See our license files for additional details.
+When using our software, we kindly ask you to cite our website URL and related publications in all your work (publications, studies, oral presentations,...). In particular, we recommend to cite (Marée et al., Bioinformatics 2016) paper, and to use our logo when appropriate. See our license files for additional details.
 
 - URL: http://www.cytomine.be/
 - Logo: http://www.cytomine.be/logo/logo.png
@@ -24,7 +24,7 @@ import {Cytomine, User, ProjectCollection} from "cytomine-client"; // required o
 let cytomine = new Cytomine(CYTOMINE_URL);
 
 // Login into Cytomine
-await cytomine.login("username", "password"); // or Cytomine.instance.login("username", "password");
+await cytomine.login("username", "password"); // or await Cytomine.instance.login("username", "password");
 
 // Fetch the connected user, and log "Hello " followed by its username in the console
 let user = await User.fetchCurrent();
