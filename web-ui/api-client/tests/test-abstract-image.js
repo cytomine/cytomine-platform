@@ -155,7 +155,7 @@ describe("AbstractImage", function() {
 
             it("Fetch arbitrary page", async function() {
                 let collection = new AbstractImageCollection(nbPerPage);
-                await collection.fetchPage(3);
+                await collection.fetchPage(2);
                 expect(collection).to.have.lengthOf(nbPerPage);
             });
 
