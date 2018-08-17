@@ -57,15 +57,6 @@ describe("Ontology", function() {
         });
     });
 
-    describe("Specific operations", function() {
-        it("Get creator", async function() {
-            let user = await ontology.fetchCreator();
-            expect(user).to.be.instanceof(User);
-            let currentUser = await User.fetchCurrent();
-            expect(user.id).to.equal(currentUser.id);
-        });
-    });
-
     describe("Update", function() {
         it("Update", async function() {
             let newName = utils.randomString();

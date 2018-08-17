@@ -1,6 +1,4 @@
-import Cytomine from "../cytomine.js";
 import Model from "./model.js";
-import User from "./user.js";
 import ProjectCollection from "../collections/project-collection.js";
 import TermCollection from "../collections/term-collection.js";
 
