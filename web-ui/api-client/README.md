@@ -2,12 +2,12 @@
 
 When using our software, we kindly ask you to cite our website URL and related publications in all your work (publications, studies, oral presentations,...). In particular, we recommend to cite (Marée et al., Bioinformatics 2016) paper, and to use our logo when appropriate. See our license files for additional details.
 
-- URL: http://www.cytomine.be/
-- Logo: http://www.cytomine.be/logo/logo.png
+- URL: http://www.cytomine.org/
+- Logo: [Available here](https://cytomine.coop/sites/cytomine.coop/files/inline-images/logo-300-org.png)
 - Scientific paper: Raphaël Marée, Loïc Rollus, Benjamin Stévens, Renaud Hoyoux, Gilles Louppe, Rémy Vandaele, Jean-Michel Begon, Philipp Kainz, Pierre Geurts and Louis Wehenkel. Collaborative analysis of multi-gigapixel imaging data using Cytomine, Bioinformatics, DOI: 10.1093/bioinformatics/btw013, 2016. http://bioinformatics.oxfordjournals.org/cgi/content/abstract/btw013?ijkey=dQzEgmXVozFRPPf&keytype=ref
 
 ## Presentation
-Cytomine-js-client is an opensource javascript client allowing to communicate with the REST API of a Cytomine instance. For more information about Cytomine, go to http://www.cytomine.be.
+Cytomine-js-client is an opensource javascript client allowing to communicate with the REST API of a Cytomine instance. For more information about Cytomine, go to https://www.cytomine.org.
 
 ## How to use the client
 The javascript client can be used in one of the following ways:
@@ -47,7 +47,7 @@ First checkout the repository, then install the dependencies with
 
  #### Test execution
 
-Prior to the first test execution, update the [tests configuration file](tests/config.js) with appropriate values (beware that the tests will create data on the configured Cytomine instance). To avoid committing the configuration values, it is advised to run `git update-index --skip-worktree tests/config.js`.
+Prior to the first test execution, update the [tests configuration file](tests/config.js) with appropriate values (**beware that the tests will create data on the configured Cytomine instance!**). To avoid committing the configuration values, it is advised to run `git update-index --skip-worktree tests/config.js`.
 
 Then, to execute the tests, run
 
