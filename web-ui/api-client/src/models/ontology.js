@@ -60,22 +60,4 @@ export default class Ontology extends Model {
         // -----
         return clone;
     }
-
-    /**
-     * Get the user that created the ontology // QUESTION: how is it different from user field?
-     *
-     * @returns {User}
-     */
-    async fetchCreator() {
-        if(this.isNew()) {
-            throw new Error("Cannot get creator of an ontology with no ID.");
-        }
-
-        if(!this._creator) {
-            let {data} = await Cytomine.instance.api.get(`${this.callbackIdentifier}/${this.id}/creator.json`);
-            this._creator = new User(data.collection[0]);
-        }
-
-        return this._creator;
-    }
 }
