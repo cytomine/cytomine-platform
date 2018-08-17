@@ -14,10 +14,10 @@ describe("AbstractImage", function() {
     let id = 0;
 
     before(async function() {
-        utils.connect();
+        await utils.connect();
     });
 
-    describe.skip("Create", function() {
+    describe("Create", function() {
         it("Create", async function() {
             abstractImage = new AbstractImage({filename, path, mime});
             abstractImage = await abstractImage.save();

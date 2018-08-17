@@ -61,8 +61,6 @@ export default class AnnotationCollection extends Collection {
         return collection.fetch(nbPerPage);
     }
 
-    // QUESTION: add "included"? (discuss whether it is needed or not with Renaud)
-
     /** @inheritdoc */
     static get model() {
         return Annotation;
