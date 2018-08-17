@@ -79,14 +79,12 @@ export default class Cytomine {
      *
      * @param {string}  username            The username
      * @param {string}  password            The password
-     * @param {string}  [email=""]          The email of the user // QUESTION: is it needed?
      * @param {boolean} [rememberMe=true]   Whether or not to remember the user
      */
-    async login(username, password, email="", rememberMe=true) {
+    async login(username, password, rememberMe=true) {
         let params = new URLSearchParams();
         params.append("j_username", username);
         params.append("j_password", password);
-        params.append("j_email", email);
         params.append("remember_me", rememberMe ? "on" : "off");
         await axios.post(`${this._host}/j_spring_security_check`, params, {withCredentials: true});
     }
