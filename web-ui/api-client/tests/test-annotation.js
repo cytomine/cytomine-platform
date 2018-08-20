@@ -4,8 +4,6 @@ import {Annotation, AnnotationType, AnnotationCollection, User} from "@";
 describe("Annotation", function() {
 
     let location = "POLYGON ((10 10, 10 20, 20 20, 20 10, 15 10, 10 10), (16 16, 18 16, 18 18, 16 18, 16 16))";
-    let area = 96;
-    let perim = 48;
     let project;
     let image;
 
@@ -32,7 +30,7 @@ describe("Annotation", function() {
             id = annotation.id;
             expect(annotation).to.be.an.instanceof(Annotation);
             expect(annotation.type).to.equal(AnnotationType.USER);
-            expect(annotation.location).to.equal(location);
+            expect(id).to.exist;
         });
     });
 
@@ -40,19 +38,19 @@ describe("Annotation", function() {
         it("Fetch with static method", async function() {
             let fetchedAnnotation = await Annotation.fetch(id);
             expect(fetchedAnnotation).to.be.an.instanceof(Annotation);
-            expect(fetchedAnnotation.location).to.equal(location);
+            expect(fetchedAnnotation).to.deep.equal(annotation);
         });
 
         it("Fetch with type", async function() {
             let fetchedAnnotation = await Annotation.fetch(id, AnnotationType.USER);
             expect(fetchedAnnotation).to.be.an.instanceof(Annotation);
-            expect(fetchedAnnotation.location).to.equal(location);
+            expect(fetchedAnnotation).to.deep.equal(annotation);
         });
 
         it("Fetch with instance method", async function() {
             let fetchedAnnotation = await new Annotation({id}).fetch();
             expect(fetchedAnnotation).to.be.an.instanceof(Annotation);
-            expect(fetchedAnnotation.location).to.equal(location);
+            expect(fetchedAnnotation).to.deep.equal(annotation);
         });
 
         it("Fetch with wrong ID", function() {
@@ -63,17 +61,20 @@ describe("Annotation", function() {
     describe("Specific operations", function() {
         it("[Correction] Add", async function() {
             let currentUser = await User.fetchCurrent();
+            let initialArea = annotation.area;
             let result = await Annotation.correctAnnotations(image, "POLYGON((5 5, 15 5, 15 15, 5 15, 5 5))",
                 false, false, [currentUser.id]);
-            await annotation.fetch();
             expect(result.id).to.equal(annotation.id);
+            expect(result.area).to.be.above(initialArea);
         });
 
         it("[Correction] Remove", async function() {
             let currentUser = await User.fetchCurrent();
+            let initialArea = annotation.area;
             let result = await Annotation.correctAnnotations(image, "POLYGON((5 5, 15 5, 15 15, 5 15, 5 5))",
                 false, true, [currentUser.id]);
             expect(result.id).to.equal(annotation.id);
+            expect(result.area).to.be.below(initialArea);
         });
 
         it("Review", async function() {
@@ -102,7 +103,6 @@ describe("Annotation", function() {
             annotation.location = newLocation;
             await annotation.update();
             expect(annotation).to.be.an.instanceof(Annotation);
-            expect(annotation.location).to.equal(newLocation);
             expect(annotation.centroid).to.deep.equal({x: 15, y: 15});
         });
     });

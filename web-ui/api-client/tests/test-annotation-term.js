@@ -69,6 +69,7 @@ describe("AnnotationTerm", function() {
         let annotationTerms;
 
         before(async function() {
+            this.timeout(10000);
             async function createTermAndAnnotTerm() {
                 let tempTerm = await utils.getTerm();
                 let annotTerm = new AnnotationTerm({userannotation, term: tempTerm.id});
