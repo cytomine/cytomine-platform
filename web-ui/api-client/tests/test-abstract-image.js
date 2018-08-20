@@ -17,7 +17,7 @@ describe("AbstractImage", function() {
         await utils.connect();
     });
 
-    describe("Create", function() {
+    describe.skip("Create", function() {
         it("Create", async function() {
             abstractImage = new AbstractImage({filename, path, mime});
             abstractImage = await abstractImage.save();
