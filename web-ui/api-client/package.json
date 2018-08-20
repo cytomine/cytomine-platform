@@ -4,7 +4,6 @@
     "description": "Client to communicate with Cytomine API in javascript. For more information about Cytomine, go to http://www.cytomine.be.",
     "browser": "dist/cytomine-client.min.js",
     "unpkg": "dist/cytomine-client.min.js",
-    "private": true,
     "scripts": {
         "dev": "webpack --mode=development --watch --info-verbosity verbose",
         "build": "webpack --mode=production",
@@ -16,7 +15,7 @@
         "src"
     ],
     "author": "Burtin Elodie <elodie.burtin@cytomine.coop>",
-    "contributors":["Hoyoux Renaud <renaud.hoyoux@cytomine.coop"],
+    "contributors": ["Hoyoux Renaud <renaud.hoyoux@cytomine.coop"],
     "license": "Apache-2.0",
     "dependencies": {
         "axios": "^0.18.0",
