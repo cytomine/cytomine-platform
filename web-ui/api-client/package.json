@@ -1,7 +1,7 @@
 {
     "name": "cytomine-client",
-    "version": "0.0.1",
-    "description": "Client to communicate with Cytomine API in javascript. For more information about Cytomine, go to http://www.cytomine.be.",
+    "version": "0.1.0",
+    "description": "Client to communicate with Cytomine API in javascript. For more information about Cytomine, go to http://www.cytomine.org.",
     "browser": "dist/cytomine-client.min.js",
     "unpkg": "dist/cytomine-client.min.js",
     "scripts": {
