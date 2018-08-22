@@ -44,11 +44,6 @@ export default class AttachedFile extends DomainModel {
         throw new Error("Update of attached files not implemented in API.");
     }
 
-    /** @override */
-    delete() {
-        throw new Error("Deletion of attached files not implemented in API.");
-    }
-
     /** @inheritdoc */
     get uri() {
         if(this.isNew()) {

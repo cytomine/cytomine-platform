@@ -31,10 +31,8 @@ describe("Property", function() {
         });
 
         it("Create without providing associated object", async function() {
-            function fcn() {
-                new Property({key, value});
-            }
-            expect(fcn).to.throw();
+            let propertyWithoutObject = new Property({key, value});
+            expect(propertyWithoutObject.save()).to.be.rejected;
         });
     });
 

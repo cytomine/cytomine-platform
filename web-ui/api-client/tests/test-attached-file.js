@@ -30,10 +30,8 @@ describe("AttachedFile", function() {
         });
 
         it("Create without providing associated object", async function() {
-            function fcn() {
-                new AttachedFile({file});
-            }
-            expect(fcn).to.throw();
+            let attachedFileWithoutObject = new AttachedFile({file});
+            expect(attachedFileWithoutObject.save()).to.be.rejected;
         });
 
         it("Create without providing file", async function() {
@@ -44,14 +42,14 @@ describe("AttachedFile", function() {
 
     describe("Fetch", function() {
         it("Fetch with static method", async function() {
-            let fetchedFile = await AttachedFile.fetch(id, abstractImage);
+            let fetchedFile = await AttachedFile.fetch(id);
             expect(fetchedFile).to.be.an.instanceof(AttachedFile);
             expect(fetchedFile.domainIdent).to.equal(abstractImage.id);
             // expect(fetchedFile.filename).to.equal(filename);
         });
 
         it("Fetch with instance method", async function() {
-            let fetchedFile = await new AttachedFile({id}, abstractImage).fetch();
+            let fetchedFile = await new AttachedFile({id}).fetch();
             expect(fetchedFile).to.be.an.instanceof(AttachedFile);
             expect(fetchedFile.domainIdent).to.equal(abstractImage.id);
             // expect(fetchedFile.filename).to.equal(filename);
@@ -65,13 +63,17 @@ describe("AttachedFile", function() {
     describe("Update", function() {
         it("Update", function() {
             attachedFile.filename = "new_filename.xml";
-            expect(attachedFile.update.bind(attachedFile, {})).to.throw();
+            expect(attachedFile.update.bind(attachedFile)).to.throw();
         });
     });
 
     describe("Delete", function() {
-        it("Delete", function() {
-            expect(attachedFile.delete.bind(attachedFile, {})).to.throw();
+        it("Delete", async function() {
+            await AttachedFile.delete(id);
+        });
+
+        it("Fetch a deleted element", function() {
+            expect(AttachedFile.fetch(id)).to.be.rejected;
         });
     });
 
@@ -91,9 +93,8 @@ describe("AttachedFile", function() {
         });
 
         after(async function() {
-            // TODO: uncomment once delete operation implemented in core
-            //let deletionPromises = attachedFiles.map(attachedFile => AttachedFile.delete(attachedFile.id));
-            //await Promise.all(deletionPromises);
+            let deletionPromises = attachedFiles.map(attachedFile => AttachedFile.delete(attachedFile.id));
+            await Promise.all(deletionPromises);
         });
 
         describe("Fetch", function() {

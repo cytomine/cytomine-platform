@@ -28,10 +28,8 @@ describe("Description", function() {
         });
 
         it("Create without providing associated object", async function() {
-            function fcn() {
-                new Description({data});
-            }
-            expect(fcn).to.throw();
+            let descriptionWithoutObject = new Description({data});
+            expect(descriptionWithoutObject.save()).to.be.rejected;
         });
     });
 

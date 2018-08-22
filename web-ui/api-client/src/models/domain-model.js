@@ -17,10 +17,6 @@ export default class DomainModel extends Model {
         if(object != null) {
             this.object = object;
         }
-
-        if(this.domainClassName == null || this.domainIdent == null) {
-            throw new Error("The reference object must be defined.");
-        }
     }
 
     /** @inheritdoc */
@@ -62,7 +58,7 @@ export default class DomainModel extends Model {
 
     set object(obj) {
         if(!(obj instanceof Model)) {
-            throw new Error("PLOUF The object must be a model instance.");
+            throw new Error("The object must be a model instance.");
         }
 
         if(obj.isNew() || !obj.class) {
@@ -76,6 +72,10 @@ export default class DomainModel extends Model {
 
     /** @inheritdoc */
     get uri() {
+        if(this.domainClassName == null || this.domainIdent == null) {
+            throw new Error("The reference object must be defined to construct the URI.");
+        }
+
         if(this.isNew()) {
             return `domain/${this.domainClassName}/${this.domainIdent}/${this.callbackIdentifier}.json`;
         }
