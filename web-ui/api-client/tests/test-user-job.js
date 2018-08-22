@@ -68,8 +68,6 @@ describe("UserJob", function() {
         let totalNb = 0;
 
         before(async function() {
-            this.timeout(10000);
-
             userJobs = [];
             // create user jobs sequentially to avoid having the same username for several of them (happens if several
             // user jobs associated to same software are created during the same second)

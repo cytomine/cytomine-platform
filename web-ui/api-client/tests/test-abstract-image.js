@@ -88,8 +88,6 @@ describe("AbstractImage", function() {
     // --------------------
 
     describe("AbstractImageCollection", function() {
-        this.timeout(10000);
-
         let totalNb = 0;
         let project;
 

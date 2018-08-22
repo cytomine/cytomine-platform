@@ -11,7 +11,6 @@ describe("ProjectRepresentative", function() {
     let id = 0;
 
     before(async function() {
-        this.timeout(10000);
         await utils.connect(true);
         projectInstance = await utils.getProject();
         project = projectInstance.id;

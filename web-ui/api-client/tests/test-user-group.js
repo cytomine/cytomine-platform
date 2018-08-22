@@ -9,7 +9,6 @@ describe("UserGroup", function() {
     let userGroup;
 
     before(async function() {
-        this.timeout(10000);
         await utils.connect(true);
         ({id: user} = await utils.getUser());
         ({id: group} = await utils.getGroup());

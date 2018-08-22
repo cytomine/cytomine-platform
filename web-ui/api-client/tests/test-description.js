@@ -9,7 +9,6 @@ describe("Description", function() {
     let description = null;
 
     before(async function() {
-        this.timeout(10000);
         await utils.connect();
         annotation = await utils.getAnnotation();
     });

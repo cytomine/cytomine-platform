@@ -10,7 +10,6 @@ describe("ProjectDefaultLayer", function() {
     let id = 0;
 
     before(async function() {
-        this.timeout(10000);
         await utils.connect(true);
         ({id: project} = await utils.getProject());
         ({id: user} = await utils.getUser());

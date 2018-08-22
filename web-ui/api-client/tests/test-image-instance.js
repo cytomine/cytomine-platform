@@ -11,7 +11,6 @@ describe("ImageInstance", function() {
     let id = 0;
 
     before(async function() {
-        this.timeout(10000);
         await utils.connect();
         ({id: baseImage} = await utils.getAbstractImage());
         let projectInstance = await utils.getProject();
@@ -88,8 +87,6 @@ describe("ImageInstance", function() {
         let location = "POLYGON((10 10, 20 10, 20 20, 10 20, 10 10), (16 16, 18 16, 18 18, 16 18, 16 16))";
 
         before(async function() {
-            this.timeout(10000);
-
             let currentUser = await User.fetchCurrent();
             idUser = currentUser.id;
 
@@ -174,7 +171,6 @@ describe("ImageInstance", function() {
         let baseImages;
 
         before(async function() {
-            this.timeout(10000);
             baseImages = await utils.getMultipleAbstractImages(nbImageInstances);
 
             async function createAndConsultImageInstance(baseImage, project) {

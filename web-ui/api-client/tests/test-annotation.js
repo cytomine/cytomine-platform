@@ -11,7 +11,6 @@ describe("Annotation", function() {
     let id = 0;
 
     before(async function() {
-        this.timeout(10000);
         await utils.connect();
         ({id: project} = await utils.getProject()); // HACK required for "Save collection" test case
         let imageInstance = await utils.getImageInstance({project, review: true});

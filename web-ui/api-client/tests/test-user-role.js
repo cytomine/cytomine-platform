@@ -9,7 +9,6 @@ describe("UserRole", function() {
     let userRole;
 
     before(async function() {
-        this.timeout(10000);
         await utils.connect(true);
         ({id: user} = await utils.getUser());
         ({id: role} = await utils.getRole());

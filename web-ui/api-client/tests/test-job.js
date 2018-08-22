@@ -11,7 +11,6 @@ describe("Job", function() {
     let id = 0;
 
     before(async function() {
-        this.timeout(10000);
         await utils.connect();
         ({project, software} = await utils.getSoftwareProject());
         ({id: softwareParameter} = await utils.getSoftwareParameter({software}));

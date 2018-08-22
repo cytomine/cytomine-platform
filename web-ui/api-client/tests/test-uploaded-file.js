@@ -76,8 +76,6 @@ describe("UploadedFile", function() {
     // --------------------
 
     describe("UploadedFileCollection", function() {
-        this.timeout(10000);
-
         let nbUploadedFiles = 3;
         let totalNb = 0;
 

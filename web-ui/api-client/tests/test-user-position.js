@@ -9,7 +9,6 @@ describe("UserPosition", function() {
     let userPosition = null;
 
     before(async function() {
-        this.timeout(10000);
         await utils.connect();
         ({id: image} = await utils.getImageInstance());
     });

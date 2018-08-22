@@ -6,7 +6,6 @@ describe("AlgoAnnotationTerm", function() {
     let annotation;
 
     before(async function() {
-        this.timeout(10000);
         await utils.connect();
         ({id: annotation} = await utils.getAnnotation());
     });

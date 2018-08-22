@@ -12,7 +12,6 @@ describe("User", function() {
     let id = 0;
 
     before(async function() {
-        this.timeout(10000);
         await utils.connect(true);
         project = await utils.getProject();
     });

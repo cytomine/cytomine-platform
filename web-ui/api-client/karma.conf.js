@@ -9,6 +9,12 @@ module.exports = function(config) {
         // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
         frameworks: ["mocha", "chai-as-promised", "chai"],
 
+        client: {
+            mocha: {
+                timeout : 10000 // global mocha timeout of 10 seconds
+            }
+        },
+
         // list of files / patterns to load in the browser
         files: [
             "node_modules/babel-polyfill/dist/polyfill.js",

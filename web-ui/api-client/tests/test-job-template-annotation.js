@@ -12,7 +12,6 @@ describe("JobTemplateAnnotation", function() {
     let job = null;
 
     before(async function() {
-        this.timeout(10000);
         await utils.connect();
         let project;
         ({id: annotationIdent, project} = await utils.getAnnotation());

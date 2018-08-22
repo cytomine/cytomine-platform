@@ -11,7 +11,6 @@ describe("AttachedFile", function() {
     let id = 0;
 
     before(async function() {
-        this.timeout(10000);
         await utils.connect();
         abstractImage = await utils.getAbstractImage();
     });

@@ -11,7 +11,6 @@ describe("SoftwareProject", function() {
     let id = 0;
 
     before(async function() {
-        this.timeout(10000);
         await utils.connect(true);
         ({id: project} = await utils.getProject());
         ({id: software, name: softwareName} = await utils.getSoftware());
