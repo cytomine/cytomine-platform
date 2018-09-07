@@ -118,6 +118,20 @@ export default class ImageInstance extends Model {
     }
 
     /**
+     * Fetch the information about the annotation layers present in the image instance
+     *
+     * @returns {Array<user, image, countAnnotation, countReviewedAnnotation>} The list of annotation layers with counts
+     */
+    async fetchAnnotationsIndex() {
+        if(this.isNew()) {
+            throw new Error("Cannot fetch annotations index of image with no ID.");
+        }
+
+        let {data} = await Cytomine.instance.api.get(`${this.callbackIdentifier}/${this.id}/annotationindex.json`);
+        return data.collection;
+    }
+
+    /**
      * Copy to the image instance the properties and description associated with the provided source image
      *
      * @param {number} idSource Identifier of the source image instance
