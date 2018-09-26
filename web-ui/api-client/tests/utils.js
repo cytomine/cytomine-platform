@@ -144,7 +144,7 @@ export async function getOntology({name=randomString(), forceCreation=false} = {
 }
 
 export async function getProject({name=randomString(), ontology, forceCreation=true, cascadeForceCreation} = {}) {
-    let projectCollection = new cytomine.ProjectCollection(1);
+    let projectCollection = new cytomine.ProjectCollection({}, 1);
     if(ontology == null) {
         ({id: ontology} = await getOntology({forceCreation: cascadeForceCreation}));
     }

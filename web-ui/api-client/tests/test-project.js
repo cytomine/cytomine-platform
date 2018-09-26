@@ -190,7 +190,7 @@ describe("Project", function() {
             });
 
             it("Fetch with several requests", async function() {
-                let collection = await ProjectCollection.fetch(Math.ceil(totalNb/3));
+                let collection = await ProjectCollection.fetch({}, Math.ceil(totalNb/3));
                 expect(collection).to.be.an.instanceof(ProjectCollection);
                 expect(collection).to.have.lengthOf(totalNb);
             });
@@ -233,6 +233,11 @@ describe("Project", function() {
                 expect(collection).to.have.lengthOf.at.least(nbProjects);
             });
 
+            it("Filter on user ; light version", async function() {
+                let collection = await ProjectCollection.fetchWithFilter("user", currentUser.id, {light: true});
+                expect(collection).to.have.lengthOf.at.least(nbProjects);
+            });
+
             it("Filter on software", async function() {
                 let collection = new ProjectCollection();
                 collection.setFilter("software", software);
@@ -241,7 +246,7 @@ describe("Project", function() {
             });
 
             it("Filter on ontology", async function() {
-                let collection = new ProjectCollection(0, "ontology", ontology);
+                let collection = new ProjectCollection({}, 0, "ontology", ontology);
                 await collection.fetch();
                 expect(collection).to.have.lengthOf.at.least(nbProjects);
             });
@@ -249,21 +254,21 @@ describe("Project", function() {
 
         describe("Pagination", function() {
             let nbPerPage = 1;
-            
+
             it("Fetch arbitrary page", async function() {
-                let collection = new ProjectCollection(nbPerPage);
+                let collection = new ProjectCollection({}, nbPerPage);
                 await collection.fetchPage(1);
                 expect(collection).to.have.lengthOf(nbPerPage);
             });
 
             it("Fetch next page", async function() {
-                let collection = new ProjectCollection(nbPerPage);
+                let collection = new ProjectCollection({}, nbPerPage);
                 await collection.fetchNextPage();
                 expect(collection).to.have.lengthOf(nbPerPage);
             });
 
             it("Fetch previous page", async function() {
-                let collection = new ProjectCollection(nbPerPage);
+                let collection = new ProjectCollection({}, nbPerPage);
                 collection.curPage = 2;
                 await collection.fetchPreviousPage();
                 expect(collection).to.have.lengthOf(nbPerPage);
