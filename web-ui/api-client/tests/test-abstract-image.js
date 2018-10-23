@@ -101,13 +101,13 @@ describe("AbstractImage", function() {
 
         describe("Fetch", function() {
             it("Fetch the whole collection", async function() {
-                let collection = await AbstractImageCollection.fetch();
+                let collection = await AbstractImageCollection.fetchAll();
                 expect(collection).to.be.an.instanceof(AbstractImageCollection);
                 totalNb = collection.length;
             });
 
             it("Fetch with several requests", async function() {
-                let collection = await AbstractImageCollection.fetch(Math.ceil(totalNb/3));
+                let collection = await AbstractImageCollection.fetchAll({nbPerPage: Math.ceil(totalNb/3)});
                 expect(collection).to.be.an.instanceof(AbstractImageCollection);
                 expect(collection).to.have.lengthOf(totalNb);
             });
@@ -121,7 +121,7 @@ describe("AbstractImage", function() {
 
         describe("Working with the collection", function() {
             it("Iterate through abstract images", async function() {
-                let collection = await new AbstractImageCollection(10).fetchPage();
+                let collection = await new AbstractImageCollection({nbPerPage: 10}).fetchPage();
                 for(let image of collection) {
                     expect(image).to.be.an.instanceof(AbstractImage);
                 }
@@ -143,7 +143,7 @@ describe("AbstractImage", function() {
 
         describe("Filtering", function() {
             it("Filter on project", async function() {
-                let collection = await AbstractImageCollection.fetchWithFilter("project", project);
+                let collection = await AbstractImageCollection.fetchAll({filterKey: "project", filterValue: project});
                 expect(collection).to.have.lengthOf(0);
             });
         });
@@ -152,19 +152,19 @@ describe("AbstractImage", function() {
             let nbPerPage = 1;
 
             it("Fetch arbitrary page", async function() {
-                let collection = new AbstractImageCollection(nbPerPage);
+                let collection = new AbstractImageCollection({nbPerPage});
                 await collection.fetchPage(2);
                 expect(collection).to.have.lengthOf(nbPerPage);
             });
 
             it("Fetch next page", async function() {
-                let collection = new AbstractImageCollection(nbPerPage);
+                let collection = new AbstractImageCollection({nbPerPage});
                 await collection.fetchNextPage();
                 expect(collection).to.have.lengthOf(nbPerPage);
             });
 
             it("Fetch previous page", async function() {
-                let collection = new AbstractImageCollection(nbPerPage);
+                let collection = new AbstractImageCollection({nbPerPage});
                 collection.curPage = 2;
                 await collection.fetchPreviousPage();
                 expect(collection).to.have.lengthOf(nbPerPage);

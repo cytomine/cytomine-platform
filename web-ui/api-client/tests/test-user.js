@@ -131,20 +131,20 @@ describe("User", function() {
 
         describe("Fetch", function() {
             it("Fetch (instance method)", async function() {
-                let collection = await new UserCollection().fetch();
+                let collection = await new UserCollection().fetchAll();
                 expect(collection).to.be.an.instanceof(UserCollection);
                 expect(collection).to.have.lengthOf.at.least(nbUsers);
                 totalNb = collection.length;
             });
 
             it("Fetch (static method)", async function() {
-                let collection = await UserCollection.fetch();
+                let collection = await UserCollection.fetchAll();
                 expect(collection).to.be.an.instanceof(UserCollection);
                 expect(collection).to.have.lengthOf(totalNb);
             });
 
             it("Fetch with several requests", async function() {
-                let collection = await UserCollection.fetch(Math.ceil(totalNb/3));
+                let collection = await UserCollection.fetchAll({nbPerPage: Math.ceil(totalNb/3)});
                 expect(collection).to.be.an.instanceof(UserCollection);
                 expect(collection).to.have.lengthOf(totalNb);
             });
@@ -152,7 +152,7 @@ describe("User", function() {
 
         describe("Working with the collection", function() {
             it("Iterate through", async function() {
-                let collection = await UserCollection.fetch();
+                let collection = await UserCollection.fetchAll();
                 for(let user of collection) {
                     expect(user).to.be.an.instanceof(User);
                 }
@@ -173,11 +173,11 @@ describe("User", function() {
 
         describe("Filtering", function() {
             it("Filter on project", async function() {
-                await UserCollection.fetchWithFilter("project", project.id);
+                await UserCollection.fetchAll({filterKey: "project", filterValue: project.id});
             });
 
             it("Filter on ontology", async function() {
-                await new UserCollection(10, "ontology", project.ontology).fetch();
+                await new UserCollection({nbPerPage: 10, filterKey: "ontology", filterValue: project.ontology}).fetchAll();
             });
         });
 
@@ -185,19 +185,19 @@ describe("User", function() {
             let nbPerPage = 1;
 
             it("Fetch arbitrary page", async function() {
-                let collection = new UserCollection(nbPerPage);
+                let collection = new UserCollection({nbPerPage});
                 await collection.fetchPage(2);
                 expect(collection).to.have.lengthOf(nbPerPage);
             });
 
             it("Fetch next page", async function() {
-                let collection = new UserCollection(nbPerPage);
+                let collection = new UserCollection({nbPerPage});
                 await collection.fetchNextPage();
                 expect(collection).to.have.lengthOf(nbPerPage);
             });
 
             it("Fetch previous page", async function() {
-                let collection = new UserCollection(nbPerPage);
+                let collection = new UserCollection({nbPerPage});
                 collection.curPage = 2;
                 await collection.fetchPreviousPage();
                 expect(collection).to.have.lengthOf(nbPerPage);

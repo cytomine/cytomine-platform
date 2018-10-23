@@ -98,25 +98,25 @@ describe("JobTemplateAnnotation", function() {
 
         describe("Fetch", function() {
             it("Fetch (instance method)", async function() {
-                let collection = await new JobTemplateAnnotationCollection({annotation}).fetch();
+                let collection = await new JobTemplateAnnotationCollection({annotation}).fetchAll();
                 expect(collection).to.be.an.instanceof(JobTemplateAnnotationCollection);
                 expect(collection).to.have.lengthOf(nbJobTemplateAnnotations);
             });
 
             it("Fetch (static method)", async function() {
-                let collection = await JobTemplateAnnotationCollection.fetch({annotation});
+                let collection = await JobTemplateAnnotationCollection.fetchAll({annotation});
                 expect(collection).to.be.an.instanceof(JobTemplateAnnotationCollection);
                 expect(collection).to.have.lengthOf(nbJobTemplateAnnotations);
             });
 
             it("Fetch with several requests", async function() {
-                let collection = await JobTemplateAnnotationCollection.fetch({annotation}, 1);
+                let collection = await JobTemplateAnnotationCollection.fetchAll({annotation}, 1);
                 expect(collection).to.be.an.instanceof(JobTemplateAnnotationCollection);
                 expect(collection).to.have.lengthOf(nbJobTemplateAnnotations);
             });
 
             it("Fetch with project and software filters", async function() {
-                let collection = await new JobTemplateAnnotationCollection({jobtemplate: jobTemplate, annotation}).fetch();
+                let collection = await new JobTemplateAnnotationCollection({jobtemplate: jobTemplate, annotation}).fetchAll();
                 expect(collection).to.be.an.instanceof(JobTemplateAnnotationCollection);
                 expect(collection).to.have.lengthOf(nbJobTemplateAnnotations);
             });
@@ -124,7 +124,7 @@ describe("JobTemplateAnnotation", function() {
 
         describe("Working with the collection", function() {
             it("Iterate through", async function() {
-                let collection = await JobTemplateAnnotationCollection.fetch({jobtemplate: jobTemplate});
+                let collection = await JobTemplateAnnotationCollection.fetchAll({jobtemplate: jobTemplate});
                 for(let jobTemplateAnnotation of collection) {
                     expect(jobTemplateAnnotation).to.be.an.instanceof(JobTemplateAnnotation);
                 }
@@ -147,19 +147,19 @@ describe("JobTemplateAnnotation", function() {
             let nbPerPage = 1;
 
             it("Fetch arbitrary page", async function() {
-                let collection = new JobTemplateAnnotationCollection({annotation}, nbPerPage);
+                let collection = new JobTemplateAnnotationCollection({annotation, nbPerPage});
                 await collection.fetchPage(2);
                 expect(collection).to.have.lengthOf(nbPerPage);
             });
 
             it("Fetch next page", async function() {
-                let collection = new JobTemplateAnnotationCollection({annotation}, nbPerPage);
+                let collection = new JobTemplateAnnotationCollection({annotation, nbPerPage});
                 await collection.fetchNextPage();
                 expect(collection).to.have.lengthOf(nbPerPage);
             });
 
             it("Fetch previous page", async function() {
-                let collection = new JobTemplateAnnotationCollection({annotation}, nbPerPage);
+                let collection = new JobTemplateAnnotationCollection({annotation, nbPerPage});
                 collection.curPage = 2;
                 await collection.fetchPreviousPage();
                 expect(collection).to.have.lengthOf(nbPerPage);

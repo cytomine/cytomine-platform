@@ -104,38 +104,38 @@ describe("Property", function() {
 
         describe("Fetch", function() {
             it("Fetch (instance method)", async function() {
-                let collection = await new PropertyCollection(annotation).fetch();
+                let collection = await new PropertyCollection({object: annotation}).fetchAll();
                 expect(collection).to.be.an.instanceof(PropertyCollection);
                 expect(collection).to.have.lengthOf(nbPropertiesAnnot);
             });
 
             it("Fetch (static method)", async function() {
-                let collection = await PropertyCollection.fetch(image);
+                let collection = await PropertyCollection.fetchAll({object: image});
                 expect(collection).to.be.an.instanceof(PropertyCollection);
                 expect(collection).to.have.lengthOf(nbPropertiesImage);
             });
 
             it("Fetch with several requests", async function() {
-                let collection = await PropertyCollection.fetch(annotation, 1);
+                let collection = await PropertyCollection.fetchAll({nbPerPage: 1, object: annotation});
                 expect(collection).to.be.an.instanceof(PropertyCollection);
                 expect(collection).to.have.lengthOf(nbPropertiesAnnot);
             });
 
             it("Fetch without associated object", async function() {
-                expect(PropertyCollection.fetch()).to.be.rejected;
+                expect(PropertyCollection.fetchAll()).to.be.rejected;
             });
         });
 
         describe("Working with the collection", function() {
             it("Iterate through", async function() {
-                let collection = await PropertyCollection.fetch(annotation);
+                let collection = await PropertyCollection.fetchAll({object: annotation});
                 for(let property of collection) {
                     expect(property).to.be.an.instanceof(Property);
                 }
             });
 
             it("Add item to the collection", function() {
-                let collection = new PropertyCollection(annotation);
+                let collection = new PropertyCollection({object: annotation});
                 expect(collection).to.have.lengthOf(0);
                 collection.push(new Property({}, annotation));
                 expect(collection).to.have.lengthOf(1);
@@ -182,19 +182,19 @@ describe("Property", function() {
             let nbPerPage = 1;
 
             it("Fetch arbitrary page", async function() {
-                let collection = new PropertyCollection(annotation, nbPerPage);
+                let collection = new PropertyCollection({nbPerPage, object: annotation});
                 await collection.fetchPage(2);
                 expect(collection).to.have.lengthOf(nbPerPage);
             });
 
             it("Fetch next page", async function() {
-                let collection = new PropertyCollection(annotation, nbPerPage);
+                let collection = new PropertyCollection({nbPerPage, object: annotation});
                 await collection.fetchNextPage();
                 expect(collection).to.have.lengthOf(nbPerPage);
             });
 
             it("Fetch previous page", async function() {
-                let collection = new PropertyCollection(annotation, nbPerPage);
+                let collection = new PropertyCollection({nbPerPage, object: annotation});
                 collection.curPage = 2;
                 await collection.fetchPreviousPage();
                 expect(collection).to.have.lengthOf(nbPerPage);

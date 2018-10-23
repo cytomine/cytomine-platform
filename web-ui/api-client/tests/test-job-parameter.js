@@ -96,20 +96,20 @@ describe("JobParameter", function() {
 
         describe("Fetch", function() {
             it("Fetch (instance method)", async function() {
-                let collection = await new JobParameterCollection().fetch();
+                let collection = await new JobParameterCollection().fetchAll();
                 expect(collection).to.be.an.instanceof(JobParameterCollection);
                 expect(collection).to.have.lengthOf.at.least(nbJobParameters);
                 totalNb = collection.length;
             });
 
             it("Fetch (static method)", async function() {
-                let collection = await JobParameterCollection.fetch();
+                let collection = await JobParameterCollection.fetchAll();
                 expect(collection).to.be.an.instanceof(JobParameterCollection);
                 expect(collection).to.have.lengthOf(totalNb);
             });
 
             it("Fetch with several requests", async function() {
-                let collection = await JobParameterCollection.fetch(Math.ceil(totalNb/3));
+                let collection = await JobParameterCollection.fetchAll({nbPerPage: Math.ceil(totalNb/3)});
                 expect(collection).to.be.an.instanceof(JobParameterCollection);
                 expect(collection).to.have.lengthOf(totalNb);
             });
@@ -117,21 +117,21 @@ describe("JobParameter", function() {
 
         describe("Filtering", function() {
             it("Filter on job (static method)", async function() {
-                let collection = await JobParameterCollection.fetchWithFilter("job", job);
+                let collection = await JobParameterCollection.fetchAll({filterKey: "job", filterValue: job});
                 expect(collection).to.have.lengthOf(nbJobParameters);
             });
 
             it("Filter on job (instance method)", async function() {
                 let collection = new JobParameterCollection(0);
                 collection.setFilter("job", job);
-                await collection.fetch();
+                await collection.fetchAll();
                 expect(collection).to.have.lengthOf(nbJobParameters);
             });
         });
 
         describe("Working with the collection", function() {
             it("Iterate through", async function() {
-                let collection = await JobParameterCollection.fetch();
+                let collection = await JobParameterCollection.fetchAll();
                 for(let jobParameter of collection) {
                     expect(jobParameter).to.be.an.instanceof(JobParameter);
                 }
@@ -154,19 +154,19 @@ describe("JobParameter", function() {
             let nbPerPage = 1;
 
             it("Fetch arbitrary page", async function() {
-                let collection = new JobParameterCollection(nbPerPage);
+                let collection = new JobParameterCollection({nbPerPage});
                 await collection.fetchPage(2);
                 expect(collection).to.have.lengthOf(nbPerPage);
             });
 
             it("Fetch next page", async function() {
-                let collection = new JobParameterCollection(nbPerPage);
+                let collection = new JobParameterCollection({nbPerPage});
                 await collection.fetchNextPage();
                 expect(collection).to.have.lengthOf(nbPerPage);
             });
 
             it("Fetch previous page", async function() {
-                let collection = new JobParameterCollection(nbPerPage);
+                let collection = new JobParameterCollection({nbPerPage});
                 collection.curPage = 2;
                 await collection.fetchPreviousPage();
                 expect(collection).to.have.lengthOf(nbPerPage);

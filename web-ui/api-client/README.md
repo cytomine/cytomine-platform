@@ -31,7 +31,7 @@ let user = await User.fetchCurrent();
 console.log("Hello " + user.username);
 
 // Fetch the projects available to the current user and log their names in the console
-let projects = await ProjectCollection.fetch();
+let projects = await ProjectCollection.fetchAll();
 console.log("You have access to these projects:");
 for(let project of projects) {
     console.log(project.name);

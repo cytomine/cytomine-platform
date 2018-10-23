@@ -89,33 +89,34 @@ describe("UserJob", function() {
 
         describe("Fetch", function() {
             it("Fetch (instance method)", async function() {
-                let collection = await new UserJobCollection(0, "project", project).fetch();
+                let collection = await new UserJobCollection({filterKey: "project", filterValue: project}).fetchAll();
                 expect(collection).to.be.an.instanceof(UserJobCollection);
                 expect(collection).to.have.lengthOf.at.least(nbUserJobs);
                 totalNb = collection.length;
             });
 
             it("Fetch (static method)", async function() {
-                let collection = await UserJobCollection.fetchWithFilter("project", project, 0);
+                let collection = await UserJobCollection.fetchAll({filterKey: "project", filterValue: project});
                 expect(collection).to.be.an.instanceof(UserJobCollection);
                 expect(collection).to.have.lengthOf(totalNb);
             });
 
             it("Fetch with several requests", async function() {
-                let collection = await UserJobCollection.fetchWithFilter("project", project, Math.ceil(totalNb/3));
+                let collection = await UserJobCollection.fetchAll({nbPerPage: Math.ceil(totalNb/3), 
+                    filterKey: "project", filterValue: project});
                 expect(collection).to.be.an.instanceof(UserJobCollection);
                 expect(collection).to.have.lengthOf(totalNb);
             });
 
             it("Fetch without filter", async function() {
                 let collection = new UserJobCollection();
-                expect(collection.fetch()).to.be.rejected;
+                expect(collection.fetchAll()).to.be.rejected;
             });
         });
 
         describe("Working with the collection", function() {
             it("Iterate through", async function() {
-                let collection = await UserJobCollection.fetchWithFilter("project", project);
+                let collection = await UserJobCollection.fetchAll({filterKey: "project", filterValue: project});
                 for(let userJob of collection) {
                     expect(userJob).to.be.an.instanceof(UserJob);
                 }
@@ -138,19 +139,19 @@ describe("UserJob", function() {
             let nbPerPage = 1;
 
             it("Fetch arbitrary page", async function() {
-                let collection = new UserJobCollection(nbPerPage, "project", project);
+                let collection = new UserJobCollection({nbPerPage, filterKey: "project", filterValue: project});
                 await collection.fetchPage(2);
                 expect(collection).to.have.lengthOf(nbPerPage);
             });
 
             it("Fetch next page", async function() {
-                let collection = new UserJobCollection(nbPerPage, "project", project);
+                let collection = new UserJobCollection({nbPerPage, filterKey: "project", filterValue: project});
                 await collection.fetchNextPage();
                 expect(collection).to.have.lengthOf(nbPerPage);
             });
 
             it("Fetch previous page", async function() {
-                let collection = new UserJobCollection(nbPerPage, "project", project);
+                let collection = new UserJobCollection({nbPerPage, filterKey: "project", filterValue: project});
                 collection.curPage = 2;
                 await collection.fetchPreviousPage();
                 expect(collection).to.have.lengthOf(nbPerPage);

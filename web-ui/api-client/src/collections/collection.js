@@ -3,11 +3,13 @@ import Cytomine from "../cytomine.js";
 export default class Collection {
 
     /**
-     * @param {number}  [nbPerPage=0] The maximum number of items fetched at a time (if set to 0, all items will be fetched at once)
-     * @param {string}  [filterKey]    The filter key
-     * @param {number}  [filterValue]  The filter value (an identifier)
+     * @param {number}  [nbPerPage=0]   The maximum number of items fetched at a time (if set to 0, all items will be fetched at once)
+     * @param {string}  [filterKey]     The filter key
+     * @param {number}  [filterValue]   The filter value (an identifier)
+     * @param {Object}  [props]         Properties of the collection to set (the allowed props are model-dependent and
+     *                                  defined in _initProperties())
      */
-    constructor(nbPerPage=0, filterKey, filterValue) {
+    constructor({nbPerPage=0, filterKey, filterValue, ...props} = {}) {
         if (new.target === Collection) {
             throw new Error("Collection is an abstract class and cannot be constructed directly.");
         }
@@ -24,6 +26,16 @@ export default class Collection {
         this._total = null;
         this._nbPages = null;
         this._curPage = 0;
+
+        this._initProperties();
+        this.setProps(props);
+    }
+
+    /**
+     * Initialize the properties allowed for collection (the children must override this method to initialize their
+     * custom properties)
+     */
+    _initProperties() {
     }
 
     toString() {
@@ -118,22 +130,11 @@ export default class Collection {
     }
 
     /**
-     * @static Fetch all available items
-     *
-     * @param {number} [nbPerPage] The maximum number of items to fetch per request
-     *
-     * @returns {this} collection containing all available items
-     */
-    static async fetch(nbPerPage) {
-        return new this(nbPerPage).fetch();
-    }
-
-    /**
      * Fetch all available items and fill the collection with them
      *
      * @returns {this} collection containing all available items
      */
-    async fetch() {
+    async fetchAll() {
         if(this.max > 0) {
             this.offset = 0;
             await this.fetchPage();
@@ -148,24 +149,18 @@ export default class Collection {
     }
 
     /**
-     * @static Set a filter and fetch all available items (shorthand for setFilter() followed by fetch())
+     * @static Fetch all available items
      *
-     * @param {number} [nbPerPage] The maximum number of items to fetch per request
-     *
-     * @returns {this} collection containing all available items
-     */
-
-    /**
-     * @static Fetch all available items fitting provided filter
-     *
-     * @param {string} key      The filter key
-     * @param {number} value    The filter value (an identifier)
-     * @param {number} [nbPerPage] The maximum number of items to fetch per request
+     * @param {number}  [nbPerPage=0]   The maximum number of items fetched at a time (if set to 0, all items will be fetched at once)
+     * @param {string}  [filterKey]     The filter key
+     * @param {number}  [filterValue]   The filter value (an identifier)
+     * @param {Object}  [props]         Properties of the collection to set (the allowed props are model-dependent and
+     *                                  defined in _initProperties())
      *
      * @returns {this} collection containing all available items
      */
-    static async fetchWithFilter(key, value, nbPerPage) {
-        return new this(nbPerPage, key, value).fetch();
+    static async fetchAll({nbPerPage, filterKey, filterValue, ...props}={}) {
+        return new this({nbPerPage, filterKey, filterValue, ...props}).fetchAll();
     }
 
     /**

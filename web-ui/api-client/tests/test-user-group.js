@@ -84,32 +84,33 @@ describe("UserGroup", function() {
 
         describe("Fetch", function() {
             it("Fetch (instance method)", async function() {
-                let collection = await new UserGroupCollection(0, "user", user).fetch();
+                let collection = await new UserGroupCollection({filterKey: "user", filterValue: user}).fetchAll();
                 expect(collection).to.be.an.instanceof(UserGroupCollection);
                 expect(collection).to.have.lengthOf(nbUserGroups);
             });
 
             it("Fetch (static method)", async function() {
-                let collection = await UserGroupCollection.fetchWithFilter("user", user);
+                let collection = await UserGroupCollection.fetchAll({filterKey: "user", filterValue: user});
                 expect(collection).to.be.an.instanceof(UserGroupCollection);
                 expect(collection).to.have.lengthOf(nbUserGroups);
             });
 
             it("Fetch with several requests", async function() {
-                let collection = await UserGroupCollection.fetchWithFilter("user", user, 1);
+                let collection = await UserGroupCollection.fetchAll({nbPerPage: 1,
+                    filterKey: "user", filterValue: user});
                 expect(collection).to.be.an.instanceof(UserGroupCollection);
                 expect(collection).to.have.lengthOf(nbUserGroups);
             });
 
             it("Fetch without filter", async function() {
                 let collection = new UserGroupCollection();
-                expect(collection.fetch()).to.be.rejected;
+                expect(collection.fetchAll()).to.be.rejected;
             });
         });
 
         describe("Working with the collection", function() {
             it("Iterate through", async function() {
-                let collection = await UserGroupCollection.fetchWithFilter("user", user);
+                let collection = await UserGroupCollection.fetchAll({filterKey: "user", filterValue: user});
                 for(let userGroup of collection) {
                     expect(userGroup).to.be.an.instanceof(UserGroup);
                 }
@@ -132,19 +133,19 @@ describe("UserGroup", function() {
             let nbPerPage = 1;
 
             it("Fetch arbitrary page", async function() {
-                let collection = new UserGroupCollection(nbPerPage, "user", user);
+                let collection = new UserGroupCollection({nbPerPage, filterKey: "user", filterValue: user});
                 await collection.fetchPage(2);
                 expect(collection).to.have.lengthOf(nbPerPage);
             });
 
             it("Fetch next page", async function() {
-                let collection = new UserGroupCollection(nbPerPage, "user", user);
+                let collection = new UserGroupCollection({nbPerPage, filterKey: "user", filterValue: user});
                 await collection.fetchNextPage();
                 expect(collection).to.have.lengthOf(nbPerPage);
             });
 
             it("Fetch previous page", async function() {
-                let collection = new UserGroupCollection(nbPerPage, "user", user);
+                let collection = new UserGroupCollection({nbPerPage, filterKey: "user", filterValue: user});
                 collection.curPage = 2;
                 await collection.fetchPreviousPage();
                 expect(collection).to.have.lengthOf(nbPerPage);

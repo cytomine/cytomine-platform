@@ -89,32 +89,33 @@ describe("AnnotationTerm", function() {
 
         describe("Fetch", function() {
             it("Fetch (instance method)", async function() {
-                let collection = await new AnnotationTermCollection(0, "annotation", userannotation).fetch();
+                let collection = await new AnnotationTermCollection({filterKey: "annotation", filterValue: userannotation}).fetchAll();
                 expect(collection).to.be.an.instanceof(AnnotationTermCollection);
                 expect(collection).to.have.lengthOf(nbAnnotationTerms);
             });
 
             it("Fetch (static method)", async function() {
-                let collection = await AnnotationTermCollection.fetchWithFilter("annotation", userannotation);
+                let collection = await AnnotationTermCollection.fetchAll({filterKey: "annotation", filterValue: userannotation});
                 expect(collection).to.be.an.instanceof(AnnotationTermCollection);
                 expect(collection).to.have.lengthOf(nbAnnotationTerms);
             });
 
             it("Fetch with several requests", async function() {
-                let collection = await AnnotationTermCollection.fetchWithFilter("annotation", userannotation, 1);
+                let collection = await AnnotationTermCollection.fetchAll({nbPerPage: Math.ceil(nbAnnotationTerms/3), 
+                    filterKey: "annotation", filterValue: userannotation});
                 expect(collection).to.be.an.instanceof(AnnotationTermCollection);
                 expect(collection).to.have.lengthOf(nbAnnotationTerms);
             });
 
             it("Fetch without filter", async function() {
                 let collection = new AnnotationTermCollection();
-                expect(collection.fetch()).to.be.rejected;
+                expect(collection.fetchAll()).to.be.rejected;
             });
         });
 
         describe("Working with the collection", function() {
             it("Iterate through", async function() {
-                let collection = await AnnotationTermCollection.fetchWithFilter("annotation", userannotation);
+                let collection = await AnnotationTermCollection.fetchAll({filterKey: "annotation", filterValue: userannotation});
                 for(let annotationTerm of collection) {
                     expect(annotationTerm).to.be.an.instanceof(AnnotationTerm);
                 }
@@ -137,19 +138,22 @@ describe("AnnotationTerm", function() {
             let nbPerPage = 1;
 
             it("Fetch arbitrary page", async function() {
-                let collection = new AnnotationTermCollection(nbPerPage, "annotation", userannotation);
+                let collection = new AnnotationTermCollection({nbPerPage, 
+                    filterKey: "annotation", filterValue: userannotation});
                 await collection.fetchPage(1);
                 expect(collection).to.have.lengthOf(nbPerPage);
             });
 
             it("Fetch next page", async function() {
-                let collection = new AnnotationTermCollection(nbPerPage, "annotation", userannotation);
+                let collection = new AnnotationTermCollection({nbPerPage, 
+                    filterKey: "annotation", filterValue: userannotation});
                 await collection.fetchNextPage();
                 expect(collection).to.have.lengthOf(nbPerPage);
             });
 
             it("Fetch previous page", async function() {
-                let collection = new AnnotationTermCollection(nbPerPage, "annotation", userannotation);
+                let collection = new AnnotationTermCollection({nbPerPage, 
+                    filterKey: "annotation", filterValue: userannotation});
                 collection.curPage = 2;
                 await collection.fetchPreviousPage();
                 expect(collection).to.have.lengthOf(nbPerPage);

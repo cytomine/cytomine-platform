@@ -1,5 +1,5 @@
 import * as utils from "./utils.js";
-import {Ontology, OntologyCollection, User, TermCollection} from "@";
+import {Ontology, OntologyCollection, TermCollection} from "@";
 
 describe("Ontology", function() {
 
@@ -100,20 +100,20 @@ describe("Ontology", function() {
 
         describe("Fetch", function() {
             it("Fetch (instance method)", async function() {
-                let collection = await new OntologyCollection().fetch();
+                let collection = await new OntologyCollection().fetchAll();
                 expect(collection).to.be.an.instanceof(OntologyCollection);
                 expect(collection).to.have.lengthOf.at.least(nbOntologies);
                 totalNb = collection.length;
             });
 
             it("Fetch (static method)", async function() {
-                let collection = await OntologyCollection.fetch();
+                let collection = await OntologyCollection.fetchAll();
                 expect(collection).to.be.an.instanceof(OntologyCollection);
                 expect(collection).to.have.lengthOf(totalNb);
             });
 
             it("Fetch light version", async function() {
-                let collection = await OntologyCollection.fetch({light: true});
+                let collection = await OntologyCollection.fetchAll({light: true});
                 expect(collection).to.be.an.instanceof(OntologyCollection);
                 expect(collection).to.have.lengthOf(totalNb);
                 let model = collection.get(0);
@@ -123,7 +123,7 @@ describe("Ontology", function() {
             });
 
             it("Fetch with several requests", async function() {
-                let collection = await OntologyCollection.fetch(Math.ceil(totalNb/3));
+                let collection = await OntologyCollection.fetchAll({nbPerPage: Math.ceil(totalNb/3)});
                 expect(collection).to.be.an.instanceof(OntologyCollection);
                 expect(collection).to.have.lengthOf(totalNb);
             });
@@ -131,7 +131,7 @@ describe("Ontology", function() {
 
         describe("Working with the collection", function() {
             it("Iterate through", async function() {
-                let collection = await OntologyCollection.fetch();
+                let collection = await OntologyCollection.fetchAll();
                 for(let ontology of collection) {
                     expect(ontology).to.be.an.instanceof(Ontology);
                 }
@@ -154,19 +154,19 @@ describe("Ontology", function() {
             let nbPerPage = 1;
 
             it("Fetch arbitrary page", async function() {
-                let collection = new OntologyCollection({}, nbPerPage);
+                let collection = new OntologyCollection({nbPerPage});
                 await collection.fetchPage(2);
                 expect(collection).to.have.lengthOf(nbPerPage);
             });
 
             it("Fetch next page", async function() {
-                let collection = new OntologyCollection({}, nbPerPage);
+                let collection = new OntologyCollection({nbPerPage});
                 await collection.fetchNextPage();
                 expect(collection).to.have.lengthOf(nbPerPage);
             });
 
             it("Fetch previous page", async function() {
-                let collection = new OntologyCollection({}, nbPerPage);
+                let collection = new OntologyCollection({nbPerPage});
                 collection.curPage = 2;
                 await collection.fetchPreviousPage();
                 expect(collection).to.have.lengthOf(nbPerPage);

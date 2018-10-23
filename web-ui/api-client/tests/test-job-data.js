@@ -104,20 +104,20 @@ describe("JobData", function() {
 
         describe("Fetch", function() {
             it("Fetch (instance method)", async function() {
-                let collection = await new JobDataCollection().fetch();
+                let collection = await new JobDataCollection().fetchAll();
                 expect(collection).to.be.an.instanceof(JobDataCollection);
                 expect(collection).to.have.lengthOf.at.least(nbJobDatas);
                 totalNb = collection.length;
             });
 
             it("Fetch (static method)", async function() {
-                let collection = await JobDataCollection.fetch();
+                let collection = await JobDataCollection.fetchAll();
                 expect(collection).to.be.an.instanceof(JobDataCollection);
                 expect(collection).to.have.lengthOf(totalNb);
             });
 
             it("Fetch with several requests", async function() {
-                let collection = await JobDataCollection.fetch(Math.ceil(totalNb/3));
+                let collection = await JobDataCollection.fetchAll({nbPerPage: Math.ceil(totalNb/3)});
                 expect(collection).to.be.an.instanceof(JobDataCollection);
                 expect(collection).to.have.lengthOf(totalNb);
             });
@@ -125,21 +125,21 @@ describe("JobData", function() {
 
         describe("Filtering", function() {
             it("Filter on job (static method)", async function() {
-                let collection = await JobDataCollection.fetchWithFilter("job", job);
+                let collection = await JobDataCollection.fetchAll({filterKey: "job", filterValue: job});
                 expect(collection).to.have.lengthOf(nbJobDatas);
             });
 
             it("Filter on job (instance method)", async function() {
                 let collection = new JobDataCollection(0);
                 collection.setFilter("job", job);
-                await collection.fetch();
+                await collection.fetchAll();
                 expect(collection).to.have.lengthOf(nbJobDatas);
             });
         });
 
         describe("Working with the collection", function() {
             it("Iterate through", async function() {
-                let collection = await JobDataCollection.fetch();
+                let collection = await JobDataCollection.fetchAll();
                 for(let jobData of collection) {
                     expect(jobData).to.be.an.instanceof(JobData);
                 }
@@ -162,19 +162,19 @@ describe("JobData", function() {
             let nbPerPage = 1;
 
             it("Fetch arbitrary page", async function() {
-                let collection = new JobDataCollection(nbPerPage);
+                let collection = new JobDataCollection({nbPerPage});
                 await collection.fetchPage(2);
                 expect(collection).to.have.lengthOf(nbPerPage);
             });
 
             it("Fetch next page", async function() {
-                let collection = new JobDataCollection(nbPerPage);
+                let collection = new JobDataCollection({nbPerPage});
                 await collection.fetchNextPage();
                 expect(collection).to.have.lengthOf(nbPerPage);
             });
 
             it("Fetch previous page", async function() {
-                let collection = new JobDataCollection(nbPerPage);
+                let collection = new JobDataCollection({nbPerPage});
                 collection.curPage = 2;
                 await collection.fetchPreviousPage();
                 expect(collection).to.have.lengthOf(nbPerPage);

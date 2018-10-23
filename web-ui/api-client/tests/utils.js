@@ -41,13 +41,13 @@ export async function getAbstractImage({filename=randomString(), path, mime="ima
         path = "path/" + filename;
     }
     let abstractImage = new cytomine.AbstractImage({filename, path, mime});
-    let abstractImageCollection = new cytomine.AbstractImageCollection(1);
+    let abstractImageCollection = new cytomine.AbstractImageCollection({nbPerPage: 1});
     return getModel(abstractImage, abstractImageCollection, forceCreation);
 }
 
 // WARNING: no creation, the instances must exist
 export async function getMultipleAbstractImages(nb) {
-    let collection = new cytomine.AbstractImageCollection(nb);
+    let collection = new cytomine.AbstractImageCollection({nbPerPage: nb});
     await collection.fetchPage();
     if(collection.length < nb) {
         throw new Error(`Not able to retrieve ${nb} abstract images. You may need to upload some on test instance.`);
@@ -74,7 +74,7 @@ export async function getAnnotation({location="POINT(5 5)", image, forceCreation
 
 export async function getGroup({name=randomString(), forceCreation=true} = {}) {
     let group = new cytomine.Group({name});
-    let groupCollection = new cytomine.GroupCollection(1);
+    let groupCollection = new cytomine.GroupCollection({nbPerPage: 1});
     return getModel(group, groupCollection, forceCreation);
 }
 
@@ -87,7 +87,7 @@ export async function getImageInstance({baseImage, project, forceCreation=true, 
         ({id: baseImage} = await getAbstractImage({forceCreation: cascadeForceCreation}));
     }
 
-    let imageCollection = new cytomine.ImageInstanceCollection(1);
+    let imageCollection = new cytomine.ImageInstanceCollection({nbPerPage: 1});
     if(project == null) {
         ({id: project} = await getProject({forceCreation: cascadeForceCreation, cascadeForceCreation}));
     }
@@ -109,7 +109,7 @@ export async function getJob({software, project, forceCreation=true, cascadeForc
     }
 
     let job = new cytomine.Job({software, project});
-    let jobCollection = new cytomine.JobCollection({software, project}, 1);
+    let jobCollection = new cytomine.JobCollection({software, project, nbPerPage: 1});
     return getModel(job, jobCollection, forceCreation);
 }
 
@@ -123,7 +123,7 @@ export async function getJobTemplate({software, project, name=randomString(), fo
         await getSoftwareParameter({software, name: "annotation", forceCreation: true});
     }
 
-    let jobTemplateCollection = new cytomine.JobTemplateCollection(1);
+    let jobTemplateCollection = new cytomine.JobTemplateCollection({nbPerPage: 1});
     if(project == null) {
         ({id: project} = await getProject({forceCreation: cascadeForceCreation, cascadeForceCreation}));
     }
@@ -139,12 +139,12 @@ export async function getJobTemplate({software, project, name=randomString(), fo
 // if ontology used in deleted project) => leave forceCreation to false if possible
 export async function getOntology({name=randomString(), forceCreation=false} = {}) {
     let ontology = new cytomine.Ontology({name});
-    let ontologyCollection = new cytomine.OntologyCollection(1);
+    let ontologyCollection = new cytomine.OntologyCollection({nbPerPage: 1});
     return getModel(ontology, ontologyCollection, forceCreation);
 }
 
 export async function getProject({name=randomString(), ontology, forceCreation=true, cascadeForceCreation} = {}) {
-    let projectCollection = new cytomine.ProjectCollection({}, 1);
+    let projectCollection = new cytomine.ProjectCollection({nbPerPage: 1});
     if(ontology == null) {
         ({id: ontology} = await getOntology({forceCreation: cascadeForceCreation}));
     }
@@ -156,12 +156,12 @@ export async function getProject({name=randomString(), ontology, forceCreation=t
 }
 
 export async function getRole() {
-    let collection = new cytomine.RoleCollection(1);
+    let collection = new cytomine.RoleCollection({nbPerPage: 1});
     return getModel(null, collection, false);
 }
 
 export async function getMultipleRoles(nb) {
-    let collection = new cytomine.RoleCollection(nb);
+    let collection = new cytomine.RoleCollection({nbPerPage: nb});
     await collection.fetchPage();
     if(collection.length < nb) {
         throw new Error(`Not able to retrieve ${nb} roles.`);
@@ -175,12 +175,12 @@ export async function getMultipleRoles(nb) {
 
 export async function getSoftware({name=randomString(), serviceName="createRabbitJobService", executeCommand="clear", forceCreation=true} = {}) {
     let software = new cytomine.Software({name, serviceName, executeCommand});
-    let softwareCollection = new cytomine.SoftwareCollection(1);
+    let softwareCollection = new cytomine.SoftwareCollection({nbPerPage: 1});
     return getModel(software, softwareCollection, forceCreation);
 }
 
 export async function getSoftwareParameter({name=randomString(), software, type="String", forceCreation=true, cascadeForceCreation} = {}) {
-    let softwareParameterCollection = new cytomine.SoftwareParameterCollection(1);
+    let softwareParameterCollection = new cytomine.SoftwareParameterCollection({nbPerPage: 1});
     if(software == null) {
         ({id: software} = await getSoftware({forceCreation: cascadeForceCreation}));
     }
@@ -200,7 +200,7 @@ export async function getSoftwareProject({software, project, forceCreation=true,
         ({id: software} = await getSoftware({forceCreation: cascadeForceCreation}));
     }
 
-    let softwareProjectCollection = new cytomine.SoftwareProjectCollection(1);
+    let softwareProjectCollection = new cytomine.SoftwareProjectCollection({nbPerPage: 1});
     if(project == null) {
         ({id: project} = await getProject({forceCreation: cascadeForceCreation, cascadeForceCreation}));
     }
@@ -218,7 +218,7 @@ export async function getStorage({user, name=randomString(), basePath, forceCrea
         throw new Error("Cannot retrieve storage of a given user. Either set forceCreation to true or remove user.");
     }
 
-    let storageCollection = new cytomine.StorageCollection(1);
+    let storageCollection = new cytomine.StorageCollection({nbPerPage: 1});
     if(user == null) {
         ({id: user} = await getUser({forceCreation: cascadeForceCreation}));
     }
@@ -229,7 +229,7 @@ export async function getStorage({user, name=randomString(), basePath, forceCrea
 }
 
 export async function getTerm({name=randomString(), ontology, color="#ffffff", forceCreation=true, cascadeForceCreation} = {}) {
-    let termCollection = new cytomine.TermCollection(1);
+    let termCollection = new cytomine.TermCollection({nbPerPage: 1});
     if(ontology == null) {
         ({id: ontology} = await getOntology({forceCreation: cascadeForceCreation}));
     }
@@ -246,7 +246,7 @@ export async function getUser({username=randomString(), password, email, firstna
     lastname = lastname || username;
     email = email || (username + "@cytomine.coop");
 
-    let userCollection = new cytomine.UserCollection(1);
+    let userCollection = new cytomine.UserCollection({nbPerPage: 1});
     let user = new cytomine.User({username, password, firstname, lastname, email});
     return getModel(user, userCollection, forceCreation);
 }

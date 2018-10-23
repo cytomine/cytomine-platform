@@ -97,32 +97,33 @@ describe("ProjectDefaultLayer", function() {
 
         describe("Fetch", function() {
             it("Fetch (instance method)", async function() {
-                let collection = await new ProjectDefaultLayerCollection(0, "project", project).fetch();
+                let collection = await new ProjectDefaultLayerCollection({filterKey: "project", filterValue: project}).fetchAll();
                 expect(collection).to.be.an.instanceof(ProjectDefaultLayerCollection);
                 expect(collection).to.have.lengthOf(nbProjectDefaultLayers);
             });
 
             it("Fetch (static method)", async function() {
-                let collection = await ProjectDefaultLayerCollection.fetchWithFilter("project", project);
+                let collection = await ProjectDefaultLayerCollection.fetchAll({filterKey: "project", filterValue: project});
                 expect(collection).to.be.an.instanceof(ProjectDefaultLayerCollection);
                 expect(collection).to.have.lengthOf(nbProjectDefaultLayers);
             });
 
             it("Fetch with several requests", async function() {
-                let collection = await ProjectDefaultLayerCollection.fetchWithFilter("project", project, 1);
+                let collection = await ProjectDefaultLayerCollection.fetchAll({nbPerPage: 1, 
+                    filterKey: "project", filterValue: project});
                 expect(collection).to.be.an.instanceof(ProjectDefaultLayerCollection);
                 expect(collection).to.have.lengthOf(nbProjectDefaultLayers);
             });
 
             it("Fetch without filter", async function() {
                 let collection = new ProjectDefaultLayerCollection();
-                expect(collection.fetch()).to.be.rejected;
+                expect(collection.fetchAll()).to.be.rejected;
             });
         });
 
         describe("Working with the collection", function() {
             it("Iterate through", async function() {
-                let collection = await ProjectDefaultLayerCollection.fetchWithFilter("project", project);
+                let collection = await ProjectDefaultLayerCollection.fetchAll({filterKey: "project", filterValue: project});
                 for(let projectDefaultLayer of collection) {
                     expect(projectDefaultLayer).to.be.an.instanceof(ProjectDefaultLayer);
                 }
@@ -145,19 +146,19 @@ describe("ProjectDefaultLayer", function() {
             let nbPerPage = 1;
 
             it("Fetch arbitrary page", async function() {
-                let collection = new ProjectDefaultLayerCollection(nbPerPage, "project", project);
+                let collection = new ProjectDefaultLayerCollection({nbPerPage, filterKey: "project", filterValue: project});
                 await collection.fetchPage(2);
                 expect(collection).to.have.lengthOf(nbPerPage);
             });
 
             it("Fetch next page", async function() {
-                let collection = new ProjectDefaultLayerCollection(nbPerPage, "project", project);
+                let collection = new ProjectDefaultLayerCollection({nbPerPage, filterKey: "project", filterValue: project});
                 await collection.fetchNextPage();
                 expect(collection).to.have.lengthOf(nbPerPage);
             });
 
             it("Fetch previous page", async function() {
-                let collection = new ProjectDefaultLayerCollection(nbPerPage, "project", project);
+                let collection = new ProjectDefaultLayerCollection({nbPerPage, filterKey: "project", filterValue: project});
                 collection.curPage = 2;
                 await collection.fetchPreviousPage();
                 expect(collection).to.have.lengthOf(nbPerPage);

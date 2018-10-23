@@ -14,7 +14,7 @@ describe("UserRole", function() {
         ({id: role} = await utils.getRole());
 
         // clean the roles automatically associated to the user during its creation (otherwise, duplicate errors)
-        let collection = await UserRoleCollection.fetchWithFilter("user", user);
+        let collection = await UserRoleCollection.fetchAll({filterKey: "user", filterValue: user});
         for(let userRole of collection) {
             await userRole.delete();
         }
@@ -81,32 +81,33 @@ describe("UserRole", function() {
 
         describe("Fetch", function() {
             it("Fetch (instance method)", async function() {
-                let collection = await new UserRoleCollection(0, "user", user).fetch();
+                let collection = await new UserRoleCollection({filterKey: "user", filterValue: user}).fetchAll();
                 expect(collection).to.be.an.instanceof(UserRoleCollection);
                 expect(collection).to.have.lengthOf(nbUserRoles);
             });
 
             it("Fetch (static method)", async function() {
-                let collection = await UserRoleCollection.fetchWithFilter("user", user);
+                let collection = await UserRoleCollection.fetchAll({filterKey: "user", filterValue: user});
                 expect(collection).to.be.an.instanceof(UserRoleCollection);
                 expect(collection).to.have.lengthOf(nbUserRoles);
             });
 
             it("Fetch with several requests", async function() {
-                let collection = await UserRoleCollection.fetchWithFilter("user", user, 1);
+                let collection = await UserRoleCollection.fetchAll({nbPerPage: 1,
+                    filterKey: "user", filterValue: user});
                 expect(collection).to.be.an.instanceof(UserRoleCollection);
                 expect(collection).to.have.lengthOf(nbUserRoles);
             });
 
             it("Fetch without filter", async function() {
                 let collection = new UserRoleCollection();
-                expect(collection.fetch()).to.be.rejected;
+                expect(collection.fetchAll()).to.be.rejected;
             });
         });
 
         describe("Working with the collection", function() {
             it("Iterate through", async function() {
-                let collection = await UserRoleCollection.fetchWithFilter("user", user);
+                let collection = await UserRoleCollection.fetchAll({filterKey: "user", filterValue: user});
                 for(let userRole of collection) {
                     expect(userRole).to.be.an.instanceof(UserRole);
                 }
@@ -129,19 +130,19 @@ describe("UserRole", function() {
             let nbPerPage = 1;
 
             it("Fetch arbitrary page", async function() {
-                let collection = new UserRoleCollection(nbPerPage, "user", user);
+                let collection = new UserRoleCollection({nbPerPage, filterKey: "user", filterValue: user});
                 await collection.fetchPage(2);
                 expect(collection).to.have.lengthOf(nbPerPage);
             });
 
             it("Fetch next page", async function() {
-                let collection = new UserRoleCollection(nbPerPage, "user", user);
+                let collection = new UserRoleCollection({nbPerPage, filterKey: "user", filterValue: user});
                 await collection.fetchNextPage();
                 expect(collection).to.have.lengthOf(nbPerPage);
             });
 
             it("Fetch previous page", async function() {
-                let collection = new UserRoleCollection(nbPerPage, "user", user);
+                let collection = new UserRoleCollection({nbPerPage, filterKey: "user", filterValue: user});
                 collection.curPage = 2;
                 await collection.fetchPreviousPage();
                 expect(collection).to.have.lengthOf(nbPerPage);

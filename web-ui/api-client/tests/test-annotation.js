@@ -130,7 +130,7 @@ describe("Annotation", function() {
         });
 
         after(async function() {
-            let collection = await new AnnotationCollection({image}).fetch();
+            let collection = await new AnnotationCollection({image}).fetchAll();
             let deletionPromises = [];
             for(let annot of collection) {
                 deletionPromises.push(Annotation.delete(annot.id));
@@ -140,19 +140,19 @@ describe("Annotation", function() {
 
         describe("Fetch", function() {
             it("Fetch (instance method)", async function() {
-                let collection = await new AnnotationCollection({image}).fetch();
+                let collection = await new AnnotationCollection({image}).fetchAll();
                 expect(collection).to.be.an.instanceof(AnnotationCollection);
                 expect(collection).to.have.lengthOf(nb);
             });
 
             it("Fetch (static method)", async function() {
-                let collection = await AnnotationCollection.fetch({image});
+                let collection = await AnnotationCollection.fetchAll({image});
                 expect(collection).to.be.an.instanceof(AnnotationCollection);
                 expect(collection).to.have.lengthOf(nb);
             });
 
             it("Fetch with several requests", async function() {
-                let collection = await AnnotationCollection.fetch({image}, 1);
+                let collection = await AnnotationCollection.fetchAll({image}, 1);
                 expect(collection).to.be.an.instanceof(AnnotationCollection);
                 expect(collection).to.have.lengthOf(nb);
             });
@@ -160,7 +160,7 @@ describe("Annotation", function() {
 
         describe("Working with the collection", function() {
             it("Iterate through the collection", async function() {
-                let collection = await AnnotationCollection.fetch({image});
+                let collection = await AnnotationCollection.fetchAll({image});
                 for(let annot of collection) {
                     expect(annot).to.be.an.instanceof(Annotation);
                 }
@@ -195,7 +195,7 @@ describe("Annotation", function() {
                 collection.project = project;
                 collection.terms = [1, 2];
                 collection.showTerm = true;
-                await collection.fetch();
+                await collection.fetchAll();
                 expect(collection).to.have.lengthOf(0);
             });
         });
@@ -204,19 +204,19 @@ describe("Annotation", function() {
             let nbPerPage = 1;
 
             it("Fetch arbitrary page", async function() {
-                let collection = new AnnotationCollection({project}, nbPerPage);
+                let collection = new AnnotationCollection({project, nbPerPage});
                 await collection.fetchPage(2);
                 expect(collection).to.have.lengthOf(nbPerPage);
             });
 
             it("Fetch next page", async function() {
-                let collection = new AnnotationCollection({project}, nbPerPage);
+                let collection = new AnnotationCollection({project, nbPerPage});
                 await collection.fetchNextPage();
                 expect(collection).to.have.lengthOf(nbPerPage);
             });
 
             it("Fetch previous page", async function() {
-                let collection = new AnnotationCollection({project}, nbPerPage);
+                let collection = new AnnotationCollection({project, nbPerPage});
                 collection.curPage = 2;
                 await collection.fetchPreviousPage();
                 expect(collection).to.have.lengthOf(nbPerPage);

@@ -98,46 +98,46 @@ describe("AttachedFile", function() {
 
         describe("Fetch", function() {
             it("Fetch (instance method)", async function() {
-                let collection = await new AttachedFileCollection(abstractImage).fetch();
+                let collection = await new AttachedFileCollection({object: abstractImage}).fetchAll();
                 expect(collection).to.be.an.instanceof(AttachedFileCollection);
                 expect(collection).to.have.lengthOf.at.least(nbAttachedFiles);
                 totalNb = collection.length;
             });
 
             it("Fetch (static method)", async function() {
-                let collection = await AttachedFileCollection.fetch(abstractImage);
+                let collection = await AttachedFileCollection.fetchAll({object: abstractImage});
                 expect(collection).to.be.an.instanceof(AttachedFileCollection);
                 expect(collection).to.have.lengthOf(totalNb);
             });
 
             it("Fetch with several requests", async function() {
-                let collection = await AttachedFileCollection.fetch(abstractImage, Math.ceil(totalNb/3));
+                let collection = await AttachedFileCollection.fetchAll({object: abstractImage, nbPerPage: Math.ceil(totalNb/3)});
                 expect(collection).to.be.an.instanceof(AttachedFileCollection);
                 expect(collection).to.have.lengthOf(totalNb);
             });
 
             it("Fetch without associated object", async function() {
-                expect(AttachedFileCollection.fetch()).to.be.rejected;
+                expect(AttachedFileCollection.fetchAll()).to.be.rejected;
             });
         });
 
         describe("Working with the collection", function() {
             it("Iterate through", async function() {
-                let collection = await AttachedFileCollection.fetch(abstractImage);
+                let collection = await AttachedFileCollection.fetchAll({object: abstractImage});
                 for(let attachedFile of collection) {
                     expect(attachedFile).to.be.an.instanceof(AttachedFile);
                 }
             });
 
             it("Add item to the collection", function() {
-                let collection = new AttachedFileCollection(abstractImage);
+                let collection = new AttachedFileCollection({object: abstractImage});
                 expect(collection).to.have.lengthOf(0);
                 collection.push(new AttachedFile({file}, abstractImage));
                 expect(collection).to.have.lengthOf(1);
             });
 
             it("Add arbitrary object to the collection", function() {
-                let collection = new AttachedFileCollection(abstractImage);
+                let collection = new AttachedFileCollection({object: abstractImage});
                 expect(collection.push.bind(collection, {})).to.throw();
             });
         });
@@ -146,19 +146,19 @@ describe("AttachedFile", function() {
             let nbPerPage = 1;
 
             it("Fetch arbitrary page", async function() {
-                let collection = new AttachedFileCollection(abstractImage, nbPerPage);
+                let collection = new AttachedFileCollection({object: abstractImage, nbPerPage});
                 await collection.fetchPage(2);
                 expect(collection).to.have.lengthOf(nbPerPage);
             });
 
             it("Fetch next page", async function() {
-                let collection = new AttachedFileCollection(abstractImage, nbPerPage);
+                let collection = new AttachedFileCollection({object: abstractImage, nbPerPage});
                 await collection.fetchNextPage();
                 expect(collection).to.have.lengthOf(nbPerPage);
             });
 
             it("Fetch previous page", async function() {
-                let collection = new AttachedFileCollection(abstractImage, nbPerPage);
+                let collection = new AttachedFileCollection({object: abstractImage, nbPerPage});
                 collection.curPage = 2;
                 await collection.fetchPreviousPage();
                 expect(collection).to.have.lengthOf(nbPerPage);

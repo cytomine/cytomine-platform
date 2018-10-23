@@ -107,20 +107,20 @@ describe("Software", function() {
 
         describe("Fetch", function() {
             it("Fetch (instance method)", async function() {
-                let collection = await new SoftwareCollection().fetch();
+                let collection = await new SoftwareCollection().fetchAll();
                 expect(collection).to.be.an.instanceof(SoftwareCollection);
                 expect(collection).to.have.lengthOf.at.least(nbSoftwares);
                 totalNb = collection.length;
             });
 
             it("Fetch (static method)", async function() {
-                let collection = await SoftwareCollection.fetch();
+                let collection = await SoftwareCollection.fetchAll();
                 expect(collection).to.be.an.instanceof(SoftwareCollection);
                 expect(collection).to.have.lengthOf(totalNb);
             });
 
             it("Fetch with several requests", async function() {
-                let collection = await SoftwareCollection.fetch(Math.ceil(totalNb/3));
+                let collection = await SoftwareCollection.fetchAll({nbPerPage: Math.ceil(totalNb/3)});
                 expect(collection).to.be.an.instanceof(SoftwareCollection);
                 expect(collection).to.have.lengthOf(totalNb);
             });
@@ -128,7 +128,7 @@ describe("Software", function() {
 
         describe("Working with the collection", function() {
             it("Iterate through", async function() {
-                let collection = await SoftwareCollection.fetch();
+                let collection = await SoftwareCollection.fetchAll();
                 for(let software of collection) {
                     expect(software).to.be.an.instanceof(Software);
                 }
@@ -149,7 +149,7 @@ describe("Software", function() {
 
         describe("Filtering", function() {
             it("Filter on project", async function() {
-                let collection = await SoftwareCollection.fetchWithFilter("project", project);
+                let collection = await SoftwareCollection.fetchAll({filterKey: "project", filterValue: project});
                 expect(collection).to.have.lengthOf(1);
             });
         });
@@ -158,19 +158,19 @@ describe("Software", function() {
             let nbPerPage = 1;
 
             it("Fetch arbitrary page", async function() {
-                let collection = new SoftwareCollection(nbPerPage);
+                let collection = new SoftwareCollection({nbPerPage});
                 await collection.fetchPage(2);
                 expect(collection).to.have.lengthOf(nbPerPage);
             });
 
             it("Fetch next page", async function() {
-                let collection = new SoftwareCollection(nbPerPage);
+                let collection = new SoftwareCollection({nbPerPage});
                 await collection.fetchNextPage();
                 expect(collection).to.have.lengthOf(nbPerPage);
             });
 
             it("Fetch previous page", async function() {
-                let collection = new SoftwareCollection(nbPerPage);
+                let collection = new SoftwareCollection({nbPerPage});
                 collection.curPage = 2;
                 await collection.fetchPreviousPage();
                 expect(collection).to.have.lengthOf(nbPerPage);

@@ -4,40 +4,12 @@ import Project from "../models/project.js";
 
 export default class ProjectCollection extends Collection {
 
-    constructor(props, nbPerPage, filterKey, filterValue) {
-        super(nbPerPage, filterKey, filterValue);
+    /** @inheritdoc */
+    _initProperties() {
         this.light = null; // used iff filter on user ; if true, only id and name properties will be filled
         this.admin = null; // used iff filter on user ; if true, only returns the projects in which user is admin
-        this.setProps(props);
-    }
-
-    /**
-     * @override
-     * @static Fetch all available items
-     *
-     * @param {Object} [props]  Object containing the properties of the collection to set
-     * @param {number} [nbPerPage] The maximum number of items to fetch per request
-     *
-     * @returns {this} collection containing all available items
-     */
-    static async fetch(props, nbPerPage) {
-        let collection = new this(props);
-        return collection.fetch(nbPerPage);
-    }
-
-    /**
-     * @override
-     * @static Fetch all available items fitting provided filter
-     *
-     * @param {string} key      The filter key
-     * @param {number} value    The filter value (an identifier)
-     * @param {Object} [props]  Object containing the properties of the collection to set
-     * @param {number} [nbPerPage] The maximum number of items to fetch per request
-     *
-     * @returns {this} collection containing all available items
-     */
-    static async fetchWithFilter(key, value, props, nbPerPage) {
-        return new this(props, nbPerPage, key, value).fetch();
+        this.withLastActivity = null;
+        this.withMembersCount = null;
     }
 
     /** @inheritdoc */

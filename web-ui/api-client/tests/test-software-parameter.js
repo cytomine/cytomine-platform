@@ -91,20 +91,20 @@ describe("SoftwareParameter", function() {
 
         describe("Fetch", function() {
             it("Fetch (instance method)", async function() {
-                let collection = await new SoftwareParameterCollection().fetch();
+                let collection = await new SoftwareParameterCollection().fetchAll();
                 expect(collection).to.be.an.instanceof(SoftwareParameterCollection);
                 expect(collection).to.have.lengthOf.at.least(nbSoftwareParameters);
                 totalNb = collection.length;
             });
 
             it("Fetch (static method)", async function() {
-                let collection = await SoftwareParameterCollection.fetch();
+                let collection = await SoftwareParameterCollection.fetchAll();
                 expect(collection).to.be.an.instanceof(SoftwareParameterCollection);
                 expect(collection).to.have.lengthOf(totalNb);
             });
 
             it("Fetch with several requests", async function() {
-                let collection = await SoftwareParameterCollection.fetch(Math.ceil(totalNb/3));
+                let collection = await SoftwareParameterCollection.fetchAll({nbPerPage: Math.ceil(totalNb/3)});
                 expect(collection).to.be.an.instanceof(SoftwareParameterCollection);
                 expect(collection).to.have.lengthOf(totalNb);
             });
@@ -112,21 +112,21 @@ describe("SoftwareParameter", function() {
 
         describe("Filtering", function() {
             it("Filter on software (static method)", async function() {
-                let collection = await SoftwareParameterCollection.fetchWithFilter("software", software);
+                let collection = await SoftwareParameterCollection.fetchAll({filterKey: "software", filterValue: software});
                 expect(collection).to.have.lengthOf(nbSoftwareParameters);
             });
 
             it("Filter on software (instance method)", async function() {
                 let collection = new SoftwareParameterCollection(0);
                 collection.setFilter("software", software);
-                await collection.fetch();
+                await collection.fetchAll();
                 expect(collection).to.have.lengthOf(nbSoftwareParameters);
             });
         });
 
         describe("Working with the collection", function() {
             it("Iterate through", async function() {
-                let collection = await SoftwareParameterCollection.fetch();
+                let collection = await SoftwareParameterCollection.fetchAll();
                 for(let softwareParameter of collection) {
                     expect(softwareParameter).to.be.an.instanceof(SoftwareParameter);
                 }
@@ -149,19 +149,19 @@ describe("SoftwareParameter", function() {
             let nbPerPage = 1;
 
             it("Fetch arbitrary page", async function() {
-                let collection = new SoftwareParameterCollection(nbPerPage);
+                let collection = new SoftwareParameterCollection({nbPerPage});
                 await collection.fetchPage(2);
                 expect(collection).to.have.lengthOf(nbPerPage);
             });
 
             it("Fetch next page", async function() {
-                let collection = new SoftwareParameterCollection(nbPerPage);
+                let collection = new SoftwareParameterCollection({nbPerPage});
                 await collection.fetchNextPage();
                 expect(collection).to.have.lengthOf(nbPerPage);
             });
 
             it("Fetch previous page", async function() {
-                let collection = new SoftwareParameterCollection(nbPerPage);
+                let collection = new SoftwareParameterCollection({nbPerPage});
                 collection.curPage = 2;
                 await collection.fetchPreviousPage();
                 expect(collection).to.have.lengthOf(nbPerPage);

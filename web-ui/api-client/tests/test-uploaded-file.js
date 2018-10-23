@@ -99,20 +99,20 @@ describe("UploadedFile", function() {
 
         describe("Fetch", function() {
             it("Fetch (instance method)", async function() {
-                let collection = await new UploadedFileCollection().fetch();
+                let collection = await new UploadedFileCollection().fetchAll();
                 expect(collection).to.be.an.instanceof(UploadedFileCollection);
                 expect(collection).to.have.lengthOf.at.least(nbUploadedFiles);
                 totalNb = collection.length;
             });
 
             it("Fetch (static method)", async function() {
-                let collection = await UploadedFileCollection.fetch();
+                let collection = await UploadedFileCollection.fetchAll();
                 expect(collection).to.be.an.instanceof(UploadedFileCollection);
                 expect(collection).to.have.lengthOf(totalNb);
             });
 
             it("Fetch with several requests", async function() {
-                let collection = await UploadedFileCollection.fetch(Math.ceil(totalNb/3));
+                let collection = await UploadedFileCollection.fetchAll({nbPerPage: Math.ceil(totalNb/3)});
                 expect(collection).to.be.an.instanceof(UploadedFileCollection);
                 expect(collection).to.have.lengthOf(totalNb);
             });
@@ -120,7 +120,7 @@ describe("UploadedFile", function() {
 
         describe("Working with the collection", function() {
             it("Iterate through", async function() {
-                let collection = await UploadedFileCollection.fetch();
+                let collection = await UploadedFileCollection.fetchAll();
                 for(let uploadedFile of collection) {
                     expect(uploadedFile).to.be.an.instanceof(UploadedFile);
                 }
@@ -143,19 +143,19 @@ describe("UploadedFile", function() {
             let nbPerPage = 1;
 
             it("Fetch arbitrary page", async function() {
-                let collection = new UploadedFileCollection(nbPerPage);
+                let collection = new UploadedFileCollection({nbPerPage});
                 await collection.fetchPage(2);
                 expect(collection).to.have.lengthOf(nbPerPage);
             });
 
             it("Fetch next page", async function() {
-                let collection = new UploadedFileCollection(nbPerPage);
+                let collection = new UploadedFileCollection({nbPerPage});
                 await collection.fetchNextPage();
                 expect(collection).to.have.lengthOf(nbPerPage);
             });
 
             it("Fetch previous page", async function() {
-                let collection = new UploadedFileCollection(nbPerPage);
+                let collection = new UploadedFileCollection({nbPerPage});
                 collection.curPage = 2;
                 await collection.fetchPreviousPage();
                 expect(collection).to.have.lengthOf(nbPerPage);

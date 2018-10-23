@@ -91,32 +91,32 @@ describe("JobTemplate", function() {
 
         describe("Fetch", function() {
             it("Fetch (instance method)", async function() {
-                let collection = await new JobTemplateCollection(0, "project", project).fetch();
+                let collection = await new JobTemplateCollection({filterKey: "project", filterValue: project}).fetchAll();
                 expect(collection).to.be.an.instanceof(JobTemplateCollection);
                 expect(collection).to.have.lengthOf(nbJobTemplates);
             });
 
             it("Fetch (static method)", async function() {
-                let collection = await JobTemplateCollection.fetchWithFilter("project", project);
+                let collection = await JobTemplateCollection.fetchAll({filterKey: "project", filterValue: project});
                 expect(collection).to.be.an.instanceof(JobTemplateCollection);
                 expect(collection).to.have.lengthOf(nbJobTemplates);
             });
 
             it("Fetch with several requests", async function() {
-                let collection = await JobTemplateCollection.fetchWithFilter("project", project, 1);
+                let collection = await JobTemplateCollection.fetchAll({nbPerPage: 1, filterKey: "project", filterValue: project});
                 expect(collection).to.be.an.instanceof(JobTemplateCollection);
                 expect(collection).to.have.lengthOf(nbJobTemplates);
             });
 
             it("Fetch without filter", async function() {
                 let collection = new JobTemplateCollection();
-                expect(collection.fetch()).to.be.rejected;
+                expect(collection.fetchAll()).to.be.rejected;
             });
         });
 
         describe("Working with the collection", function() {
             it("Iterate through", async function() {
-                let collection = await JobTemplateCollection.fetchWithFilter("project", project);
+                let collection = await JobTemplateCollection.fetchAll({filterKey: "project", filterValue: project});
                 for(let jobTemplate of collection) {
                     expect(jobTemplate).to.be.an.instanceof(JobTemplate);
                 }
@@ -139,19 +139,19 @@ describe("JobTemplate", function() {
             let nbPerPage = 1;
 
             it("Fetch arbitrary page", async function() {
-                let collection = new JobTemplateCollection(nbPerPage, "project", project);
+                let collection = new JobTemplateCollection({nbPerPage, filterKey: "project", filterValue: project});
                 await collection.fetchPage(2);
                 expect(collection).to.have.lengthOf(nbPerPage);
             });
 
             it("Fetch next page", async function() {
-                let collection = new JobTemplateCollection(nbPerPage, "project", project);
+                let collection = new JobTemplateCollection({nbPerPage, filterKey: "project", filterValue: project});
                 await collection.fetchNextPage();
                 expect(collection).to.have.lengthOf(nbPerPage);
             });
 
             it("Fetch previous page", async function() {
-                let collection = new JobTemplateCollection(nbPerPage, "project", project);
+                let collection = new JobTemplateCollection({nbPerPage, filterKey: "project", filterValue: project});
                 collection.curPage = 2;
                 await collection.fetchPreviousPage();
                 expect(collection).to.have.lengthOf(nbPerPage);
