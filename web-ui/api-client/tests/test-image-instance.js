@@ -226,6 +226,11 @@ describe("ImageInstance", function() {
                     expect(listId).to.include(image.id);
                 });
             });
+
+            it("Fetch light version", async function() {
+                let collection = await ImageInstanceCollection.fetchAllLight();
+                expect(collection).to.have.lengthOf.at.least(nbImageInstances);
+            });
         });
 
         describe("Working with the collection", function() {
