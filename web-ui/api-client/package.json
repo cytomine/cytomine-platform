@@ -1,6 +1,6 @@
 {
     "name": "cytomine-client",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "description": "Client to communicate with Cytomine API in javascript. For more information about Cytomine, go to http://www.cytomine.org.",
     "browser": "dist/cytomine-client.min.js",
     "unpkg": "dist/cytomine-client.min.js",
@@ -25,19 +25,19 @@
     "license": "Apache-2.0",
     "dependencies": {
         "axios": "^0.18.0",
-        "detect-browser": "^3.0.0",
-        "idempotent-babel-polyfill": "^6.26.0-1"
+        "detect-browser": "^3.0.1",
+        "idempotent-babel-polyfill": "^6.26.0"
     },
     "devDependencies": {
-        "@babel/core": "^7.1.2",
+        "@babel/core": "^7.1.6",
         "@babel/plugin-proposal-object-rest-spread": "^7.0.0",
-        "@babel/preset-env": "^7.1.0",
+        "@babel/preset-env": "^7.1.6",
         "babel-loader": "^8.0.4",
-        "chai": "^4.1.2",
+        "chai": "^4.2.0",
         "chai-as-promised": "5.3.0",
-        "eslint": "^5.7.0",
-        "eslint-loader": "^2.1.0",
-        "karma": "^3.0.0",
+        "eslint": "^5.9.0",
+        "eslint-loader": "^2.1.1",
+        "karma": "^3.1.1",
         "karma-chai": "^0.1.0",
         "karma-chai-as-promised": "0.1.2",
         "karma-firefox-launcher": "^1.1.0",
@@ -46,7 +46,7 @@
         "karma-webpack": "^3.0.0",
         "mocha": "^5.2.0",
         "randomstring": "^1.1.5",
-        "webpack": "^4.17.1",
-        "webpack-cli": "^3.1.0"
+        "webpack": "^4.26.1",
+        "webpack-cli": "^3.1.2"
     }
 }
