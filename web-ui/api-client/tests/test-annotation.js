@@ -58,6 +58,11 @@ describe("Annotation", function() {
     });
 
     describe("Specific operations", function() {
+        it("Annotation action", async function() {
+            let annotationAction = await annotation.recordAction();
+            expect(annotationAction.id).to.exist;
+        });
+
         it("[Correction] Add", async function() {
             let currentUser = await User.fetchCurrent();
             let initialArea = annotation.area;

@@ -128,6 +128,24 @@ export default class Annotation extends Model {
     // 	}
     // }
 
+    /**
+     * Record an action performed on the annotation
+     *
+     * @param {string} [action="select"] The action performed on the annotation (select, add, delete, update)
+     *
+     * @returns {Object} The annotation action
+     */
+    async recordAction(action="select") {
+        if(this.isNew()) {
+            throw new Error("Cannot record an action on an annotation with no ID.");
+        }
+
+        let {data} = await Cytomine.instance.api.post("annotationaction.json", {
+            annotation: this.id,
+            action
+        });
+        return data;
+    }
 
     /**
      * Create a reviewed annotation based on the current annotation
@@ -144,7 +162,6 @@ export default class Annotation extends Model {
         return reviewedAnnotation;
     }
 
-
     /**
      * Cancel the review of the current annotation (thus deleting associated reviewed annotations)
      */
@@ -155,7 +172,6 @@ export default class Annotation extends Model {
 
         await Cytomine.instance.api.delete(`${this.callbackIdentifier}/${this.id}/review.json`);
     }
-
 
     /**
      * Simplifies the annotation so that it is described with a number of points between minNbPoints and maxNbPoints (no
