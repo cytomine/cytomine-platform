@@ -15,7 +15,7 @@ describe("ImageInstance", function() {
         ({id: baseImage} = await utils.getAbstractImage());
         let projectInstance = await utils.getProject();
         project = projectInstance.id;
-        await projectInstance.recordUserConnection(); // required for image consultation (in before hook of collection)
+        await projectInstance.recordUserConnection(); // required for image consultation
     });
 
     after(async function() {
@@ -101,6 +101,15 @@ describe("ImageInstance", function() {
             await Description.delete(imageSource);
             await Property.delete(property.id, imageSource);
             await Annotation.delete(annotation.id);
+        });
+
+        it("Record consultation", async function() {
+            await imageInstance.recordConsultation();
+        });
+
+        it("Fetch connected users", async function() {
+            let connectedUsers = await imageInstance.fetchConnectedUsers();
+            expect(connectedUsers).to.be.instanceof(Array);
         });
 
         it("Fetch layers in other projects", async function() {

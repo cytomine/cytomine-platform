@@ -95,6 +95,19 @@ export default class ImageInstance extends Model {
         });
     }
 
+    /**
+     * Fetch the users that have opened the image recently
+     *
+     * @returns {Array<number>} The list of IDs of the connected users
+     */
+    async fetchConnectedUsers() {
+        if(this.isNew()) {
+            throw new Error("Cannot fetch connected users of an image with no ID.");
+        }
+
+        let {data} = await Cytomine.instance.api.get(`${this.callbackIdentifier}/${this.id}/online.json`);
+        return JSON.parse(`[${data.users}]`);
+    }
 
     /**
      * Fetch the layers associated with the base abstract image in other projects
