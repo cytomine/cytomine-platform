@@ -10,8 +10,14 @@ describe("ImageInstance", function() {
     let imageInstance = null;
     let id = 0;
 
+    let idUser;
+
     before(async function() {
         await utils.connect();
+
+        let currentUser = await User.fetchCurrent();
+        idUser = currentUser.id;
+
         ({id: baseImage} = await utils.getAbstractImage());
         let projectInstance = await utils.getProject();
         project = projectInstance.id;
@@ -75,7 +81,6 @@ describe("ImageInstance", function() {
 
     describe("Specific operations", function() {
         let imageSource;
-        let idUser;
 
         let dataDescription = utils.randomString();
 
@@ -87,9 +92,6 @@ describe("ImageInstance", function() {
         let location = "POLYGON((10 10, 20 10, 20 20, 10 20, 10 10), (16 16, 18 16, 18 18, 16 18, 16 16))";
 
         before(async function() {
-            let currentUser = await User.fetchCurrent();
-            idUser = currentUser.id;
-
             imageSource = await utils.getImageInstance({baseImage});
 
             await new Description({data: dataDescription}, imageSource).save();
@@ -231,6 +233,19 @@ describe("ImageInstance", function() {
                 let collection = await ImageInstanceCollection.fetchLastOpened({max: nbImageInstances});
                 expect(collection).to.have.lengthOf(nbImageInstances);
                 let listId = collection.map(imageInstance => imageInstance.id);
+                imageInstances.forEach(image => {
+                    expect(listId).to.include(image.id);
+                });
+            });
+
+            it("Fetch last opened in project", async function() {
+                let collection = await ImageInstanceCollection.fetchLastOpened({
+                    project: project,
+                    user: idUser,
+                    max: nbImageInstances
+                });
+                expect(collection).to.have.lengthOf(nbImageInstances);
+                let listId = collection.map(item => item.image);
                 imageInstances.forEach(image => {
                     expect(listId).to.include(image.id);
                 });

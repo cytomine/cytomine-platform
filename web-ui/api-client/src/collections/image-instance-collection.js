@@ -22,18 +22,21 @@ export default class ImageInstanceCollection extends Collection {
     /**
      * @static Fetch last opened image instances
      *
-     * @param {number} [project]    Identifier of project to consider (/!\ requires user parameter to be set)
-     * @param {number} [user]       Identifier of user to consider (/!\ requires project parameter to be set)
-     * @param {number} [max=0]      The maximum number of items to retrieve
-     * @param {number} [offset=0]   The offset
+     * @param {number}  [project]           Identifier of project to consider (/!\ requires user parameter to be set)
+     * @param {number}  [user]              Identifier of user to consider (/!\ requires project parameter to be set)
+     * @param {boolean} [distinctImages]    If true, the result will include distinct images
+     * @param {number}  [max=0]             The maximum number of items to retrieve
+     * @param {number}  [offset=0]          The offset
      *
-     * @returns {Array<{id: Number, date: String, thumb: String, instanceFilename: String, project: Number}>}
-     *          The last opened images
+     * @returns {Array<{id: Number, date: String, thumb: String, instanceFilename: String, project: Number}>
+     *           | Array<{created: String, user: Number, image: Number, time: Number, imageThumb: String,
+     *                    imageName: String, countCreatedAnnotations: Number, project: Number}>}
+     *          The last opened images (second format used iff project and user are specified)
      */
-    static async fetchLastOpened({project, user, max=0, offset=0}={}) {
+    static async fetchLastOpened({project, user, distinctImages=true, max=0, offset=0}={}) {
         let uri = project != null ? `project/${project}/user/${user}/imageconsultation.json`
             : "imageinstance/method/lastopened.json";
-        let {data} = await Cytomine.instance.api.get(`${uri}?max=${max}&offset=${offset}`);
+        let {data} = await Cytomine.instance.api.get(`${uri}?max=${max}&offset=${offset}&distinctImages=${distinctImages}`);
         return data.collection;
     }
 
