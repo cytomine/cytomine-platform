@@ -99,6 +99,12 @@ describe("Annotation", function() {
         it("Simplify", async function() {
             await annotation.simplify(5, 10);
         });
+
+        it("Fill", async function() {
+            let initialArea = annotation.area;
+            await annotation.fill();
+            expect(annotation.area).to.be.above(initialArea);
+        });
     });
 
     describe("Update", function() {

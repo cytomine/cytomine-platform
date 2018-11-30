@@ -195,6 +195,21 @@ export default class Annotation extends Model {
     }
 
     /**
+     * Fills the annotation
+     *
+     * @returns {Annotation} The filled annotation
+     */
+    async fill() {
+        if(this.isNew()) {
+            throw new Error("Cannot fill an annotation with no ID.");
+        }
+
+        let {data} = await Cytomine.instance.api.post(`${this.callbackIdentifier}/${this.id}/fill`);
+        this.populate(data.data.annotation);
+        return this;
+    }
+
+    /**
      * @static correctAnnotations - Description
      *
      * @param {number} image    The identifier of the image instance
