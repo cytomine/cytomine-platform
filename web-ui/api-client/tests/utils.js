@@ -78,6 +78,15 @@ export async function getGroup({name=randomString(), forceCreation=true} = {}) {
     return getModel(group, groupCollection, forceCreation);
 }
 
+export async function getImageFilter({name=randomString(), baseUrl="path/", processingServer, forceCreation=true, cascadeForceCreation} = {}) {
+    let imageFilterCollection = new cytomine.ImageFilterCollection({nbPerPage: 1});
+    if(processingServer == null) {
+        ({url: processingServer} = await getProcessingServer({forceCreation: cascadeForceCreation}));
+    }
+    let imageFilter = new cytomine.ImageFilter({name, baseUrl, processingServer});
+    return getModel(imageFilter, imageFilterCollection, forceCreation);
+}
+
 export async function getImageInstance({baseImage, project, forceCreation=true, cascadeForceCreation} = {}) {
     if(!forceCreation && baseImage != null) {
         throw new Error("Cannot retrieve image instance of a given base image. Either set forceCreation to true or remove baseImage");
@@ -141,6 +150,12 @@ export async function getOntology({name=randomString(), forceCreation=false} = {
     let ontology = new cytomine.Ontology({name});
     let ontologyCollection = new cytomine.OntologyCollection({nbPerPage: 1});
     return getModel(ontology, ontologyCollection, forceCreation);
+}
+
+export async function getProcessingServer({url=randomString(), forceCreation=true} = {}) {
+    let processingServerCollection = new cytomine.ProcessingServerCollection({nbPerPage: 1});
+    let processingServer = new cytomine.ProcessingServer({url});
+    return getModel(processingServer, processingServerCollection, forceCreation);
 }
 
 export async function getProject({name=randomString(), ontology, forceCreation=true, cascadeForceCreation} = {}) {
