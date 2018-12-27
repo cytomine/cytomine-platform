@@ -50,6 +50,7 @@ describe("Project", function() {
         let nbUsers;
         let nbAdmins;
         let idUser;
+        let uiConfig;
 
         before(async function() {
             ({id: idUser} = await utils.getUser());
@@ -116,6 +117,21 @@ describe("Project", function() {
             await project.deleteAdmin(idUser);
             let admins = await project.fetchAdministrators();
             expect(admins.length).to.equal(nbAdmins);
+        });
+
+        it("Fetch UI config", async function() {
+            uiConfig = await project.fetchUIConfig();
+            expect(uiConfig).to.be.an.instanceof(Object);
+            for(let prop in uiConfig){
+                expect(uiConfig[prop]["CONTRIBUTOR_PROJECT"]).to.be.a("boolean");
+                expect(uiConfig[prop]["ADMIN_PROJECT"]).to.be.a("boolean");
+            }
+        });
+
+        it("Set UI config", async function() {
+            uiConfig["project-images-tab"]["ADMIN_PROJECT"] = false;
+            let result = await project.saveUIConfig(uiConfig);
+            expect(result).to.deep.equal(uiConfig);
         });
     });
 
@@ -225,7 +241,6 @@ describe("Project", function() {
                 expect(collection.push.bind(collection, {})).to.throw();
             });
         });
-
 
         describe("Filtering", function() {
             it("Filter on user", async function() {

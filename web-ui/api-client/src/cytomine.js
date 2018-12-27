@@ -57,12 +57,18 @@ export default class Cytomine {
     }
 
     /**
+     * @returns {string} The host
+     */
+    get host() {
+        return this._host;
+    }
+
+    /**
      * @returns {string} The base path
      */
     get basePath() {
         return this._basePath;
     }
-
 
     /**
      * Ping the server to get info
@@ -112,5 +118,21 @@ export default class Cytomine {
     async closeAdminSession() {
         let {data} = await axios.get(`${this._host}/session/admin/close.json`, {withCredentials: true});
         return !data.adminByNow;
+    }
+
+    /**
+     * Fetch the UI configuration for the current user
+     * @param {number} [project] The identifier of the project to consider (if specified, in addition to the general UI
+     *                           config, the UI config of the specified project will be returned)
+     * @returns {Object} Set of properties describing which parts of the UI to display
+     */
+    async fetchUIConfigCurrentUser(project) {
+        let params = {};
+        if(project != null) {
+            params.project = project;
+        }
+
+        let {data} = await axios.get(`${this._host}/custom-ui/config.json`, {params, withCredentials: true});
+        return data;
     }
 }

@@ -2,6 +2,7 @@ import Cytomine from "../cytomine.js";
 import Model from "./model.js";
 import User from "./user.js";
 import UserCollection from "../collections/user-collection.js";
+import axios from "axios";
 
 export default class Project extends Model {
     /** @inheritdoc */
@@ -247,5 +248,36 @@ export default class Project extends Model {
         let collection = new UserCollection();
         data.collection.forEach(item => collection.push(new User(item)));
         return collection;
+    }
+
+    /**
+     * Fetch the UI config of the project
+     * @returns {Object} Set of properties describing which parts of the UI to display, depending on the role of the
+     *                   user (each property is an object {CONTRIBUTOR_PROJECT: boolean, ADMIN_PROJECT: boolean})
+     */
+    async fetchUIConfig() {
+        if(this.isNew()) {
+            throw new Error("Cannot fetch UI configuration of a project with no ID.");
+        }
+
+        let {data} = await axios.get(`${Cytomine.instance._host}/custom-ui/project/${this.id}.json`,
+            {withCredentials: true});
+        return data;
+    }
+
+    /**
+     * Sets the UI config of the project
+     * @param   {Object} config Set of properties describing which parts of the UI to display, depending on the role of the
+     *                          user (each property is an object {CONTRIBUTOR_PROJECT: boolean, ADMIN_PROJECT: boolean})
+     * @returns {Object}        Resulting UI config as returned by backend (same structure as input)
+     */
+    async saveUIConfig(config) {
+        if(this.isNew()) {
+            throw new Error("Cannot save UI configuration of a project with no ID.");
+        }
+
+        let {data} = await axios.post(`${Cytomine.instance.host}/custom-ui/project/${this.id}.json`, config,
+            {withCredentials: true});
+        return data;
     }
 }
