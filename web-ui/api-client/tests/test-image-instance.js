@@ -156,6 +156,10 @@ describe("ImageInstance", function() {
             await imageInstance.stopReview(true);
             expect(imageInstance.inReview).to.be.false;
         });
+
+        it("Download URL", async function() {
+            expect(imageInstance.downloadURL).to.be.a("string");
+        });
     });
 
     describe("Update", function() {

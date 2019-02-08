@@ -53,6 +53,12 @@ describe("UploadedFile", function() {
         });
     });
 
+    describe("Specific operations", function() {
+        it("Download URL", async function() {
+            expect(uploadedFile.downloadURL).to.be.a("string");
+        });
+    });
+
     describe("Update", function() {
         it("Update", async function() {
             let newFilename = utils.randomString();

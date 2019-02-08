@@ -52,6 +52,13 @@ export default class ImageInstance extends Model {
     }
 
     /**
+     * @returns {String} the download URL of the image (valid iff the identifier of the image was previously defined)
+     */
+    get downloadURL() {
+        return `${Cytomine.instance.host}${Cytomine.instance.basePath}imageinstance/${this.id}/download`;
+    }
+
+    /**
     * Fetch the next image instance of the project (first image created before)
     *
     * @returns {ImageInstance}

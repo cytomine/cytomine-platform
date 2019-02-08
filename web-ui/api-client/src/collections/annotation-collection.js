@@ -1,3 +1,4 @@
+import Cytomine from "../cytomine.js";
 import Collection from "./collection.js";
 import Annotation from "../models/annotation.js";
 
@@ -42,6 +43,26 @@ export default class AnnotationCollection extends Collection {
         this.bboxAnnotation = null;
         this.baseAnnotation = null;
         this.maxDistanceBaseAnnotation = null;
+    }
+
+    /**
+     * Returns the URL for downloading the collection under the provided format
+     * @param   {String} [format="pdf"] The format of the file to download ("csv", "xls" or "pdf")
+     * @returns {String} The download URL
+     */
+    getDownloadURL(format="pdf") {
+        if(this.project == null) {
+            throw new Error("Cannot construct download URL if no project ID is provided.");
+        }
+        let strParam = `format=${format}`;
+        let paramFields = ["reviewed", "terms", "users", "images", "noTerm", "multipleTerms"];
+        paramFields.forEach(param => {
+            if(this[param] != null) {
+                strParam += `&${param}=${this[param]}`;
+            }
+        });
+        let uri = `project/${this.project}/annotation/download?${strParam}`;
+        return Cytomine.instance.host + Cytomine.instance.basePath + uri;
     }
 
     /** @inheritdoc */

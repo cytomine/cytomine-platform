@@ -188,6 +188,11 @@ describe("Annotation", function() {
                 let collection = new AnnotationCollection({image});
                 expect(collection.push.bind(collection, {})).to.throw();
             });
+
+            it("Download URL", function() {
+                let collection = new AnnotationCollection({project});
+                expect(collection.getDownloadURL()).to.be.a("string");
+            });
         });
 
         describe("Save collection", function() {
