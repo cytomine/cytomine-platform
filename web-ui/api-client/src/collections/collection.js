@@ -261,6 +261,21 @@ export default class Collection {
     }
 
     /**
+     * @returns {number} The total number of items available in the database (whereas length() returns the number
+     *                   of items fetched from the database, which can be a subset of those available)
+     */
+    get totalNbItems() {
+        return this._total;
+    }
+
+    /**
+     * @returns {number} The number of available pages
+     */
+    get nbPages() {
+        return this._nbPages;
+    }
+
+    /**
      * @returns {string} The callback identifier of the collection used in API requests
      */
     get callbackIdentifier() {
