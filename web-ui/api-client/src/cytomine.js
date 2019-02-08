@@ -135,4 +135,21 @@ export default class Cytomine {
         let {data} = await axios.get(`${this._host}/custom-ui/config.json`, {params, withCredentials: true});
         return data;
     }
+
+    /**
+     * Fetch a signature string for the current user
+     * @param {string} method The request method action
+     * @param {string} uri The request URI
+     * @param {string} [queryString] The request query string
+     * @param {string} [date] The request date
+     * @param {string} [contentMD5] The request content MD5
+     * @param {string} [contentType] The request content type
+     * @returns {string} The generated signature
+     */
+    async fetchSignature({method, uri, queryString, date, contentMD5, contentType}={}) {
+        let params = {method, forwardURI: uri, queryString, date, "content-MD5": contentMD5, "content-type": contentType};
+
+        let {data} = await this.api.get("signature.json", {params});
+        return data.signature;
+    }
 }
