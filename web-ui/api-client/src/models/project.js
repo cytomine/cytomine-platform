@@ -2,6 +2,7 @@ import Cytomine from "../cytomine.js";
 import Model from "./model.js";
 import User from "./user.js";
 import UserCollection from "../collections/user-collection.js";
+import {AnnotationType} from "./annotation.js";
 import axios from "axios";
 
 export default class Project extends Model {
@@ -279,5 +280,279 @@ export default class Project extends Model {
         let {data} = await axios.post(`${Cytomine.instance.host}/custom-ui/project/${this.id}.json`, config,
             {withCredentials: true});
         return data;
+    }
+
+    /**
+     * Fetch the last actions in the project
+     * 
+     * @param {number}  [max]       The maximum number of actions to return
+     * @param {number}  [offset]    Offset of first record
+     * @param {number}  [user]      If specified, only actions from this user will be returned
+     * @param {boolean} [fullData]  Specifies whether or not the response should include the full JSON of the data field
+     * @param {number}  [startDate] If specified, only actions performed after this date will be returned
+     * @param {number}  [endDate]   If specified, only actions performed before this date will be returned
+     * @returns {Array<{id, created, message, prefix, prefixAction, user, project, data, serviceName, className, action}>} 
+     *                              The list of actions (properites data, serviceName, className and action will only be
+     *                              provided if fullData is set to true)
+     */
+    async fetchCommandHistory({max, offset, user, fullData, startDate, endDate}={}) {
+        if(this.isNew()) {
+            throw new Error("Cannot fetch command history of a project with no ID.");
+        }
+        return this.constructor.fetchCommandHistory({project: this.id, max, offset, user, fullData, startDate, endDate});
+    }
+
+    /**
+     * Fetch the last actions performed in the instance
+     * 
+     * @param {number}  [project]   If specified, only actions in this project will be returned
+     * @param {number}  [max]       The maximum number of actions to return
+     * @param {number}  [offset]    Offset of first record
+     * @param {number}  [user]      If specified, only actions from this user will be returned
+     * @param {boolean} [fullData]  Specifies whether or not the response should include the full JSON of the data field
+     * @param {number}  [startDate] If specified, only actions performed after this date will be returned
+     * @param {number}  [endDate]   If specified, only actions performed before this date will be returned
+     * @returns {Array<{id, created, message, prefix, prefixAction, user, project, data, serviceName, className, action}>} 
+     *                              The list of actions (properites data, serviceName, className and action will only be
+     *                              provided if fullData is set to true)
+     */
+    static async fetchCommandHistory({project, max, offset, user, fullData, startDate, endDate}={}) {
+        let uri = project == null ? "commandhistory.json" : `project/${project}/commandhistory.json`;
+        let {data} = await Cytomine.instance.api.get(uri, {params: {
+            max,
+            offset,
+            user,
+            fullData,
+            startDate,
+            endDate
+        }});
+
+        return data;
+    }
+
+    /**
+     * Fetches the number of connections in this project
+     * 
+     * @param {number}  [startDate] If specified, only connections after this date will be counted
+     * @param {number}  [endDate]   If specified, only connections before this date will be counted
+     * @returns {number} The number of connections
+     */
+    async fetchNbConnections({startDate, endDate}) {
+        if(this.isNew()) {
+            throw new Error("Cannot fetch the number of connections in a project with no ID.");
+        }
+        let {data} = await Cytomine.instance.api.get(
+            `project/${this.id}/userconnection/count.json`, 
+            {params: {startDate, endDate}}
+        );
+        return data.total;
+    }
+
+    /**
+     * Fetches the evolution of connections in this project
+     * 
+     * @param {number}  [startDate]     If specified, only connections after this date will be counted
+     * @param {number}  [endDate]       If specified, only connections before this date will be counted
+     * @param {number}  [daysRange]     The durations of the periods to consider
+     * @param {boolean} [accumulate]    Whether or not the count should be accumulated across periods
+     * @returns {Array<{date, endDate, size}>} The number of connections for each period
+     */
+    async fetchConnectionsEvolution({startDate, endDate, daysRange, accumulate}={}) {
+        if(this.isNew()) {
+            throw new Error("Cannot fetch the evolution of connections in a project with no ID.");
+        }
+        let {data} = await Cytomine.instance.api.get(
+            `project/${this.id}/stats/connectionsevolution.json`, 
+            {params: {startDate, endDate, daysRange, accumulate}}
+        );
+        return data.collection;
+    }
+
+    /**
+     * Fetches the number of image consultations in this project
+     * 
+     * @param {number}  [startDate] If specified, only consultations after this date will be counted
+     * @param {number}  [endDate]   If specified, only consultations before this date will be counted
+     * @returns {number} The number of image consultations
+     */
+    async fetchNbImageConsultations({startDate, endDate}) {
+        if(this.isNew()) {
+            throw new Error("Cannot fetch the number of image consultations in a project with no ID.");
+        }
+        let {data} = await Cytomine.instance.api.get(
+            `project/${this.id}/imageconsultation/count.json`, 
+            {params: {startDate, endDate}}
+        );
+        return data.total;
+    }
+
+    /**
+     * Fetches the evolution of image consultations in this project
+     * 
+     * @param {number}  [startDate]     If specified, only consultations after this date will be counted
+     * @param {number}  [endDate]       If specified, only consultations before this date will be counted
+     * @param {number}  [daysRange]     The durations of the periods to consider
+     * @param {boolean} [accumulate]    Whether or not the count should be accumulated across periods
+     * @returns {Array<{date, endDate, size}>} The number of image consultations for each period
+     */
+    async fetchImageConsultationsEvolution({startDate, endDate, daysRange, accumulate}={}) {
+        if(this.isNew()) {
+            throw new Error("Cannot fetch the evolution of image consultations in a project with no ID.");
+        }
+        let {data} = await Cytomine.instance.api.get(
+            `project/${this.id}/stats/imageconsultationsevolution.json`, 
+            {params: {startDate, endDate, daysRange, accumulate}}
+        );
+        return data.collection;
+    }
+
+    /**
+     * Fetches the number of annotation actions in this project
+     * 
+     * @param {number}  [startDate] If specified, only actions after this date will be counted
+     * @param {number}  [endDate]   If specified, only actions before this date will be counted
+     * @returns {number} The number of annotation actions
+     */
+    async fetchNbAnnotationActions({startDate, endDate}) {
+        if(this.isNew()) {
+            throw new Error("Cannot fetch the number of annotation actions in a project with no ID.");
+        }
+        let {data} = await Cytomine.instance.api.get(
+            `project/${this.id}/annotationaction/count.json`, 
+            {params: {startDate, endDate}}
+        );
+        return data.total;
+    }
+
+    /**
+     * Fetches the evolution of annotation actions in this project
+     * 
+     * @param {number}  [startDate]     If specified, only actions after this date will be counted
+     * @param {number}  [endDate]       If specified, only actions before this date will be counted
+     * @param {number}  [daysRange]     The durations of the periods to consider
+     * @param {boolean} [accumulate]    Whether or not the count should be accumulated across periods
+     * @returns {Array<{date, endDate, size}>} The number of annotation actions for each period
+     */
+    async fetchAnnotationActionsEvolution({startDate, endDate, daysRange, accumulate}={}) {
+        if(this.isNew()) {
+            throw new Error("Cannot fetch the evolution of annotation actions in a project with no ID.");
+        }
+        let {data} = await Cytomine.instance.api.get(
+            `project/${this.id}/stats/annotationactionsevolution.json`, 
+            {params: {startDate, endDate, daysRange, accumulate}}
+        );
+        return data.collection;
+    }
+
+    /**
+     * Fetches the number of annotations in this project
+     * 
+     * @param {number}  [startDate] If specified, only annotations created after this date will be counted
+     * @param {number}  [endDate]   If specified, only annotations created before this date will be counted
+     * @param {string} annotationType The annotation type to count (see AnnotationType for allowed values)
+     * @returns {number} The number of annotations
+     */
+    async fetchNbAnnotations({startDate, endDate, annotationType}={}) {
+        if(this.isNew()) {
+            throw new Error("Cannot fetch the number of annotations in a project with no ID.");
+        }
+
+        let uri = null;
+        switch(annotationType) {
+        case AnnotationType.USER:
+            uri = "userannotation";
+            break;
+        case AnnotationType.ALGO:
+            uri = "algoannotation";
+            break;
+        case AnnotationType.REVIEWED:
+            uri = "reviewedannotation";
+            break;
+        }
+
+        if(uri == null) {
+            throw new Error("This annotation type is not handled.");
+        }
+
+        let {data} = await Cytomine.instance.api.get(
+            `project/${this.id}/${uri}/count.json`, 
+            {params: {startDate, endDate}}
+        );
+        return data.total;
+    }
+
+    /** Fetches the evolution of annotations in this project
+     * 
+     * @param {number}  [startDate]     If specified, only annotations created after this date will be counted
+     * @param {number}  [endDate]       If specified, only annotations created before this date will be counted
+     * @param {number}  [daysRange]     The durations of the periods to consider
+     * @param {boolean} [accumulate]    Whether or not the count should be accumulated across periods
+     * @param {boolean} [reverseOrder]  If true, the latest period will be returned as first element of the array
+     * @param {number}  [term]          The identifier of the term to consider
+     * @param {string}  annotationType The annotation type to count (see AnnotationType for allowed values)
+     * @returns {Array<{date, endDate, size}>} The number of annotations for each period
+     */
+    async fetchAnnotationsEvolution({startDate, endDate, annotationType, daysRange, accumulate, reverseOrder, term}={}) {
+        if(this.isNew()) {
+            throw new Error("Cannot fetch the evolution of annotations in a project with no ID.");
+        }
+
+        let uri = null;
+        switch(annotationType) {
+        case AnnotationType.USER:
+            uri = "annotationevolution";
+            break;
+        case AnnotationType.ALGO:
+            uri = "algoannotationevolution";
+            break;
+        case AnnotationType.REVIEWED:
+            uri = "reviewedannotationevolution";
+            break;
+        }
+
+        if(uri == null) {
+            throw new Error("This annotation type is not handled.");
+        }
+
+        let {data} = await Cytomine.instance.api.get(
+            `project/${this.id}/stats/${uri}.json`, 
+            {params: {startDate, endDate, daysRange, accumulate, reverseOrder, term}}
+        );
+        return data.collection;
+    }
+
+    /**
+     * Fetches the number of annotations for each term
+     *
+     * @param {number}  [startDate]     If specified, only associations after this date will be counted
+     * @param {number}  [endDate]       If specified, only associations before this date will be counted
+     * @param {boolean}  [leafsOnly]    If true, only leafs terms will be returned in the statistics
+     * @returns {Array<{id, key, color, value}>} The terms, with their associated count (value property)
+     */
+    async fetchStatsTerms({startDate, endDate, leafsOnly}={}) {
+        if(this.isNew()) {
+            throw new Error("Cannot fetch terms statistics in a project with no ID.");
+        }
+
+        let params = {startDate, endDate, leafsOnly};
+        let {data} = await Cytomine.instance.api.get(`project/${this.id}/stats/term.json`, {params});
+        return data.collection;
+    }
+
+    /**
+     * Fetches the number of annotations for each contributor
+     *
+     * @param {number}  [startDate]     If specified, only annotations created after this date will be counted
+     * @param {number}  [endDate]       If specified, only annotations created before this date will be counted
+     * @returns {Array<{id, key, username, value}>} The contributors (key=firstName + lastName), with their associated count (value property)
+     */
+    async fetchStatsAnnotationCreators({startDate, endDate}={}) {
+        if(this.isNew()) {
+            throw new Error("Cannot fetch annotation creators statistics in a project with no ID.");
+        }
+        
+        let params = {startDate, endDate};
+        let {data} = await Cytomine.instance.api.get(`project/${this.id}/stats/user.json`, {params});
+        return data.collection;
     }
 }

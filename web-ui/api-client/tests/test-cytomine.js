@@ -2,7 +2,7 @@ import * as utils from "./utils.js";
 import {Cytomine} from "@";
 import config from "./config.js";
 
-describe.only("Cytomine", function() {
+describe("Cytomine", function() {
     before(function() {
         new Cytomine(config.host);
     });

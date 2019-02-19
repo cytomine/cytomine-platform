@@ -1,5 +1,5 @@
 import * as utils from "./utils.js";
-import {Project, ProjectCollection, User, UserCollection} from "@";
+import {Project, ProjectCollection, User, UserCollection, AnnotationType} from "@";
 
 describe("Project", function() {
 
@@ -132,6 +132,61 @@ describe("Project", function() {
             uiConfig["project-images-tab"]["ADMIN_PROJECT"] = false;
             let result = await project.saveUIConfig(uiConfig);
             expect(result).to.deep.equal(uiConfig);
+        });
+
+        it("Fetch command history", async function() {
+            let result = await project.fetchCommandHistory({max: 10});
+            expect(result).to.be.instanceof(Array);
+        });
+
+        it("Fetch evolution of connections", async function() {
+            let result = await project.fetchConnectionsEvolution({startDate: new Date().getTime()});
+            expect(result).to.be.instanceof(Array);
+        });
+
+        it("Fetch evolution of image consultations", async function() {
+            let result = await project.fetchImageConsultationsEvolution({startDate: new Date().getTime()});
+            expect(result).to.be.instanceof(Array);
+        });
+
+        it("Fetch evolution of annotation actions", async function() {
+            let result = await project.fetchAnnotationActionsEvolution({startDate: new Date().getTime()});
+            expect(result).to.be.instanceof(Array);
+        });
+
+        it("Fetch evolution of annotation", async function() {
+            let result = await project.fetchAnnotationActionsEvolution({startDate: new Date().getTime(), annotationType: AnnotationType.ALGO});
+            expect(result).to.be.instanceof(Array);
+        });
+
+        it("Fetch number of connections", async function() {
+            let result = await project.fetchNbConnections({startDate: new Date().getTime()});
+            expect(result).to.be.a("number");
+        });
+
+        it("Fetch number of image consultations", async function() {
+            let result = await project.fetchNbImageConsultations({startDate: new Date().getTime()});
+            expect(result).to.be.a("number");
+        });
+
+        it("Fetch number of annotation actions", async function() {
+            let result = await project.fetchNbAnnotationActions({startDate: new Date().getTime()});
+            expect(result).to.be.a("number");
+        });
+
+        it("Fetch number of annotations", async function() {
+            let result = await project.fetchNbAnnotations({startDate: new Date().getTime(), annotationType: AnnotationType.USER});
+            expect(result).to.be.a("number");
+        });
+
+        it("Fetch terms statistics", async function() {
+            let result = await project.fetchStatsTerms({startDate: new Date().getTime()});
+            expect(result).to.be.instanceof(Array);
+        });
+
+        it("Fetch contributors statistics", async function() {
+            let result = await project.fetchStatsAnnotationCreators({startDate: new Date().getTime()});
+            expect(result).to.be.instanceof(Array);
         });
     });
 
