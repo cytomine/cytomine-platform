@@ -47,6 +47,37 @@ describe("Term", function() {
         });
     });
 
+    describe("Specific operations", function() {
+        let idParent1;
+        let idParent2;
+
+        before(async function() {
+            ({id: idParent1} = await utils.getTerm({ontology}));
+            ({id: idParent2} = await utils.getTerm({ontology}));
+        });
+
+        it("Set parent", async function() {
+            await term.changeParent(idParent1);
+            expect(term.parent).to.equal(idParent1);
+            await term.fetch();
+            expect(term.parent).to.equal(idParent1);
+        });
+
+        it("Update parent", async function() {
+            await term.changeParent(idParent2);
+            expect(term.parent).to.equal(idParent2);
+            await term.fetch();
+            expect(term.parent).to.equal(idParent2);
+        });
+
+        it("Remove parent", async function() {
+            await term.changeParent(null);
+            expect(term.parent).to.equal(null);
+            await term.fetch();
+            expect(term.parent).to.equal(null);
+        });
+    });
+
     describe("Update", function() {
         it("Update", async function() {
             let newName = utils.randomString();
