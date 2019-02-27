@@ -92,7 +92,8 @@ export default class Job extends Model {
         }
 
         let {data} = await Cytomine.instance.api.post(`${this.callbackIdentifier}/${this.id}/execute.json`);
-        return data;
+        this.populate(data[this.callbackIdentifier]);
+        return this;
     }
 
     /**
@@ -111,13 +112,15 @@ export default class Job extends Model {
 
     /**
      * Delete all data created by the job
+     *
+     * @param {Number} [task] The identifier of the task to associate to the job data deletion
      */
-    async deleteAllData() {
+    async deleteAllData(task) {
         if(this.isNew()) {
             throw new Error("Cannot fetch the data related to a job with no ID.");
         }
 
-        await Cytomine.instance.api.delete(`${this.callbackIdentifier}/${this.id}/alldata.json`);
+        await Cytomine.instance.api.delete(`${this.callbackIdentifier}/${this.id}/alldata.json`, {params: {task}});
         this.dataDeleted = true;
     }
 }

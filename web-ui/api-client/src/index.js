@@ -27,6 +27,7 @@ export {default as Software} from "./models/software.js";
 export {default as SoftwareParameter} from "./models/software-parameter.js";
 export {default as SoftwareProject} from "./models/software-project.js";
 export {default as Storage} from "./models/storage.js";
+export {default as Task} from "./models/task.js";
 export {default as Term} from "./models/term.js";
 export {default as UploadedFile, UploadedFileStatus} from "./models/uploaded-file.js";
 export {default as User} from "./models/user.js";
