@@ -85,7 +85,7 @@ export default class JobData extends Model {
         if(this.isNew()) {
             return null;
         }
-        return `${this.callbackIdentifier}/${this.id}/download`;
+        return `${Cytomine.instance.host}${Cytomine.instance.basePath}${this.callbackIdentifier}/${this.id}/download`;
     }
 
     /**
@@ -95,6 +95,6 @@ export default class JobData extends Model {
         if(this.isNew()) {
             return null;
         }
-        return `${this.callbackIdentifier}/${this.id}/view`;
+        return `${Cytomine.instance.host}${Cytomine.instance.basePath}${this.callbackIdentifier}/${this.id}/view`;
     }
 }

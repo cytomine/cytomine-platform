@@ -42,10 +42,11 @@ export default class Model {
     populate(props) {
         if(props) {
             for(let key in props) {
+                let value = props[key];
                 if(key == "uri") { // special handling to avoid conflict with uri property
                     key = "uri_";
                 }
-                this[key] = props[key];
+                this[key] = value;
             }
         }
     }
