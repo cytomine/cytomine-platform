@@ -94,12 +94,6 @@ export default class User extends Model {
     /**
      * Fetch the number of annotations for the user in the provided project or in all projects
      *
-     * @returns {type} Description
-     */
-
-    /**
-     * Fetch the number of annotations for the user
-     *
      * @param {boolean} [reviewed=false]    If true, counts reviewed annotations, if false, user annotations
      * @param {number}  [idProject]         The identifier of the project to consider (if undefined, annotations of all
      *                                      projects will be counted)

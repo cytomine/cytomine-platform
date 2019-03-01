@@ -41,34 +41,6 @@ export default class Project extends Model {
     }
 
     /**
-     * @static Record a connection of the current user to a project
-     *
-     * @param {number} id The identifier of the project
-     */
-    static async recordUserConnection(id) {
-        new this({id}).recordUserConnection();
-    }
-
-    /**
-     * Record a connection of the current user to the project
-     */
-    async recordUserConnection() {
-        if(this.isNew()) {
-            throw new Error("Cannot record user connection to project with no ID.");
-        }
-
-        const { detect } = require("detect-browser");
-        const browser = detect();
-
-        await Cytomine.instance.api.post(`${this.callbackIdentifier}/${this.id}/userconnection.json`, {
-            browser: browser ? browser.name : "Unknown",
-            browserVersion: browser ? browser.verion : "Unknown",
-            os: browser ? browser.os : "Unknown",
-            project: this.id
-        });
-    }
-
-    /**
      * Fetch the user that created the project
      *
      * @returns {User}

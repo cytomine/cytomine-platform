@@ -1,5 +1,5 @@
 import * as utils from "./utils.js";
-import {Project, ProjectCollection, User, UserCollection, AnnotationType} from "@";
+import {Project, ProjectCollection, ProjectConnection, User, UserCollection, AnnotationType} from "@";
 
 describe("Project", function() {
 
@@ -228,7 +228,7 @@ describe("Project", function() {
             async function createAndAccessProject() {
                 let project = new Project({name: utils.randomString(), ontology});
                 await project.save();
-                await project.recordUserConnection();
+                await new ProjectConnection({project: project.id}).save();
                 return project;
             }
 

@@ -87,22 +87,6 @@ export default class ImageInstance extends Model {
     }
 
     /**
-     * Record a consultation of the image by the current user
-     *
-     * @param {string} [mode=view] The consultation mode
-     */
-    async recordConsultation(mode="view") {
-        if(this.isNew()) {
-            throw new Error("Cannot record consultation of image with no ID.");
-        }
-
-        await Cytomine.instance.api.post(`${this.callbackIdentifier}/${this.id}/consultation.json`, {
-            image: this.id,
-            mode
-        });
-    }
-
-    /**
      * Fetch the users that have opened the image recently
      *
      * @returns {Array<number>} The list of IDs of the connected users
@@ -125,7 +109,7 @@ export default class ImageInstance extends Model {
      */
     async fetchLayersInOtherProjects(project) {
         if(this.isNew()) {
-            throw new Error("Cannot record consultation of image with no ID.");
+            throw new Error("Cannot fetch layers in other projects of image with no ID.");
         }
 
         let params = {};

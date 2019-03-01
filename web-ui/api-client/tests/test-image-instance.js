@@ -1,5 +1,5 @@
 import * as utils from "./utils.js";
-import {ImageInstance, ImageInstanceCollection,
+import {ImageInstance, ImageInstanceCollection, ImageConsultation, ProjectConnection,
     User, Description, Property, PropertyCollection, Annotation, AnnotationCollection} from "@";
 
 describe("ImageInstance", function() {
@@ -21,7 +21,7 @@ describe("ImageInstance", function() {
         ({id: baseImage} = await utils.getAbstractImage());
         let projectInstance = await utils.getProject();
         project = projectInstance.id;
-        await projectInstance.recordUserConnection(); // required for image consultation
+        await new ProjectConnection({project}).save(); // required for image consultation
     });
 
     after(async function() {
@@ -103,10 +103,6 @@ describe("ImageInstance", function() {
             await Description.delete(imageSource);
             await Property.delete(property.id, imageSource);
             await Annotation.delete(annotation.id);
-        });
-
-        it("Record consultation", async function() {
-            await imageInstance.recordConsultation();
         });
 
         it("Fetch connected users", async function() {
@@ -196,7 +192,7 @@ describe("ImageInstance", function() {
             async function createAndConsultImageInstance(baseImage, project) {
                 let imageInstance = new ImageInstance({baseImage, project});
                 await imageInstance.save();
-                await imageInstance.recordConsultation();
+                await new ImageConsultation({image: imageInstance.id}).save();
                 return imageInstance;
             }
 
