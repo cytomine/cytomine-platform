@@ -73,10 +73,11 @@ export default class Cytomine {
     /**
      * Ping the server to get info
      *
+     * @param {number}  [project]   The identifier of the active project
      * @returns {{alive, authenticated, version, serverURL, serverID, user}} The data returned by the server
      */
-    async ping() {
-        let {data} = await axios.get(`${this._host}/server/ping.json`, {withCredentials: true});
+    async ping(project) {
+        let {data} = await axios.post(`${this._host}/server/ping.json`, {project}, {withCredentials: true});
         return data;
     }
 
