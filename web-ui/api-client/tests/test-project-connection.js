@@ -113,8 +113,13 @@ describe("ProjectConnection", function() {
         });
 
         describe("Specific operations", function() {
-            it("Fetch evolution of image consultations", async function() {
+            it("Fetch average connections", async function() {
                 let result = await ProjectConnectionCollection.fetchAverageConnections({project, beforeThan: new Date().getTime()});
+                expect(result).to.be.instanceof(Array);
+            });
+
+            it("Fetch connections frequency", async function() {
+                let result = await ProjectConnectionCollection.fetchConnectionsFrequency({project, beforeThan: new Date().getTime()});
                 expect(result).to.be.instanceof(Array);
             });
         });

@@ -53,8 +53,8 @@ export default class ProjectConnectionCollection extends Collection {
      *
      * @param {number}  [project]       The identifier of the project to consider
      * @param {number}  [user]          The identifier of the user to consider
-     * @param {number}  [startDate]     If specified, only connections after this date will be taken into account
-     * @param {number}  [endDate]       If specified, only connections before this date will be taken into account
+     * @param {number}  [afterThan]     If specified, only connections after this date will be taken into account
+     * @param {number}  [beforeThan]       If specified, only connections before this date will be taken into account
      * @param {string}  [period=hour]   The periods to consider
      * @returns {Array<{time, frequency}>} The timestamps defining the period (depends on the period parameter) and the
      *                                     associated relative frequency
@@ -62,6 +62,31 @@ export default class ProjectConnectionCollection extends Collection {
     static async fetchAverageConnections({project, user, afterThan, beforeThan, period="hour"}={}) {
         let params = {project, user, afterThan, beforeThan, period};
         let {data} = await Cytomine.instance.api.get("averageConnections.json", {params});
+        return data.collection;
+    }
+
+    /**
+     * Fetches the number of connections in given periods
+     *
+     * @param {number}  [project]       The identifier of the project to consider
+     * @param {number}  [user]          The identifier of the user to consider
+     * @param {number}  [afterThan]     If specified, only connections after this date will be taken into account
+     * @param {number}  [beforeThan]       If specified, only connections before this date will be taken into account
+     * @param {string}  [period=hour]   The periods to consider
+     * @returns {Array<{time, frequency}>} The timestamps defining the period and the associated numbers of connections
+     */
+    static async fetchConnectionsFrequency({project, user, afterThan, beforeThan, period="hour"}={}) {
+        let uri = "connectionFrequency.json";
+        if(project != null) {
+            if(user != null) {
+                uri = `project/${project}/connectionFrequency/${user}.json`;
+            }
+            else {
+                uri = `project/${project}/connectionFrequency.json`;
+            }
+        }
+        let params = {project, user, afterThan, beforeThan, period};
+        let {data} = await Cytomine.instance.api.get(uri, {params});
         return data.collection;
     }
 

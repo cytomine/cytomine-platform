@@ -153,4 +153,35 @@ export default class Cytomine {
         let {data} = await this.api.get("signature.json", {params});
         return data.signature;
     }
+
+    /**
+     * Fetch total count of each model
+     *
+     * @returns {{users, projects, images, userAnnotations, jobAnnotations, terms, ontologies, softwares, jobs}}
+     *          The total count for each model
+     */
+    async fetchTotalCounts() {
+        let {data} = await this.api.get("stats/all.json");
+        return data;
+    }
+
+    /**
+     * Fetch stats of current activity
+     *
+     * @returns {{users, projects, mostActiveProject}} Stats related to current activity
+     */
+    async fetchCurrentStats() {
+        let {data} = await this.api.get("stats/currentStats.json");
+        return data;
+    }
+
+    /**
+     * Fetch stats related to storage space
+     *
+     * @returns {{total, available, used, usedP}} Stats related to the storage
+     */
+    async fetchStorageStats() {
+        let {data} = await this.api.get("stats/imageserver/total.json");
+        return data;
+    }
 }

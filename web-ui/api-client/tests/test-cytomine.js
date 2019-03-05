@@ -57,4 +57,32 @@ describe("Cytomine", function() {
         });
     });
 
+    describe("Stats", function() {
+        before(async function() {
+            await utils.connect();
+        });
+
+        it("Total counts", async function() {
+            let counts = await Cytomine.instance.fetchTotalCounts();
+            expect(counts).to.be.an.instanceof(Object);
+            for(let prop in counts){
+                expect(counts[prop]).to.be.a("number");
+            }
+        });
+
+        it("Current stats", async function() {
+            let currentStats = await Cytomine.instance.fetchCurrentStats();
+            expect(currentStats).to.be.an.instanceof(Object);
+            expect(currentStats.users).to.be.a("number");
+            expect(currentStats.projects).to.be.a("number");
+        });
+
+        it("Storage stats", async function() {
+            let storageStats = await Cytomine.instance.fetchStorageStats();
+            expect(storageStats).to.be.an.instanceof(Object);
+            for(let prop in storageStats){
+                expect(storageStats[prop]).to.be.a("number");
+            }
+        });
+    });
 });
