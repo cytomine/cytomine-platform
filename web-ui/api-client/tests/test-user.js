@@ -84,6 +84,16 @@ describe("User", function() {
             expect(activity.totalAnnotations).to.equal(0);
             expect(activity.totalConnections).to.equal(0);
         });
+
+        it("Lock", async function() {
+            await user.lock();
+            expect(user.enabled).to.be.false;
+        });
+
+        it("Unlock", async function() {
+            await user.unlock();
+            expect(user.enabled).to.be.true;
+        });
     });
 
     describe("Update", function() {

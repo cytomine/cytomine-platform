@@ -130,6 +130,36 @@ export default class User extends Model {
         return this.update();
     }
 
+    /**
+     * Lock the user
+     *
+     * @returns {this} The updated user
+     */
+    async lock() {
+        if(this.isNew()) {
+            throw new Error("Cannot lock a user with no ID.");
+        }
+
+        let {data} = await Cytomine.instance.api.post(`user/${this.id}/lock`);
+        this.populate(data);
+        return this;
+    }
+
+    /**
+     * Unlock the user
+     *
+     * @returns {this} The updated user
+     */
+    async unlock() {
+        if(this.isNew()) {
+            throw new Error("Cannot unlock a user with no ID.");
+        }
+
+        let {data} = await Cytomine.instance.api.delete(`user/${this.id}/lock`);
+        this.populate(data);
+        return this;
+    }
+
     // TODO: uncomment once issue in core is solved (ID parameter not correctly handled)
     // /**
     //  * @static Fetch the API keys of the provided user
