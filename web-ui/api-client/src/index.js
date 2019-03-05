@@ -5,6 +5,7 @@ export {default as AlgoAnnotationTerm} from "./models/algo-annotation-term.js";
 export {default as Annotation, AnnotationType} from "./models/annotation.js";
 export {default as AnnotationTerm} from "./models/annotation-term.js";
 export {default as AttachedFile} from "./models/attached-file.js";
+export {default as Configuration} from "./models/configuration.js";
 export {default as Description} from "./models/description.js";
 export {default as Discipline} from "./models/discipline.js";
 export {default as Group} from "./models/group.js";
@@ -43,6 +44,7 @@ export {default as AlgoAnnotationTermCollection} from "./collections/algo-annota
 export {default as AnnotationCollection} from "./collections/annotation-collection.js";
 export {default as AnnotationTermCollection} from "./collections/annotation-term-collection.js";
 export {default as AttachedFileCollection} from "./collections/attached-file-collection.js";
+export {default as ConfigurationCollection} from "./collections/configuration-collection.js";
 export {default as DisciplineCollection} from "./collections/discipline-collection.js";
 export {default as GroupCollection} from "./collections/group-collection.js";
 export {default as ImageConsultationCollection} from "./collections/image-consultation-collection.js";
