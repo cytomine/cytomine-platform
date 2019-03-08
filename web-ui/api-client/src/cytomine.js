@@ -93,6 +93,7 @@ export default class Cytomine {
         params.append("j_username", username);
         params.append("j_password", password);
         params.append("remember_me", rememberMe ? "on" : "off");
+        params.append("ajax", true);
         await axios.post(`${this._host}/j_spring_security_check`, params, {withCredentials: true});
     }
 
