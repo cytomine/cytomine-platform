@@ -1,5 +1,5 @@
 import * as utils from "./utils.js";
-import {User, UserCollection} from "@";
+import {User, UserCollection, RoleCollection} from "@";
 
 describe("User", function() {
 
@@ -49,6 +49,12 @@ describe("User", function() {
     });
 
     describe("Specific operations", function() {
+        let role;
+
+        before(async function() {
+            ({id: role} = await utils.getRole());
+        });
+
         it("Fetch current user", async function() {
             let currentUser = await User.fetchCurrent();
             expect(currentUser).to.be.an.instanceof(User);
@@ -93,6 +99,16 @@ describe("User", function() {
         it("Unlock", async function() {
             await user.unlock();
             expect(user.enabled).to.be.true;
+        });
+
+        it("Define role", async function() {
+            let roles = await user.defineRole(role);
+            expect(roles).to.be.instanceof(RoleCollection);
+        });
+
+        it("Change password", async function() {
+            let newPassword = utils.randomString();
+            await user.savePassword(newPassword);
         });
     });
 

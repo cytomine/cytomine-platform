@@ -1,6 +1,8 @@
 import Cytomine from "../cytomine.js";
 import Model from "./model.js";
 import UserCollection from "../collections/user-collection.js";
+import RoleCollection from "../collections/role-collection.js";
+import Role from "./role.js";
 
 export default class User extends Model {
     /** @inheritdoc */
@@ -157,6 +159,36 @@ export default class User extends Model {
 
         let {data} = await Cytomine.instance.api.delete(`user/${this.id}/lock`);
         this.populate(data);
+        return this;
+    }
+
+    /**
+     * Define the role of the user
+     * 
+     * @param {number} idRole       The identifier of the role to assign
+     * @returns {RoleCollection}    The list of roles associated to the user
+     */
+    async defineRole(idRole) {
+        if(this.isNew()) {
+            throw new Error("Cannot define the role of a user with no ID.");
+        }
+        let {data} = await Cytomine.instance.api.put(`user/${this.id}/role/${idRole}/define.json`);
+        let collection = new RoleCollection();
+        data.collection.forEach(item => collection.push(new Role(item)));
+        return collection;
+    }
+
+    /**
+     * Change the password of the user
+     *
+     * @param {string} password       The new password
+     * @returns {this}    The user
+     */
+    async savePassword(password) {
+        if(this.isNew()) {
+            throw new Error("Cannot change password of a user with no ID.");
+        }
+        await Cytomine.instance.api.put(`user/${this.id}/password.json`, {password});
         return this;
     }
 
