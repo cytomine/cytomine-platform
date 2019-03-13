@@ -105,6 +105,28 @@ export default class Cytomine {
     }
 
     /**
+     * Send a mail to the provided email address with the associated username
+     *
+     * @param {string}  email   The email address
+     */
+    async forgotUsername(email) {
+        let params = new URLSearchParams();
+        params.append("j_email", email);
+        await axios.post(`${this._host}/login/forgotUsername`, params);
+    }
+
+    /**
+     * Send a mail to the email associated to the provided username to reset password
+     *
+     * @param {string}  username    The username
+     */
+    async forgotPassword(username) {
+        let params = new URLSearchParams();
+        params.append("j_username", username);
+        await axios.post(`${this._host}/login/forgotPassword`, params);
+    }
+
+    /**
      * Open an admin session
      * @returns {boolean} True if the current user is now connected as admin
      */

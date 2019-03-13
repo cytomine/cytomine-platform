@@ -57,6 +57,27 @@ describe("Cytomine", function() {
         });
     });
 
+    describe("Forgot credentials", function() {
+        let user;
+
+        before(async function() {
+            await utils.connect();
+            user = await utils.getUser();
+        });
+
+        after(async function() {
+            await utils.cleanData();
+        });
+
+        it("Forgot username", async function() {
+            await Cytomine.instance.forgotUsername(user.email);
+        });
+
+        it("Forgot password", async function() {
+            await Cytomine.instance.forgotPassword(user.username);
+        });
+    });
+
     describe("Stats", function() {
         before(async function() {
             await utils.connect();
