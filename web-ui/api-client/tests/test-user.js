@@ -1,5 +1,6 @@
 import * as utils from "./utils.js";
 import {User, UserCollection, RoleCollection} from "@";
+import config from "./config.js";
 
 describe("User", function() {
 
@@ -109,6 +110,13 @@ describe("User", function() {
         it("Change password", async function() {
             let newPassword = utils.randomString();
             await user.savePassword(newPassword);
+        });
+
+        it("Check password of current user", async function() {
+            let result = await User.checkCurrentPassword(config.password);
+            expect(result).to.be.true;
+            result = await User.checkCurrentPassword(utils.randomString());
+            expect(result).to.be.false;
         });
     });
 

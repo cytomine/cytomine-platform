@@ -179,6 +179,22 @@ export default class User extends Model {
     }
 
     /**
+     * Check the password of the current user
+     *
+     * @param {string} password       The password to check
+     * @returns {boolean}    Whether or not the password is valid
+     */
+    static async checkCurrentPassword(password) {
+        try {
+            await Cytomine.instance.api.post("user/security_check.json", {password});
+            return true;
+        }
+        catch(error) {
+            return false;
+        }
+    }
+
+    /**
      * Change the password of the user
      *
      * @param {string} password       The new password
