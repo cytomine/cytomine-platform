@@ -95,39 +95,6 @@ export default class Annotation extends Model {
         return annotation.fetch();
     }
 
-    // TODO: comments handling
-    // async comment(subject, message, users, comment) {
-    // 	if(this.isNew()) {
-    // 		throw new Error("Cannot comment an annotation with no ID.");
-    // 	}
-    //
-    // 	if(this._type != AnnotationType.USER && this._type != AnnotationType.ALGO) {
-    // 		throw new Error("Comment functionality not available for this type of annotation.");
-    // 	}
-    //
-    // 	await Cytomine.instance.api.post(`${this._type.toLowerCase()}/${this.id}/comment.json`);
-    // }
-    //
-    // async fetchComment(id) {
-    // 	if(this.isNew()) {
-    // 		throw new Error("Cannot fetch comment related to an annotation with no ID.");
-    // 	}
-    //
-    // 	if(this._type != AnnotationType.USER && this._type != AnnotationType.ALGO) {
-    // 		throw new Error("Comment functionality not available for this type of annotation.");
-    // 	}
-    // }
-    //
-    // async fetchAllComments() {
-    // 	if(this.isNew()) {
-    // 		throw new Error("Cannot fetch comments related to an annotation with no ID.");
-    // 	}
-    //
-    // 	if(this._type != AnnotationType.USER && this._type != AnnotationType.ALGO) {
-    // 		throw new Error("Comment functionality not available for this type of annotation.");
-    // 	}
-    // }
-
     /**
      * Record an action performed on the annotation
      *
