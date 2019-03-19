@@ -45,6 +45,13 @@ export default class AnnotationCollection extends Collection {
         this.maxDistanceBaseAnnotation = null;
     }
 
+    /** @override */
+    async _doFetch() {
+        // in large projects, URL can become very long if performed with GET => use POST instead
+        let {data} = await Cytomine.instance.api.post("annotation/search.json", this.getParameters());
+        return data;
+    }
+
     /**
      * Returns the URL for downloading the collection under the provided format
      * @param   {String} [format="pdf"] The format of the file to download ("csv", "xls" or "pdf")

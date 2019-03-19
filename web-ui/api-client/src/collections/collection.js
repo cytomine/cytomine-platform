@@ -91,13 +91,18 @@ export default class Collection {
         this._curPage = value;
     }
 
+    async _doFetch() {
+        let {data} = await Cytomine.instance.api.get(this.uri, {params: this.getParameters()});
+        return data;
+    }
+
     async _fetch(append=false) {
 
         if(this._filter.key == null && !this.constructor.allowedFilters.includes(null)) {
             throw new Error(`A ${this.callbackIdentifier} collection cannot be fetched without filter.`);
         }
 
-        let {data} = await Cytomine.instance.api.get(this.uri, {params: this.getParameters()});
+        let data = await this._doFetch();
 
         if(!append) {
             this._data = [];
