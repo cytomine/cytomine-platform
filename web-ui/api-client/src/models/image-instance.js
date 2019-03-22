@@ -89,15 +89,18 @@ export default class ImageInstance extends Model {
     /**
      * Fetch the users that have opened the image recently
      *
+     * @param {boolean} broadcast  If true, only users broadcasting their positions will be returned
+     *
      * @returns {Array<number>} The list of IDs of the connected users
      */
-    async fetchConnectedUsers() {
+    async fetchConnectedUsers(broadcast=false) {
         if(this.isNew()) {
             throw new Error("Cannot fetch connected users of an image with no ID.");
         }
-
-        let {data} = await Cytomine.instance.api.get(`${this.callbackIdentifier}/${this.id}/online.json`);
-        return JSON.parse(`[${data.users}]`);
+        
+        let uri = `${this.callbackIdentifier}/${this.id}/online.json${broadcast ? "?broadcast=true" : ""}`;
+        let {data} = await Cytomine.instance.api.get(uri);
+        return data.users;
     }
 
     /**

@@ -19,6 +19,8 @@ export default class UserPosition extends Model {
         this.x = null;
         this.y = null;
         this.zoom = null;
+        this.rotation = null;
+        this.broadcast = null;
     }
 
     /** @override */
@@ -31,8 +33,17 @@ export default class UserPosition extends Model {
         throw new Error("UserPosition instances cannot be fetched.");
     }
 
-    static async fetchLastPosition(imageInstance, user) {
-        let {data} = await Cytomine.instance.api.get(`imageinstance/${imageInstance}/position/${user}.json`);
+    /**
+     * Fetch the last position of a user in an image
+     * 
+     * @param {number} imageInstance    the identifier of the image
+     * @param {number} user             the identifier of the user  
+     * @param {boolean} broadcast       if true, the last position broadcasted by the user will be returned
+     * @returns the last position of the user
+     */
+    static async fetchLastPosition(imageInstance, user, broadcast=false) {
+        let uri = `imageinstance/${imageInstance}/position/${user}.json${broadcast ? "?broadcast=true" : ""}`;
+        let {data} = await Cytomine.instance.api.get(uri);
         return new this(data);
     }
 
@@ -44,7 +55,7 @@ export default class UserPosition extends Model {
     /**
      * @static Record the position of the current user on an image
      *
-     * @param {{image, topLeftX, topLeftY, topRightX, topRightY, bottomLeftX, bottomLeftY, bottomRightX, bottomRightY, zoom}} position
+     * @param {{image, topLeftX, topLeftY, topRightX, topRightY, bottomLeftX, bottomLeftY, bottomRightX, bottomRightY, zoom, broadcast}} position
      *
      * @returns {this} The created position
      */
