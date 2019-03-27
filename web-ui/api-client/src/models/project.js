@@ -383,15 +383,16 @@ export default class Project extends Model {
      * 
      * @param {number}  [startDate] If specified, only actions after this date will be counted
      * @param {number}  [endDate]   If specified, only actions before this date will be counted
+     * @param {string}  [type]    The type of annotation action to take into account
      * @returns {number} The number of annotation actions
      */
-    async fetchNbAnnotationActions({startDate, endDate}) {
+    async fetchNbAnnotationActions({startDate, endDate, type}) {
         if(this.isNew()) {
             throw new Error("Cannot fetch the number of annotation actions in a project with no ID.");
         }
         let {data} = await Cytomine.instance.api.get(
             `project/${this.id}/annotationaction/count.json`, 
-            {params: {startDate, endDate}}
+            {params: {startDate, endDate, type}}
         );
         return data.total;
     }
@@ -403,15 +404,16 @@ export default class Project extends Model {
      * @param {number}  [endDate]       If specified, only actions before this date will be counted
      * @param {number}  [daysRange]     The durations of the periods to consider
      * @param {boolean} [accumulate]    Whether or not the count should be accumulated across periods
+     * @param {string}  [type]        The type of annotation action to take into account
      * @returns {Array<{date, endDate, size}>} The number of annotation actions for each period
      */
-    async fetchAnnotationActionsEvolution({startDate, endDate, daysRange, accumulate}={}) {
+    async fetchAnnotationActionsEvolution({startDate, endDate, daysRange, accumulate, type}={}) {
         if(this.isNew()) {
             throw new Error("Cannot fetch the evolution of annotation actions in a project with no ID.");
         }
         let {data} = await Cytomine.instance.api.get(
             `project/${this.id}/stats/annotationactionsevolution.json`, 
-            {params: {startDate, endDate, daysRange, accumulate}}
+            {params: {startDate, endDate, daysRange, accumulate, type}}
         );
         return data.collection;
     }
