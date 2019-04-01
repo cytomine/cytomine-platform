@@ -40,6 +40,8 @@ export default class Cytomine {
                 return Promise.reject(error);
             });
 
+            this.lastCommand = null;
+
             Cytomine._instance = this;
         }
 
@@ -206,5 +208,29 @@ export default class Cytomine {
     async fetchStorageStats() {
         let {data} = await this.api.get("stats/imageserver/total.json");
         return data;
+    }
+
+    /**
+     * Undo a command
+     *
+     * @param {number} command The identifier of the command to undo ; if null, the last command will be undone
+     *
+     * @returns {Array<Object>} The collection of affected models
+     */
+    async undo(command = null) {
+        let {data} = await this.api.get(`command/${command ? command + "/" : ""}undo.json`);
+        return data.collection;
+    }
+
+    /**
+     * Redo a command
+     *
+     * @param {number} command The identifier of the command to redo ; if null, the last undone command will be redone
+     *
+     * @returns {Array<Object>} The collection of affected models
+     */
+    async redo(command = null) {
+        let {data} = await this.api.get(`command/${command ? command + "/" : ""}redo.json`);
+        return data.collection;
     }
 }

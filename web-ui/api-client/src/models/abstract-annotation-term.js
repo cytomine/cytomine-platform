@@ -60,6 +60,7 @@ export default class AbstractAnnotationTerm extends Model {
             {clearForAll: clearForAllUsers});
 
         this.populate(data[this.callbackIdentifier]);
+        Cytomine.instance.lastCommand = data.command;
         return this;
     }
 

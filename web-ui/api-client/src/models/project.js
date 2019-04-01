@@ -166,7 +166,8 @@ export default class Project extends Model {
         if(this.isNew()) {
             throw new Error("Cannot add a user to a project with no ID.");
         }
-        await Cytomine.instance.api.post(`${this.callbackIdentifier}/${this.id}/user/${idUser}.json`);
+        let {data} = await Cytomine.instance.api.post(`${this.callbackIdentifier}/${this.id}/user/${idUser}.json`);
+        Cytomine.instance.lastCommand = data.command;
     }
 
     /**
@@ -178,7 +179,8 @@ export default class Project extends Model {
         if(this.isNew()) {
             throw new Error("Cannot delete a user from a project with no ID.");
         }
-        await Cytomine.instance.api.delete(`${this.callbackIdentifier}/${this.id}/user/${idUser}.json`);
+        let {data} = await Cytomine.instance.api.delete(`${this.callbackIdentifier}/${this.id}/user/${idUser}.json`);
+        Cytomine.instance.lastCommand = data.command;
     }
 
     /**
@@ -190,7 +192,8 @@ export default class Project extends Model {
         if(this.isNew()) {
             throw new Error("Cannot add an admin to a project with no ID.");
         }
-        await Cytomine.instance.api.post(`${this.callbackIdentifier}/${this.id}/user/${idUser}/admin.json`);
+        let {data} = await Cytomine.instance.api.post(`${this.callbackIdentifier}/${this.id}/user/${idUser}/admin.json`);
+        Cytomine.instance.lastCommand = data.command;
     }
 
     /**
@@ -202,7 +205,8 @@ export default class Project extends Model {
         if(this.isNew()) {
             throw new Error("Cannot delete an admin from a project with no ID.");
         }
-        await Cytomine.instance.api.delete(`${this.callbackIdentifier}/${this.id}/user/${idUser}/admin.json`);
+        let {data} = await Cytomine.instance.api.delete(`${this.callbackIdentifier}/${this.id}/user/${idUser}/admin.json`);
+        Cytomine.instance.lastCommand = data.command;
     }
 
     /**

@@ -48,6 +48,7 @@ export default class UserJob extends Model {
             }
             let {data} = await Cytomine.instance.api.post(this.uri, properties);
             this.populate(data[this.callbackIdentifier]);
+            Cytomine.instance.lastCommand = data.command;
             return this;
         }
         else {

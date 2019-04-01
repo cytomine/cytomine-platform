@@ -23,11 +23,10 @@ export default class ProjectConnection extends Model {
 
     /** @override */
     async save() {
-        // super.save(); // TODO: uncomment once lack of consistency in core is fixed
-
         if(this.isNew()) {
             let {data} = await Cytomine.instance.api.post(this.uri, this.getPublicProperties());
             this.populate(data);
+            // TODO: store command ID (currently not returned by backend)
             return this;
         }
         else {

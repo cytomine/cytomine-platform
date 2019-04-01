@@ -1,5 +1,5 @@
 import * as utils from "./utils.js";
-import {Annotation, AnnotationType, AnnotationCollection, User} from "@";
+import {Cytomine, Annotation, AnnotationType, AnnotationCollection, User} from "@";
 
 describe("Annotation", function() {
 
@@ -104,6 +104,42 @@ describe("Annotation", function() {
             let initialArea = annotation.area;
             await annotation.fill();
             expect(annotation.area).to.be.above(initialArea);
+        });
+    });
+
+    describe("Undo/redo", function() {
+        let urAnnot;
+        let command;
+
+        it("Create", async function() {
+            urAnnot = await new Annotation({location, image}).save();
+            command = Cytomine.instance.lastCommand;
+            expect(urAnnot.id).to.exist;
+            expect(command).to.exist;
+        });
+
+        it("Undo", async function() {
+            let collection = await Cytomine.instance.undo(command);
+            expect(collection).to.have.lengthOf(1);
+            let annot = collection[0].annotation;
+            expect(annot.id).to.equal(urAnnot.id);
+            expect(Annotation.fetch(urAnnot.id)).to.be.rejected;
+        });
+
+        it("Redo", async function() {
+            let collection = await Cytomine.instance.redo(command);
+            expect(collection).to.have.lengthOf(1);
+            let annot = collection[0].annotation;
+            expect(annot.id).to.equal(urAnnot.id);
+            let fetchedAnnotation = await Annotation.fetch(urAnnot.id);
+            expect(fetchedAnnotation.id).to.equal(urAnnot.id);
+        });
+
+        it("Undo again", async function() {
+            let collection = await Cytomine.instance.undo();
+            expect(collection).to.have.lengthOf(1);
+            let annot = collection[0].annotation;
+            expect(annot.id).to.equal(urAnnot.id);
         });
     });
 

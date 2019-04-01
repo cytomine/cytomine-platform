@@ -34,6 +34,7 @@ export default class JobTemplateAnnotation extends Model {
         let {data} = await Cytomine.instance.api.post(this.uri, this.getPublicProperties());
         this.populate(data[this.callbackIdentifier]);
         this._job = new Job(data.job);
+        Cytomine.instance.lastCommand = data.command;
         return this._job;
     }
 

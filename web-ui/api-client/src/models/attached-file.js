@@ -31,6 +31,7 @@ export default class AttachedFile extends DomainModel {
             formData.append("files[]", this._file);
             let {data} = await Cytomine.instance.api.post(this.uri, formData);
             this.populate(data);
+            // TODO: store command ID (currently not returned by backend)
             return this;
         }
         else {

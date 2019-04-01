@@ -38,6 +38,7 @@ export default class ProjectConnection extends Model {
         if(this.isNew()) {
             let {data} = await Cytomine.instance.api.post(this.uri, this.getPublicProperties());
             this.populate(data);
+            // TODO: store command ID (currently not returned by backend)
             return this;
         }
         else {

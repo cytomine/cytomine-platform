@@ -145,7 +145,7 @@ export default class ImageInstance extends Model {
      */
     async copyMetadata(idSource) {
         if(this.isNew()) {
-            throw new Error("Cannot copy metadat to an image instance with no ID.");
+            throw new Error("Cannot copy metadata to an image instance with no ID.");
         }
 
         if(idSource == null) {
@@ -188,6 +188,7 @@ export default class ImageInstance extends Model {
 
         let {data} = await Cytomine.instance.api.put(`${this.callbackIdentifier}/${this.id}/review.json`);
         this.populate(data[this.callbackIdentifier]);
+        Cytomine.instance.lastCommand = data.command;
         return this;
     }
 
