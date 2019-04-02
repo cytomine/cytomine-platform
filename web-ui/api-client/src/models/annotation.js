@@ -179,19 +179,22 @@ export default class Annotation extends Model {
     }
 
     /**
-     * @static correctAnnotations - Description
+     * @static Correct annotation(s) with freehand drawing
      *
      * @param {number} image    The identifier of the image instance
      * @param {string} location The correcting geometric object, described in WKT format
      * @param {boolean} review  If set to true, the correction is to be applied on reviewed annotations if possible
      * @param {boolean} remove  If true, the correcting geometric object will be removed from the existing annotations
      *                          If false, it will be added to them
+     * @param {number} annotation   The identifier of the annotation to correct (if specified, only the targetted
+     *                              annotation will be affected by the correction)
      * @param {Array<Number>} layers   The identifiers of the layers to correct
      *
      * @returns {Annotation} One of the corrected annotations
      */
-    static async correctAnnotations(image, location, review, remove, layers) {
-        let {data} = await Cytomine.instance.api.post("annotationcorrection.json", {image, location, review, remove, layers});
+    static async correctAnnotations({image, location, review, remove, layers, annotation}) {
+        let params = {image, location, review, remove, layers, annotation};
+        let {data} = await Cytomine.instance.api.post("annotationcorrection.json", params);
         Cytomine.instance.lastCommand = data.command;
         return new this(data.annotation);
     }

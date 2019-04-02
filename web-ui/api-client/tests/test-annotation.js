@@ -66,8 +66,11 @@ describe("Annotation", function() {
         it("[Correction] Add", async function() {
             let currentUser = await User.fetchCurrent();
             let initialArea = annotation.area;
-            let result = await Annotation.correctAnnotations(image, "POLYGON((5 5, 15 5, 15 15, 5 15, 5 5))",
-                false, false, [currentUser.id]);
+            let result = await Annotation.correctAnnotations({
+                image,
+                location: "POLYGON((5 5, 15 5, 15 15, 5 15, 5 5))",
+                layers: [currentUser.id]
+            });
             expect(result.id).to.equal(annotation.id);
             expect(result.area).to.be.above(initialArea);
         });
@@ -75,8 +78,12 @@ describe("Annotation", function() {
         it("[Correction] Remove", async function() {
             let currentUser = await User.fetchCurrent();
             let initialArea = annotation.area;
-            let result = await Annotation.correctAnnotations(image, "POLYGON((5 5, 15 5, 15 15, 5 15, 5 5))",
-                false, true, [currentUser.id]);
+            let result = await Annotation.correctAnnotations({
+                image,
+                location: "POLYGON((5 5, 15 5, 15 15, 5 15, 5 5))",
+                remove: true,
+                layers: [currentUser.id]
+            });
             expect(result.id).to.equal(annotation.id);
             expect(result.area).to.be.below(initialArea);
         });
