@@ -100,6 +100,17 @@ export default class Cytomine {
     }
 
     /**
+     * Login to Cytomine with a token
+     *
+     * @param {string}  username    The username
+     * @param {string}  tokenKey    The token
+     */
+    async loginWithToken(username, tokenKey) {
+        let params = {username, tokenKey};
+        await axios.get(`${this._host}/login/loginWithToken`, {withCredentials: true, params});
+    }
+
+    /**
      * Logout from Cytomine
      */
     async logout() {
