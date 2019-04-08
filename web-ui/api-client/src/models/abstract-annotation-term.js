@@ -42,9 +42,10 @@ export default class AbstractAnnotationTerm extends Model {
      *
      * @param {number} annotation The identifier of the annotation
      * @param {number} term       The identifier of the term
+     * @param {number} [user]       The identifier of the user
      */
-    static async delete(annotation, term) {
-        return new this({id: 0, annotation, term}).delete(); // ID set to 0 to bypass the isNew() verification
+    static async delete(annotation, term, user=null) {
+        return new this({id: 0, annotation, term, user}).delete(); // ID set to 0 to bypass the isNew() verification
     }
 
     /**
@@ -69,6 +70,7 @@ export default class AbstractAnnotationTerm extends Model {
         if(this.annotation == null || this.term == null) {
             throw new Error("Impossible to construct Annotation Term URI with no annotation ID or term ID.");
         }
-        return `annotation/${this.annotation}/term/${this.term}.json`;
+        let userStr = this.user ? `/user/${this.user}` : "";
+        return `annotation/${this.annotation}/term/${this.term}${userStr}.json`;
     }
 }
