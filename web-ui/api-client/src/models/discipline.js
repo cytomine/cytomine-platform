@@ -1,15 +1,15 @@
-import Model from "./model.js";
+import Model from './model.js';
 
 export default class Discipline extends Model {
-    /** @inheritdoc */
-    static get callbackIdentifier() {
-        return "discipline";
-    }
+  /** @inheritdoc */
+  static get callbackIdentifier() {
+    return 'discipline';
+  }
 
-    /** @inheritdoc */
-    _initProperties() {
-        super._initProperties();
+  /** @inheritdoc */
+  _initProperties() {
+    super._initProperties();
 
-        this.name = null;
-    }
+    this.name = null;
+  }
 }
