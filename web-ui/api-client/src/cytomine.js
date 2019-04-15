@@ -111,6 +111,25 @@ export default class Cytomine {
   }
 
   /**
+   * Impersonate another user
+   *
+   * @param {String} username The username of the user to impersonate
+   */
+  async switchUser(username) {
+    let params = new URLSearchParams();
+    params.append('j_username', username);
+    params.append('ajax', true);
+    await axios.post(`${this._host}/j_spring_security_switch_user`, params, {withCredentials: true});
+  }
+
+  /**
+   * Stops impersonating another user
+   */
+  async stopSwitchUser() {
+    await axios.get(`${this._host}/j_spring_security_exit_user`, {withCredentials: true});
+  }
+
+  /**
    * Logout from Cytomine
    */
   async logout() {

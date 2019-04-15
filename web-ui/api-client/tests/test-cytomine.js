@@ -1,5 +1,5 @@
 import * as utils from './utils.js';
-import {Cytomine} from '@';
+import {Cytomine, User} from '@';
 import config from './config.js';
 
 describe('Cytomine', function() {
@@ -43,6 +43,31 @@ describe('Cytomine', function() {
       for(let prop in config){
         expect(config[prop]).to.be.a('boolean');
       }
+    });
+  });
+
+  describe('Switch user', function() {
+    let otherUser;
+
+    before(async function() {
+      await utils.connect(true);
+      otherUser = await utils.getUser();
+    });
+
+    after(async function() {
+      await utils.cleanData();
+    });
+
+    it('Switch to another user account', async function() {
+      await Cytomine.instance.switchUser(otherUser.username);
+      let currentUser = await User.fetchCurrent();
+      expect(currentUser.id).to.equal(otherUser.id);
+    });
+
+    it('Switch back to real user account', async function() {
+      await Cytomine.instance.stopSwitchUser();
+      let currentUser = await User.fetchCurrent();
+      expect(currentUser.id).to.not.equal(otherUser.id);
     });
   });
 
