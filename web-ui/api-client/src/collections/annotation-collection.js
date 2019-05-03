@@ -18,6 +18,7 @@ export default class AnnotationCollection extends Collection {
 
     this.reviewed = null;
     this.notReviewedOnly = null;
+    this.reviewUsers = null;
 
     this.project = null;
     this.image = null;
@@ -43,6 +44,9 @@ export default class AnnotationCollection extends Collection {
     this.bboxAnnotation = null;
     this.baseAnnotation = null;
     this.maxDistanceBaseAnnotation = null;
+
+    this.afterThan = null;
+    this.beforeThan = null;
   }
 
   /** @override */
@@ -62,7 +66,7 @@ export default class AnnotationCollection extends Collection {
       throw new Error('Cannot construct download URL if no project ID is provided.');
     }
     let strParam = `format=${format}`;
-    let paramFields = ['reviewed', 'terms', 'users', 'images', 'noTerm', 'multipleTerms'];
+    let paramFields = ['reviewed', 'terms', 'users', 'reviewUsers', 'images', 'noTerm', 'multipleTerms', 'afterThan', 'beforeThan'];
     paramFields.forEach(param => {
       if(this[param] != null) {
         strParam += `&${param}=${this[param]}`;
