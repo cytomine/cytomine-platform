@@ -173,7 +173,7 @@ export default class Annotation extends Model {
     }
 
     let {data} = await Cytomine.instance.api.post(`${this.callbackIdentifier}/${this.id}/fill`);
-    this.populate(data.data.annotation);
+    this.populate(data.data.annotation || data.data.reviewedannotation);
     Cytomine.instance.lastCommand = data.command;
     return this;
   }
@@ -196,7 +196,7 @@ export default class Annotation extends Model {
     let params = {image, location, review, remove, layers, annotation};
     let {data} = await Cytomine.instance.api.post('annotationcorrection.json', params);
     Cytomine.instance.lastCommand = data.command;
-    return new this(data.annotation);
+    return new this(data.annotation || data.reviewedannotation);
   }
 
   /** @inheritdoc */
