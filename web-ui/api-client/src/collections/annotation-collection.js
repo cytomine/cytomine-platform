@@ -76,6 +76,24 @@ export default class AnnotationCollection extends Collection {
     return Cytomine.instance.host + Cytomine.instance.basePath + uri;
   }
 
+  /**
+   * Validate or reject all annotations belonging to the provided image and user layers
+   *
+   * @param {Boolean} accept      If true, all targetted annotations will be validated ; if false, they will all be rejected
+   * @param {Number} image        The identifier of the image
+   * @param {Array<Number>} users The identifiers of the users whose annotation layers must be accepted or rejected
+   * @param {Number} task         The identifier of the Cytomine task to use
+   */
+  static async reviewAll({accept, image, users, task}={}) {
+    let uri = `imageinstance/${image}/annotation/review.json?users=${users.join(',')}&task=${task}`;
+    if(accept) {
+      await Cytomine.instance.api.post(uri);
+    }
+    else {
+      await Cytomine.instance.api.delete(uri);
+    }
+  }
+
   /** @inheritdoc */
   static get model() {
     return Annotation;
