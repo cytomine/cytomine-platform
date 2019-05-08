@@ -55,6 +55,17 @@ export default class Collection {
   }
 
   /**
+   * Clone the collection (beware that only the filter and properties will be copied not the contained data, nor the pagination info)
+   *
+   * @returns {this} the clone of the object
+   */
+  clone() {
+    let collection = new this.constructor(JSON.parse(JSON.stringify(this)));
+    collection._filter = this._filter;
+    return collection;
+  }
+
+  /**
    * Populate the instance with the properties of the provided object (useful for collections accepting custom
    * parameters in addition to max and offset)
    *
@@ -125,9 +136,18 @@ export default class Collection {
       let value = this[key];
       if(!key.startsWith('_') && value != null) {
         if(Array.isArray(value)) {
-          value = value.join();
+          params[key] = value.join();
         }
-        params[key] = value;
+        else if(typeof value === 'object') {
+          for(let subkey in value) {
+            if(value[subkey]) {
+              params[`${key}[${subkey}]`] = value[subkey];
+            }
+          }
+        }
+        else {
+          params[key] = value;
+        }
       }
     }
     return params;
