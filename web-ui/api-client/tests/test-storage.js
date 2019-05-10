@@ -28,7 +28,7 @@ describe('Storage', function() {
     });
 
     it('Create', async function() {
-      storage = new Storage({name, user, basePath: name});
+      storage = new Storage({name, user});
       storage = await storage.save();
       id = storage.id;
       expect(storage).to.be.an.instanceof(Storage);
@@ -86,7 +86,7 @@ describe('Storage', function() {
       let storagePromises = [];
       for(let i = 0; i < nbStorages - 1; i++) {
         let str = utils.randomString();
-        storagePromises.push(new Storage({name: str, user, basePath: str}).save());
+        storagePromises.push(new Storage({name: str, user}).save());
       }
       await Promise.all(storagePromises);
     });
@@ -95,20 +95,20 @@ describe('Storage', function() {
 
     describe('Fetch', function() {
       it('Fetch (instance method)', async function() {
-        let collection = await new StorageCollection().fetchAll();
+        let collection = await new StorageCollection({all: true}).fetchAll();
         expect(collection).to.be.an.instanceof(StorageCollection);
         expect(collection).to.have.lengthOf.at.least(nbStorages);
         totalNb = collection.length;
       });
 
       it('Fetch (static method)', async function() {
-        let collection = await StorageCollection.fetchAll();
+        let collection = await StorageCollection.fetchAll({all: true});
         expect(collection).to.be.an.instanceof(StorageCollection);
         expect(collection).to.have.lengthOf(totalNb);
       });
 
       it('Fetch with several requests', async function() {
-        let collection = await StorageCollection.fetchAll({nbPerPage: Math.ceil(totalNb/3)});
+        let collection = await StorageCollection.fetchAll({nbPerPage: Math.ceil(totalNb/3), all: true});
         expect(collection).to.be.an.instanceof(StorageCollection);
         expect(collection).to.have.lengthOf(totalNb);
       });
@@ -137,21 +137,22 @@ describe('Storage', function() {
 
     describe('Pagination', function() {
       let nbPerPage = 1;
+      let all = true;
 
       it('Fetch arbitrary page', async function() {
-        let collection = new StorageCollection({nbPerPage});
+        let collection = new StorageCollection({nbPerPage, all});
         await collection.fetchPage(2);
         expect(collection).to.have.lengthOf(nbPerPage);
       });
 
       it('Fetch next page', async function() {
-        let collection = new StorageCollection({nbPerPage});
+        let collection = new StorageCollection({nbPerPage, all});
         await collection.fetchNextPage();
         expect(collection).to.have.lengthOf(nbPerPage);
       });
 
       it('Fetch previous page', async function() {
-        let collection = new StorageCollection({nbPerPage});
+        let collection = new StorageCollection({nbPerPage, all});
         collection.curPage = 2;
         await collection.fetchPreviousPage();
         expect(collection).to.have.lengthOf(nbPerPage);

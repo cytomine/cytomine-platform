@@ -228,7 +228,7 @@ export async function getSoftwareProject({software, project, forceCreation=true,
 
 // WARNING: bug in core prevents the deletion of storage => it is advised to leave user field to null, so that the
 // deletion of the user during clean-up triggers the deletion of the storage
-export async function getStorage({user, name=randomString(), basePath, forceCreation=true, cascadeForceCreation} = {}) {
+export async function getStorage({user, name=randomString(), forceCreation=true, cascadeForceCreation} = {}) {
   if(!forceCreation && user) {
     throw new Error('Cannot retrieve storage of a given user. Either set forceCreation to true or remove user.');
   }
@@ -237,9 +237,8 @@ export async function getStorage({user, name=randomString(), basePath, forceCrea
   if(!user) {
     ({id: user} = await getUser({forceCreation: cascadeForceCreation}));
   }
-
-  basePath = basePath || name;
-  let storage = new cytomine.Storage({user, name, basePath});
+  
+  let storage = new cytomine.Storage({user, name});
   return getModel(storage, storageCollection, forceCreation);
 }
 
