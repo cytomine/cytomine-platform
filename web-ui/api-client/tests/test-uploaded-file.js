@@ -5,6 +5,7 @@ describe('UploadedFile', function() {
 
   let storage;
   let user;
+  let imageServer;
   let ext = '.ext';
   let filename = utils.randomString() + ext;
   let contentType = 'contentType';
@@ -16,6 +17,7 @@ describe('UploadedFile', function() {
     await utils.connect(true);
     ({id: storage} = await utils.getStorage());
     ({id: user} = await User.fetchCurrent());
+    ({id: imageServer} = await utils.getImageServer());
   });
 
   after(async function() {
@@ -25,7 +27,7 @@ describe('UploadedFile', function() {
   describe('Create', function() {
     it('Create', async function() {
       uploadedFile = new UploadedFile({
-        storages: [storage], user, filename, originalFilename: filename, contentType, ext, path: filename
+        storage, user, imageServer, filename, originalFilename: filename, contentType, ext
       });
       uploadedFile = await uploadedFile.save();
       id = uploadedFile.id;
@@ -92,7 +94,7 @@ describe('UploadedFile', function() {
       for(let i = 0; i < nbUploadedFiles - 1; i++) {
         let tmp = utils.randomString();
         uploadedFilePromises.push(new UploadedFile({
-          storages: [storage], user, filename: tmp, originalFilename: tmp, contentType, ext, path: tmp
+          storage, user, imageServer, filename: tmp, originalFilename: tmp, contentType, ext
         }).save());
       }
       uploadedFiles = await Promise.all(uploadedFilePromises);
