@@ -266,6 +266,24 @@ export async function getUser({username=randomString(), password, email, firstna
   return getModel(user, userCollection, forceCreation);
 }
 
+export async function getImageServer() {
+  let collection = new cytomine.ImageServerCollection({nbPerPage: 1});
+  return getModel(null, collection, false);
+}
+
+export async function getMultipleImageServers(nb) {
+  let collection = new cytomine.ImageServerCollection({nbPerPage: nb});
+  await collection.fetchPage();
+  if(collection.length < nb) {
+    throw new Error(`Not able to retrieve ${nb} image servers.`);
+  }
+  let ids = [];
+  for(let item of collection) {
+    ids.push(item.id);
+  }
+  return ids;
+}
+
 export async function cleanData() {
   await cytomine.Cytomine.instance.openAdminSession();
 

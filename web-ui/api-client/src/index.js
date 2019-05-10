@@ -14,6 +14,7 @@ export {default as ImageConsultation} from './models/image-consultation.js';
 export {default as ImageFilter} from './models/image-filter.js';
 export {default as ImageFilterProject} from './models/image-filter-project.js';
 export {default as ImageInstance} from './models/image-instance.js';
+export {default as ImageServer} from './models/image-server.js';
 export {default as Job, JobStatus} from './models/job.js';
 export {default as JobData} from './models/job-data.js';
 export {default as JobParameter} from './models/job-parameter.js';
@@ -53,6 +54,7 @@ export {default as ImageConsultationCollection} from './collections/image-consul
 export {default as ImageFilterCollection} from './collections/image-filter-collection.js';
 export {default as ImageFilterProjectCollection} from './collections/image-filter-project-collection.js';
 export {default as ImageInstanceCollection} from './collections/image-instance-collection.js';
+export {default as ImageServerCollection} from './collections/image-server-collection.js';
 export {default as JobCollection} from './collections/job-collection.js';
 export {default as JobDataCollection} from './collections/job-data-collection.js';
 export {default as JobParameterCollection} from './collections/job-parameter-collection.js';
