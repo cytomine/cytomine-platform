@@ -184,8 +184,18 @@ describe('Project', function() {
       expect(result).to.be.instanceof(Array);
     });
 
+    it('Fetch annotated images by terms statistics', async function() {
+      let result = await project.fetchStatsAnnotatedImagesByTerm({startDate: new Date().getTime()});
+      expect(result).to.be.instanceof(Array);
+    });
+
     it('Fetch contributors statistics', async function() {
       let result = await project.fetchStatsAnnotationCreators({startDate: new Date().getTime()});
+      expect(result).to.be.instanceof(Array);
+    });
+
+    it('Fetch annotated images by contributor statistics', async function() {
+      let result = await project.fetchStatsAnnotatedImagesByCreator({startDate: new Date().getTime()});
       expect(result).to.be.instanceof(Array);
     });
   });

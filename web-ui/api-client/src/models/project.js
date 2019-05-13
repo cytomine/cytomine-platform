@@ -518,6 +518,22 @@ export default class Project extends Model {
   }
 
   /**
+   * Fetches for each term the number of images having annotations associated with this term
+   *
+   * @param {number}  [startDate]     If specified, only associations after this date will be counted
+   * @param {number}  [endDate]       If specified, only associations before this date will be counted
+   * @returns {Array<{id, key, color, value}>} The terms, with their associated count (value property)
+   */
+  async fetchStatsAnnotatedImagesByTerm({startDate, endDate}={}) {
+    if(this.isNew()) {
+      throw new Error('Cannot fetch annotated images statistics in a project with no ID.');
+    }
+
+    let {data} = await Cytomine.instance.api.get(`project/${this.id}/stats/termslide.json`, {startDate, endDate});
+    return data.collection;
+  }
+
+  /**
    * Fetches the number of annotations for each contributor
    *
    * @param {number}  [startDate]     If specified, only annotations created after this date will be counted
@@ -529,8 +545,23 @@ export default class Project extends Model {
       throw new Error('Cannot fetch annotation creators statistics in a project with no ID.');
     }
 
-    let params = {startDate, endDate};
-    let {data} = await Cytomine.instance.api.get(`project/${this.id}/stats/user.json`, {params});
+    let {data} = await Cytomine.instance.api.get(`project/${this.id}/stats/user.json`, {startDate, endDate});
+    return data.collection;
+  }
+
+  /**
+   * Fetches the number of annotated images for each contributor
+   *
+   * @param {number}  [startDate]     If specified, only annotations created after this date will be counted
+   * @param {number}  [endDate]       If specified, only annotations created before this date will be counted
+   * @returns {Array<{id, key, value}>} The contributors (key=firstName + lastName), with their associated count (value property)
+   */
+  async fetchStatsAnnotatedImagesByCreator({startDate, endDate}={}) {
+    if(this.isNew()) {
+      throw new Error('Cannot fetch annotated images statistics in a project with no ID.');
+    }
+
+    let {data} = await Cytomine.instance.api.get(`project/${this.id}/stats/userslide.json`, {startDate, endDate});
     return data.collection;
   }
 }
