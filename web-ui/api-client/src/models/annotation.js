@@ -117,14 +117,16 @@ export default class Annotation extends Model {
   /**
    * Create a reviewed annotation based on the current annotation
    *
+   * @param {Array<Number>} terms The identifiers of the terms to associate to the annotation
+   *
    * @returns {Annotation} The newly created reviewed annotation
    */
-  async review() {
+  async review(terms) {
     if(this.isNew()) {
       throw new Error('Cannot review an annotation with no ID.');
     }
 
-    let {data} = await Cytomine.instance.api.put(`${this.callbackIdentifier}/${this.id}/review.json`);
+    let {data} = await Cytomine.instance.api.put(`${this.callbackIdentifier}/${this.id}/review.json`, {terms});
     let reviewedAnnotation = new this.constructor(data['reviewedannotation']);
     Cytomine.instance.lastCommand = data.command;
     return reviewedAnnotation;
