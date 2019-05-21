@@ -199,7 +199,7 @@ export default class ImageInstance extends Model {
    *                                  (if the image is validated)
    *                                  If false, stop the review and validate the image
    *
-   * @returns {type} Description
+   * @returns {this} The image instance as returned by backend
    */
   async stopReview(cancel=false) {
     if(this.isNew()) {
@@ -209,6 +209,20 @@ export default class ImageInstance extends Model {
     let {data} = await Cytomine.instance.api.delete(`${this.callbackIdentifier}/${this.id}/review.json?cancel=${cancel}`);
     this.populate(data[this.callbackIdentifier]);
     return this;
+  }
+
+  /**
+   * Fetch statistics regarding the number of reviewed annotations for each layer of the image
+   *
+   * @returns {Array<user: Number, all: Number, reviewed: Number>} The review statistics
+   */
+  async fetchReviewStatistics() {
+    if(this.isNew()) {
+      throw new Error('Cannot fetch review statistics on an image with no ID.');
+    }
+
+    let {data} = await Cytomine.instance.api.get(`imageinstance/${this.id}/reviewedannotation/stats.json`);
+    return data.collection;
   }
 
 }
