@@ -153,6 +153,11 @@ describe('ImageInstance', function() {
       expect(imageInstance.inReview).to.be.false;
     });
 
+    it('Fetch review statistics', async function() {
+      let stats = await imageInstance.fetchReviewStatistics();
+      expect(stats).to.be.instanceof(Array);
+    });
+
     it('Download URL', async function() {
       expect(imageInstance.downloadURL).to.be.a('string');
     });
