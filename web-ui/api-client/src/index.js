@@ -1,6 +1,7 @@
 export {default as Cytomine} from './cytomine.js';
 
 export {default as AbstractImage} from './models/abstract-image.js';
+export {default as AbstractSlice} from './models/abstract-slice.js';
 export {default as AlgoAnnotationTerm} from './models/algo-annotation-term.js';
 export {default as Annotation, AnnotationType} from './models/annotation.js';
 export {default as AnnotationComment} from './models/annotation-comment.js';
@@ -28,6 +29,7 @@ export {default as ProjectDefaultLayer} from './models/project-default-layer.js'
 export {default as ProjectRepresentative} from './models/project-representative.js';
 export {default as Property} from './models/property.js';
 export {default as Role} from './models/role.js';
+export {default as SliceInstance} from './models/slice-instance.js';
 export {default as Software} from './models/software.js';
 export {default as SoftwareParameter} from './models/software-parameter.js';
 export {default as SoftwareProject} from './models/software-project.js';
@@ -42,6 +44,7 @@ export {default as UserPosition} from './models/user-position.js';
 export {default as UserRole} from './models/user-role.js';
 
 export {default as AbstractImageCollection} from './collections/abstract-image-collection.js';
+export {default as AbstractSliceCollection} from './collections/abstract-slice-collection.js';
 export {default as AlgoAnnotationTermCollection} from './collections/algo-annotation-term-collection.js';
 export {default as AnnotationCollection} from './collections/annotation-collection.js';
 export {default as AnnotationCommentCollection} from './collections/annotation-comment-collection.js';
@@ -68,6 +71,7 @@ export {default as ProjectDefaultLayerCollection} from './collections/project-de
 export {default as ProjectRepresentativeCollection} from './collections/project-representative-collection.js';
 export {default as PropertyCollection} from './collections/property-collection.js';
 export {default as RoleCollection} from './collections/role-collection.js';
+export {default as SliceInstanceCollection} from './collections/slice-instance-collection.js';
 export {default as SoftwareCollection} from './collections/software-collection.js';
 export {default as SoftwareParameterCollection} from './collections/software-parameter-collection.js';
 export {default as SoftwareProjectCollection} from './collections/software-project-collection.js';

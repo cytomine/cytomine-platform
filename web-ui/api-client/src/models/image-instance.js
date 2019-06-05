@@ -1,5 +1,6 @@
 import Cytomine from '../cytomine.js';
 import Model from './model.js';
+import SliceInstance from './slice-instance.js';
 
 export default class ImageInstance extends Model {
   /** @inheritdoc */
@@ -17,19 +18,24 @@ export default class ImageInstance extends Model {
 
     this.filename = null;
     this.originalFilename = null;
-    this.extension = null;
     this.instanceFilename = null;
     this.path = null;
-    this.fullPath = null;
 
-    this.mime = null;
     this.sample = null;
 
     this.width = null;
     this.height = null;
+    this.depth = null;
+    this.time = null;
+    this.channels = null;
     this.resolution = null;
     this.magnification = null;
-    this.depth = null;
+    this.physicalSizeX = null;
+    this.physicalSizeY = null;
+    this.physicalSizeZ = null;
+    this.fps = null;
+    this.zoom = null;
+    this.contentType = null;
 
     this.thumb = null;
     this.preview = null;
@@ -209,6 +215,24 @@ export default class ImageInstance extends Model {
     let {data} = await Cytomine.instance.api.delete(`${this.callbackIdentifier}/${this.id}/review.json?cancel=${cancel}`);
     this.populate(data[this.callbackIdentifier]);
     return this;
+  }
+
+  /**
+   * Fetch the reference slice instance for the image instance
+   *
+   * @returns {SliceInstance}
+   */
+  async fetchReferenceSlice() {
+    if(this.isNew()) {
+      throw new Error('Cannot get reference slice of an image with no ID.');
+    }
+
+    if(!this._referenceSlice) {
+      let {data} = await Cytomine.instance.api.get(`${this.callbackIdentifier}/${this.id}/sliceinstance/reference.json`);
+      this._referenceSlice = new SliceInstance(data);
+    }
+
+    return this._referenceSlice;
   }
 
 }

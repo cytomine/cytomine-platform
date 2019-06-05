@@ -1,7 +1,6 @@
 import Cytomine from '../cytomine.js';
 import Model from './model.js';
 import User from './user.js';
-import UploadedFile from './uploaded-file.js';
 
 export default class AbstractImage extends Model {
   /** @inheritdoc */
@@ -16,17 +15,24 @@ export default class AbstractImage extends Model {
     this.filename = null;
     this.originalFilename = null;
     this.path = null;
-    this.fullPath = null;
 
     this.scanner = null;
-    this.mime = null;
     this.sample = null;
+    this.uploadedFile = null;
 
     this.width = null;
     this.height = null;
+    this.depth = null;
+    this.time = null;
+    this.channels = null;
     this.resolution = null;
     this.magnification = null;
-    this.depth = null;
+    this.physicalSizeX = null;
+    this.physicalSizeY = null;
+    this.physicalSizeZ = null;
+    this.fps = null;
+    this.zoom = null;
+    this.contentType = null;
 
     this.thumb = null;
     this.preview = null;
@@ -72,23 +78,5 @@ export default class AbstractImage extends Model {
     }
 
     return this._imageServers;
-  }
-
-  /**
-   * Get the uploaded file associated to the image
-   *
-   * @returns {UploadedFile}
-   */
-  async fetchUploadedFile() {
-    if(this.isNew()) {
-      throw new Error('Cannot get the uploaded file for an abstract image with no ID.');
-    }
-
-    if(!this._uploadedFile) {
-      let {data} = await Cytomine.instance.api.get(`uploadedfile/image/${this.id}.json`);
-      this._uploadedFile = new UploadedFile(data);
-    }
-
-    return this._uploadedFile;
   }
 }
