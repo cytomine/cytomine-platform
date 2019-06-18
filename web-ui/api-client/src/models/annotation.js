@@ -108,7 +108,7 @@ export default class Annotation extends Model {
     }
 
     let {data} = await Cytomine.instance.api.post('annotationaction.json', {
-      annotation: this.id,
+      annotationIdent: this.id,
       action
     });
     return data;
