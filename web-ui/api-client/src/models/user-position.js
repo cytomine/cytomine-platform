@@ -13,6 +13,7 @@ export default class UserPosition extends Model {
 
     this.user = null;
     this.image = null;
+    this.slice = null;
     this.project = null;
 
     this.location = null;
@@ -60,12 +61,20 @@ export default class UserPosition extends Model {
    * @returns {this} The created position
    */
   static async create(position) {
-    if(!position || !position.image) {
-      throw new Error('The position parameter should have an image property.');
+    if(!position || (!position.image && !position.slice)) {
+      throw new Error('The position parameter should have an image or a slice property.');
     }
-    let image = position.image;
-    let {data} = await Cytomine.instance.api.post(`imageinstance/${image}/position.json`, position);
-    return new this(data);
+
+    if (position.slice) {
+      let slice = position.slice;
+      let {data} = await Cytomine.instance.api.post(`sliceinstance/${slice}/position.json`, position);
+      return new this(data);
+    }
+    else {
+      let image = position.image;
+      let {data} = await Cytomine.instance.api.post(`imageinstance/${image}/position.json`, position);
+      return new this(data);
+    }
   }
 
   /** @override */
