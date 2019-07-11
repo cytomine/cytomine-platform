@@ -306,6 +306,25 @@ describe('ImageInstance', function() {
       });
     });
 
+    describe('Search', function() {
+      it('Get bounds', async function() {
+        let result = await new ImageInstanceCollection.fetchBounds({project: project});
+        expect(result.width.max).to.be.at.least(result.width.min);
+      });
+
+      it('Search by name', async function() {
+        let searchString = imageInstances[0].instanceFilename;
+        let collection = new ImageInstanceCollection({filterKey: 'project', filterValue: project, 'name': {'ilike': searchString}});
+        await collection.fetchAll();
+        expect(collection).to.have.lengthOf(1);
+
+        searchString = '';
+        collection = new ImageInstanceCollection({filterKey: 'project', filterValue: project, 'name': {'ilike': searchString}});
+        await collection.fetchAll();
+        expect(collection).to.have.lengthOf(imageInstances.length);
+      });
+    });
+
   });
 
 });
