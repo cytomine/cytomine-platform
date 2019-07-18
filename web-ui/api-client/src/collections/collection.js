@@ -140,7 +140,7 @@ export default class Collection {
         }
         else if(typeof value === 'object') {
           for(let subkey in value) {
-            if(value[subkey]) {
+            if(value[subkey] || value[subkey] === 0) {
               params[`${key}[${subkey}]`] = value[subkey];
             }
           }
