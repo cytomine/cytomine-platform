@@ -171,6 +171,19 @@ export default class Project extends Model {
   }
 
   /**
+   * Add users to the project
+   *
+   * @param {array} idUsers identifiers of the users
+   */
+  async addUsers(idUsers) {
+    if(this.isNew()) {
+      throw new Error('Cannot add a user to a project with no ID.');
+    }
+    let {data} = await Cytomine.instance.api.post(`${this.callbackIdentifier}/${this.id}/user.json?users=${idUsers.join(',')}`);
+    Cytomine.instance.lastCommand = data.command;
+  }
+
+  /**
    * Delete a user from the project
    *
    * @param {number} idUser identifier of the user
@@ -180,6 +193,19 @@ export default class Project extends Model {
       throw new Error('Cannot delete a user from a project with no ID.');
     }
     let {data} = await Cytomine.instance.api.delete(`${this.callbackIdentifier}/${this.id}/user/${idUser}.json`);
+    Cytomine.instance.lastCommand = data.command;
+  }
+
+  /**
+   * Delete users from the project
+   *
+   * @param {array} idUsers identifiers of the users
+   */
+  async deleteUsers(idUsers) {
+    if(this.isNew()) {
+      throw new Error('Cannot delete a user from a project with no ID.');
+    }
+    let {data} = await Cytomine.instance.api.delete(`${this.callbackIdentifier}/${this.id}/user.json?users=${idUsers.join(',')}`);
     Cytomine.instance.lastCommand = data.command;
   }
 

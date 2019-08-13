@@ -107,6 +107,18 @@ describe('Project', function() {
       expect(users.length).to.equal(nbUsers);
     });
 
+    it('Add users', async function() {
+      await project.addUsers([idUser]);
+      let users = await project.fetchUsers();
+      expect(users.length).to.equal(nbUsers + 1);
+    });
+
+    it('Delete users', async function() {
+      await project.deleteUsers([idUser]);
+      let users = await project.fetchUsers();
+      expect(users.length).to.equal(nbUsers);
+    });
+
     it('Add admin', async function() {
       await project.addAdmin(idUser);
       let admins = await project.fetchAdministrators();
