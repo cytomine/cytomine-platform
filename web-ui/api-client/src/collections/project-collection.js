@@ -45,4 +45,18 @@ export default class ProjectCollection extends Collection {
       return super.uri;
     }
   }
+
+
+  /**
+   * @static Fetch bounds of the attributes of all projects
+   *
+   * @returns {{numberOfAnnotations: {min: Long, max: Long}, numberOfJobAnnotations: {min: Long, max: Long}, numberOfReviewedAnnotations: {min: Long, max: Long}, numberOfImages: {min: Long, max: Long}, members: {min: Long, max: Long}}}
+   *          The max, min or list of all the projects properties. members is returned iif withMembersCount parameter is set to true
+   */
+  static async fetchBounds({withMembersCount=true}={}) {
+    let suffix = withMembersCount ? '?withMembersCount=true' : '';
+    let {data} = await Cytomine.instance.api.get('bounds/project.json'+ suffix);
+    return data;
+  }
+
 }

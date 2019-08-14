@@ -59,9 +59,10 @@ export default class ImageInstanceCollection extends Collection {
    *
    * @param {number}  [project]           Identifier of project to consider
    *
-   * @returns TODO  {Array<{id: Number, filename: String, originalFilename: String, projectName: String, project: Number}>}
-   *          The list of images (light format)
+   * @returns {{width: {min: Long, max: Long}, height: {min: Long, max: Long}, magnification: {min: Long, max: Long, list: Array<Long>}, resolution: {min: Long, max: Long, list: Array<Long>}, format: {list: Array<String>}, mimeType: {list: Array<String>}}}
+   *          The max, min or list of all the image instances properties
    */
+
   static async fetchBounds({project}={}) {
     let {data} = await Cytomine.instance.api.get(`project/${project}/bounds/imageinstance.json`); 
     return data;
