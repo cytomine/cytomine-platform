@@ -21,7 +21,7 @@ export {default as JobTemplateAnnotation} from './models/job-template-annotation
 export {default as JobTemplate} from './models/job-template.js';
 export {default as Ontology} from './models/ontology.js';
 export {default as ProcessingServer} from './models/processing-server.js';
-export {default as Project} from './models/project.js';
+export {default as Project, ProjectMemberRole} from './models/project.js';
 export {default as ProjectConnection} from './models/project-connection.js';
 export {default as ProjectDefaultLayer} from './models/project-default-layer.js';
 export {default as ProjectRepresentative} from './models/project-representative.js';

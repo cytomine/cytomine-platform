@@ -5,6 +5,13 @@ import UserCollection from '../collections/user-collection.js';
 import {AnnotationType} from './annotation.js';
 import axios from 'axios';
 
+/** Enum providing the project member roles handled in Cytomine */
+export const ProjectMemberRole = Object.freeze({
+  CONTRIBUTOR: 'contributor',
+  MANAGER: 'manager',
+  REPRESENTATIVE: 'representative'
+});
+
 export default class Project extends Model {
   /** @inheritdoc */
   static get callbackIdentifier() {
