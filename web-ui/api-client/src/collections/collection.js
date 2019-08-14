@@ -140,7 +140,7 @@ export default class Collection {
         }
         else if(typeof value === 'object') {
           for(let subkey in value) {
-            if(value[subkey] || value[subkey] === 0) {
+            if(value[subkey]!= null) {
               params[`${key}[${subkey}]`] = value[subkey];
             }
           }
@@ -298,6 +298,7 @@ export default class Collection {
   get nbPages() {
     return this._nbPages;
   }
+
 
   /**
    * @returns {string} The callback identifier of the collection used in API requests
