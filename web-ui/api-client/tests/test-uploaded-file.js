@@ -15,8 +15,8 @@ describe('UploadedFile', function() {
 
   before(async function() {
     await utils.connect(true);
-    ({id: storage} = await utils.getStorage());
     ({id: user} = await User.fetchCurrent());
+    ({id: storage} = await utils.getStorage({user}));
     ({id: imageServer} = await utils.getImageServer());
   });
 
@@ -32,7 +32,6 @@ describe('UploadedFile', function() {
       uploadedFile = await uploadedFile.save();
       id = uploadedFile.id;
       expect(uploadedFile).to.be.an.instanceof(UploadedFile);
-      expect(id).to.exist;
       expect(uploadedFile.filename).to.equal(filename);
     });
   });
@@ -91,7 +90,7 @@ describe('UploadedFile', function() {
 
     before(async function() {
       let uploadedFilePromises = [];
-      for(let i = 0; i < nbUploadedFiles - 1; i++) {
+      for(let i = 0; i < nbUploadedFiles; i++) {
         let tmp = utils.randomString();
         uploadedFilePromises.push(new UploadedFile({
           storage, user, imageServer, filename: tmp, originalFilename: tmp, contentType, ext

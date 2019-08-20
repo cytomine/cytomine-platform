@@ -34,15 +34,20 @@ async function getModel(model, collection, forceCreation) {
   return model;
 }
 
-// WARNING: issue prevents from creating abstract image => ensure one is available on test instance and leave
-// forceCreation to false
-export async function getAbstractImage({filename=randomString(), path, mime='image/tiff', forceCreation=false} = {}) {
-  if(!path) {
-    path = 'path/' + filename;
+export async function getAbstractImage({filename=randomString(), uploadedFile, forceCreation=true, cascadeForceCreation} = {}) {
+  if(!uploadedFile) {
+    if (!forceCreation) {
+      throw new Error('Cannot retrieve abstract image without uploaded file. Either set forceCreation to true or provide an uploaded file');
+    }
+    ({id: uploadedFile} = await getUploadedFile({filename, forceCreation: cascadeForceCreation, cascadeForceCreation}));
   }
-  let abstractImage = new cytomine.AbstractImage({filename, path, mime});
+
+  let abstractImage = new cytomine.AbstractImage({originalFilename: filename, uploadedFile});
   let abstractImageCollection = new cytomine.AbstractImageCollection({nbPerPage: 1});
-  return getModel(abstractImage, abstractImageCollection, forceCreation);
+  abstractImage = await getModel(abstractImage, abstractImageCollection, forceCreation);
+
+  let as = await new cytomine.AbstractSlice({uploadedFile, image: abstractImage.id, mime: 'image/pyrtiff'}).save();
+  return abstractImage;
 }
 
 // WARNING: no creation, the instances must exist
@@ -237,7 +242,7 @@ export async function getStorage({user, name=randomString(), forceCreation=true,
   if(!user) {
     ({id: user} = await getUser({forceCreation: cascadeForceCreation}));
   }
-  
+
   let storage = new cytomine.Storage({user, name});
   return getModel(storage, storageCollection, forceCreation);
 }
@@ -281,6 +286,29 @@ export async function getMultipleImageServers(nb) {
     ids.push(item.id);
   }
   return ids;
+}
+
+export async function getUploadedFile({storage, imageServer, filename, originalFilename, ext, contentType, forceCreation = true, cascadeForceCreation} = {}) {
+  let user;
+  if (!storage) {
+    ({id: storage, user: user} = await getStorage(cascadeForceCreation));
+  }
+  else {
+    ({user: user} = await cytomine.Storage.fetch(storage));
+  }
+
+  if (!imageServer) {
+    ({id: imageServer} = await getImageServer());
+  }
+
+  filename = filename || randomString();
+  originalFilename = originalFilename || filename;
+  ext = ext || '.ext';
+  contentType = contentType || 'contentType';
+
+  let uploadedFileCollection =new cytomine.UploadedFileCollection({nbPerPage: 1});
+  let uploadedFile = new cytomine.UploadedFile({storage, user, imageServer, filename, originalFilename, contentType, ext});
+  return getModel(uploadedFile, uploadedFileCollection, forceCreation);
 }
 
 export async function cleanData() {

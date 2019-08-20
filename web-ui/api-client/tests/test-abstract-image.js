@@ -6,38 +6,42 @@ import {AbstractImage, AbstractImageCollection, User, UploadedFile} from '@';
 // when authenticated as admin, POST api/abstractimage.json redirects to GET api/abstractimage.json
 describe('AbstractImage', function() {
 
-  let filename = utils.randomString();
-  let mime = 'image/tiff'; // QUESTION discuss with Renaud if it is appropriate to have mimetype instead of extension + change API documenation
-  let path = `path/${filename}`;
+  let originalFilename = utils.randomString();
+  let uploadedFile;
+  let user;
+  let storage;
 
   let abstractImage = null;
   let id = 0;
 
   before(async function() {
     await utils.connect();
+    ({id: user} = await User.fetchCurrent());
+    ({id: storage} = await utils.getStorage({user}));
+    ({id: uploadedFile} = await utils.getUploadedFile({storage, originalFilename}));
   });
 
-  describe.skip('Create', function() {
+  describe('Create', function() {
     it('Create', async function() {
-      abstractImage = new AbstractImage({filename, path, mime});
+      abstractImage = new AbstractImage({originalFilename, uploadedFile});
       abstractImage = await abstractImage.save();
       id = abstractImage.id;
       expect(abstractImage).to.be.an.instanceof(AbstractImage);
-      expect(abstractImage.filename).to.equal(filename);
+      expect(abstractImage.originalFilename).to.equal(originalFilename);
     });
   });
 
-  describe.skip('Fetch', function() {
+  describe('Fetch', function() {
     it('Fetch with static method', async function() {
       let fetchedImage = await AbstractImage.fetch(id);
       expect(fetchedImage).to.be.an.instanceof(AbstractImage);
-      expect(fetchedImage.filename).to.equal(filename);
+      expect(fetchedImage.originalFilename).to.equal(originalFilename);
     });
 
     it('Fetch with instance method', async function() {
       let fetchedImage = await new AbstractImage({id}).fetch();
       expect(fetchedImage).to.be.an.instanceof(AbstractImage);
-      expect(fetchedImage.filename).to.equal(filename);
+      expect(fetchedImage.originalFilename).to.equal(originalFilename);
     });
 
     it('Fetch with wrong ID', function() {
@@ -45,7 +49,7 @@ describe('AbstractImage', function() {
     });
   });
 
-  describe.skip('Specific operations', function() {
+  describe('Specific operations', function() {
     it('Get uploader', async function() {
       let user = await abstractImage.fetchUploader();
       expect(user).to.be.instanceof(User);
@@ -58,24 +62,19 @@ describe('AbstractImage', function() {
       expect(imageServers).to.be.instanceof(Array);
       expect(imageServers).to.have.lengthOf.at.least(1);
     });
-
-    it('Get uploaded file', async function() {
-      let uploadedFile = await abstractImage.fetchUploadedFile();
-      expect(uploadedFile).to.be.instanceof(UploadedFile);
-    });
   });
 
-  describe.skip('Update', function() {
+  describe('Update', function() {
     it('Update', async function() {
       let newFilename = utils.randomString();
-      abstractImage.filename = newFilename;
+      abstractImage.originalFilename = newFilename;
       await abstractImage.update();
       expect(abstractImage).to.be.an.instanceof(AbstractImage);
-      expect(abstractImage.filename).to.equal(newFilename);
+      expect(abstractImage.originalFilename).to.equal(newFilename);
     });
   });
 
-  describe.skip('Delete', function() {
+  describe('Delete', function() {
     it('Delete', async function() {
       await AbstractImage.delete(id);
     });
