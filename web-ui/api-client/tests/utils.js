@@ -77,6 +77,19 @@ export async function getAnnotation({location='POINT(5 5)', image, forceCreation
   return getModel(annotation, annotationCollection, forceCreation);
 }
 
+export async function getTrack({name=randomString(), image, color='#ffffff', forceCreation=true, cascadeForceCreation} = {}) {
+  if(!image) {
+    if(!forceCreation) {
+      throw new Error('Cannot retrieve track without base image. Either set forceCreation to true or provide an image');
+    }
+    ({id: image} = await getImageInstance({forceCreation: cascadeForceCreation, cascadeForceCreation}));
+  }
+
+  let track = new cytomine.Track({name, image, color});
+  let trackCollection = new cytomine.TrackCollection({image});
+  return getModel(track, trackCollection, forceCreation);
+}
+
 export async function getGroup({name=randomString(), forceCreation=true} = {}) {
   let group = new cytomine.Group({name});
   let groupCollection = new cytomine.GroupCollection({nbPerPage: 1});

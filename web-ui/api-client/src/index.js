@@ -6,6 +6,7 @@ export {default as AlgoAnnotationTerm} from './models/algo-annotation-term.js';
 export {default as Annotation, AnnotationType} from './models/annotation.js';
 export {default as AnnotationComment} from './models/annotation-comment.js';
 export {default as AnnotationTerm} from './models/annotation-term.js';
+export {default as AnnotationTrack} from './models/annotation-track.js';
 export {default as AttachedFile} from './models/attached-file.js';
 export {default as Configuration} from './models/configuration.js';
 export {default as Description} from './models/description.js';
@@ -50,6 +51,7 @@ export {default as AlgoAnnotationTermCollection} from './collections/algo-annota
 export {default as AnnotationCollection} from './collections/annotation-collection.js';
 export {default as AnnotationCommentCollection} from './collections/annotation-comment-collection.js';
 export {default as AnnotationTermCollection} from './collections/annotation-term-collection.js';
+export {default as AnnotationTrackCollection} from './collections/annotation-track-collection.js';
 export {default as AttachedFileCollection} from './collections/attached-file-collection.js';
 export {default as ConfigurationCollection} from './collections/configuration-collection.js';
 export {default as DisciplineCollection} from './collections/discipline-collection.js';
