@@ -117,10 +117,10 @@ describe('ImageInstance', function() {
     //   expect(layers[0].image).to.equal(imageSource.id);
     // });
 
-    it('Fetch annotations index', async function() {
-      let layers = await imageInstance.fetchAnnotationsIndex();
-      expect(layers).to.be.instanceof(Array);
-    });
+    // it('Fetch annotations index', async function() {
+    //   let layers = await imageInstance.fetchAnnotationsIndex();
+    //   expect(layers).to.be.instanceof(Array);
+    // });
 
     // it('Copy metadata', async function() {
     //   await imageInstance.copyMetadata(imageSource.id);
