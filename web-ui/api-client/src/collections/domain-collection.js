@@ -51,7 +51,7 @@ export default class DomainCollection extends Collection {
    * @type {string}
    */
   get domainClassName() {
-    return this._object.class;
+    return this._object ? this._object.class : null;
   }
 
   /**

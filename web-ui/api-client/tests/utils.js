@@ -40,7 +40,10 @@ export async function getAbstractImage({filename=randomString(), path, mime='ima
   if(!path) {
     path = 'path/' + filename;
   }
-  let abstractImage = new cytomine.AbstractImage({filename, path, mime});
+  let width = 5000;
+  let height = 5000;
+
+  let abstractImage = new cytomine.AbstractImage({filename, path, mime, width, height});
   let abstractImageCollection = new cytomine.AbstractImageCollection({nbPerPage: 1});
   return getModel(abstractImage, abstractImageCollection, forceCreation);
 }

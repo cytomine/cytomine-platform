@@ -89,7 +89,7 @@ describe('UploadedFile', function() {
 
     before(async function() {
       let uploadedFilePromises = [];
-      for(let i = 0; i < nbUploadedFiles - 1; i++) {
+      for(let i = 0; i < nbUploadedFiles; i++) {
         let tmp = utils.randomString();
         uploadedFilePromises.push(new UploadedFile({
           storages: [storage], user, filename: tmp, originalFilename: tmp, contentType, ext, path: tmp
