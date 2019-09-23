@@ -32,6 +32,8 @@ export {default as SoftwareParameter} from './models/software-parameter.js';
 export {default as SoftwareProject} from './models/software-project.js';
 export {default as Storage} from './models/storage.js';
 export {default as Task} from './models/task.js';
+export {default as Tag} from './models/tag.js';
+export {default as TagDomainAssociation} from './models/tag-domain-association.js';
 export {default as Term} from './models/term.js';
 export {default as UploadedFile, UploadedFileStatus} from './models/uploaded-file.js';
 export {default as User} from './models/user.js';
@@ -70,6 +72,8 @@ export {default as SoftwareCollection} from './collections/software-collection.j
 export {default as SoftwareParameterCollection} from './collections/software-parameter-collection.js';
 export {default as SoftwareProjectCollection} from './collections/software-project-collection.js';
 export {default as StorageCollection} from './collections/storage-collection.js';
+export {default as TagCollection} from './collections/tag-collection.js';
+export {default as TagDomainAssociationCollection} from './collections/tag-domain-association-collection.js';
 export {default as TermCollection} from './collections/term-collection.js';
 export {default as UploadedFileCollection} from './collections/uploaded-file-collection.js';
 export {default as UserCollection} from './collections/user-collection.js';
