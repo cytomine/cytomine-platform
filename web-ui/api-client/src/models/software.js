@@ -28,6 +28,7 @@ export default class Software extends Model {
     this.numberOfFailed = null;
     this.numberOfIndeterminate = null;
     this.numberOfWait = null;
+    this.numberOfKilled = null;
   }
 
   /** @type {SoftwareParameterCollection} */
@@ -44,7 +45,7 @@ export default class Software extends Model {
    *
    * @param {number} idProject The identifier of the project
    *
-   * @returns {{numberOfJob, numberOfNotLaunch, numberOfInQueue, numberOfRunning, numberOfSuccess, numberOfFailed, numberOfIndeterminate, numberOfWait}}
+   * @returns {{numberOfJob, numberOfNotLaunch, numberOfInQueue, numberOfRunning, numberOfSuccess, numberOfFailed, numberOfIndeterminate, numberOfWait, numberOfKilled}}
    */
   async fetchStats(idProject) {
     if(this.isNew()) {

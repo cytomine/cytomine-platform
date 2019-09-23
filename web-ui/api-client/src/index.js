@@ -35,6 +35,7 @@ export {default as Task} from './models/task.js';
 export {default as Tag} from './models/tag.js';
 export {default as TagDomainAssociation} from './models/tag-domain-association.js';
 export {default as Term} from './models/term.js';
+export {default as TrustedSource} from './models/trusted-source.js';
 export {default as UploadedFile, UploadedFileStatus} from './models/uploaded-file.js';
 export {default as User} from './models/user.js';
 export {default as UserGroup} from './models/user-group.js';
@@ -75,6 +76,7 @@ export {default as StorageCollection} from './collections/storage-collection.js'
 export {default as TagCollection} from './collections/tag-collection.js';
 export {default as TagDomainAssociationCollection} from './collections/tag-domain-association-collection.js';
 export {default as TermCollection} from './collections/term-collection.js';
+export {default as TrustedSourceCollection} from './collections/trusted-source-collection.js';
 export {default as UploadedFileCollection} from './collections/uploaded-file-collection.js';
 export {default as UserCollection} from './collections/user-collection.js';
 export {default as UserGroupCollection} from './collections/user-group-collection.js';
