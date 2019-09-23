@@ -11,7 +11,8 @@ export const JobStatus = Object.freeze({
   FAILED: 4,
   INDETERMINATE: 5,
   WAIT: 6,
-  PREVIEWED: 7
+  PREVIEWED: 7,
+  KILLED: 8
 });
 
 export default class Job extends Model {
