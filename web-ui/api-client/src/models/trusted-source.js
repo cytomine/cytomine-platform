@@ -18,7 +18,11 @@ export default class TrustedSource extends Model {
   }
 
   async refresh() {
-    let {data} = await Cytomine.instance.api.get('software_user_repository/refresh_user_repository.json');
-    return data;
+    if(this.isNew()) {
+      throw new Error('Cannot refresh a trusted source with no ID.');
+    }
+
+    await Cytomine.instance.api.get(`${this.callbackIdentifier}/${this.id}/refresh.json`);
+    return self;
   }
 }

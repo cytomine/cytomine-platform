@@ -99,6 +99,21 @@ export default class Job extends Model {
   }
 
   /**
+   * Kill the execution of the job
+   *
+   * @returns {this} The job as returned by backend
+   */
+  async kill() {
+    if(this.isNew()) {
+      throw new Error('Cannot kill a job with no ID.');
+    }
+
+    let {data} = await Cytomine.instance.api.post(`${this.callbackIdentifier}/${this.id}/kill.json`);
+    this.populate(data[this.callbackIdentifier]);
+    return this;
+  }
+
+  /**
    * Fetch the number of each type of data created by the job
    *
    * @returns {{annotations: Number, annotationsTerm: Number, jobDatas: Number, reviewed: Number}}
@@ -124,5 +139,19 @@ export default class Job extends Model {
 
     await Cytomine.instance.api.delete(`${this.callbackIdentifier}/${this.id}/alldata.json`, {params: {task}});
     this.dataDeleted = true;
+  }
+
+  /**
+   * Fetch the log created by the job
+   *
+   * @returns {AttachedFile}
+   */
+  async fetchLog() {
+    if(this.isNew()) {
+      throw new Error('Cannot fetch the log related to a job with no ID.');
+    }
+
+    let {data} = await Cytomine.instance.api.get(`${this.callbackIdentifier}/${this.id}/log.json`);
+    return data;
   }
 }
