@@ -283,6 +283,22 @@ describe('ImageInstance', function() {
       });
     });
 
+    describe('Specific operations', function() {
+      it('Filter by project', async function() {
+        let collection = await new ImageInstanceCollection({filterKey: 'project', filterValue: project}).fetchAll();
+        expect(collection).to.be.an.instanceof(ImageInstanceCollection);
+        expect(collection).to.have.lengthOf(nbImageInstances);
+        expect(collection.get(0).project).to.be.equals(project);
+
+      });
+
+      it('Filter by user', async function() {
+        let collection = await new ImageInstanceCollection({filterKey: 'user', filterValue: idUser}).fetchAll();
+        expect(collection).to.be.an.instanceof(ImageInstanceCollection);
+        expect(collection).to.have.length.above(nbImageInstances);
+      });
+    })
+
     describe('Pagination', function() {
       let nbPerPage = 1;
 

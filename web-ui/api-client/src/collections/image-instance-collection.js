@@ -16,7 +16,7 @@ export default class ImageInstanceCollection extends Collection {
 
   /** @inheritdoc */
   static get allowedFilters() {
-    return ['project'];
+    return ['project','user'];
   }
 
   /**
@@ -64,7 +64,7 @@ export default class ImageInstanceCollection extends Collection {
    */
 
   static async fetchBounds({project}={}) {
-    let {data} = await Cytomine.instance.api.get(`project/${project}/bounds/imageinstance.json`); 
+    let {data} = await Cytomine.instance.api.get(`project/${project}/bounds/imageinstance.json`);
     return data;
   }
 }
