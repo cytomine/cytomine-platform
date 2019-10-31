@@ -25,7 +25,7 @@ export default class TagDomainAssociationCollection extends DomainCollection {
 
   /** @inheritdoc */
   get uriWithoutFilter() {
-    return `tag_domain_association.json`;
+    return 'tag_domain_association.json';
   }
 
 }
