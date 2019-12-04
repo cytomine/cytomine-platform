@@ -79,4 +79,11 @@ export default class AbstractImage extends Model {
 
     return this._imageServers;
   }
+
+  /**
+   * @returns {String} the download URL of the image (valid iff the identifier of the image was previously defined)
+   */
+  get downloadURL() {
+    return `${Cytomine.instance.host}${Cytomine.instance.basePath}abstractimage/${this.id}/download`;
+  }
 }
