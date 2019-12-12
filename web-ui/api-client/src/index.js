@@ -25,7 +25,7 @@ export {default as JobTemplateAnnotation} from './models/job-template-annotation
 export {default as JobTemplate} from './models/job-template.js';
 export {default as Ontology} from './models/ontology.js';
 export {default as ProcessingServer} from './models/processing-server.js';
-export {default as Project} from './models/project.js';
+export {default as Project, ProjectMemberRole} from './models/project.js';
 export {default as ProjectConnection} from './models/project-connection.js';
 export {default as ProjectDefaultLayer} from './models/project-default-layer.js';
 export {default as ProjectRepresentative} from './models/project-representative.js';
@@ -37,6 +37,8 @@ export {default as SoftwareParameter} from './models/software-parameter.js';
 export {default as SoftwareProject} from './models/software-project.js';
 export {default as Storage} from './models/storage.js';
 export {default as Task} from './models/task.js';
+export {default as Tag} from './models/tag.js';
+export {default as TagDomainAssociation} from './models/tag-domain-association.js';
 export {default as Term} from './models/term.js';
 export {default as Track} from './models/track.js';
 export {default as TrustedSource} from './models/trusted-source.js';
@@ -82,6 +84,8 @@ export {default as SoftwareCollection} from './collections/software-collection.j
 export {default as SoftwareParameterCollection} from './collections/software-parameter-collection.js';
 export {default as SoftwareProjectCollection} from './collections/software-project-collection.js';
 export {default as StorageCollection} from './collections/storage-collection.js';
+export {default as TagCollection} from './collections/tag-collection.js';
+export {default as TagDomainAssociationCollection} from './collections/tag-domain-association-collection.js';
 export {default as TermCollection} from './collections/term-collection.js';
 export {default as TrackCollection} from './collections/track-collection.js';
 export {default as TrustedSourceCollection} from './collections/trusted-source-collection.js';

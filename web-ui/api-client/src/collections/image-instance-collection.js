@@ -16,7 +16,7 @@ export default class ImageInstanceCollection extends Collection {
 
   /** @inheritdoc */
   static get allowedFilters() {
-    return ['project'];
+    return ['project','user'];
   }
 
   /**
@@ -52,5 +52,19 @@ export default class ImageInstanceCollection extends Collection {
   static async fetchAllLight({max=0, offset=0}={}) {
     let {data} = await Cytomine.instance.api.get(`user/0/imageinstance/light.json?max=${max}&offset=${offset}`); // {user} value ignored in backend => set to 0
     return data.collection;
+  }
+
+  /**
+   * @static Fetch bounds of the attributes of all image instances into a project
+   *
+   * @param {number}  [project]           Identifier of project to consider
+   *
+   * @returns {{width: {min: Long, max: Long}, height: {min: Long, max: Long}, magnification: {min: Long, max: Long, list: Array<Long>}, resolution: {min: Long, max: Long, list: Array<Long>}, format: {list: Array<String>}, mimeType: {list: Array<String>}}}
+   *          The max, min or list of all the image instances properties
+   */
+
+  static async fetchBounds({project}={}) {
+    let {data} = await Cytomine.instance.api.get(`project/${project}/bounds/imageinstance.json`);
+    return data;
   }
 }

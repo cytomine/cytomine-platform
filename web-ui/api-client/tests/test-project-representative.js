@@ -58,6 +58,18 @@ describe('ProjectRepresentative', function() {
     it('Fetch deleted', function() {
       expect(ProjectRepresentative.fetch(id, project)).to.be.rejected;
     });
+
+    it('Create again', async function() {
+      projectRepresentative = new ProjectRepresentative({user, project});
+      projectRepresentative = await projectRepresentative.save();
+      id = projectRepresentative.id;
+    });
+
+    it('Delete with project and user', async function() {
+      await ProjectRepresentative.delete(0, project, user);
+      expect(ProjectRepresentative.fetch(id, project)).to.be.rejected;
+    });
+
   });
 
   // --------------------

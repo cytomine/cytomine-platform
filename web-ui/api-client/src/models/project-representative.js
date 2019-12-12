@@ -34,8 +34,8 @@ export default class ProjectRepresentative extends Model {
    * @param {number} id       The identifier of the project representative
    * @param {number} project  The identifier of the project
    */
-  static async delete(id, project) {
-    return new this({id, project}).delete();
+  static async delete(id, project, user) {
+    return new this({id, project, user}).delete();
   }
 
   /** @override */
@@ -54,7 +54,8 @@ export default class ProjectRepresentative extends Model {
       return `project/${this.project}/representative.json`;
     }
     else {
-      return `project/${this.project}/representative/${this.id}.json`;
+      if(this.id) return `project/${this.project}/representative/${this.id}.json`;
+      else return `project/${this.project}/representative.json?user=${this.user}`;
     }
   }
 }

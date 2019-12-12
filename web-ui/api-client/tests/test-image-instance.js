@@ -283,6 +283,22 @@ describe('ImageInstance', function() {
       });
     });
 
+    describe('Specific operations', function() {
+      it('Filter by project', async function() {
+        let collection = await new ImageInstanceCollection({filterKey: 'project', filterValue: project}).fetchAll();
+        expect(collection).to.be.an.instanceof(ImageInstanceCollection);
+        expect(collection).to.have.lengthOf(nbImageInstances);
+        expect(collection.get(0).project).to.be.equals(project);
+
+      });
+
+      it('Filter by user', async function() {
+        let collection = await new ImageInstanceCollection({filterKey: 'user', filterValue: idUser}).fetchAll();
+        expect(collection).to.be.an.instanceof(ImageInstanceCollection);
+        expect(collection).to.have.length.above(nbImageInstances);
+      });
+    })
+
     describe('Pagination', function() {
       let nbPerPage = 1;
 
@@ -303,6 +319,25 @@ describe('ImageInstance', function() {
         collection.curPage = 2;
         await collection.fetchPreviousPage();
         expect(collection).to.have.lengthOf(nbPerPage);
+      });
+    });
+
+    describe('Search', function() {
+      it('Get bounds', async function() {
+        let result = await new ImageInstanceCollection.fetchBounds({project: project});
+        expect(result.width.max).to.be.at.least(result.width.min);
+      });
+
+      it('Search by name', async function() {
+        let searchString = imageInstances[0].instanceFilename;
+        let collection = new ImageInstanceCollection({filterKey: 'project', filterValue: project, 'name': {'ilike': searchString}});
+        await collection.fetchAll();
+        expect(collection).to.have.lengthOf(1);
+
+        searchString = '';
+        collection = new ImageInstanceCollection({filterKey: 'project', filterValue: project, 'name': {'ilike': searchString}});
+        await collection.fetchAll();
+        expect(collection).to.have.lengthOf(imageInstances.length);
       });
     });
 
