@@ -235,4 +235,32 @@ export default class ImageInstance extends Model {
     return this._referenceSlice;
   }
 
+
+  /**
+   * Fetch the histogram statistics for the image instance
+   *
+   * @returns {Array<sample: Number, min: Number, max: Number>} The histogram statistics
+   */
+  async fetchHistogramStats() {
+    if (this.isNew()) {
+      throw new Error('Cannot get histogram statistics for an image with no ID.');
+    }
+
+    if(!this._histogramStats) {
+      let {data} = await Cytomine.instance.api.get(`${this.callbackIdentifier}/${this.id}/histogram/stats.json`);
+      this._histogramStats = data.collection;
+    }
+
+    return this._histogramStats;
+  }
+  
+  async extractHistogram() {
+    if (this.isNew()) {
+      throw new Error('Cannot extract histogram for an image with no ID.');
+    }
+    
+    await Cytomine.instance.api.post(`${this.callbackIdentifier}/${this.id}/histogram/extract.json`);
+    return this;
+  }
+
 }
