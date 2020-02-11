@@ -16,6 +16,7 @@ after_success:
   fi;
 deploy:
   - provider: npm
+    edge: true
     email: urubens@uliege.be
     api_key:
       secure: IhMxNHyU10Vu2nhMaHzvhWOZ37dYfwv+efglaw0SMp8w5Q0NJx3ymAOifmaJC00PBGv2v161YZurQnXVe3VTgf9YoDklgcvSNIY+uUmwt2Fb25SwDTGImuZ/9flC+oigqdGcMkII3Mbi0hURsVN9j0OmvMu48W1ec/ZySFA9nuXROEGxi506BGKmZDltsV+R/mdxN2FspyASHOSV4Z9Dc9U0hnsxU5Yg+DnaYMA9wkHf5PPEsadwQkwwxW3siDJ4hvfy22/l0xJtocmSa60SC+hnuAqcN9mrEKQPyOaMbSsSeao1n7WHnaoT0gM38bTYYmxUWl71UjJmFgKSo0MRoVRUmUlWB4/BGKi6HHKGBYNlZz1eHfXxL7G3WEyf328lvfXnJq0VqzDevFFw6C28HMypEIetK1smHAYA725VuEZdikFyAK4BZ9Om5NOWHJr1tjGYZ05Il7lJtrDEQxSKeZDWdcqTUvDoS04lxPUIjCLp/TG/lN+hJgyYges5DFzaIf2u7i9l5I0ZaCkCTeDbtl83pUVpU0v75Kh1d+8IUqOSQgr7xeNLVzkTCKQyefOagHxlD8ae9UvhanDPGqd80BZIm9SjdeRHag5itq+HQHvwofGrKC1rsteRLDxV/kpoSvhxZUlV6w68H4jSvz584dTxmGH+/wwvEeVi4wClVwA=
@@ -23,6 +24,7 @@ deploy:
     on:
       condition: $DEPLOY = true
   - provider: releases
+    edge: true
     api_key:
       secure: d1VzjvtC36J12UFhtnpyOxECH3eJ0Kl2fy4FQrmpQu4OBSZYr7buf1WBm2wQLe+AmpDrUf0DgCRassrrt2lw+LvY9CHvoACttsb7B/8KvB5zL0KPiZOd+B4xf/JfkSrsc4g2IqMKv4WMhECXtQvLbumJzARq/jMt2kGWJOoYlVd+dl9HFYmrIpecHIEYc9m9IbVoPDHiH4uFB9PIufOqkSNffdO9EtFhllo/jsnrnR8nSUnH8d9c6HSbu3l1mspQFdIUT6likh6bj3lAzuRjlSd+ouz1E4bJBXp/+SFHFYLgVa58MCbSf4mtuLpkubrHe0R9DiVnzo6lrMXtF2V7Cbm8+Ze41o+1bfvkHN6e9wgGkmP6FlYjoIXQDob5N/KHe7ljJKmvzZoqAf7szT2JrVlALetxZB+ArFAlkmoolKxEGnnUv1VEOUTWs5Oe2IPzN/7oH7vZn+tVtVg83EY0GQH3uiNroU+Lf4PKTv7unP7H40NWhd/89E1xmw/U4FlUMn9RPqZYV16hRyNsJnXS0ae2HAd19QPrCyjPxaduceqnXrnwVEC74XY8THJUSOvJi4CejuAcIb0jl+gA0c63BHKOjSbQvnB7SiGCjQD9f9VjBNy7QTf+GLBQzanCk/3GRzZ4/LLWBmhfeB60by+AWbSbhLti8M/2oG01+90y3fU=
     file: "*.{tgz}"
