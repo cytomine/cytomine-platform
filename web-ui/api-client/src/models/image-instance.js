@@ -52,6 +52,20 @@ export default class ImageInstance extends Model {
   }
 
   /**
+  * @returns {String} the preview URL of the image with a specified size
+  */
+  previewURL(size) {
+    return this.preview.replace(/maxSize=\d+/, 'maxSize='+size);
+  }
+
+  /**
+  * @returns {String} the thumb URL of the image with a specified size
+  */
+  thumbURL(size) {
+    return this.thumb.replace(/maxSize=\d+/, 'maxSize='+size);
+  }
+
+  /**
    * @returns {String} the download URL of the image (valid iff the identifier of the image was previously defined)
    */
   get downloadURL() {

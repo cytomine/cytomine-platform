@@ -39,6 +39,13 @@ export default class AbstractImage extends Model {
   }
 
   /**
+  * @returns {String} the preview URL of the image with a specified size
+  */
+  previewURL(size) {
+    return this.preview.replace(/maxSize=\d+/, 'maxSize='+size);
+  }
+
+  /**
    * Get the user that uploaded the abstract image
    *
    * @returns {User}
