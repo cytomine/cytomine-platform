@@ -428,7 +428,7 @@ export default class Project extends Model {
       throw new Error('Cannot fetch the number of annotation actions in a project with no ID.');
     }
     let {data} = await Cytomine.instance.api.get(
-      `project/${this.id}/annotationaction/count.json`,
+      `project/${this.id}/annotation_action/count.json`,
       {params: {startDate, endDate, type}}
     );
     return data.total;

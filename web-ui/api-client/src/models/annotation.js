@@ -107,7 +107,7 @@ export default class Annotation extends Model {
       throw new Error('Cannot record an action on an annotation with no ID.');
     }
 
-    let {data} = await Cytomine.instance.api.post('annotationaction.json', {
+    let {data} = await Cytomine.instance.api.post('annotation_action.json', {
       annotationIdent: this.id,
       action
     });
