@@ -1,6 +1,6 @@
 {
     "name": "cytomine-uliege-js-client",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "description": "Client to communicate with Cytomine API in javascript. For more information about Cytomine, go to http://www.cytomine.org.",
     "browser": "dist/cytomine-client.min.js",
     "unpkg": "dist/cytomine-client.min.js",

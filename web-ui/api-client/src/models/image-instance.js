@@ -253,12 +253,23 @@ export default class ImageInstance extends Model {
 
     return this._histogramStats;
   }
-  
+
+  async fetchNbSampleHistograms() {
+    if (this.isNew()) {
+      throw new Error('Cannot get number of sample histograms for an image with no ID.');
+    }
+
+    let {data} = await Cytomine.instance.api.get(
+      `${this.callbackIdentifier}/${this.id}/samplehistogram/count.json`
+    );
+    return data.total;
+  }
+
   async extractHistogram() {
     if (this.isNew()) {
       throw new Error('Cannot extract histogram for an image with no ID.');
     }
-    
+
     await Cytomine.instance.api.post(`${this.callbackIdentifier}/${this.id}/histogram/extract.json`);
     return this;
   }
