@@ -1,6 +1,6 @@
 import * as utils from './utils.js';
 import {ImageInstance, ImageInstanceCollection, ImageConsultation, ProjectConnection,
-  User, Description, Property, PropertyCollection, Annotation, AnnotationCollection} from '@';
+  User, Description, Property, PropertyCollection, Annotation, AnnotationCollection, SliceInstance} from '@';
 
 describe('ImageInstance', function() {
 
@@ -88,21 +88,21 @@ describe('ImageInstance', function() {
     let propKey = 'TEST_JS_KEY';
     let propValue = utils.randomString();
 
-    let annotation;
-    let location = 'POLYGON((10 10, 20 10, 20 20, 10 20, 10 10), (16 16, 18 16, 18 18, 16 18, 16 16))';
+    // let annotation;
+    // let location = 'POLYGON((10 10, 20 10, 20 20, 10 20, 10 10), (16 16, 18 16, 18 18, 16 18, 16 16))';
 
     before(async function() {
       imageSource = await utils.getImageInstance({baseImage});
 
       await new Description({data: dataDescription}, imageSource).save();
       property = await new Property({key: propKey, value: propValue}, imageSource).save();
-      annotation = await new Annotation({location, image: imageSource.id}).save();
+      // annotation = await new Annotation({location, image: imageSource.id}).save();
     });
 
     after(async function() {
       await Description.delete(imageSource);
       await Property.delete(property.id, imageSource);
-      await Annotation.delete(annotation.id);
+      // await Annotation.delete(annotation.id);
     });
 
     it('Fetch connected users', async function() {
@@ -110,38 +110,38 @@ describe('ImageInstance', function() {
       expect(connectedUsers).to.be.instanceof(Array);
     });
 
-    it('Fetch layers in other projects', async function() {
-      let layers = await imageInstance.fetchLayersInOtherProjects(imageSource.project);
-      expect(layers).to.be.instanceof(Array);
-      expect(layers).to.have.lengthOf(1);
-      expect(layers[0].image).to.equal(imageSource.id);
-    });
+    // it('Fetch layers in other projects', async function() {
+    //   let layers = await imageInstance.fetchLayersInOtherProjects(imageSource.project);
+    //   expect(layers).to.be.instanceof(Array);
+    //   expect(layers).to.have.lengthOf(1);
+    //   expect(layers[0].image).to.equal(imageSource.id);
+    // });
 
-    it('Fetch annotations index', async function() {
-      let layers = await imageInstance.fetchAnnotationsIndex();
-      expect(layers).to.be.instanceof(Array);
-    });
+    // it('Fetch annotations index', async function() {
+    //   let layers = await imageInstance.fetchAnnotationsIndex();
+    //   expect(layers).to.be.instanceof(Array);
+    // });
 
-    it('Copy metadata', async function() {
-      await imageInstance.copyMetadata(imageSource.id);
+    // it('Copy metadata', async function() {
+    //   await imageInstance.copyMetadata(imageSource.id);
+    //
+    //   let copiedDescription = await Description.fetch(imageSource);
+    //   expect(copiedDescription.data).to.equal(dataDescription);
+    //
+    //   let collection = await new PropertyCollection({object: imageSource}).fetchAll();
+    //   expect(collection).to.have.lengthOf(1);
+    //   let copiedProperty = collection.get(0);
+    //   expect(copiedProperty.key).to.equal(propKey);
+    //   expect(copiedProperty.value).to.equal(propValue);
+    // });
 
-      let copiedDescription = await Description.fetch(imageSource);
-      expect(copiedDescription.data).to.equal(dataDescription);
-
-      let collection = await new PropertyCollection({object: imageSource}).fetchAll();
-      expect(collection).to.have.lengthOf(1);
-      let copiedProperty = collection.get(0);
-      expect(copiedProperty.key).to.equal(propKey);
-      expect(copiedProperty.value).to.equal(propValue);
-    });
-
-    it('Copy annotations', async function() {
-      await imageInstance.copyData([{image: imageSource.id, user: idUser}]);
-      let collection = await new AnnotationCollection({image: imageSource.id, showGIS: true}).fetchAll();
-      expect(collection).to.have.lengthOf(1);
-      let copiedAnnot = collection.get(0);
-      expect(copiedAnnot.perimeter).to.equal(annotation.perimeter);
-    });
+    // it('Copy annotations', async function() {
+    //   await imageInstance.copyData([{image: imageSource.id, user: idUser}]);
+    //   let collection = await new AnnotationCollection({image: imageSource.id, showGIS: true}).fetchAll();
+    //   expect(collection).to.have.lengthOf(1);
+    //   let copiedAnnot = collection.get(0);
+    //   expect(copiedAnnot.perimeter).to.equal(annotation.perimeter);
+    // });
 
     it('Start review', async function() {
       await imageInstance.review();
@@ -160,6 +160,11 @@ describe('ImageInstance', function() {
 
     it('Download URL', async function() {
       expect(imageInstance.downloadURL).to.be.a('string');
+    });
+
+    it('Fetch reference slice', async function() {
+      let slice = await imageInstance.fetchReferenceSlice();
+      expect(slice).to.be.instanceOf(SliceInstance);
     });
   });
 
@@ -189,19 +194,14 @@ describe('ImageInstance', function() {
 
     let imageInstances;
     let nbImageInstances = 3;
-    let baseImages;
 
     before(async function() {
-      baseImages = await utils.getMultipleAbstractImages(nbImageInstances);
-
-      async function createAndConsultImageInstance(baseImage, project) {
-        let imageInstance = new ImageInstance({baseImage, project});
-        await imageInstance.save();
-        await new ImageConsultation({image: imageInstance.id}).save();
-        return imageInstance;
+      let imageInstancePromises = [];
+      for(let i = 0; i < nbImageInstances; i++) {
+        let tmp = utils.randomString();
+        let baseImage = await utils.getAbstractImage(tmp);
+        imageInstancePromises.push(new ImageInstance({baseImage: baseImage.id, project}).save());
       }
-
-      let imageInstancePromises = baseImages.map(baseImage => createAndConsultImageInstance(baseImage, project));
       imageInstances = await Promise.all(imageInstancePromises);
     });
 
