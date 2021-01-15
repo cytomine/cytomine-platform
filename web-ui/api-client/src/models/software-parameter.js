@@ -23,4 +23,15 @@ export default class SoftwareParameter extends Model {
     this.uriPrintAttribut = null;
     this.uriSortAttribut = null;
   }
+
+  // HACK: remove (temporary hack due to lack of consistency in API endpoint)
+  /** @inheritdoc */
+  get uri() {
+    if(this.isNew()) {
+      return `software_parameter.json`;
+    }
+    else {
+      return `software_parameter/${this.id}.json`;
+    }
+  }
 }
