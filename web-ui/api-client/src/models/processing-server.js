@@ -10,7 +10,10 @@ export default class ProcessingServer extends Model {
   _initProperties() {
     super._initProperties();
 
-    this.url = null;
+    this.name = null;
+    this.host = null;
+    this.username = null;
+    this.port = null;
   }
 
   /** @override */

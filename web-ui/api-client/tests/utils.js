@@ -170,9 +170,9 @@ export async function getOntology({name=randomString(), forceCreation=false} = {
   return getModel(ontology, ontologyCollection, forceCreation);
 }
 
-export async function getProcessingServer({url=randomString(), forceCreation=true} = {}) {
+export async function getProcessingServer({name=randomString(), host=randomString(), username=randomString(), port=9999, forceCreation=true} = {}) {
   let processingServerCollection = new cytomine.ProcessingServerCollection({nbPerPage: 1});
-  let processingServer = new cytomine.ProcessingServer({url});
+  let processingServer = new cytomine.ProcessingServer({name, host, username, port});
   return getModel(processingServer, processingServerCollection, forceCreation);
 }
 
@@ -206,8 +206,11 @@ export async function getMultipleRoles(nb) {
   return ids;
 }
 
-export async function getSoftware({name=randomString(), serviceName='createRabbitJobService', executeCommand='clear', forceCreation=true} = {}) {
-  let software = new cytomine.Software({name, serviceName, executeCommand});
+export async function getSoftware({name=randomString(), serviceName='createRabbitJobService', executeCommand='clear', pullingCommand = 'test', defaultProcessingServer, forceCreation=true} = {}) {
+  if(!defaultProcessingServer) {
+    ({id: defaultProcessingServer} = await getProcessingServer());
+  }
+  let software = new cytomine.Software({name, serviceName, executeCommand, pullingCommand, defaultProcessingServer});
   let softwareCollection = new cytomine.SoftwareCollection({nbPerPage: 1});
   return getModel(software, softwareCollection, forceCreation);
 }
@@ -281,6 +284,11 @@ export async function getUser({username=randomString(), password, email, firstna
   let userCollection = new cytomine.UserCollection({nbPerPage: 1});
   let user = new cytomine.User({username, password, firstname, lastname, email});
   return getModel(user, userCollection, forceCreation);
+}
+export async function getTag({name=randomString(), forceCreation=true} = {}) {
+  let tagCollection = new cytomine.TagCollection({nbPerPage: 1});
+  let tag = new cytomine.Tag({name});
+  return getModel(tag, tagCollection, forceCreation);
 }
 
 export async function getImageServer() {

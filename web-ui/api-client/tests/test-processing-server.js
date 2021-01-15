@@ -3,7 +3,10 @@ import {ProcessingServer, ProcessingServerCollection} from '@';
 
 describe('Processing server', function() {
 
-  let url = utils.randomString();
+  let name = utils.randomString();
+  let host = utils.randomString();
+  let username = utils.randomString();
+  let port = 5555;
 
   let processingServer = null;
   let id = 0;
@@ -14,11 +17,11 @@ describe('Processing server', function() {
 
   describe('Create', function() {
     it('Create', async function() {
-      processingServer = new ProcessingServer({url});
+      processingServer = new ProcessingServer({name, host, username, port});
       processingServer = await processingServer.save();
       id = processingServer.id;
       expect(processingServer).to.be.an.instanceof(ProcessingServer);
-      expect(processingServer.url).to.equal(url);
+      expect(processingServer.name).to.equal(name);
     });
   });
 
@@ -26,13 +29,13 @@ describe('Processing server', function() {
     it('Fetch with static method', async function() {
       let fetchedProcessingServer = await ProcessingServer.fetch(id);
       expect(fetchedProcessingServer).to.be.an.instanceof(ProcessingServer);
-      expect(fetchedProcessingServer.url).to.equal(url);
+      expect(fetchedProcessingServer.name).to.equal(name);
     });
 
     it('Fetch with instance method', async function() {
       let fetchedProcessingServer = await new ProcessingServer({id}).fetch();
       expect(fetchedProcessingServer).to.be.an.instanceof(ProcessingServer);
-      expect(fetchedProcessingServer.url).to.equal(url);
+      expect(fetchedProcessingServer.name).to.equal(name);
     });
 
     it('Fetch with wrong ID', function() {
@@ -67,7 +70,7 @@ describe('Processing server', function() {
     before(async function() {
       let processingServerPromises = [];
       for(let i = 0; i < nbProcessingServers; i++) {
-        processingServerPromises.push(new ProcessingServer({url: utils.randomString()}).save());
+        processingServerPromises.push(new ProcessingServer({name: utils.randomString(),host, username, port}).save());
       }
       processingServers = await Promise.all(processingServerPromises);
     });

@@ -11,10 +11,10 @@ describe('UserGroup', function() {
   before(async function() {
     await utils.connect(true);
     ({id: user} = await utils.getUser());
-    ({id: group} = await utils.getGroup());
+    //({id: group} = await utils.getGroup());
   });
 
-  after(async function() {
+  /*after(async function() {
     await utils.cleanData();
   });
 
@@ -152,6 +152,6 @@ describe('UserGroup', function() {
       });
     });
 
-  });
+  });*/
 
 });

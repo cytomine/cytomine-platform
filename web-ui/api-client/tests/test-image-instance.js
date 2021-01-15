@@ -297,7 +297,7 @@ describe('ImageInstance', function() {
         expect(collection).to.be.an.instanceof(ImageInstanceCollection);
         expect(collection).to.have.length.above(nbImageInstances);
       });
-    })
+    });
 
     describe('Pagination', function() {
       let nbPerPage = 1;
