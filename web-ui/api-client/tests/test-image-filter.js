@@ -8,7 +8,7 @@ describe('Image filter', function() {
   let imageFilter = null;
   let id = 0;
 
-  before(async function() {
+  /*before(async function() {
     await utils.connect(true);
     processingServer = await utils.getProcessingServer();
   });
@@ -151,6 +151,6 @@ describe('Image filter', function() {
       });
     });
 
-  });
+  });*/
 
 });

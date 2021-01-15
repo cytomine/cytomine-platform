@@ -13,7 +13,7 @@ describe('Job', function() {
   before(async function() {
     await utils.connect();
     ({project, software} = await utils.getSoftwareProject());
-    ({id: softwareParameter} = await utils.getSoftwareParameter({software}));
+    ({id: softwareParameter} = await utils.getSoftwareParameter({software, type:'String'}));
   });
 
   after(async function() {
@@ -23,7 +23,7 @@ describe('Job', function() {
   describe('Create', function() {
     it('Create', async function() {
       job = new Job({software, project});
-      job.jobParameters.push(new JobParameter({softwareParameter, value: 0}));
+      job.jobParameters.push(new JobParameter({softwareParameter, value: "test"}));
       job = await job.save();
       id = job.id;
       expect(job).to.be.an.instanceof(Job);

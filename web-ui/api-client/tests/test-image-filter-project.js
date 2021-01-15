@@ -10,7 +10,7 @@ describe('ImageFilterProject', function() {
   let imageFilterProject;
   let id = 0;
 
-  before(async function() {
+  /*before(async function() {
     await utils.connect(true);
     ({id: project} = await utils.getProject());
     ({id: imageFilter, name: imageFilterName} = await utils.getImageFilter());
@@ -139,6 +139,6 @@ describe('ImageFilterProject', function() {
       });
     });
 
-  });
+  });*/
 
 });
