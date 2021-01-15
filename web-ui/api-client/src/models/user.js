@@ -143,7 +143,7 @@ export default class User extends Model {
     }
 
     let {data} = await Cytomine.instance.api.post(`user/${this.id}/lock`);
-    this.populate(data);
+    this.populate(data.user);
     return this;
   }
 
@@ -158,7 +158,7 @@ export default class User extends Model {
     }
 
     let {data} = await Cytomine.instance.api.delete(`user/${this.id}/lock`);
-    this.populate(data);
+    this.populate(data.user);
     return this;
   }
 
