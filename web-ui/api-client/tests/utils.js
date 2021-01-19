@@ -42,7 +42,7 @@ export async function getAbstractImage({filename=randomString(), uploadedFile, f
     ({id: uploadedFile} = await getUploadedFile({filename, forceCreation: cascadeForceCreation, cascadeForceCreation}));
   }
 
-  let abstractImage = new cytomine.AbstractImage({originalFilename: filename, uploadedFile});
+  let abstractImage = new cytomine.AbstractImage({originalFilename: filename, uploadedFile, width : 1000, height : 1000});
   let abstractImageCollection = new cytomine.AbstractImageCollection({nbPerPage: 1});
   abstractImage = await getModel(abstractImage, abstractImageCollection, forceCreation);
 

@@ -82,7 +82,11 @@ describe('Job', function() {
 
   describe('Delete', function() {
     it('Delete', async function() {
-      await Job.delete(id);
+      job = new Job({software, project});
+      job = await job.save();
+      id = job.id;
+
+      await Job.delete(job.id);
     });
 
     it('Fetch deleted', function() {

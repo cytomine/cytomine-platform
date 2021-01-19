@@ -203,6 +203,12 @@ describe('ImageInstance', function() {
         imageInstancePromises.push(new ImageInstance({baseImage: baseImage.id, project}).save());
       }
       imageInstances = await Promise.all(imageInstancePromises);
+
+      let consultationsPromise = [];
+      for(let i = 0; i < nbImageInstances; i++) {
+        consultationsPromise.push(new ImageConsultation({image : imageInstances[i].id}).save());
+      }
+      await Promise.all(consultationsPromise);
     });
 
     after(async function() {

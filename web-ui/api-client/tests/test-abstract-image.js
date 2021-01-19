@@ -23,7 +23,7 @@ describe('AbstractImage', function() {
 
   describe('Create', function() {
     it('Create', async function() {
-      abstractImage = new AbstractImage({originalFilename, uploadedFile});
+      abstractImage = new AbstractImage({originalFilename, uploadedFile, width : 1000, height : 1000});
       abstractImage = await abstractImage.save();
       id = abstractImage.id;
       expect(abstractImage).to.be.an.instanceof(AbstractImage);

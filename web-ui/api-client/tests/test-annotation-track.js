@@ -62,8 +62,9 @@ describe('AnnotationTrack', function() {
     let annotationTracks;
 
     before(async function() {
+      let tempImage = await utils.getImageInstance();
       async function createTrackAndAnnotTrack() {
-        let tempTrack = await utils.getTrack();
+        let tempTrack = await utils.getTrack({image : tempImage.id});
         let annotTrack = new AnnotationTrack({annotation: annotation, track: tempTrack.id});
         await annotTrack.save();
         return annotTrack;
