@@ -1,5 +1,7 @@
 
 import Model from './model.js';
+import Cytomine from '../cytomine';
+import ImageInstance from './image-instance';
 
 export default class ImageGroupImageInstance extends Model {
   /** @inheritdoc */
@@ -58,4 +60,33 @@ export default class ImageGroupImageInstance extends Model {
 
     return `imagegroup/${this.group}/imageinstance/${this.image}.json`;
   }
+
+  /**
+   * Fetch the next image instance of the group
+   *
+   * @returns {ImageInstance}
+   */
+  async fetchNext(circular=true) {
+    if(!this.group || !this.image) {
+      throw new Error('Cannot fetch next image of an image instance with no ID.');
+    }
+
+    let {data} = await Cytomine.instance.api.get(`imagegroup/${this.group}/imageinstance/${this.image}/next.json?circular=${circular}`);
+    return new ImageInstance(data);
+  }
+
+  /**
+   * Fetch the previous image instance of the group
+   *
+   * @returns {ImageInstance}
+   */
+  async fetchPrevious(circular=true) {
+    if(!this.group || !this.image) {
+      throw new Error('Cannot fetch next image of an image instance with no ID.');
+    }
+
+    let {data} = await Cytomine.instance.api.get(`imagegroup/${this.group}/imageinstance/${this.image}/previous.json?circular=${circular}`);
+    return new ImageInstance(data);
+  }
+
 }
