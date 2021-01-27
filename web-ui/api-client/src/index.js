@@ -5,6 +5,8 @@ export {default as AbstractSlice} from './models/abstract-slice.js';
 export {default as AlgoAnnotationTerm} from './models/algo-annotation-term.js';
 export {default as Annotation, AnnotationType} from './models/annotation.js';
 export {default as AnnotationComment} from './models/annotation-comment.js';
+export {default as AnnotationGroup} from './models/annotation-group.js';
+export {default as AnnotationLink} from './models/annotation-link.js';
 export {default as AnnotationTerm} from './models/annotation-term.js';
 export {default as AnnotationTrack} from './models/annotation-track.js';
 export {default as AttachedFile} from './models/attached-file.js';
@@ -54,6 +56,8 @@ export {default as AbstractSliceCollection} from './collections/abstract-slice-c
 export {default as AlgoAnnotationTermCollection} from './collections/algo-annotation-term-collection.js';
 export {default as AnnotationCollection} from './collections/annotation-collection.js';
 export {default as AnnotationCommentCollection} from './collections/annotation-comment-collection.js';
+export {default as AnnotationGroupCollection} from './collections/annotation-group-collection.js';
+export {default as AnnotationLinkCollection} from './collections/annotation-link-collection.js';
 export {default as AnnotationTermCollection} from './collections/annotation-term-collection.js';
 export {default as AnnotationTrackCollection} from './collections/annotation-track-collection.js';
 export {default as AttachedFileCollection} from './collections/attached-file-collection.js';
