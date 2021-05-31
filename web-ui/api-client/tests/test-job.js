@@ -23,7 +23,7 @@ describe('Job', function() {
   describe('Create', function() {
     it('Create', async function() {
       job = new Job({software, project});
-      job.jobParameters.push(new JobParameter({softwareParameter, value: "test"}));
+      job.jobParameters.push(new JobParameter({softwareParameter, value: 'test'}));
       job = await job.save();
       id = job.id;
       expect(job).to.be.an.instanceof(Job);
