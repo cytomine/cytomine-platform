@@ -87,7 +87,7 @@ describe('Ontology', function() {
 
     before(async function() {
       let ontologyPromises = [];
-      for(let i = 0; i < nbOntologies - 1; i++) {
+      for(let i = 0; i < nbOntologies; i++) {
         ontologyPromises.push(new Ontology({name: utils.randomString()}).save());
       }
       ontologies = await Promise.all(ontologyPromises);

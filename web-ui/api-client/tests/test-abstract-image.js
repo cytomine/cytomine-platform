@@ -9,17 +9,19 @@ describe('AbstractImage', function() {
   let filename = utils.randomString();
   let mime = 'image/tiff'; // QUESTION discuss with Renaud if it is appropriate to have mimetype instead of extension + change API documenation
   let path = `path/${filename}`;
+  let width = 500;
+  let height = 500;
 
   let abstractImage = null;
   let id = 0;
 
   before(async function() {
-    await utils.connect();
+    await utils.connect(true);
   });
 
-  describe.skip('Create', function() {
+  describe('Create', function() {
     it('Create', async function() {
-      abstractImage = new AbstractImage({filename, path, mime});
+      abstractImage = new AbstractImage({filename, path, mime, width, height});
       abstractImage = await abstractImage.save();
       id = abstractImage.id;
       expect(abstractImage).to.be.an.instanceof(AbstractImage);
@@ -27,7 +29,7 @@ describe('AbstractImage', function() {
     });
   });
 
-  describe.skip('Fetch', function() {
+  describe('Fetch', function() {
     it('Fetch with static method', async function() {
       let fetchedImage = await AbstractImage.fetch(id);
       expect(fetchedImage).to.be.an.instanceof(AbstractImage);
@@ -45,15 +47,22 @@ describe('AbstractImage', function() {
     });
   });
 
-  describe.skip('Specific operations', function() {
+  describe('Specific operations', function() {
     it('Get uploader', async function() {
-      let user = await abstractImage.fetchUploader();
-      expect(user).to.be.instanceof(User);
       let currentUser = await User.fetchCurrent();
+      let uploadedFile = new UploadedFile({
+        storages: [], user:currentUser.id, image: abstractImage.id, ext : '.ext', contentType: 'contentType', path: 'path', originalFilename: 'filename', filename: 'filename'
+      });
+      uploadedFile = await uploadedFile.save();
+      expect(uploadedFile).to.be.an.instanceof(UploadedFile);
+
+      let user = await abstractImage.fetchUploader();
       expect(user.id).to.equal(currentUser.id);
+
+
     });
 
-    it('Get image servers', async function() {
+    it.skip('Get image servers', async function() {
       let imageServers = await abstractImage.fetchImageServers();
       expect(imageServers).to.be.instanceof(Array);
       expect(imageServers).to.have.lengthOf.at.least(1);
@@ -65,7 +74,7 @@ describe('AbstractImage', function() {
     });
   });
 
-  describe.skip('Update', function() {
+  describe('Update', function() {
     it('Update', async function() {
       let newFilename = utils.randomString();
       abstractImage.filename = newFilename;
@@ -75,7 +84,7 @@ describe('AbstractImage', function() {
     });
   });
 
-  describe.skip('Delete', function() {
+  describe('Delete', function() {
     it('Delete', async function() {
       await AbstractImage.delete(id);
     });
