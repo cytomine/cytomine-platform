@@ -27,6 +27,8 @@ node {
     catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
         sh 'scripts/ciTest.sh'
     }
+    stage 'Publish test'
+    step([$class: 'JUnitResultArchiver', testResults: 'ci/TESTS*.xml'])
 
     stage 'Clear cytomine instance'
     catchError {

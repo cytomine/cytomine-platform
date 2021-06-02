@@ -43,6 +43,7 @@
         "karma-firefox-launcher": "^1.1.0",
         "karma-mocha": "^2.0.0",
         "karma-mocha-reporter": "^2.2.5",
+        "karma-junit-reporter": "2.0.1",
         "karma-webpack": "^4.0.0-rc.6",
         "mocha": "^6.1.4",
         "randomstring": "^1.1.5",
