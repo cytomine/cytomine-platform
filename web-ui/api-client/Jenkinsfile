@@ -31,7 +31,7 @@ node {
     step([$class: 'JUnitResultArchiver', testResults: 'ci/test-reports/*.xml'])
 
     stage 'Clear cytomine instance'
-    catchError {
+    catchError(buildResult: 'SUCCESS', stageResult: 'SUCCESS') {
         sh 'docker-compose -f scripts/docker-compose.yml down'
     }
 }
