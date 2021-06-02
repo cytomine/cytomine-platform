@@ -67,8 +67,8 @@ module.exports = function(config) {
 
     // the default configuration
     junitReporter: {
-      outputDir: 'ci', // results will be saved as $outputDir/$browserName.xml
-
+      outputDir: 'ci/test-reports', // results will be saved as $outputDir/$browserName.xml
+      outputFile: 'test-reports.xml'
     }
   });
 };
