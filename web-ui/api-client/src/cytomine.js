@@ -96,21 +96,7 @@ export default class Cytomine {
     params.append('j_password', password);
     params.append('remember_me', rememberMe ? 'on' : 'off');
     params.append('ajax', true);
-    console.log('post login', `${this._host}/j_spring_security_check`);
-    axios.post(`${this._host}/j_spring_security_check`, params, {withCredentials: true})
-      .then(function (response) {
-        // handle success
-        console.log(response);
-      })
-      .catch(function (error) {
-        // handle error
-        console.log(error);
-      })
-      .then(function () {
-        // always executed
-      });
-
-    console.log('post login ok');
+    await axios.post(`${this._host}/j_spring_security_check`, params, {withCredentials: true});
   }
 
   /**
