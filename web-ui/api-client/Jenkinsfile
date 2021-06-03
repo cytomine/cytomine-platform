@@ -20,7 +20,7 @@ node {
     lock('cytomine-instance-test') {
       stage 'Run cytomine instance'
       catchError {
-          sh 'docker-compose -f scripts/docker-compose.yml down'
+          sh 'docker-compose -f scripts/docker-compose.yml down -v'
       }
       sh 'docker-compose -f scripts/docker-compose.yml up -d'
 
@@ -33,7 +33,7 @@ node {
 
       stage 'Clear cytomine instance'
       catchError(buildResult: 'SUCCESS', stageResult: 'SUCCESS') {
-          sh 'docker-compose -f scripts/docker-compose.yml down'
+          sh 'docker-compose -f scripts/docker-compose.yml down -v'
       }
     }
 }
