@@ -7,9 +7,13 @@ COPY package.json /app/package.json
 RUN cd /app && npm install -S --unsafe-perm=true --allow-root
 
 
-# update version number in package
-ARG NPM_KEY
-ENV NPM_KEY=$NPM_KEY
+
+ARG NPM_TOKEN
+ENV NPM_TOKEN=$NPM_TOKEN
+RUN echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc
+
+ARG VERSION_NUMBER
+ENV VERSION_NUMBER_ENV=$VERSION_NUMBER
 
 COPY . /app
 RUN npm version $VERSION_NUMBER
