@@ -16,8 +16,8 @@ ARG VERSION_NUMBER
 ENV VERSION_NUMBER_ENV=$VERSION_NUMBER
 
 COPY . /app
-RUN npm version $VERSION_NUMBER
-RUN cat /app/package.json
 
 WORKDIR /app
+RUN npm version $VERSION_NUMBER
+RUN cat /app/package.json
 CMD npm publish
