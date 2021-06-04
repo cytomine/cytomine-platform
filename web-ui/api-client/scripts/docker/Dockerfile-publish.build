@@ -10,12 +10,13 @@ RUN cd /app && npm install -S --unsafe-perm=true --allow-root
 
 ARG NPM_TOKEN
 ENV NPM_TOKEN=$NPM_TOKEN
-RUN echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc
+
 
 ARG VERSION_NUMBER
 ENV VERSION_NUMBER_ENV=$VERSION_NUMBER
 
 COPY . /app
+RUN echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > /app/.npmrc
 
 WORKDIR /app
 RUN npm version $VERSION_NUMBER
