@@ -28,7 +28,7 @@ export default class SoftwareParameter extends Model {
   /** @inheritdoc */
   get uri() {
     if(this.isNew()) {
-      return `software_parameter.json`;
+      return 'software_parameter.json';
     }
     else {
       return `software_parameter/${this.id}.json`;
