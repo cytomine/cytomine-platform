@@ -20,4 +20,5 @@ COPY . /app
 WORKDIR /app
 RUN npm version $VERSION_NUMBER
 RUN cat /app/package.json
+RUN npm run build
 RUN npm publish
