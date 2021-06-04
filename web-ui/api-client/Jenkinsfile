@@ -36,7 +36,7 @@ node {
           sh 'docker-compose -f scripts/docker-compose.yml down -v'
       }
     }
-    STAGE 'Publish if official release'
+    stage 'Publish if official release'
     withCredentials(
         [
             string(credentialsId: 'NPM_TOKEN', variable: 'NPM_TOKEN')
