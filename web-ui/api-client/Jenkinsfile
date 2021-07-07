@@ -24,6 +24,8 @@ node {
       }
       sh 'docker-compose -f scripts/docker-compose.yml up -d'
 
+      sleep(time:30,unit:"SECONDS") // wait for cytomine, TODO: we should wait in the js code (retry connection).
+
       stage 'Build and test'
       catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
           sh 'scripts/ciTest.sh'
