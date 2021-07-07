@@ -51,6 +51,15 @@ describe('Job', function() {
     });
   });
 
+  describe('Copy', function() {
+    it('Copy', async function() {
+      let copiedJob = await Job.copy(id);
+      expect(copiedJob.id).to.not.equal(job.id);
+      expect(copiedJob.userJob).to.not.equal(job.userJob);
+      expect(copiedJob.software).to.equal(job.software);
+    });
+  });
+
   describe('Update', function() {
     it('Update', async function() {
       let statusComment = utils.randomString();
