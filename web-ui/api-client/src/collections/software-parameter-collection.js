@@ -20,7 +20,7 @@ export default class SoftwareParameterCollection extends Collection {
       return `software/${this._filter.value}/software_parameter.json`;
     }
     else {
-      return `software_parameter.json`;
+      return 'software_parameter.json';
     }
   }
 }

@@ -1,6 +1,6 @@
 {
     "name": "cytomine-client",
-    "version": "1.4.1",
+    "version": "1.4.2-SNAPSHOT",
     "description": "Client to communicate with Cytomine API in javascript. For more information about Cytomine, go to http://www.cytomine.org.",
     "browser": "dist/cytomine-client.min.js",
     "unpkg": "dist/cytomine-client.min.js",
@@ -43,6 +43,7 @@
         "karma-firefox-launcher": "^1.1.0",
         "karma-mocha": "^2.0.0",
         "karma-mocha-reporter": "^2.2.5",
+        "karma-junit-reporter": "2.0.1",
         "karma-webpack": "^4.0.0-rc.6",
         "mocha": "^6.1.4",
         "randomstring": "^1.1.5",

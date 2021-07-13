@@ -41,7 +41,7 @@ module.exports = function(config) {
     // test results reporter to use
     // possible values: "dots", "progress"
     // available reporters: https://npmjs.org/browse/keyword/karma-reporter
-    reporters: ['mocha'],
+    reporters: ['mocha', 'junit'],
 
     // web server port
     port: 9876,
@@ -55,14 +55,21 @@ module.exports = function(config) {
 
     // start these browsers
     // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
-    browsers: ['Firefox'],
+    browsers: ['FirefoxHeadless'],
 
     // Continuous Integration mode
     // if true, Karma captures browsers, runs the tests and exits
-    singleRun: false,
+    singleRun: true,
 
     // Concurrency level
     // how many browser should be started simultaneous
-    concurrency: Infinity
+    concurrency: Infinity,
+
+    // the default configuration
+    junitReporter: {
+      outputDir: 'ci/test-reports', // results will be saved as $outputDir/$browserName.xml
+      outputFile: 'test-reports.xml',
+      useBrowserName: false
+    }
   });
 };
