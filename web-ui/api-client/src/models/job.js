@@ -84,6 +84,21 @@ export default class Job extends Model {
   }
 
   /**
+   * Copy the job and its parameter to create a new job
+   *
+   * @returns {this} The job created from the original
+   */
+  async copy() {
+    if(this.isNew()) {
+      throw new Error('Cannot copy a job with no ID.');
+    }
+    let {data} = await Cytomine.instance.api.post(`${this.callbackIdentifier}/${this.id}/copy.json`);
+    let job = new Job();
+    job.populate(data[this.callbackIdentifier]);
+    return job;
+  }
+
+  /**
    * Launch the execution of the job
    *
    * @returns {this} The job as returned by backend

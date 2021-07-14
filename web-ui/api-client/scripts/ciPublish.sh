@@ -11,7 +11,7 @@ VERSION_NUMBER=$(<"$file")
 echo "Publish npm for $VERSION_NUMBER"
 echo "$NPM_TOKEN"
 
-if [[ $VERSION_NUMBER =~ v[0-9]+.[0-9]+.[0-9]$ ]]; then
+if [[ $VERSION_NUMBER =~ [0-9]+.[0-9]+.[0-9]$ ]]; then
   echo "Official release"
 
   docker build --rm -f scripts/docker/Dockerfile-publish.build -t cytomine/cytomine-js-client-publish \
