@@ -21,10 +21,8 @@ export default class Annotation extends Model {
 
     this.project = null;
     this.image = null;
-    this.imageURL = null;
+    this.slice = null;
     this.user = null;
-
-    // this.container = null;
 
     this.location = null;
     this.geometryCompression = null;
@@ -40,12 +38,8 @@ export default class Annotation extends Model {
     // this.nbComments = null;
 
     this.term = null;
-    // this.idTerm = null;
-    // this.rate = null;
-    // this.idExpectedTerm;
-    //
-    // this.similarity = null;
 
+    this.imageURL = null;
     this.cropURL = null;
     this.smallCropURL = null;
   }
@@ -93,6 +87,22 @@ export default class Annotation extends Model {
       annotation.type = annotationType;
     }
     return annotation.fetch();
+  }
+
+  /**
+   * Get the profile of the annotation, if available
+   */
+  async fetchProfile() {
+    if(this.isNew()) {
+      throw new Error('Cannot get profile for an annotation with no ID.');
+    }
+
+    if(!this._profile) {
+      let {data} = await Cytomine.instance.api.get(`${this.callbackIdentifier}/${this.id}/profile.json`);
+      this._profile = data;
+    }
+
+    return this._profile;
   }
 
   /**

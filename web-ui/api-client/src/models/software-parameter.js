@@ -31,7 +31,7 @@ export default class SoftwareParameter extends Model {
       return 'software_parameter.json';
     }
     else {
-      return `software_parameter/${this.id}.json`;
+      return 'software_parameter/${this.id}.json';
     }
   }
 }

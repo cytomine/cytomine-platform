@@ -1,5 +1,6 @@
 import Cytomine from '../cytomine.js';
 import Model from './model.js';
+import SliceInstance from './slice-instance.js';
 
 export default class ImageInstance extends Model {
   /** @inheritdoc */
@@ -17,19 +18,24 @@ export default class ImageInstance extends Model {
 
     this.filename = null;
     this.originalFilename = null;
-    this.extension = null;
     this.instanceFilename = null;
     this.path = null;
-    this.fullPath = null;
 
-    this.mime = null;
     this.sample = null;
 
     this.width = null;
     this.height = null;
+    this.depth = null;
+    this.time = null;
+    this.channels = null;
     this.resolution = null;
     this.magnification = null;
-    this.depth = null;
+    this.physicalSizeX = null;
+    this.physicalSizeY = null;
+    this.physicalSizeZ = null;
+    this.fps = null;
+    this.zoom = null;
+    this.contentType = null;
 
     this.thumb = null;
     this.preview = null;
@@ -139,20 +145,6 @@ export default class ImageInstance extends Model {
   }
 
   /**
-   * Fetch the information about the annotation layers present in the image instance
-   *
-   * @returns {Array<user, image, countAnnotation, countReviewedAnnotation>} The list of annotation layers with counts
-   */
-  async fetchAnnotationsIndex() {
-    if(this.isNew()) {
-      throw new Error('Cannot fetch annotations index of image with no ID.');
-    }
-
-    let {data} = await Cytomine.instance.api.get(`${this.callbackIdentifier}/${this.id}/annotationindex.json`);
-    return data.collection;
-  }
-
-  /**
    * Copy to the image instance the properties and description associated with the provided source image
    *
    * @param {number} idSource Identifier of the source image instance
@@ -237,6 +229,24 @@ export default class ImageInstance extends Model {
 
     let {data} = await Cytomine.instance.api.get(`imageinstance/${this.id}/reviewedannotation/stats.json`);
     return data.collection;
+  }
+
+  /**
+   * Fetch the reference slice instance for the image instance
+   *
+   * @returns {SliceInstance}
+   */
+  async fetchReferenceSlice() {
+    if(this.isNew()) {
+      throw new Error('Cannot get reference slice of an image with no ID.');
+    }
+
+    if(!this._referenceSlice) {
+      let {data} = await Cytomine.instance.api.get(`${this.callbackIdentifier}/${this.id}/sliceinstance/reference.json`);
+      this._referenceSlice = new SliceInstance(data);
+    }
+
+    return this._referenceSlice;
   }
 
 }

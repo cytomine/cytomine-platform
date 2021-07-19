@@ -33,6 +33,7 @@ export default class Job extends Model {
     this.rate = null;
     this.dataDeleted = null;
     this.algoType = null;
+    this.favorite = null;
 
     this.userJob = null;
     this.username = null;
