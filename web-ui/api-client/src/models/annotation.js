@@ -142,6 +142,18 @@ export default class Annotation extends Model {
     return reviewedAnnotation;
   }
 
+  async repeat(slice, number) {
+    if(this.isNew()) {
+      throw new Error('Cannot repeat an annotation with no ID.');
+    }
+
+    let {data} = await Cytomine.instance.api.post(`userannotation/${this.id}/repeat.json`, {
+      slice,
+      repeat: number
+    });
+    return data;
+  }
+
   /**
    * Cancel the review of the current annotation (thus deleting associated reviewed annotations)
    */
