@@ -129,6 +129,13 @@ export default class Job extends Model {
     return this;
   }
 
+  async setFavorite() {
+    let {data} = await Cytomine.instance.api.post(`${this.callbackIdentifier}/${this.id}/favorite.json`,
+      this.getPublicProperties());
+    this.populate(data[this.callbackIdentifier]);
+    return this;
+  }
+
   /**
    * Fetch the number of each type of data created by the job
    *
