@@ -12,7 +12,6 @@ export default class Storage extends Model {
     super._initProperties();
 
     this.name = null;
-    this.basePath = null;
     this.user = null;
   }
 

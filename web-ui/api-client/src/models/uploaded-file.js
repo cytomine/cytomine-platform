@@ -4,14 +4,17 @@ import Model from './model.js';
 /** Enum providing the uploaded file status handled in Cytomine */
 export const UploadedFileStatus = Object.freeze({
   UPLOADED: 0,
-  CONVERTED: 1,
-  DEPLOYED: 2,
-  ERROR_FORMAT: 3,
-  ERROR_CONVERT: 4,
-  UNCOMPRESSED: 5,
-  TO_DEPLOY: 6,
-  TO_CONVERT: 7,
-  ERROR_DEPLOYMENT: 8
+  DETECTING_FORMAT: 10,
+  ERROR_FORMAT: 11,
+  EXTRACTING_DATA: 20,
+  ERROR_EXTRACTION: 21,
+  CONVERTING: 30,
+  ERROR_CONVERSION: 31,
+  DEPLOYING: 40,
+  ERROR_DEPLOYMENT: 41,
+  DEPLOYED: 100,
+  EXTRACTED: 102,
+  CONVERTED: 104
 });
 
 export default class UploadedFile extends Model {
@@ -26,7 +29,8 @@ export default class UploadedFile extends Model {
 
     this.user = null;
     this.projects = null;
-    this.storages = null;
+    this.storage = null;
+    this.imageServer = null;
 
     this.path = null;
     this.filename = null;
@@ -37,10 +41,10 @@ export default class UploadedFile extends Model {
     this.size = null;
 
     this.parent = null;
-    this.image = null;
     this.thumbURL = null;
 
     this.status = null;
+    this.statusText = null;
   }
 
   get downloadURL() {
