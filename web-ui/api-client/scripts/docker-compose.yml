@@ -8,12 +8,13 @@ services:
     ports: [ "80:80" ]
     restart: unless-stopped
     volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
       - "${PWD}/scripts/config/nginx/nginxCORS.conf:/usr/local/nginx/conf/nginx.conf"
     links:
       - "core:core"
 
   core:
-    image: cytomine/core:release-multidim-20210726170212-SNAPSHOT
+    image: cytomine/core:release-multidim-20210727103618-SNAPSHOT
     restart: unless-stopped
     ports: [ "8090:8080" ]
     volumes:
