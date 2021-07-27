@@ -48,3 +48,5 @@ grails.mongo.options.threadsAllowedToBlockForConnectionMultiplier=5
 grails.messageBrokerServerURL='rabbitmq:5672'
 
 grails.serverID='86f55071-eac0-4fd4-8e3d-ecd35e775f52'
+
+cytomine.forceVersion='3.2.0'
