@@ -153,13 +153,13 @@ describe('Job', function() {
       it('Fetch with project filter', async function() {
         let collection = await new JobCollection({project}).fetchAll();
         expect(collection).to.be.an.instanceof(JobCollection);
-        expect(collection).to.have.lengthOf(nbJobs);
+        expect(collection).to.have.lengthOf(nbJobs + 1); // +1 because 1 is created for otherSoftware in the project
       });
 
       it('Fetch with project and software filters', async function() {
         let collection = await new JobCollection({project, software}).fetchAll();
         expect(collection).to.be.an.instanceof(JobCollection);
-        expect(collection).to.have.lengthOf(nbJobs - 1);
+        expect(collection).to.have.lengthOf(nbJobs);
       });
     });
 
