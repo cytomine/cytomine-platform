@@ -37,7 +37,7 @@ grails.rabbitMQPublicKey='d6376301-eb72-4c46-b4f7-0ffcd6313ccc'
 
 grails.notification.email='your.email@gmail.com'
 grails.notification.password='passwd'
-grails.notification.smtp.host='smtp.gmail.com'
+grails.notification.smtp.host='disabled' // mail are disabled for tests
 grails.notification.smtp.port='587'
 grails.admin.email='info@cytomine.coop'
 
@@ -48,3 +48,5 @@ grails.mongo.options.threadsAllowedToBlockForConnectionMultiplier=5
 grails.messageBrokerServerURL='rabbitmq:5672'
 
 grails.serverID='86f55071-eac0-4fd4-8e3d-ecd35e775f52'
+
+cytomine.forceVersion='3.2.0'

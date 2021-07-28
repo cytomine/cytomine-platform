@@ -33,6 +33,7 @@ export default class Job extends Model {
     this.rate = null;
     this.dataDeleted = null;
     this.algoType = null;
+    this.favorite = null;
 
     this.userJob = null;
     this.username = null;
@@ -124,6 +125,13 @@ export default class Job extends Model {
     }
 
     let {data} = await Cytomine.instance.api.post(`${this.callbackIdentifier}/${this.id}/kill.json`);
+    this.populate(data[this.callbackIdentifier]);
+    return this;
+  }
+
+  async setFavorite() {
+    let {data} = await Cytomine.instance.api.post(`${this.callbackIdentifier}/${this.id}/favorite.json`,
+      this.getPublicProperties());
     this.populate(data[this.callbackIdentifier]);
     return this;
   }

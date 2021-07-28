@@ -15,6 +15,7 @@ export default class AnnotationCollection extends Collection {
     this.showAlgo = null;
     this.showUser = null;
     this.showImage = null;
+    this.showSlice = null;
 
     this.reviewed = null;
     this.notReviewedOnly = null;
@@ -23,6 +24,9 @@ export default class AnnotationCollection extends Collection {
     this.project = null;
     this.image = null;
     this.images = null;
+
+    this.slice = null;
+    this.slices = null;
 
     this.job = null;
     this.user = null;
