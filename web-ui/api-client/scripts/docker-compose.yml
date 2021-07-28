@@ -8,16 +8,18 @@ services:
     ports: [ "80:80" ]
     restart: unless-stopped
     volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
       - "${PWD}/scripts/config/nginx/nginxCORS.conf:/usr/local/nginx/conf/nginx.conf"
     links:
       - "core:core"
 
   core:
-    image: cytomine/core:v3.0.4
+    image: cytomine/core:release-multidim-20210727103618-SNAPSHOT
     restart: unless-stopped
     ports: [ "8090:8080" ]
     volumes:
       - "${PWD}/scripts/config/cytomineconfig.groovy:/usr/share/tomcat7/.grails/cytomineconfig.groovy"
+      - "${PWD}/scripts/config/application.properties:/var/lib/tomcat7/application.properties"
       - "${PWD}/scripts/config/addHosts.sh:/tmp/addHosts.sh"
     links:
       - "postgresql:postgresql"
@@ -36,3 +38,49 @@ services:
     image: cytomine/rabbitmq:v1.1.2
     ports: [ "5672:5672", "15672:15672" ]
     restart: unless-stopped
+
+  memcached:
+    image: cytomine/memcached:v1.1.2
+    restart: unless-stopped
+    volumes:
+      - "${PWD}/scripts/config/memcached/memcached.conf:/etc/memcached.conf"
+
+  iipOff:
+    image: cytomine/iipofficial:v1.2.0
+    volumes:
+      - "${PWD}/scripts/config/iipOff/nginx.conf.sample:/tmp/nginx.conf.sample"
+      - "/tmp/data/images:/data/images"
+    restart: unless-stopped
+    privileged: true
+    environment:
+      - NB_IIP_PROCESS=10
+
+  iipCyto:
+    image: cytomine/iipcyto:v1.2.2
+    volumes:
+      - "${PWD}/scripts/config/iipCyto/nginx.conf.sample:/tmp/nginx.conf.sample"
+      - "/tmp/data/images:/data/images"
+    restart: unless-stopped
+    privileged: true
+    environment:
+      - NB_IIP_PROCESS=10
+
+  bioformat:
+    image: cytomineuliege/bioformat:v2.3.1
+    volumes:
+      - "/tmp/data/images:/data/images"
+    restart: unless-stopped
+    environment:
+      - BIOFORMAT_PORT=4321
+
+  ims:
+    image: cytomine/ims:vrelease-multidim-ci-20210719161613-SNAPSHOT
+    restart: unless-stopped
+    volumes:
+      - "/tmp/data/images:/data/images"
+      - "/tmp/data/images/_buffer:/tmp/uploaded"
+      - "${PWD}/scripts/config/ims/imageserverconfig.properties:/usr/share/tomcat7/.grails/imageserverconfig.properties"
+      - "${PWD}/scripts/config/ims/ims-config.groovy:/usr/share/tomcat7/.grails/ims-config.groovy"
+      - "${PWD}/scripts/config/ims/addHosts.sh:/tmp/addHosts.sh"
+    environment:
+      - IMS_STORAGE_PATH=/data/images
