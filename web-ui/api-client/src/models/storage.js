@@ -86,4 +86,20 @@ export default class Storage extends Model {
     let {data} = await Cytomine.instance.api.delete(`storage/${this.id}/user.json?users=${idUsers.join(',')}`);
     return data;
   }
+
+  /**
+   * Change permission for a user on this storage
+   *
+   * @param {number} idUser identifier of the user
+   * @param {String} permission Permission for this user (READ, WRITE, ADMINISTRATION)
+   *
+   * @returns {Object} Result (OK) in case of success
+   */
+  async changePermission(idUser, permission) {
+    if(this.isNew()) {
+      throw new Error('Cannot change permission to a storage with no ID.');
+    }
+    let {data} = await Cytomine.instance.api.put(`storage/${this.id}/user/${idUser}.json?` + (permission? `&permission=${permission}` : ''));
+    return data;
+  }
 }
