@@ -25,7 +25,7 @@ PLUGIN_NAME="pims-plugin-format-openslide"
 OPENSLIDE_VERSION=3.4.1
 OPENSLIDE_URL=https://github.com/openslide/openslide/releases/download
 
-before_vips() {
+dependencies_before_vips() {
   echo "Prerequisites to install before vips for ${PLUGIN_NAME}";
 
   apt-get -y install --no-install-recommends --no-install-suggests \
@@ -45,7 +45,7 @@ before_vips() {
   make install
 }
 
-before_python() {
+dependencies_before_python() {
   echo "Prerequisites to install before Python dependencies for ${PLUGIN_NAME}";
 }
 
