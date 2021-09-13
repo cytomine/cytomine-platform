@@ -55,8 +55,13 @@ class NDPIParser(TifffileParser):
 
         # Magnification extracted by OpenSlide: nominal_magnification
         # Magnification extracted by BioFormats: calibrated_magnification
-        imd.objective.nominal_magnification = parse_float(ndpi_metadata.get("Magnification"))
-        imd.objective.calibrated_magnification = parse_float(ndpi_metadata.get("Objective.Lens.Magnificant"))
+        imd.objective.nominal_magnification = parse_float(
+            ndpi_metadata.get("Magnification")
+        )
+        imd.objective.calibrated_magnification = parse_float(
+            ndpi_metadata.get("Objective.Lens.Magnificant")
+        )  # Not a typo!
+
         imd.microscope.model = ndpi_metadata.get("Model")
 
         # NDPI series: Baseline, Macro, Map
@@ -90,11 +95,13 @@ class NDPIParser(TifffileParser):
 
         pyramid = Pyramid()
         for level in range(parse_int(openslide.get('openslide.level-count'))):
-            prefix = 'openslide.level[{}].'.format(level)
-            pyramid.insert_tier(parse_int(openslide.get(prefix + 'width')),
-                                parse_int(openslide.get(prefix + 'height')),
-                                (parse_int(openslide.get(prefix + 'tile-width')),
-                                 parse_int(openslide.get(prefix + 'tile-height'))))
+            prefix = f'openslide.level[{level}].'
+            pyramid.insert_tier(
+                parse_int(openslide.get(prefix + 'width')),
+                parse_int(openslide.get(prefix + 'height')),
+                (parse_int(openslide.get(prefix + 'tile-width')),
+                 parse_int(openslide.get(prefix + 'tile-height')))
+            )
 
         return pyramid
 

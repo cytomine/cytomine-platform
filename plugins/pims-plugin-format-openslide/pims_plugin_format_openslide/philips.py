@@ -37,8 +37,11 @@ class PhilipsParser(OpenslideVipsParser):
 
         imd = super().parse_known_metadata()
 
-        acquisition_date = self.parse_acquisition_date(get_vips_field(image, 'philips.DICOM_ACQUISITION_DATETIME'))
-        imd.acquisition_datetime = acquisition_date if acquisition_date else imd.acquisition_datetime
+        acquisition_date = self.parse_acquisition_date(
+            get_vips_field(image, 'philips.DICOM_ACQUISITION_DATETIME')
+        )
+        if acquisition_date:
+            imd.acquisition_datetime = acquisition_date
 
         imd.is_complete = True
         return imd

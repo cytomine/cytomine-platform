@@ -18,7 +18,7 @@
 
 # How to run this script ?
 # bash install-prerequisites.sh func arg1 arg2
-# Example: bash install-prerequisites.sh before_vips
+# Example: bash install-prerequisites.sh dependencies_before_vips
 
 PLUGIN_NAME="pims-plugin-format-openslide"
 
