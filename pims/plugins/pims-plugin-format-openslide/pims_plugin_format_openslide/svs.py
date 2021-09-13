@@ -77,7 +77,7 @@ class SVSParser(TifffileParser):
         """
         try:
             if date and time:
-                return datetime.strptime("{} {}".format(date, time), "%m/%d/%y %H:%M:%S")
+                return datetime.strptime(f"{date} {time}", "%m/%d/%y %H:%M:%S")
             elif date:
                 return datetime.strptime(date, "%Y-%m-%dT%H:%M:%SZ")
             else:
@@ -95,7 +95,9 @@ class SVSParser(TifffileParser):
 
         imd.physical_size_x = self.parse_physical_size(svs_metadata.get("MPP"))
         imd.physical_size_y = imd.physical_size_x
-        imd.objective.nominal_magnification = parse_float(svs_metadata.get("AppMag"))
+        imd.objective.nominal_magnification = parse_float(
+            svs_metadata.get("AppMag")
+        )
 
         for series in cached_tifffile(self.format).series:
             name = series.name.lower()

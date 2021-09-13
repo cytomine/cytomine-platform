@@ -14,11 +14,9 @@
 
 from pims import UNIT_REGISTRY
 from pims.formats.utils.engines.vips import VipsParser, VipsReader, get_vips_field
-
-from pyvips import Image as VIPSImage
-
 from pims.formats.utils.metadata import parse_float, parse_int
 from pims.formats.utils.pyramid import Pyramid
+from pyvips import Image as VIPSImage
 
 
 def cached_vips_openslide_file(format):
@@ -47,12 +45,16 @@ class OpenslideVipsParser(VipsParser):
         if mppy:
             imd.physical_size_y = mppy * UNIT_REGISTRY("micrometers")
 
-        imd.objective.nominal_magnification = parse_float(get_vips_field(image, 'openslide.objective-power'))
+        imd.objective.nominal_magnification = parse_float(
+            get_vips_field(image, 'openslide.objective-power')
+        )
 
         for associated in ('macro', 'thumbnail', 'label'):
             if associated in get_vips_field(image, 'slide-associated-images', []):
-                head = VIPSImage.openslideload(str(self.format.path), associated=associated)
-                imd_associated = getattr(imd, 'associated_{}'.format(associated[:5]))
+                head = VIPSImage.openslideload(
+                    str(self.format.path), associated=associated
+                )
+                imd_associated = getattr(imd, f'associated_{associated[:5]}')
                 imd_associated.width = head.width
                 imd_associated.height = head.height
                 imd_associated.n_channels = head.bands
@@ -76,12 +78,14 @@ class OpenslideVipsParser(VipsParser):
             return super(OpenslideVipsParser, self).parse_pyramid()
 
         for level in range(n_levels):
-            prefix = 'openslide.level[{}].'.format(level)
+            prefix = f'openslide.level[{level}].'
             width = parse_int(get_vips_field(image, prefix + 'width'))
             height = parse_int(get_vips_field(image, prefix + 'height'))
-            pyramid.insert_tier(width, height,
-                                (parse_int(get_vips_field(image, prefix + 'tile-width', width)),
-                                 parse_int(get_vips_field(image, prefix + 'tile-height', height))))
+            pyramid.insert_tier(
+                width, height,
+                (parse_int(get_vips_field(image, prefix + 'tile-width', width)),
+                 parse_int(get_vips_field(image, prefix + 'tile-height', height)))
+            )
 
         return pyramid
 
@@ -91,36 +95,46 @@ class OpenslideVipsReader(VipsReader):
         if precomputed:
             imd = self.format.full_imd
             if imd.associated_thumb.exists:
-                return VIPSImage.openslideload(str(self.format.path), associated='thumbnail').flatten()
+                return VIPSImage.openslideload(
+                    str(self.format.path), associated='thumbnail'
+                ).flatten()
 
         return super().read_thumb(out_width, out_height, **other)
 
     def read_window(self, region, out_width, out_height, **other):
-        tier = self.format.pyramid.most_appropriate_tier(region, (out_width, out_height))
+        out_size = (out_width, out_height)
+        tier = self.format.pyramid.most_appropriate_tier(region, out_size)
         region = region.scale_to_tier(tier)
 
         level_page = VIPSImage.openslideload(str(self.format.path), level=tier.level)
-        return level_page.extract_area(region.left, region.top, region.width, region.height).flatten()
+        return level_page.extract_area(
+            region.left, region.top, region.width, region.height
+        ).flatten()
 
     def read_tile(self, tile, **other):
         tier = tile.tier
         level_page = VIPSImage.openslideload(str(self.format.path), level=tier.level)
 
         # There is no direct access to underlying tiles in vips
-        # But the following computation match vips implementation so that only the tile
-        # that has to be read is read.
+        # But the following computation match vips implementation so that only
+        # the tile that has to be read is read.
         # https://github.com/jcupitt/tilesrv/blob/master/tilesrv.c#L461
-        # TODO: is direct tile access significantly faster ?
-        return level_page.extract_area(tile.left, tile.top, tile.width, tile.height).flatten()
+        return level_page.extract_area(
+            tile.left, tile.top, tile.width, tile.height
+        ).flatten()
 
     def read_label(self, out_width, out_height, **other):
         imd = self.format.full_imd
         if imd.associated_label.exists:
-            return VIPSImage.openslideload(str(self.format.path), associated='label').flatten()
+            return VIPSImage.openslideload(
+                str(self.format.path), associated='label'
+            ).flatten()
         return None
 
     def read_macro(self, out_width, out_height, **other):
         imd = self.format.full_imd
         if imd.associated_macro.exists:
-            return VIPSImage.openslideload(str(self.format.path), associated='macro').flatten()
+            return VIPSImage.openslideload(
+                str(self.format.path), associated='macro'
+            ).flatten()
         return None

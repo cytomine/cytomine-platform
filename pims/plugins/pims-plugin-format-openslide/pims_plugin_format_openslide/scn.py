@@ -35,7 +35,9 @@ class SCNParser(OpenslideVipsParser):
         image = cached_vips_file(self.format)
 
         imd = super().parse_known_metadata()
-        imd.acquisition_datetime = parse_datetime(get_vips_field(image, 'leica.creation-date'))
+        imd.acquisition_datetime = parse_datetime(
+            get_vips_field(image, 'leica.creation-date')
+        )
         imd.microscope.model = get_vips_field(image, 'leica.device-model')
         imd.is_complete = True
         return imd
