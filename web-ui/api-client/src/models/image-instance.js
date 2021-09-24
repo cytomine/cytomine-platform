@@ -235,39 +235,39 @@ export default class ImageInstance extends Model {
     return this._referenceSlice;
   }
 
-
-  /**
-   * Fetch the histogram statistics for the image instance
-   *
-   * @returns {Array<sample: Number, min: Number, max: Number>} The histogram statistics
-   */
-  async fetchHistogramStats() {
+  async fetchHistogram({nBins} = {}) {
     if (this.isNew()) {
-      throw new Error('Cannot get histogram statistics for an image with no ID.');
+      throw new Error('Cannot get histogram for an image with no ID.');
+    }
+    let params = {nBins};
+    let {data} = await Cytomine.instance.api.get(`${this.callbackIdentifier}/${this.id}/histogram.json`, {params});
+    return data;
+  }
+
+  async fetchHistogramBounds() {
+    if (this.isNew()) {
+      throw new Error('Cannot get histogram bounds for an image with no ID.');
     }
 
-    let {data} = await Cytomine.instance.api.get(`${this.callbackIdentifier}/${this.id}/histogram/stats.json`);
+    let {data} = await Cytomine.instance.api.get(`${this.callbackIdentifier}/${this.id}/histogram/bounds.json`);
+    return data;
+  }
+
+  async fetchChannelHistograms({nBins} = {}) {
+    if (this.isNew()) {
+      throw new Error('Cannot get channel histograms for an image with no ID.');
+    }
+    let params = {nBins};
+    let {data} = await Cytomine.instance.api.get(`${this.callbackIdentifier}/${this.id}/channelhistogram.json`, {params});
     return data.collection;
   }
 
-  async fetchNbSampleHistograms() {
+  async fetchChannelHistogramBounds() {
     if (this.isNew()) {
-      throw new Error('Cannot get number of sample histograms for an image with no ID.');
+      throw new Error('Cannot get channel histogram bounds for an image with no ID.');
     }
 
-    let {data} = await Cytomine.instance.api.get(
-      `${this.callbackIdentifier}/${this.id}/samplehistogram/count.json`
-    );
-    return data.total;
+    let {data} = await Cytomine.instance.api.get(`${this.callbackIdentifier}/${this.id}/channelhistogram/bounds.json`);
+    return data.collection;
   }
-
-  async extractHistogram() {
-    if (this.isNew()) {
-      throw new Error('Cannot extract histogram for an image with no ID.');
-    }
-
-    await Cytomine.instance.api.post(`${this.callbackIdentifier}/${this.id}/histogram/extract.json`);
-    return this;
-  }
-
 }
