@@ -17,6 +17,7 @@ export {default as ImageConsultation} from './models/image-consultation.js';
 export {default as ImageFilter} from './models/image-filter.js';
 export {default as ImageFilterProject} from './models/image-filter-project.js';
 export {default as ImageInstance} from './models/image-instance.js';
+export {default as ImageScore} from './models/image-score.js';
 export {default as ImageServer} from './models/image-server.js';
 export {default as Job, JobStatus} from './models/job.js';
 export {default as JobData} from './models/job-data.js';
@@ -31,6 +32,9 @@ export {default as ProjectDefaultLayer} from './models/project-default-layer.js'
 export {default as ProjectRepresentative} from './models/project-representative.js';
 export {default as Property} from './models/property.js';
 export {default as Role} from './models/role.js';
+export {default as Score} from './models/score.js';
+export {default as ScoreValue} from './models/score-value.js';
+export {default as ScoreProject} from './models/score-project.js';
 export {default as SliceInstance} from './models/slice-instance.js';
 export {default as Software} from './models/software.js';
 export {default as SoftwareParameter} from './models/software-parameter.js';
@@ -66,6 +70,7 @@ export {default as ImageFilterCollection} from './collections/image-filter-colle
 export {default as ImageFilterProjectCollection} from './collections/image-filter-project-collection.js';
 export {default as ImageInstanceCollection} from './collections/image-instance-collection.js';
 export {default as ImageServerCollection} from './collections/image-server-collection.js';
+export {default as ImageScoreCollection} from './collections/image-score-collection.js';
 export {default as JobCollection} from './collections/job-collection.js';
 export {default as JobDataCollection} from './collections/job-data-collection.js';
 export {default as JobParameterCollection} from './collections/job-parameter-collection.js';
@@ -79,6 +84,9 @@ export {default as ProjectDefaultLayerCollection} from './collections/project-de
 export {default as ProjectRepresentativeCollection} from './collections/project-representative-collection.js';
 export {default as PropertyCollection} from './collections/property-collection.js';
 export {default as RoleCollection} from './collections/role-collection.js';
+export {default as ScoreCollection} from './collections/score-collection.js';
+export {default as ScoreValueCollection} from './collections/score-value-collection.js';
+export {default as ScoreProjectCollection} from './collections/score-project-collection.js';
 export {default as SliceInstanceCollection} from './collections/slice-instance-collection.js';
 export {default as SoftwareCollection} from './collections/software-collection.js';
 export {default as SoftwareParameterCollection} from './collections/software-parameter-collection.js';
