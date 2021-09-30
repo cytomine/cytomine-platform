@@ -14,8 +14,8 @@ export default class ScoreProjectCollection extends Collection {
   }
 
   get uri() {
-    if(this._filter.key === 'score' && this._filter.value) {
-      return `score/${this._filter.value}/score_project.json`;
+    if(this._filter.key === 'project' && this._filter.value) {
+      return `project/${this._filter.value}/score_project.json`;
     }
     else {
       return 'score_project.json';

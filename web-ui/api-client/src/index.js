@@ -13,6 +13,7 @@ export {default as Configuration} from './models/configuration.js';
 export {default as Description} from './models/description.js';
 export {default as Discipline} from './models/discipline.js';
 export {default as Group} from './models/group.js';
+export {default as Generic} from './models/generic.js';
 export {default as ImageConsultation} from './models/image-consultation.js';
 export {default as ImageFilter} from './models/image-filter.js';
 export {default as ImageFilterProject} from './models/image-filter-project.js';
@@ -64,6 +65,7 @@ export {default as AttachedFileCollection} from './collections/attached-file-col
 export {default as CompanionFileCollection} from './collections/companion-file-collection.js';
 export {default as ConfigurationCollection} from './collections/configuration-collection.js';
 export {default as DisciplineCollection} from './collections/discipline-collection.js';
+export {default as GenericCollection} from './collections/generic-collection.js';
 export {default as GroupCollection} from './collections/group-collection.js';
 export {default as ImageConsultationCollection} from './collections/image-consultation-collection.js';
 export {default as ImageFilterCollection} from './collections/image-filter-collection.js';
