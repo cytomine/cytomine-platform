@@ -36,6 +36,7 @@ export {default as Role} from './models/role.js';
 export {default as Score} from './models/score.js';
 export {default as ScoreValue} from './models/score-value.js';
 export {default as ScoreProject} from './models/score-project.js';
+export {default as ScoringDescription} from './models/scoring-description.js';
 export {default as SliceInstance} from './models/slice-instance.js';
 export {default as Software} from './models/software.js';
 export {default as SoftwareParameter} from './models/software-parameter.js';
