@@ -13,7 +13,7 @@
         "build": "webpack-cli --mode=production",
         "test": "./node_modules/karma/bin/karma start",
         "prepack": "npm run build",
-        "prepare": "cd ./nodes_modules/cytomine-client && npm install && npm run build"
+        "prepare": "cd ./node_modules/cytomine-client && npm install && npm run build"
     },
     "files": [
         "dist",
