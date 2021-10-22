@@ -12,7 +12,8 @@
         "dev": "webpack-cli --mode=development --watch --info-verbosity verbose",
         "build": "webpack-cli --mode=production",
         "test": "./node_modules/karma/bin/karma start",
-        "prepack": "npm run build"
+        "prepack": "npm run build",
+        "prepare": "npm run build"
     },
     "files": [
         "dist",
