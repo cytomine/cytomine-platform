@@ -73,6 +73,24 @@ export default class Annotation extends Model {
   }
 
   /**
+   * Get the annotation crop URL.
+   *
+   * @param maxSize the desired crop size along largest side
+   * @param format the desired crop format (jpg, png, webp)
+   * @param otherParameters optional other parameters to include in the crop URL
+   * @returns {String} the crop URL of the annotation with a specified size
+   */
+  annotationCropURL(maxSize = 256, format = 'jpg', otherParameters = {}) {
+    if (this.cropURL === null) {
+      return null;
+    }
+    let url = this.cropURL.split('.')[0];
+    let parameters = {maxSize, ...otherParameters};
+    let query = new URLSearchParams(parameters).toString();
+    return `${url}.${format}?${query}`;
+  }
+
+  /**
    * @override
    * @static Fetch an annotation
    *
