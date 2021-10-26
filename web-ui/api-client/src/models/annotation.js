@@ -40,7 +40,7 @@ export default class Annotation extends Model {
     this.term = null;
 
     this.imageURL = null;
-    this.cropURL = null;
+    this.url = null;
     this.smallCropURL = null;
   }
 
@@ -81,10 +81,10 @@ export default class Annotation extends Model {
    * @returns {String} the crop URL of the annotation with a specified size
    */
   annotationCropURL(maxSize = 256, format = 'jpg', otherParameters = {}) {
-    if (this.cropURL === null) {
+    if (this.url === null) {
       return null;
     }
-    let url = this.cropURL.split('.')[0];
+    let url = this.url.split('.')[0];
     let parameters = {maxSize, ...otherParameters};
     let query = new URLSearchParams(parameters).toString();
     return `${url}.${format}?${query}`;
