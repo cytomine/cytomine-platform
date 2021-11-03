@@ -62,9 +62,25 @@ def test_img_exists():
 	assert os.path.exists(path+image) == True
 
 def test_info(app, client):
-	response = client.get("/formats")
+	response = client.get('/image/upload_test_mrxs/CMU-2.zip/info')
 	assert response.status_code == 200
-	assert "ndpi" in response.content.decode('utf-8').lower()
+	assert "mrxs" in response.json()['image']['original_format'].lower()
+	assert response.json()['image']['width'] == 109240
+	assert response.json()['image']['height'] == 220696
+	
+def test_metadata(app, client):
+	response = client.get('/image/upload_test_mrxs/CMU-2.zip/metadata')
+	assert response.status_code == 200
+	assert response.json()['items'][5]['key'] == 'ImageWidth'
+	assert response.json()['items'][5]["value"] == 854
+	assert response.json()['items'][6]['key'] == 'ImageHeight'
+	assert response.json()['items'][6]["value"] == 1724
+	assert response.json()['items'][2]["key"] == 'XResolution'
+	assert response.json()['items'][2]["value"] == 1
+	assert response.json()['items'][3]["key"] == 'YResolution'
+	assert response.json()['items'][3]["value"] == 1
+	assert response.json()['items'][1]["key"] == 'ResolutionUnit'
+	assert response.json()['items'][1]["value"] == "None"
 
 # For a non-normalized tile, the width is 124
 # To have a 256 x 256, the zoom level needs to be high enough
