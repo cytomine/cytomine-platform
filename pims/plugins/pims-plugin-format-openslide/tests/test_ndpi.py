@@ -57,9 +57,21 @@ def test_img_exists():
 	assert os.path.exists(path+image) == True
 
 def test_info(app, client):
-	response = client.get("/formats")
+	response = client.get('/image/upload_test_ndpi/lombric-c-sagit-111.ndpi/info')
 	assert response.status_code == 200
-	assert "ndpi" in response.content.decode('utf-8').lower()
+	assert "ndpi" in response.json()['image']['original_format'].lower()
+	assert response.json()['image']['width'] == 71424
+	assert response.json()['image']['height'] == 24064
+	
+def test_metadata(app, client):
+	response = client.get('/image/upload_test_ndpi/lombric-c-sagit-111.ndpi/metadata')
+	assert response.status_code == 200
+	assert response.json()['items'][8]["key"] == 'XResolution'
+	assert response.json()['items'][8]["value"] == '(43784, 1)'
+	assert response.json()['items'][9]["key"] == 'YResolution'
+	assert response.json()['items'][9]["value"] == '(43784, 1)'
+	assert response.json()['items'][10]["key"] == 'ResolutionUnit'
+	assert response.json()['items'][10]["value"] == "CENTIMETER"
 
 # For a non-normalized tile, the width is 124
 def test_get_norm_tile(app, client):
