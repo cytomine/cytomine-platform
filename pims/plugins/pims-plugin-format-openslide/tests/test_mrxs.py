@@ -6,13 +6,17 @@ from pims.formats import FORMATS
 import io
 from pims.importer.importer import FileImporter
 
+from tests.utils.formats import info_test, thumb_test, resized_test, mask_test, crop_test, crop_null_annot_test, histogram_perimage_test
+
 from pims.files.file import (
     EXTRACTED_DIR, HISTOGRAM_STEM, ORIGINAL_STEM, PROCESSED_DIR, Path,
     SPATIAL_STEM, UPLOAD_DIR_PREFIX, unique_name_generator
 )
 from pims.files.archive import Archive, ArchiveError
 
-def getImage(path, image):
+import pytest
+
+def get_image(path, image):
 	filepath = os.path.join(path, image)
 	# If image does not exist locally -> download image
 	if not os.path.exists(path):
@@ -20,23 +24,23 @@ def getImage(path, image):
 	
 	if not os.path.exists(filepath):
 		try:
-			url = f"https://data.cytomine.coop/open/openslide/mirax-mrxs/CMU-2.zip" #OAC
+			url = f"https://data.cytomine.coop/open/openslide/mirax-mrxs/{image}" #OAC
 			urllib.request.urlretrieve(url, filepath)
 		except Exception as e:
 			print("Could not download image")
 			print(e)
 	
-	if not os.path.exists(path + "processed"):
+	if not os.path.exists(os.path.join(path, "processed")):
 		try:
-			fi = FileImporter("/data/pims/upload_test_mrxs/CMU-2.zip")
+			fi = FileImporter(f"/data/pims/upload_test_mrxs/{image}")
 			fi.upload_dir = "/data/pims/upload_test_mrxs"
 			fi.processed_dir = fi.upload_dir / Path("processed")
 			fi.mkdir(fi.processed_dir)
 		except Exception as e:
-			print(path + "/processed could not be created")
+			print(path + "processed could not be created")
 			print(e)
 
-	if not os.path.exists(path+"/processed/visualisation.MRXS"):
+	if not os.path.exists(os.path.join(path, "processed/visualisation.MRXS")):
 		try:
 			fi.upload_path = Path(filepath)
 			original_filename = Path(f"{ORIGINAL_STEM}.MRXS")
@@ -54,22 +58,20 @@ def getImage(path, image):
 			print("Importation of images could not be done")
 			print(e)
 		
-def test_img_exists():
+def test_mrxs_exists(image_path_mrxs):
 	# Test if the file exists, either locally either with the OAC
-	path = "/data/pims/upload_test_mrxs/"
-	image = "CMU-2.zip"
-	getImage(path, image)
-	assert os.path.exists(path+image) == True
+	get_image(image_path_mrxs[0], image_path_mrxs[1])
+	assert os.path.exists(os.path.join(image_path_mrxs[0],image_path_mrxs[1])) == True
 
-def test_info(app, client):
-	response = client.get('/image/upload_test_mrxs/CMU-2.zip/info')
+def test_mrxs_info(client, image_path_mrxs):
+	response = client.get(f'/image/upload_test_mrxs/{image_path_mrxs[1]}/info')
 	assert response.status_code == 200
 	assert "mrxs" in response.json()['image']['original_format'].lower()
 	assert response.json()['image']['width'] == 109240
 	assert response.json()['image']['height'] == 220696
 	
-def test_metadata(app, client):
-	response = client.get('/image/upload_test_mrxs/CMU-2.zip/metadata')
+def test_mrxs_metadata(client, image_path_mrxs):
+	response = client.get(f'/image/upload_test_mrxs/{image_path_mrxs[1]}/metadata')
 	assert response.status_code == 200
 	assert response.json()['items'][5]['key'] == 'ImageWidth'
 	assert response.json()['items'][5]["value"] == 854
@@ -84,8 +86,8 @@ def test_metadata(app, client):
 
 # For a non-normalized tile, the width is 124
 # To have a 256 x 256, the zoom level needs to be high enough
-def test_get_norm_tile(app, client):
-	response = client.get("/image/upload_test_mrxs/CMU-2.zip/normalized-tile/zoom/4/ti/3", headers={"accept": "image/jpeg"})
+def test_mrxs_norm_tile(client, image_path_mrxs):
+	response = client.get(f"/image/upload_test_mrxs/{image_path_mrxs[1]}/normalized-tile/zoom/4/ti/3", headers={"accept": "image/jpeg"})
 	assert response.status_code == 200
 	
 	img_response = Image.open(io.BytesIO(response.content))
@@ -93,27 +95,21 @@ def test_get_norm_tile(app, client):
 	assert width_resp == 256
 	assert height_resp == 256
 
-def test_get_thumb(app, client):
-	response = client.get("/image/upload_test_mrxs/CMU-2.zip/thumb", headers={"accept": "image/jpeg"})
-	assert response.status_code == 200
+def test_mrxs_thumb(client, image_path_mrxs):
+	thumb_test(client, image_path_mrxs[1], "mrxs")
+		
+def test_mrxs_resized(client, image_path_mrxs):
+	resized_test(client, image_path_mrxs[1], "mrxs")	
+
+def test_mrxs_mask(client, image_path_mrxs):
+	mask_test(client, image_path_mrxs[1], "mrxs")
 	
-def test_get_resized(app, client):
-	response = client.get("/image/upload_test_ndpi/lombric-c-sagit-111.ndpi/resized", headers={"accept": "image/jpeg"})
-	assert response.status_code == 200
+def test_mrxs_crop(client, image_path_mrxs):
+	crop_test(client, image_path_mrxs[1], "mrxs")
 	
-def test_get_mask(app, client):
-	response = client.post("/image/upload_test_ndpi/lombric-c-sagit-111.ndpi/annotation/mask", headers={"accept": "image/jpeg"}, json={"annotations":[{"geometry": "POINT(10 10)"}], "height":50, "width":50})
-	assert response.status_code == 200
-	
-def test_get_crop(app, client):
-	response = client.post("/image/upload_test_mrxs/CMU-2.zip/annotation/crop", headers={"accept": "image/jpeg"}, json={"annotations":[{"geometry": "POINT(10 10)"}], "height":50, "width":50})
-	assert response.status_code == 200
-"""	
-def test_crop_null_annot(app, client):
-	response = client.post("/image/upload_test_mrxs/CMU-2.zip/annotation/crop", headers={"accept": "image/jpeg"}, json={"annotations": [], "height":50, "width":50})
-	print(response.__dict__)
-	assert response.status_code == 400
-"""
-def test_histogram_perimage(app, client):
-	response = client.get("/image/upload_test_mrxs/CMU-2.zip/histogram/per-image", headers={"accept": "image/jpeg"})
-	assert response.status_code == 200	
+@pytest.mark.skip
+def test_mrxs_crop_null_annot(client, image_path_mrxs):
+	crop_null_annot_test(client, image_path_mrxs[1], "mrxs")
+
+def test_mrxs_histogram_perimage(client, image_path_mrxs):
+	histogram_perimage_test(client, image_path_mrxs[1], "mrxs")
