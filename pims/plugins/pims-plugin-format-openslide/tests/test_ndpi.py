@@ -5,14 +5,15 @@ from fastapi import APIRouter
 from pims.formats import FORMATS
 import io
 from pims.importer.importer import FileImporter
+from tests.utils.formats import info_test, thumb_test, resized_test, mask_test, crop_test, crop_null_annot_test, histogram_perimage_test
 
 from pims.files.file import (
     EXTRACTED_DIR, HISTOGRAM_STEM, ORIGINAL_STEM, PROCESSED_DIR, Path,
     SPATIAL_STEM, UPLOAD_DIR_PREFIX, unique_name_generator
 )
+import pytest 
 
-
-def getImage(path, image):
+def get_image(path, image):
 	filepath = os.path.join(path, image)
 	# If image does not exist locally -> download image
 	if not os.path.exists(path):
@@ -26,17 +27,16 @@ def getImage(path, image):
 			print("Could not download image")
 			print(e)
 	
-	if not os.path.exists(path + "processed"):
+	if not os.path.exists(os.path.join(path, "processed")):
 		try:
-			fi = FileImporter("/data/pims/upload_test_ndpi/lombric-c-sagit-111.ndpi")
+			fi = FileImporter(f"/data/pims/upload_test_ndpi/{image}")
 			fi.upload_dir = "/data/pims/upload_test_ndpi"
 			fi.processed_dir = fi.upload_dir / Path("processed")
 			fi.mkdir(fi.processed_dir)
 		except Exception as e:
-			print(path + "/processed could not be created")
+			print(path + "processed could not be created")
 			print(e)
-
-	if not os.path.exists(path+"/processed/visualisation.NDPI"):
+	if not os.path.exists(os.path.join(path, "processed/visualisation.NDPI")):
 		try:
 			fi.upload_path = Path(filepath)
 			original_filename = Path(f"{ORIGINAL_STEM}.NDPI")
@@ -49,21 +49,31 @@ def getImage(path, image):
 			print("Importation of images could not be done")
 			print(e)
 			
-def test_img_exists():
+def test_ndpi_exists(image_path_ndpi):
 	# Test if the file exists, either locally either with the OAC
-	path = "/data/pims/upload_test_ndpi/"
-	image = "lombric-c-sagit-111.ndpi"
-	getImage(path, image)
-	assert os.path.exists(path+image) == True
+	get_image(image_path_ndpi[0], image_path_ndpi[1])
+	assert os.path.exists(os.path.join(image_path_ndpi[0],image_path_ndpi[1])) == True
 
-def test_info(app, client):
-	response = client.get("/formats")
+def test_ndpi_info(client, image_path_ndpi):
+	response = client.get(f'/image/upload_test_ndpi/{image_path_ndpi[1]}/info')
 	assert response.status_code == 200
-	assert "ndpi" in response.content.decode('utf-8').lower()
+	assert "ndpi" in response.json()['image']['original_format'].lower()
+	assert response.json()['image']['width'] == 71424
+	assert response.json()['image']['height'] == 24064
+	
+def test_metadata(client, image_path_ndpi):
+	response = client.get(f'/image/upload_test_ndpi/{image_path_ndpi[1]}/metadata')
+	assert response.status_code == 200
+	assert response.json()['items'][8]["key"] == 'XResolution'
+	assert response.json()['items'][8]["value"] == '(43784, 1)'
+	assert response.json()['items'][9]["key"] == 'YResolution'
+	assert response.json()['items'][9]["value"] == '(43784, 1)'
+	assert response.json()['items'][10]["key"] == 'ResolutionUnit'
+	assert response.json()['items'][10]["value"] == "CENTIMETER"
 
 # For a non-normalized tile, the width is 124
-def test_get_norm_tile(app, client):
-	response = client.get("/image/upload_test_ndpi/lombric-c-sagit-111.ndpi/normalized-tile/zoom/3/ti/3", headers={"accept": "image/jpeg"})
+def test_ndpi_norm_tile(client, image_path_ndpi):
+	response = client.get(f"/image/upload_test_ndpi/{image_path_ndpi[1]}/normalized-tile/zoom/3/ti/3", headers={"accept": "image/jpeg"})
 	assert response.status_code == 200
 	
 	img_response = Image.open(io.BytesIO(response.content))
@@ -71,30 +81,22 @@ def test_get_norm_tile(app, client):
 	assert width_resp == 256
 	assert height_resp == 256
 	
-def test_get_thumb(app, client):
-	response = client.get("/image/upload_test_ndpi/lombric-c-sagit-111.ndpi/thumb", headers={"accept": "image/jpeg"})
-	assert response.status_code == 200
+def test_ndpi_thumb(client, image_path_ndpi):
+	thumb_test(client, image_path_ndpi[1], "ndpi")
+		
+def test_ndpi_resized(client, image_path_ndpi):
+	resized_test(client, image_path_ndpi[1], "ndpi")
 	
-def test_get_resized(app, client):
-	response = client.get("/image/upload_test_ndpi/lombric-c-sagit-111.ndpi/resized", headers={"accept": "image/jpeg"})
-	assert response.status_code == 200
-	
-def test_get_mask(app, client):
-	response = client.post("/image/upload_test_ndpi/lombric-c-sagit-111.ndpi/annotation/mask", headers={"accept": "image/jpeg"}, json={"annotations":[{"geometry": "POINT(10 10)"}], "height":50, "width":50})
-	assert response.status_code == 200
-	
-def test_get_crop(app, client):
-	response = client.post("/image/upload_test_ndpi/lombric-c-sagit-111.ndpi/annotation/crop", headers={"accept": "image/jpeg"}, json={"annotations":[{"geometry": "POINT(10 10)"}], "height":50, "width":50})
-	assert response.status_code == 200
-	
-"""	
-def test_crop_null_annot(app, client):
-	response = client.post("/image/upload_test_ndpi/lombric-c-sagit-111.ndpi/annotation/crop", headers={"accept": "image/jpeg"}, json={"annotations": [], "height":50, "width":50})
-	print(response.__dict__)
-	assert response.status_code == 400
-"""	
+def test_ndpi_mask(client, image_path_ndpi):
+	mask_test(client, image_path_ndpi[1], "ndpi")
+		
+def test_ndpi_crop(client, image_path_ndpi):
+	crop_test(client, image_path_ndpi[1], "ndpi")
 
-def test_histogram_perimage(app, client):
-	response = client.get("/image/upload_test_ndpi/lombric-c-sagit-111.ndpi/histogram/per-image", headers={"accept": "image/jpeg"})
-	assert response.status_code == 200	
-
+@pytest.mark.skip
+def test_ndpi_crop_null_annot(client, image_path_ndpi):
+	crop_null_annot_test(client, image_path_ndpi[1], "ndpi")
+	
+def test_ndpi_histogram_perimage(client, image_path_ndpi):
+	histogram_perimage_test(client, image_path_ndpi[1], "ndpi")
+	
