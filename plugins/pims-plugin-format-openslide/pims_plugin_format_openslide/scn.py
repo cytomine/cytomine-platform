@@ -14,15 +14,17 @@
 from functools import cached_property
 
 from pims.formats import AbstractFormat
+from pims.formats.utils.abstract import CachedDataPath
 from pims.formats.utils.engines.tifffile import TifffileChecker
 from pims.formats.utils.engines.vips import VipsHistogramReader, cached_vips_file, get_vips_field
+from pims.formats.utils.structures.metadata import ImageMetadata
 from pims.utils.types import parse_datetime
 from pims_plugin_format_openslide.utils.engine import OpenslideVipsParser, OpenslideVipsReader
 
 
 class SCNChecker(TifffileChecker):
     @classmethod
-    def match(cls, pathlike):
+    def match(cls, pathlike: CachedDataPath) -> bool:
         if super().match(pathlike):
             tf = cls.get_tifffile(pathlike)
             return tf.is_scn
@@ -30,7 +32,7 @@ class SCNChecker(TifffileChecker):
 
 
 class SCNParser(OpenslideVipsParser):
-    def parse_known_metadata(self):
+    def parse_known_metadata(self) -> ImageMetadata:
         image = cached_vips_file(self.format)
 
         imd = super().parse_known_metadata()
