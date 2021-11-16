@@ -17,8 +17,10 @@ from pyvips import Image as VipsImage
 from tifffile import astype
 
 from pims.formats import AbstractFormat
+from pims.formats.utils.abstract import CachedDataPath
 from pims.formats.utils.engines.tifffile import TifffileChecker, TifffileParser, cached_tifffile
 from pims.formats.utils.engines.vips import VipsHistogramReader
+from pims.formats.utils.structures.metadata import ImageMetadata, MetadataStore
 from pims.formats.utils.structures.pyramid import Pyramid
 from pims.utils.types import parse_float, parse_int
 from pims_plugin_format_openslide.utils.engine import OpenslideVipsReader
@@ -26,7 +28,7 @@ from pims_plugin_format_openslide.utils.engine import OpenslideVipsReader
 
 class NDPIChecker(TifffileChecker):
     @classmethod
-    def match(cls, pathlike):
+    def match(cls, pathlike: CachedDataPath) -> bool:
         if super().match(pathlike):
             tf = cls.get_tifffile(pathlike)
             return tf.is_ndpi
@@ -35,7 +37,7 @@ class NDPIChecker(TifffileChecker):
 
 class NDPIParser(TifffileParser):
     @cached_property
-    def _parsed_ndpi_tags(self):
+    def _parsed_ndpi_tags(self) -> dict:
         tags = self.baseline.ndpi_tags
 
         comments = tags.get("Comments", None)
@@ -48,7 +50,7 @@ class NDPIParser(TifffileParser):
             del tags["Comments"]
         return tags
 
-    def parse_known_metadata(self):
+    def parse_known_metadata(self) -> ImageMetadata:
         imd = super().parse_known_metadata()
         ndpi_metadata = self._parsed_ndpi_tags
 
@@ -58,7 +60,7 @@ class NDPIParser(TifffileParser):
             ndpi_metadata.get("Magnification")
         )
         imd.objective.calibrated_magnification = parse_float(
-            ndpi_metadata.get("Objective.Lens.Magnificant")
+            ndpi_metadata.get("Objective.Lens.Magnificant")  # noqa
         )  # Not a typo!
 
         imd.microscope.model = ndpi_metadata.get("Model")
@@ -78,7 +80,7 @@ class NDPIParser(TifffileParser):
         imd.is_complete = True
         return imd
 
-    def parse_raw_metadata(self):
+    def parse_raw_metadata(self) -> MetadataStore:
         store = super().parse_raw_metadata()
 
         skipped_tags = ('McuStarts', '65439')
@@ -87,7 +89,7 @@ class NDPIParser(TifffileParser):
                 store.set(key, value, namespace="HAMAMATSU")
         return store
 
-    def parse_pyramid(self):
+    def parse_pyramid(self) -> Pyramid:
         # Tifffile is inconsistent with Openslide
         # https://github.com/cgohlke/tifffile/issues/41
         openslide = VipsImage.openslideload(str(self.format.path))

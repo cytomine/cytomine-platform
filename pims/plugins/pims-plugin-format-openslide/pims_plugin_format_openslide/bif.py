@@ -11,18 +11,22 @@
 #  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  * See the License for the specific language governing permissions and
 #  * limitations under the License.
+from datetime import datetime
 from functools import cached_property
+from typing import Optional
 
 from pims.formats import AbstractFormat
+from pims.formats.utils.abstract import CachedDataPath
 from pims.formats.utils.engines.tifffile import TifffileChecker
 from pims.formats.utils.engines.vips import VipsHistogramReader, cached_vips_file, get_vips_field
+from pims.formats.utils.structures.metadata import ImageMetadata
 from pims.utils.types import parse_datetime
 from pims_plugin_format_openslide.utils.engine import OpenslideVipsParser, OpenslideVipsReader
 
 
 class BifChecker(TifffileChecker):
     @classmethod
-    def match(cls, pathlike):
+    def match(cls, pathlike: CachedDataPath) -> bool:
         if super().match(pathlike):
             tf = cls.get_tifffile(pathlike)
             xmp = tf.pages[0].tags.get('XMP')
@@ -32,24 +36,24 @@ class BifChecker(TifffileChecker):
 
 class BifParser(OpenslideVipsParser):
     # TODO: parse ourselves ventana xml
-    def parse_known_metadata(self):
+    def parse_known_metadata(self) -> ImageMetadata:
         image = cached_vips_file(self.format)
 
         imd = super().parse_known_metadata()
 
-        acquisition_date = self.parse_acquisition_date(
+        imd.acquisition_date = self.parse_acquisition_date(
             get_vips_field(image, 'ventana.ScanDate')
         )
-        if acquisition_date:
-            imd.acquisition_datetime = acquisition_date
 
         imd.is_complete = True
         return imd
 
     @staticmethod
-    def parse_acquisition_date(date):
+    def parse_acquisition_date(date: str) -> Optional[datetime]:
         # Have seen: 8/18/2014 09:44:30 | 8/30/2017 12:04:52 PM
-        return parse_datetime(date, ["%m/%d/%Y %H:%M:%S", "%m/%d/%Y %H:%M:%S %p"])
+        return parse_datetime(
+            date, ["%m/%d/%Y %H:%M:%S", "%m/%d/%Y %H:%M:%S %p"]
+        )
 
 
 class BifFormat(AbstractFormat):
