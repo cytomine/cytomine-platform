@@ -18,7 +18,7 @@ from typing import Optional
 from pims.formats import AbstractFormat
 from pims.formats.utils.abstract import CachedDataPath
 from pims.formats.utils.checker import AbstractChecker
-from pims.formats.utils.engines.vips import VipsHistogramReader
+from pims.formats.utils.histogram import DefaultHistogramReader
 from pims_plugin_format_openslide.utils.engine import OpenslideVipsParser, OpenslideVipsReader
 
 
@@ -53,7 +53,7 @@ class VMSFormat(AbstractFormat):
     checker_class = VMSChecker
     parser_class = OpenslideVipsParser
     reader_class = OpenslideVipsReader
-    histogram_reader_class = VipsHistogramReader
+    histogram_reader_class = DefaultHistogramReader
 
     def __init__(self, path, *args, **kwargs):
         super().__init__(path, *args, **kwargs)
