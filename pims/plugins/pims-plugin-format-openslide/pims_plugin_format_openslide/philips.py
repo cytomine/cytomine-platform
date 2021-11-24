@@ -18,7 +18,8 @@ from typing import Optional
 from pims.formats import AbstractFormat
 from pims.formats.utils.abstract import CachedDataPath
 from pims.formats.utils.engines.tifffile import TifffileChecker
-from pims.formats.utils.engines.vips import VipsHistogramReader, cached_vips_file, get_vips_field
+from pims.formats.utils.engines.vips import cached_vips_file, get_vips_field
+from pims.formats.utils.histogram import DefaultHistogramReader
 from pims.formats.utils.structures.metadata import ImageMetadata
 from pims_plugin_format_openslide.utils.engine import OpenslideVipsParser, OpenslideVipsReader
 
@@ -69,7 +70,7 @@ class PhilipsFormat(AbstractFormat):
     checker_class = PhilipsChecker
     parser_class = PhilipsParser
     reader_class = OpenslideVipsReader
-    histogram_reader_class = VipsHistogramReader
+    histogram_reader_class = DefaultHistogramReader
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
