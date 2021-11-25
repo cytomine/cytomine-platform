@@ -14,11 +14,11 @@
 
 from pyvips import Image as VIPSImage
 
-from pims import UNIT_REGISTRY
 from pims.formats import AbstractFormat
 from pims.formats.utils.engines.vips import VipsParser, VipsReader, get_vips_field
 from pims.formats.utils.structures.metadata import ImageMetadata, MetadataStore
 from pims.formats.utils.structures.pyramid import Pyramid
+from pims.utils import UNIT_REGISTRY
 from pims.utils.types import parse_float, parse_int
 
 
