@@ -1,27 +1,30 @@
-# * Copyright (c) 2020. Authors: see NOTICE file.
-# *
-# * Licensed under the Apache License, Version 2.0 (the "License");
-# * you may not use this file except in compliance with the License.
-# * You may obtain a copy of the License at
-# *
-# *      http://www.apache.org/licenses/LICENSE-2.0
-# *
-# * Unless required by applicable law or agreed to in writing, software
-# * distributed under the License is distributed on an "AS IS" BASIS,
-# * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# * See the License for the specific language governing permissions and
-# * limitations under the License.
+#  * Copyright (c) 2020-2021. Authors: see NOTICE file.
+#  *
+#  * Licensed under the Apache License, Version 2.0 (the "License");
+#  * you may not use this file except in compliance with the License.
+#  * You may obtain a copy of the License at
+#  *
+#  *      http://www.apache.org/licenses/LICENSE-2.0
+#  *
+#  * Unless required by applicable law or agreed to in writing, software
+#  * distributed under the License is distributed on an "AS IS" BASIS,
+#  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  * See the License for the specific language governing permissions and
+#  * limitations under the License.
 from datetime import datetime
 from functools import cached_property
+from typing import Optional
 
+from pint import Quantity
 from tifffile import astype
 
 from pims import UNIT_REGISTRY
 from pims.formats import AbstractFormat
+from pims.formats.utils.abstract import CachedDataPath
 from pims.formats.utils.engines.tifffile import TifffileChecker, TifffileParser, cached_tifffile
-from pims.formats.utils.engines.vips import VipsHistogramReader
-from pims.formats.utils.metadata import parse_float
-
+from pims.formats.utils.histogram import DefaultHistogramReader
+from pims.formats.utils.structures.metadata import ImageMetadata, MetadataStore
+from pims.utils.types import parse_float
 from pims_plugin_format_openslide.utils.engine import OpenslideVipsReader
 
 
@@ -31,7 +34,7 @@ def _find_named_series(tf, name):
 
 class SVSChecker(TifffileChecker):
     @classmethod
-    def match(cls, pathlike):
+    def match(cls, pathlike: CachedDataPath) -> bool:
         if super().match(pathlike):
             tf = cls.get_tifffile(pathlike)
             return tf.is_svs
@@ -40,7 +43,7 @@ class SVSChecker(TifffileChecker):
 
 class SVSParser(TifffileParser):
     @cached_property
-    def _parsed_svs_description(self):
+    def _parsed_svs_description(self) -> dict:
         """
         Return metadata from Aperio image description as dict.
         The Aperio image description format is unspecified.
@@ -64,13 +67,17 @@ class SVSParser(TifffileParser):
         return result
 
     @staticmethod
-    def parse_physical_size(physical_size, unit=None):
+    def parse_physical_size(
+        physical_size: Optional[str], unit: Optional[str] = None
+    ) -> Optional[Quantity]:
         if physical_size is not None and parse_float(physical_size) is not None:
             return parse_float(physical_size) * UNIT_REGISTRY("micrometers")
         return None
 
     @staticmethod
-    def parse_acquisition_date(date, time=None):
+    def parse_acquisition_date(
+        date: Optional[str], time: Optional[str] = None
+    ) -> Optional[datetime]:
         """
         Date examples: 11/25/13 , 2013-12-05T12:49:03.69Z
         Time examples: 15:10:34
@@ -85,7 +92,7 @@ class SVSParser(TifffileParser):
         except (ValueError, TypeError):
             return None
 
-    def parse_known_metadata(self):
+    def parse_known_metadata(self) -> ImageMetadata:
         imd = super().parse_known_metadata()
         svs_metadata = self._parsed_svs_description
 
@@ -117,15 +124,12 @@ class SVSParser(TifffileParser):
         imd.is_complete = True
         return imd
 
-    def parse_raw_metadata(self):
+    def parse_raw_metadata(self) -> MetadataStore:
         store = super().parse_raw_metadata()
 
         for key, value in self._parsed_svs_description.items():
             store.set(key, value, namespace="APERIO")
         return store
-
-    def parse_pyramid(self):
-        return super().parse_pyramid()
 
 
 class SVSFormat(AbstractFormat):
@@ -146,7 +150,7 @@ class SVSFormat(AbstractFormat):
     checker_class = SVSChecker
     parser_class = SVSParser
     reader_class = OpenslideVipsReader
-    histogram_reader_class = VipsHistogramReader
+    histogram_reader_class = DefaultHistogramReader
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
