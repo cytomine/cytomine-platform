@@ -18,12 +18,12 @@ from typing import Optional
 from pint import Quantity
 from tifffile import astype
 
-from pims import UNIT_REGISTRY
 from pims.formats import AbstractFormat
 from pims.formats.utils.abstract import CachedDataPath
 from pims.formats.utils.engines.tifffile import TifffileChecker, TifffileParser, cached_tifffile
 from pims.formats.utils.histogram import DefaultHistogramReader
 from pims.formats.utils.structures.metadata import ImageMetadata, MetadataStore
+from pims.utils import UNIT_REGISTRY
 from pims.utils.types import parse_float
 from pims_plugin_format_openslide.utils.engine import OpenslideVipsReader
 
