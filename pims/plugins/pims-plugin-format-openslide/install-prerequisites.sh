@@ -1,18 +1,20 @@
 #! /usr/bin/env bash
 
+#
 #  * Copyright (c) 2020-2021. Authors: see NOTICE file.
 #  *
-#  * Licensed under the GNU Lesser General Public License, Version 2.1 (the "License");
+#  * Licensed under the Apache License, Version 2.0 (the "License");
 #  * you may not use this file except in compliance with the License.
 #  * You may obtain a copy of the License at
 #  *
-#  *      https://www.gnu.org/licenses/lgpl-2.1.txt
+#  *      http://www.apache.org/licenses/LICENSE-2.0
 #  *
 #  * Unless required by applicable law or agreed to in writing, software
 #  * distributed under the License is distributed on an "AS IS" BASIS,
 #  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  * See the License for the specific language governing permissions and
 #  * limitations under the License.
+#
 
 # Prerequisites to install before installing the plugin itself.
 
@@ -34,6 +36,10 @@ dependencies_before_vips() {
     libxml2-dev \
     libsqlite3-dev \
     libtool
+
+  cd /tmp
+  wget http://archive.ubuntu.com/ubuntu/pool/main/p/pixman/libpixman-1-0_0.40.0-1build2_amd64.deb
+  dpkg -i libpixman-1-0_0.40.0-1build2_amd64.deb
 
   cd /usr/local/src
   wget ${OPENSLIDE_URL}/v${OPENSLIDE_VERSION}/openslide-${OPENSLIDE_VERSION}.tar.gz
