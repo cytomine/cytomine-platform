@@ -35,10 +35,13 @@ def _find_named_series(tf, name):
 class SVSChecker(TifffileChecker):
     @classmethod
     def match(cls, pathlike: CachedDataPath) -> bool:
-        if super().match(pathlike):
-            tf = cls.get_tifffile(pathlike)
-            return tf.is_svs
-        return False
+        try:
+            if super().match(pathlike):
+                tf = cls.get_tifffile(pathlike)
+                return tf.is_svs
+            return False
+        except RuntimeError:
+            return False
 
 
 class SVSParser(TifffileParser):

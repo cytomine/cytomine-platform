@@ -28,13 +28,16 @@ from pims_plugin_format_openslide.utils.engine import OpenslideVipsParser, Opens
 class BifChecker(TifffileChecker):
     @classmethod
     def match(cls, pathlike: CachedDataPath) -> bool:
-        if super().match(pathlike):
-            tf = cls.get_tifffile(pathlike)
-            if len(tf.pages) == 0:
-                return False
-            xmp = tf.pages[0].tags.get('XMP')
-            return xmp and b'<iScan' in xmp.value
-        return False
+        try:
+            if super().match(pathlike):
+                tf = cls.get_tifffile(pathlike)
+                if len(tf.pages) == 0:
+                    return False
+                xmp = tf.pages[0].tags.get('XMP')
+                return xmp and b'<iScan' in xmp.value
+            return False
+        except RuntimeError:
+            return False
 
 
 class BifParser(OpenslideVipsParser):

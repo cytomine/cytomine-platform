@@ -27,10 +27,13 @@ from pims_plugin_format_openslide.utils.engine import OpenslideVipsParser, Opens
 class PhilipsChecker(TifffileChecker):
     @classmethod
     def match(cls, pathlike: CachedDataPath) -> bool:
-        if super().match(pathlike):
-            tf = cls.get_tifffile(pathlike)
-            return tf.is_philips
-        return False
+        try:
+            if super().match(pathlike):
+                tf = cls.get_tifffile(pathlike)
+                return tf.is_philips
+            return False
+        except RuntimeError:
+            return False
 
 
 class PhilipsParser(OpenslideVipsParser):
