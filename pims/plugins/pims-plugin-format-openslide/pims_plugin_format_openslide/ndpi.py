@@ -29,10 +29,13 @@ from pims_plugin_format_openslide.utils.engine import OpenslideVipsReader
 class NDPIChecker(TifffileChecker):
     @classmethod
     def match(cls, pathlike: CachedDataPath) -> bool:
-        if super().match(pathlike):
-            tf = cls.get_tifffile(pathlike)
-            return tf.is_ndpi
-        return False
+        try:
+            if super().match(pathlike):
+                tf = cls.get_tifffile(pathlike)
+                return tf.is_ndpi
+            return False
+        except RuntimeError:
+            return False
 
 
 class NDPIParser(TifffileParser):

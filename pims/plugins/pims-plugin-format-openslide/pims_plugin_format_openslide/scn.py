@@ -26,10 +26,13 @@ from pims_plugin_format_openslide.utils.engine import OpenslideVipsParser, Opens
 class SCNChecker(TifffileChecker):
     @classmethod
     def match(cls, pathlike: CachedDataPath) -> bool:
-        if super().match(pathlike):
-            tf = cls.get_tifffile(pathlike)
-            return tf.is_scn
-        return False
+        try:
+            if super().match(pathlike):
+                tf = cls.get_tifffile(pathlike)
+                return tf.is_scn
+            return False
+        except RuntimeError:
+            return False
 
 
 class SCNParser(OpenslideVipsParser):
