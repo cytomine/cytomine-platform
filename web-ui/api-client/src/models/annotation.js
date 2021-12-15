@@ -84,7 +84,7 @@ export default class Annotation extends Model {
     if (this.cropURL === null) {
       return null;
     }
-    let url = this.cropURL.split('.')[0];
+    let url = this.cropURL.split('?')[0].split('.').slice(0,-1).join('.');
     let parameters = {maxSize, ...otherParameters};
     let query = new URLSearchParams(parameters).toString();
     return `${url}.${format}?${query}`;

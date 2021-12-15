@@ -69,7 +69,7 @@ export default class ImageInstance extends Model {
     if (this.preview === null) {
       return null;
     }
-    let url = this.preview.split('.')[0];
+    let url = this.preview.split('?')[0].split('.').slice(0,-1).join('.');
     let parameters = {maxSize, ...otherParameters};
     let query = new URLSearchParams(parameters).toString();
     return `${url}.${format}?${query}`;
@@ -87,7 +87,7 @@ export default class ImageInstance extends Model {
     if (this.thumb === null) {
       return null;
     }
-    let url = this.thumb.split('.')[0];
+    let url = this.thumb.split('?')[0].split('.').slice(0,-1).join('.');
     let parameters = {maxSize, ...otherParameters};
     let query = new URLSearchParams(parameters).toString();
     return `${url}.${format}?${query}`;
@@ -106,7 +106,7 @@ export default class ImageInstance extends Model {
     if (this.macroURL === null) {
       return null;
     }
-    let url = this.macroURL.split('.')[0];
+    let url = this.macroURL.split('?')[0].split('.').slice(0,-1).join('.');
     url = url.substr(0, url.lastIndexOf('/'));
     let parameters = {maxSize, ...otherParameters};
     let query = new URLSearchParams(parameters).toString();
