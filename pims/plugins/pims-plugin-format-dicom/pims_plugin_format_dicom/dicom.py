@@ -11,7 +11,7 @@ from pims.formats.utils.histogram import DefaultHistogramReader
 from pims.utils.types import parse_float, parse_int
 from pyvips import Image as VipsImage
 from pims.processing.region import Region
-from pims.formats.utils.structures.pyramid import Pyramid
+from pims.formats.utils.structures.pyramid import Pyramid, PyramidTier
 from pims.utils import UNIT_REGISTRY
 from PIL import Image
 import numpy as np
@@ -21,8 +21,6 @@ from wsidicom.wsidicom import WsiDicom, WsiDicomGroup, WsiDicomLevel, WsiDicomLe
 from wsidicom.instance import WsiDataset
 
 from zipfile import ZipFile
-
-
 
 
 def get_root_file(path):
@@ -63,7 +61,7 @@ class DicomParser(AbstractParser):
         imd.duration = 1
         imd.n_channels = wsidicom_object.levels.groups[0].datasets[0].samples_per_pixel # same thing for all WsiDatasets? 
         imd.depth = 1
-        
+        imd.intrinsic_channels = 1
         imd.pixel_type = np.dtype('uint8')
         
         if imd.n_channels == 3:
@@ -73,6 +71,13 @@ class DicomParser(AbstractParser):
         else:
             imd.set_channel(ImageChannel(index=0, suggested_name='L'))
         imd.n_channels_per_read = imd.n_channels
+        
+        """
+        label_img = wsidicom_object.labels[0].get_default_full()
+        imd.associated_label.width = label_img.width
+        imd.associated_label.height = label_img.height
+        imd.associated_label.n_channels = 3
+        """
         
         return imd
         
@@ -99,14 +104,12 @@ class DicomParser(AbstractParser):
             if self.format.path.is_dir() and (subdir.is_dir()): 
                 wsidicom_object = WsiDicom.open(str(subdir))
                 levels = wsidicom_object.levels
-        print(wsidicom_object.levels.highest_level)
-        print(wsidicom_object.levels.levels)
+                
         for level in wsidicom_object.levels.levels:
             level_info = wsidicom_object.levels.get_level(level)
             level_size = level_info.size
-            nb_tiles = level_info.default_instance.tiled_size # /!\ nb de tuiles, pas la taille des tuiles
-            tile_size = (round(level_size.width/parse_int(nb_tiles.width)), round(level_size.height/parse_int(nb_tiles.height)))
-            pyramid.insert_tier(level_size.width, level_size.height, tile_size)
+            tile_size = level_info.tile_size
+            pyramid.insert_tier(level_size.width, level_size.height, (tile_size.width, tile_size.height))
 
         return pyramid
     
@@ -120,22 +123,29 @@ class DicomReader(AbstractReader):
         return img.read_thumbnail((out_width, out_height))
     
     def read_window(self, region, out_width, out_height, c=None, z=None, t=None):
-        """
-        out_size = (out_width, out_height)
-        tier = self.format.pyramid.most_appropriate_tier(region, out_size)
-        region = region.scale_to_tier(tier)
-        """
         
         for subdir in self.format.path.iterdir():
             if self.format.path.is_dir() and (subdir.is_dir()):
                 img = WsiDicom.open(str(subdir))
-        level = round(np.log2(region.downsample))
-        return img.read_region((region.left, region.top), level, (region.width, region.height))
+
+        tier = self.format.pyramid.most_appropriate_tier(region, (out_width, out_height))
+        region = region.scale_to_tier(tier)
+        level = tier.level
+        norm_level = img.levels.levels[level]
+        return img.read_region((region.left, region.top), norm_level, (region.width, region.height))
     
     
     def read_tile(self, tile, c=None, z=None, t=None):
         return self.read_window(tile, tile.width, tile.height, c, z, t)
-
+        
+    def read_label(self, out_width, out_height):
+        for subdir in self.format.path.iterdir():
+            if self.format.path.is_dir() and (subdir.is_dir()):
+                img = WsiDicom.open(str(subdir))
+               
+        return img.read_label()
+        
+        
 class DicomFormat(AbstractFormat):
     checker_class = DicomChecker
     parser_class = DicomParser
