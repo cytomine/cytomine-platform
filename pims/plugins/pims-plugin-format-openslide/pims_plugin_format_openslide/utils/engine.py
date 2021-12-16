@@ -11,6 +11,7 @@
 #  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  * See the License for the specific language governing permissions and
 #  * limitations under the License.
+from typing import List, Optional, Union
 
 from pyvips import Image as VIPSImage
 
@@ -96,17 +97,24 @@ class OpenslideVipsParser(VipsParser):
 
 
 class OpenslideVipsReader(VipsReader):
-    def read_thumb(self, out_width, out_height, precomputed=False, **other):
+    def read_thumb(
+        self, out_width, out_height, precomputed=False,
+        c: Optional[Union[int, List[int]]] = None, **other
+    ):
         if precomputed:
             imd = self.format.full_imd
             if imd.associated_thumb.exists:
-                return VIPSImage.openslideload(
+                im = VIPSImage.openslideload(
                     str(self.format.path), associated='thumbnail'
                 ).flatten()
+                return self._extract_channels(im, c)
 
         return super().read_thumb(out_width, out_height, **other)
 
-    def read_window(self, region, out_width, out_height, **other):
+    def read_window(
+        self, region, out_width, out_height,
+        c: Optional[Union[int, List[int]]] = None, **other
+    ):
         out_size = (out_width, out_height)
         tier = self.format.pyramid.most_appropriate_tier(region, out_size)
         region = region.scale_to_tier(tier)
@@ -114,11 +122,14 @@ class OpenslideVipsReader(VipsReader):
         level_page = VIPSImage.openslideload(
             str(self.format.path), level=tier.level
         )
-        return level_page.extract_area(
+        im = level_page.extract_area(
             region.left, region.top, region.width, region.height
         ).flatten()
+        return self._extract_channels(im, c)
 
-    def read_tile(self, tile, **other):
+    def read_tile(
+        self, tile, c: Optional[Union[int, List[int]]] = None, **other
+    ):
         tier = tile.tier
         level_page = VIPSImage.openslideload(
             str(self.format.path), level=tier.level
@@ -128,9 +139,10 @@ class OpenslideVipsReader(VipsReader):
         # But the following computation match vips implementation so that only
         # the tile that has to be read is read.
         # https://github.com/jcupitt/tilesrv/blob/master/tilesrv.c#L461
-        return level_page.extract_area(
+        im = level_page.extract_area(
             tile.left, tile.top, tile.width, tile.height
         ).flatten()
+        return self._extract_channels(im, c)
 
     def read_label(self, out_width, out_height, **other):
         imd = self.format.full_imd
