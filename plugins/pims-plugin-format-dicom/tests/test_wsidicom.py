@@ -1,20 +1,16 @@
-from PIL import Image
-import os
-import urllib.request
-from fastapi import APIRouter
-from pims.formats import FORMATS
-import io
-from pims.importer.importer import FileImporter
-
-from pims.files.file import (ORIGINAL_STEM, Path, SPATIAL_STEM)
-from pims.utils.types import parse_float, parse_int, parse_datetime
-from pixelengine import PixelEngine
-from softwarerendercontext import SoftwareRenderContext
-from softwarerenderbackend import SoftwareRenderBackend
-from pims.files.archive import Archive
-from wsidicom import WsiDicom
+import os, io
 import pytest
 from datetime import datetime
+from PIL import Image
+from fastapi import APIRouter
+
+from pims.formats import FORMATS
+from pims.importer.importer import FileImporter
+from pims.files.file import (ORIGINAL_STEM, Path, SPATIAL_STEM)
+from pims.utils.types import parse_float
+from pims.files.archive import Archive
+
+from wsidicom import WsiDicom
 
 def get_image(path, filename):
     filepath = os.path.join(path,filename)
