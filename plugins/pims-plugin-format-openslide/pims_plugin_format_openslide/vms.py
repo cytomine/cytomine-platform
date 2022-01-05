@@ -1,26 +1,29 @@
-# * Copyright (c) 2020. Authors: see NOTICE file.
-# *
-# * Licensed under the Apache License, Version 2.0 (the "License");
-# * you may not use this file except in compliance with the License.
-# * You may obtain a copy of the License at
-# *
-# *      http://www.apache.org/licenses/LICENSE-2.0
-# *
-# * Unless required by applicable law or agreed to in writing, software
-# * distributed under the License is distributed on an "AS IS" BASIS,
-# * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# * See the License for the specific language governing permissions and
-# * limitations under the License.
+#  * Copyright (c) 2020-2021. Authors: see NOTICE file.
+#  *
+#  * Licensed under the Apache License, Version 2.0 (the "License");
+#  * you may not use this file except in compliance with the License.
+#  * You may obtain a copy of the License at
+#  *
+#  *      http://www.apache.org/licenses/LICENSE-2.0
+#  *
+#  * Unless required by applicable law or agreed to in writing, software
+#  * distributed under the License is distributed on an "AS IS" BASIS,
+#  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  * See the License for the specific language governing permissions and
+#  * limitations under the License.
 from functools import cached_property
+from pathlib import Path
+from typing import Optional
 
 from pims.formats import AbstractFormat
-from pims.formats.utils.abstract import AbstractChecker
-from pims.formats.utils.engines.vips import VipsHistogramReader
+from pims.formats.utils.abstract import CachedDataPath
+from pims.formats.utils.checker import AbstractChecker
+from pims.formats.utils.histogram import DefaultHistogramReader
+from pims_plugin_format_openslide.utils.engine import OpenslideVipsParser, OpenslideVipsReader
 
-from pims_plugin_format_openslide.utils.engine import OpenslideVipsReader, OpenslideVipsParser
 
-
-def get_root_file(path):
+def get_root_file(path: Path) -> Optional[Path]:
+    """Try to get VMS main file (as it is a multi-file format)."""
     if path.is_dir():
         for child in path.iterdir():
             if child.suffix == '.vms':
@@ -30,16 +33,12 @@ def get_root_file(path):
 
 class VMSChecker(AbstractChecker):
     @classmethod
-    def match(cls, pathlike):
+    def match(cls, pathlike: CachedDataPath) -> bool:
         root = get_root_file(pathlike.path)
         if root:
             with open(root, 'r') as vms:
                 return vms.readline().strip() == '[Virtual Microscope Specimen]'
         return False
-
-
-class VMSParser(OpenslideVipsParser):
-    pass
 
 
 class VMSFormat(AbstractFormat):
@@ -52,9 +51,9 @@ class VMSFormat(AbstractFormat):
 
     """
     checker_class = VMSChecker
-    parser_class = VMSParser
+    parser_class = OpenslideVipsParser
     reader_class = OpenslideVipsReader
-    histogram_reader_class = VipsHistogramReader
+    histogram_reader_class = DefaultHistogramReader
 
     def __init__(self, path, *args, **kwargs):
         super().__init__(path, *args, **kwargs)
@@ -72,7 +71,8 @@ class VMSFormat(AbstractFormat):
 
     @classmethod
     def get_remarks(cls):
-        return "One .vms file, one .opt optimization file and several .jpg with same name, packed in an archive."
+        return "One .vms file, one .opt optimization file and several .jpg with same name, " \
+               "packed in an archive. "
 
     @classmethod
     def is_spatial(cls):

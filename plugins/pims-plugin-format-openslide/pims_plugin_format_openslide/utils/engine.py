@@ -1,30 +1,36 @@
 #  * Copyright (c) 2020-2021. Authors: see NOTICE file.
 #  *
-#  * Licensed under the GNU Lesser General Public License, Version 2.1 (the "License");
+#  * Licensed under the Apache License, Version 2.0 (the "License");
 #  * you may not use this file except in compliance with the License.
 #  * You may obtain a copy of the License at
 #  *
-#  *      https://www.gnu.org/licenses/lgpl-2.1.txt
+#  *      http://www.apache.org/licenses/LICENSE-2.0
 #  *
 #  * Unless required by applicable law or agreed to in writing, software
 #  * distributed under the License is distributed on an "AS IS" BASIS,
 #  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  * See the License for the specific language governing permissions and
 #  * limitations under the License.
+from typing import List, Optional, Union
 
-from pims import UNIT_REGISTRY
-from pims.formats.utils.engines.vips import VipsParser, VipsReader, get_vips_field
-from pims.formats.utils.metadata import parse_float, parse_int
-from pims.formats.utils.pyramid import Pyramid
 from pyvips import Image as VIPSImage
 
+from pims.formats import AbstractFormat
+from pims.formats.utils.engines.vips import VipsParser, VipsReader, get_vips_field
+from pims.formats.utils.structures.metadata import ImageMetadata, MetadataStore
+from pims.formats.utils.structures.pyramid import Pyramid
+from pims.utils import UNIT_REGISTRY
+from pims.utils.types import parse_float, parse_int
 
-def cached_vips_openslide_file(format):
-    return format.get_cached('_vipsos', VIPSImage.openslideload, str(format.path))
+
+def cached_vips_openslide_file(format: AbstractFormat) -> VIPSImage:
+    return format.get_cached(
+        '_vipsos', VIPSImage.openslideload, str(format.path)
+    )
 
 
 class OpenslideVipsParser(VipsParser):
-    def parse_main_metadata(self):
+    def parse_main_metadata(self) -> ImageMetadata:
         imd = super().parse_main_metadata()
 
         # Openslide (always ?) gives image with alpha channel
@@ -34,7 +40,7 @@ class OpenslideVipsParser(VipsParser):
 
         return imd
 
-    def parse_known_metadata(self):
+    def parse_known_metadata(self) -> ImageMetadata:
         image = cached_vips_openslide_file(self.format)
 
         imd = super(OpenslideVipsParser, self).parse_known_metadata()
@@ -60,7 +66,7 @@ class OpenslideVipsParser(VipsParser):
                 imd_associated.n_channels = head.bands
         return imd
 
-    def parse_raw_metadata(self):
+    def parse_raw_metadata(self) -> MetadataStore:
         image = cached_vips_openslide_file(self.format)
 
         store = super().parse_raw_metadata()
@@ -69,7 +75,7 @@ class OpenslideVipsParser(VipsParser):
                 store.set(key, get_vips_field(image, key))
         return store
 
-    def parse_pyramid(self):
+    def parse_pyramid(self) -> Pyramid:
         image = cached_vips_openslide_file(self.format)
 
         pyramid = Pyramid()
@@ -91,37 +97,52 @@ class OpenslideVipsParser(VipsParser):
 
 
 class OpenslideVipsReader(VipsReader):
-    def read_thumb(self, out_width, out_height, precomputed=False, **other):
+    def read_thumb(
+        self, out_width, out_height, precomputed=False,
+        c: Optional[Union[int, List[int]]] = None, **other
+    ):
         if precomputed:
             imd = self.format.full_imd
             if imd.associated_thumb.exists:
-                return VIPSImage.openslideload(
+                im = VIPSImage.openslideload(
                     str(self.format.path), associated='thumbnail'
                 ).flatten()
+                return self._extract_channels(im, c)
 
         return super().read_thumb(out_width, out_height, **other)
 
-    def read_window(self, region, out_width, out_height, **other):
+    def read_window(
+        self, region, out_width, out_height,
+        c: Optional[Union[int, List[int]]] = None, **other
+    ):
         out_size = (out_width, out_height)
         tier = self.format.pyramid.most_appropriate_tier(region, out_size)
         region = region.scale_to_tier(tier)
 
-        level_page = VIPSImage.openslideload(str(self.format.path), level=tier.level)
-        return level_page.extract_area(
+        level_page = VIPSImage.openslideload(
+            str(self.format.path), level=tier.level
+        )
+        im = level_page.extract_area(
             region.left, region.top, region.width, region.height
         ).flatten()
+        return self._extract_channels(im, c)
 
-    def read_tile(self, tile, **other):
+    def read_tile(
+        self, tile, c: Optional[Union[int, List[int]]] = None, **other
+    ):
         tier = tile.tier
-        level_page = VIPSImage.openslideload(str(self.format.path), level=tier.level)
+        level_page = VIPSImage.openslideload(
+            str(self.format.path), level=tier.level
+        )
 
         # There is no direct access to underlying tiles in vips
         # But the following computation match vips implementation so that only
         # the tile that has to be read is read.
         # https://github.com/jcupitt/tilesrv/blob/master/tilesrv.c#L461
-        return level_page.extract_area(
+        im = level_page.extract_area(
             tile.left, tile.top, tile.width, tile.height
         ).flatten()
+        return self._extract_channels(im, c)
 
     def read_label(self, out_width, out_height, **other):
         imd = self.format.full_imd
