@@ -57,13 +57,16 @@ class SVSParser(TifffileParser):
             raise ValueError('invalid Aperio image description')
 
         result = {}
-        lines = description.split('\n')
-        key, value = lines[0].strip().rsplit(None, 1)  # 'Aperio Image Library'
+        items = description.split('|')
+        headers = items[0].split('\n', 1)
+        key, value = headers[0].strip().rsplit(None, 1)  # 'Aperio Image Library'
         result[key.strip()] = value.strip()
-        if len(lines) == 1:
+        if len(headers) == 1:
             return result
-        items = lines[1].split('|')
-        result['Description'] = items[0].strip()  # TODO: parse this?
+        result['Description'] = headers[1].strip()  # TODO: parse this?
+
+        if len(items) == 1:
+            return result
         for item in items[1:]:
             key, value = item.split(' = ')
             result[key.strip()] = astype(value.strip())
