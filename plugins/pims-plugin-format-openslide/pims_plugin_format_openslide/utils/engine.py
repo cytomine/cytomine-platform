@@ -63,7 +63,12 @@ class OpenslideVipsParser(VipsParser):
                 imd_associated = getattr(imd, f'associated_{associated[:5]}')
                 imd_associated.width = head.width
                 imd_associated.height = head.height
-                imd_associated.n_channels = head.bands
+
+                # Openslide (always ?) gives image with alpha channel
+                n_channels = head.bands
+                if n_channels in (2, 4):
+                    n_channels -= 1
+                imd_associated.n_channels = n_channels
         return imd
 
     def parse_raw_metadata(self) -> MetadataStore:
