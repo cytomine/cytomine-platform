@@ -43,7 +43,7 @@ class NDPIParser(TifffileParser):
     def _parsed_ndpi_tags(self) -> dict:
         tags = self.baseline.ndpi_tags
 
-        comments = tags.valueof("Comments", None)
+        comments = tags.get("Comments", None)
         if comments:
             # Comments tag (65449): ASCII key=value pairs (not always present)
             lines = comments.split('\n')
