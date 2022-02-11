@@ -3,10 +3,13 @@ import pytest
 from datetime import datetime
 from PIL import Image
 from fastapi import APIRouter
-
+import urllib.request
 from pims.formats import FORMATS
 from pims.importer.importer import FileImporter
-from pims.files.file import (ORIGINAL_STEM, Path, SPATIAL_STEM)
+from pims.files.file import (ORIGINAL_STEM, Path, SPATIAL_STEM, HISTOGRAM_STEM)
+from pims.api.utils.models import HistogramType
+from pims.processing.histograms.utils import build_histogram_file
+from pims.formats.utils.factories import FormatFactory
 from pims.utils.types import parse_float
 from pims.files.archive import Archive
 
@@ -43,7 +46,7 @@ def get_image(path, filename):
         try:
             fi.upload_path = Path(filepath)
             original_filename = Path(f"{ORIGINAL_STEM}.WSIDICOM")
-            fi.original_path = fi.processed_dir / original_filename # unsupported operand type(s) for /: 'NoneType' and 'Path'
+            fi.original_path = fi.processed_dir / original_filename 
             archive = Archive.from_path(fi.upload_path)
             archive.extract(fi.original_path)
             new_original_path = fi.processed_dir / original_filename
@@ -55,6 +58,23 @@ def get_image(path, filename):
             fi.mksymlink(fi.spatial_path, fi.original_path)
         except Exception as e:
             print("Importation of images could not be done")
+            print(e)
+            
+    if not os.path.exists(os.path.join(path, "processed/histogram")):
+        if os.path.exists(os.path.join(path, "processed")):
+            fi = FileImporter(f"/data/pims/upload_test_wsidicom/{filename}")
+            fi.upload_dir = Path("/data/pims/upload_test_wsidicom")
+            fi.processed_dir = fi.upload_dir / Path("processed")
+            original_filename = Path(f"{ORIGINAL_STEM}.WSIDICOM")
+            fi.original_path = fi.processed_dir / original_filename
+        try:
+            from pims.files.image import Image
+            fi.histogram_path = fi.processed_dir/Path(HISTOGRAM_STEM)
+            format = FormatFactory().match(fi.original_path)
+            fi.original = Image(fi.original_path, format=format)
+            fi.histogram = build_histogram_file(fi.original, fi.histogram_path, HistogramType.FAST)
+        except Exception as e:
+            print("Creation of histogram representation could not be done")
             print(e)
 
 def dictify(ds):
@@ -84,16 +104,16 @@ def test_wsidicom_exists(image_path_wsidicom):
 	# Test if the file exists, either locally either with the OAC
 	path, filename = image_path_wsidicom
 	get_image(path, filename)
-	assert os.path.exists(os.path.join(image_path_wsidicom[0],image_path_wsidicom[1])) == True
+	assert os.path.exists(os.path.join(path,filename)) == True
 
 def test_wsidicom_info(client, image_path_wsidicom):
     path, filename = image_path_wsidicom
-    response = client.get(f'/image/upload_test_wsidicom/{image_path_wsidicom[1]}/info')
+    response = client.get(f'/image/upload_test_wsidicom/{filename}/info')
     assert response.status_code == 200
     assert "wsidicom" in response.json()['image']['original_format'].lower()
     #view = get_wsidicom_properties(os.path.join(path,filename))
     #list_subdir = [f.path for f in os.scandir(self.format.path) if f.is_dir()]
-    wsidicom_object = WsiDicom.open(f"/data/pims/upload_test_wsidicom/processed/original.WSIDICOM/{os.path.splitext(image_path_wsidicom[1])[0]}")
+    wsidicom_object = WsiDicom.open(f"/data/pims/upload_test_wsidicom/processed/original.WSIDICOM/{os.path.splitext(filename)[0]}")
     
     assert response.json()['image']['width'] == wsidicom_object.levels.base_level.size.width
     assert response.json()['image']['height'] == wsidicom_object.levels.base_level.size.height
@@ -112,7 +132,7 @@ def test_wsidicom_info(client, image_path_wsidicom):
 def test_wsidicom_associated(client, image_path_wsidicom):
     path, filename = image_path_wsidicom
     response = client.get(f'/image/upload_test_wsidicom/{image_path_wsidicom[1]}/info')
-    wsidicom_object = WsiDicom.open(f"/data/pims/upload_test_wsidicom/processed/original.WSIDICOM/{os.path.splitext(image_path_wsidicom[1])[0]}")
+    wsidicom_object = WsiDicom.open(f"/data/pims/upload_test_wsidicom/processed/original.WSIDICOM/{os.path.splitext(filename)[0]}")
     
     # assume there is no associated thumbnail for now
     # idx = index of the associated image in the response dictionary
@@ -190,4 +210,8 @@ def test_wsidicom_crop(client, image_path_wsidicom):
     _, filename = image_path_wsidicom
     response = client.post(f"/image/upload_test_wsidicom/{filename}/annotation/crop", headers={"accept": "image/jpeg"}, json={"annotations":[{"geometry": "POINT(10 10)"}], "height":50, "width":50})
     assert response.status_code == 200
-
+    
+def test_wsidicom_histogram_perimage(client, image_path_wsidicom):
+    _, filename = image_path_wsidicom
+    response = client.get(f"/image/upload_test_wsidicom/{filename}/histogram/per-image", headers={"accept": "image/jpeg"})
+    assert response.status_code == 200   
