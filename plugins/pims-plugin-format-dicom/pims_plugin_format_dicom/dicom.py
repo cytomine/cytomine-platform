@@ -23,7 +23,7 @@ from zipfile import ZipFile
 import json
 
 
-class DicomChecker(AbstractChecker):
+class WSIDicomChecker(AbstractChecker):
     OFFSET = 128
     @classmethod
     def match(cls, pathlike: CachedDataPath) -> bool:
@@ -56,14 +56,14 @@ def dictify(ds):
             output[elem.name] = [dictify(item) for item in elem]
     return output
         
-class DicomParser(AbstractParser):
+class WSIDicomParser(AbstractParser):
         
     def parse_main_metadata(self):
         list_subdir = [f.path for f in os.scandir(self.format.path) if f.is_dir()]
         wsidicom_object = WsiDicom.open(str(list_subdir[0]))
         levels = wsidicom_object.levels
         imd = ImageMetadata()
-
+        
         imd.width = levels.base_level.size.width
         imd.height = levels.base_level.size.height
         metadata = dictify(wsidicom_object.levels.groups[0].datasets[0])
@@ -71,6 +71,7 @@ class DicomParser(AbstractParser):
         
         imd.duration = 1
         imd.n_channels = metadata["Samples per Pixel"] # same thing for all WsiDatasets? 
+        #print(imd.n_channels)
         imd.depth = 1
         imd.n_intrinsic_channels = 1
         imd.pixel_type = np_dtype(imd.significant_bits)
@@ -170,7 +171,7 @@ class DicomParser(AbstractParser):
             return parse_float(physical_size) * UNIT_REGISTRY("millimeter")
         return None        
         
-class DicomReader(AbstractReader):
+class WSIDicomReader(AbstractReader):
         
     def read_thumb(self, out_width, out_height, precomputed=True, c=None, z=None, t=None):
         list_subdir = [f.path for f in os.scandir(self.format.path) if f.is_dir()]
@@ -203,10 +204,10 @@ class DicomReader(AbstractReader):
         return img.read_label()
         
         
-class DicomFormat(AbstractFormat):
-    checker_class = DicomChecker
-    parser_class = DicomParser
-    reader_class = DicomReader
+class WSIDicomFormat(AbstractFormat):
+    checker_class = WSIDicomChecker
+    parser_class = WSIDicomParser
+    reader_class = WSIDicomReader
     histogram_reader_class = DefaultHistogramReader 
 
     def __init__(self, *args, **kwargs):
