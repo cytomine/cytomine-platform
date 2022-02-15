@@ -11,11 +11,10 @@
 #  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  * See the License for the specific language governing permissions and
 #  * limitations under the License.
-from functools import cached_property
-
 from pyvips import Image as VipsImage
 from tifffile import astype
 
+from pims.cache import cached_property
 from pims.formats import AbstractFormat
 from pims.formats.utils.abstract import CachedDataPath
 from pims.formats.utils.engines.tifffile import TifffileChecker, TifffileParser, cached_tifffile
