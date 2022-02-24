@@ -1,27 +1,44 @@
-from functools import cached_property
-
 import sys, os, io
 import numpy as np
+from functools import cached_property
+from pydicom.multival import MultiValue
 
 from pims.formats.utils.checker import SignatureChecker
 from pims.formats.utils.abstract import AbstractChecker, AbstractParser, AbstractReader, AbstractFormat, CachedDataPath
 from pims.formats.utils.structures.metadata import ImageMetadata, ImageChannel
 from pims.formats.utils.histogram import DefaultHistogramReader
 from pims.utils.types import parse_float, parse_int, parse_datetime
-from pyvips import Image as VipsImage
 from pims.processing.region import Region
-from pims.formats.utils.structures.pyramid import Pyramid, PyramidTier
+from pims.formats.utils.structures.pyramid import Pyramid
 from pims.utils import UNIT_REGISTRY
 from PIL import Image
 import numpy as np
 from pims.utils.dtypes import np_dtype
-from wsidicom.geometry import Point, PointMm, Region, RegionMm, Size, SizeMm
-from wsidicom.wsidicom import WsiDicom, WsiDicomGroup, WsiDicomLevel, WsiDicomLevels
-from wsidicom.instance import WsiDataset
+from wsidicom.wsidicom import WsiDicom
 from datetime import datetime
-from zipfile import ZipFile
 import json
 
+def dictify(ds):
+    output = dict()
+    for elem in ds:
+        if elem.VR != 'SQ':
+            output[elem.name] = elem.value
+        else:
+            output[elem.name] = [dictify(item) for item in elem]
+    return output
+
+def recurse_if_SQ(ds):
+        list_ds = []
+        
+        for data_element in ds:
+            if data_element.VR != 'SQ':
+                list_ds.append(data_element)
+            
+            else:
+                for elmt in data_element:
+                    list_recursive = recurse_if_SQ(elmt)
+                    list_ds.extend(list_recursive)
+        return list_ds
 
 class WSIDicomChecker(AbstractChecker):
     OFFSET = 128
@@ -47,15 +64,6 @@ class WSIDicomChecker(AbstractChecker):
             return False
         return False
     
-def dictify(ds):
-    output = dict()
-    for elem in ds:
-        if elem.VR != 'SQ':
-            output[elem.name] = elem.value
-        else:
-            output[elem.name] = [dictify(item) for item in elem]
-    return output
-        
 class WSIDicomParser(AbstractParser):
         
     def parse_main_metadata(self):
@@ -108,14 +116,11 @@ class WSIDicomParser(AbstractParser):
         levels = wsidicom_object.levels
                 
         metadata = dictify(wsidicom_object.levels.groups[0].datasets[0])     
-        #print(metadata)
         imd = super().parse_known_metadata()
         imd.physical_size_x = wsidicom_object.levels.groups[0].mpp.width * UNIT_REGISTRY("micrometers")
         imd.physical_size_y = wsidicom_object.levels.groups[0].mpp.height * UNIT_REGISTRY("micrometers")
         
-        #if 'Spacing Between Slices' in metadata:
         imd.physical_size_z = self.parse_physical_size(metadata['Shared Functional Groups Sequence'][0]['Pixel Measures Sequence'][0]['Spacing Between Slices'])
-        #print(metadata['Shared Functional Groups Sequence'][0]['Pixel Measures Sequence'][0]['Spacing Between Slices'])
         if 'Acquisition DateTime' in metadata:
             imd.acquisition_datetime = self.parse_acquisition_date(metadata['Acquisition DateTime'])
         return imd
@@ -123,16 +128,21 @@ class WSIDicomParser(AbstractParser):
     def parse_raw_metadata(self):
         list_subdir = [f.path for f in os.scandir(self.format.path) if f.is_dir()]
         wsidicom_object = WsiDicom.open(str(list_subdir[0]))
-        levels = wsidicom_object.levels
-                
-        metadata = dictify(wsidicom_object.levels.groups[0].datasets[0])
+        levels = wsidicom_object.levels                
         store = super().parse_raw_metadata()
-        
-        if 'Device Serial Number' in metadata:
-            store.set('Device Serial Number', metadata['Device Serial Number'])
-            
-        if 'Software Versions' in metadata:
-            store.set('Software Versions', metadata['Software Versions'])
+        data_elmts = recurse_if_SQ(wsidicom_object.levels.groups[0].datasets[0])
+
+        for data_element in data_elmts:
+            name = data_element.name
+            if data_element.is_private:
+                tag = data_element.tag
+                name = f"{tag.group:04x}_{tag.element:04x}"  # noqa
+            name = name.replace(' ', '')
+
+            value = data_element.value
+            if type(value) is MultiValue:
+                value = list(value)
+            store.set(name, value, namespace="DICOM")
         return store
     
     def parse_pyramid(self):
