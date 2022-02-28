@@ -2,10 +2,12 @@ import sys, os, io
 import numpy as np
 from functools import cached_property
 from pydicom.multival import MultiValue
-
+from typing import List
+import shapely
 from pims.formats.utils.checker import SignatureChecker
 from pims.formats.utils.abstract import AbstractChecker, AbstractParser, AbstractReader, AbstractFormat, CachedDataPath
 from pims.formats.utils.structures.metadata import ImageMetadata, ImageChannel
+from pims.formats.utils.structures.annotations import ParsedMetadataAnnotation
 from pims.formats.utils.histogram import DefaultHistogramReader
 from pims.utils.types import parse_float, parse_int, parse_datetime
 from pims.processing.region import Region
@@ -14,7 +16,11 @@ from pims.utils import UNIT_REGISTRY
 from PIL import Image
 import numpy as np
 from pims.utils.dtypes import np_dtype
+import wsidicom
 from wsidicom.wsidicom import WsiDicom
+from wsidicom.graphical_annotations import AnnotationGroup
+from wsidicom.graphical_annotations import Polygon as WsiPolygon
+from wsidicom.graphical_annotations import Point as WsiPoint
 from datetime import datetime
 import json
 
@@ -75,15 +81,19 @@ class WSIDicomParser(AbstractParser):
         imd.width = levels.base_level.size.width
         imd.height = levels.base_level.size.height
         metadata = dictify(wsidicom_object.levels.groups[0].datasets[0])
-        imd.significant_bits = metadata["Bits Stored"]
+        if 'Bits Stored' in metadata:
+            imd.significant_bits = metadata["Bits Stored"]
+        else:
+            imd.significant_bits = 8
         
         imd.duration = 1
-        imd.n_channels = metadata["Samples per Pixel"] # same thing for all WsiDatasets? 
-        #print(imd.n_channels)
+        if "Samples per Pixel" in metadata:
+            imd.n_channels = metadata["Samples per Pixel"] 
         imd.depth = 1
         imd.n_intrinsic_channels = 1
         imd.pixel_type = np_dtype(imd.significant_bits)
-        imd.microscope.model = metadata["Manufacturer's Model Name"]
+        if "Manufacturer's Model Name" in metadata: 
+            imd.microscope.model = metadata["Manufacturer's Model Name"]
         
         if 'Objective Lens Power' in metadata['Optical Path Sequence'][0]:
             imd.objective.nominal_magnification = parse_float(metadata['Optical Path Sequence'][0]['Objective Lens Power'])
@@ -130,7 +140,8 @@ class WSIDicomParser(AbstractParser):
         wsidicom_object = WsiDicom.open(str(list_subdir[0]))
         levels = wsidicom_object.levels                
         store = super().parse_raw_metadata()
-        data_elmts = recurse_if_SQ(wsidicom_object.levels.groups[0].datasets[0])
+        ds = wsidicom_object.levels.groups[0].datasets[0]
+        data_elmts = recurse_if_SQ(ds)
 
         for data_element in data_elmts:
             name = data_element.name
@@ -143,6 +154,7 @@ class WSIDicomParser(AbstractParser):
             if type(value) is MultiValue:
                 value = list(value)
             store.set(name, value, namespace="DICOM")
+
         return store
     
     def parse_pyramid(self):
@@ -159,7 +171,34 @@ class WSIDicomParser(AbstractParser):
             pyramid.insert_tier(level_size.width, level_size.height, (tile_size.width, tile_size.height))
 
         return pyramid
+    
+    def parse_annotations(self) -> List[ParsedMetadataAnnotation]:
+        list_subdir = [f.path for f in os.scandir(self.format.path) if f.is_dir()]
+        wsidicom_object = WsiDicom.open(str(list_subdir[0]))
+        channels = list(range(self.format.main_imd.n_channels))
+        parsed_annots = []
+        pixel_spacing = wsidicom_object.levels.groups[0].pixel_spacing.width
         
+        ds_annot = wsidicom_object.annotations
+        for annot in ds_annot:
+            annotation_groups = annot.groups
+            for annotation_group in annotation_groups:
+                for annotation in annotation_group:
+                    coords = annotation.geometry.to_coords() # list of tuples
+                    coords_pixels = []
+                    for xy in coords: #tuple
+                        new_xy = tuple(int(value/pixel_spacing) for value in xy)
+                        coords_pixels.append(new_xy)
+                    if isinstance(annotation.geometry, WsiPolygon):
+                        annotation_geom = shapely.geometry.Polygon(coords_pixels)
+                    elif isinstance(annotation.geometry, WsiPoint):
+                        annotation_geom = shapely.geometry.Point(coords_pixels)
+                    else:
+                        pass
+                    parsed = ParsedMetadataAnnotation(annotation_geom, channels, 0, 0)
+                    parsed_annots.append(parsed)
+        return parsed_annots
+    
     @staticmethod
     def parse_acquisition_date(date: str):
         """

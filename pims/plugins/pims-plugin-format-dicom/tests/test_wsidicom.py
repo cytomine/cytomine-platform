@@ -111,14 +111,15 @@ def test_wsidicom_info(client, image_path_wsidicom):
     response = client.get(f'/image/upload_test_wsidicom/{filename}/info')
     assert response.status_code == 200
     assert "wsidicom" in response.json()['image']['original_format'].lower()
-    #view = get_wsidicom_properties(os.path.join(path,filename))
-    #list_subdir = [f.path for f in os.scandir(self.format.path) if f.is_dir()]
     wsidicom_object = WsiDicom.open(f"/data/pims/upload_test_wsidicom/processed/original.WSIDICOM/{os.path.splitext(filename)[0]}")
     
     assert response.json()['image']['width'] == wsidicom_object.levels.base_level.size.width
     assert response.json()['image']['height'] == wsidicom_object.levels.base_level.size.height
     metadata = dictify(wsidicom_object.levels.groups[0].datasets[0])
-    assert response.json()['image']['significant_bits'] == metadata["Bits Stored"]
+    if 'Bits Stored' in metadata:
+        assert response.json()['image']['significant_bits'] == metadata["Bits Stored"]
+    else:
+        assert response.json()['image']['significant_bits'] == 8
     
     assert response.json()['image']['physical_size_x'] == wsidicom_object.levels.groups[0].mpp.width
     assert response.json()['image']['physical_size_y'] == wsidicom_object.levels.groups[0].mpp.height
@@ -131,7 +132,7 @@ def test_wsidicom_info(client, image_path_wsidicom):
             
 def test_wsidicom_associated(client, image_path_wsidicom):
     path, filename = image_path_wsidicom
-    response = client.get(f'/image/upload_test_wsidicom/{image_path_wsidicom[1]}/info')
+    response = client.get(f'/image/upload_test_wsidicom/{filename}/info')
     wsidicom_object = WsiDicom.open(f"/data/pims/upload_test_wsidicom/processed/original.WSIDICOM/{os.path.splitext(filename)[0]}")
     
     # assume there is no associated thumbnail for now
@@ -214,4 +215,9 @@ def test_wsidicom_crop(client, image_path_wsidicom):
 def test_wsidicom_histogram_perimage(client, image_path_wsidicom):
     _, filename = image_path_wsidicom
     response = client.get(f"/image/upload_test_wsidicom/{filename}/histogram/per-image", headers={"accept": "image/jpeg"})
-    assert response.status_code == 200   
+    assert response.status_code == 200
+    
+def test_wsidicom_annotation(client, image_path_wsidicom):
+    _, filename = image_path_wsidicom
+    response = client.get(f"/image/upload_test_wsidicom/{filename}/metadata/annotations", headers={"accept": "image/jpeg"})
+    assert response.status_code == 200
