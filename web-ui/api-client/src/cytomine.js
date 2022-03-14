@@ -40,10 +40,38 @@ export default class Cytomine {
         return Promise.reject(error);
       });
 
+      const onRequestSuccess = config => {
+        const token = localStorage.getItem('cytomine-authentication-token') || sessionStorage.getItem('cytomine-authentication-token');
+        if (token) {
+          if (!config.headers) {
+            config.headers = {};
+          }
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+        // config.url = `${SERVER_API_URL}${config.url}`;
+        return config;
+      };
+      this.api.interceptors.request.use(onRequestSuccess);
+
+
       this.lastCommand = null;
 
       Cytomine._instance = this;
     }
+
+    const onRequestSuccess = config => {
+      const token = localStorage.getItem('cytomine-authentication-token') || sessionStorage.getItem('cytomine-authentication-token');
+      if (token) {
+        if (!config.headers) {
+          config.headers = {};
+        }
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      // config.url = `${SERVER_API_URL}${config.url}`;
+      return config;
+    };
+    axios.interceptors.request.use(onRequestSuccess);
+
 
     return Cytomine._instance;
   }
@@ -79,7 +107,18 @@ export default class Cytomine {
    * @returns {{alive, authenticated, version, serverURL, serverID, user}} The data returned by the server
    */
   async ping(project) {
+
+    //
+    // const token = localStorage.getItem('cytomine-authentication-token') || sessionStorage.getItem('cytomine-authentication-token');
+    //
+    // let tokenValue = 'unknown';
+    // if (token) {
+    //   tokenValue = `Bearer ${token}`;
+    // }
+    // let {data} = await axios.post(`${this._host}/server/ping.json`, {project}, {headers: {'Authorization': `${tokenValue}`}});
+
     let {data} = await axios.post(`${this._host}/server/ping.json`, {project}, {withCredentials: true});
+
     return data;
   }
 
