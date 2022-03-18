@@ -45,10 +45,10 @@ class OpenslideVipsParser(VipsParser):
 
         imd = super(OpenslideVipsParser, self).parse_known_metadata()
         mppx = parse_float(get_vips_field(image, 'openslide.mpp-x'))
-        if mppx is not None:
+        if mppx is not None and mppx > 0:
             imd.physical_size_x = mppx * UNIT_REGISTRY("micrometers")
         mppy = parse_float(get_vips_field(image, 'openslide.mpp-y'))
-        if mppy:
+        if mppy is not None and mppy > 0:
             imd.physical_size_y = mppy * UNIT_REGISTRY("micrometers")
 
         imd.objective.nominal_magnification = parse_float(
