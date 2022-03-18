@@ -76,8 +76,10 @@ class SVSParser(TifffileParser):
     def parse_physical_size(
         physical_size: Optional[str], unit: Optional[str] = None
     ) -> Optional[Quantity]:
-        if physical_size is not None and parse_float(physical_size) is not None:
-            return parse_float(physical_size) * UNIT_REGISTRY("micrometers")
+        if physical_size is not None:
+            physical_size = parse_float(physical_size)
+            if physical_size is not None and physical_size > 0:
+                return physical_size * UNIT_REGISTRY("micrometers")
         return None
 
     @staticmethod
