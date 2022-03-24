@@ -14,7 +14,7 @@ services:
       - "core:core"
 
   core:
-    image: cytomine/core:release-multidim-20210727103618-SNAPSHOT
+    image: cytomine/core:v3.2.0
     restart: unless-stopped
     ports: [ "8090:8080" ]
     volumes:
@@ -74,7 +74,7 @@ services:
       - BIOFORMAT_PORT=4321
 
   ims:
-    image: cytomine/ims:vrelease-multidim-ci-20210719161613-SNAPSHOT
+    image: cytomine/ims:v2.0.0
     restart: unless-stopped
     volumes:
       - "/tmp/data/images:/data/images"
