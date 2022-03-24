@@ -12,10 +12,10 @@ echo "Publish npm for $VERSION_NUMBER"
 echo "$NPM_TOKEN"
 
 
-if [[ $VERSION_NUMBER =~ v[0-9]+.[0-9]+.[0-9]+-beta.[0-9]+-0-[0-9a-g]{8,9}$ ]]; then
+if [[ $VERSION_NUMBER =~ [0-9]+.[0-9]+.[0-9]+-beta.[0-9]+$ ]]; then
   echo "BETA"
   TAG=beta
-elif [[ $VERSION_NUMBER =~ [0-9]+.[0-9]+.[0-9]$ ]]; then
+elif [[ $VERSION_NUMBER =~ [0-9]+.[0-9]+.[0-9]+$ ]]; then
   echo "OFFICIAL"
   TAG=latest
 else
