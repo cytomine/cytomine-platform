@@ -16,7 +16,7 @@ if [[ $gitLongTag =~ v[0-9]+.[0-9]+.[0-9]+-0-[0-9a-g]{8,9}$ ]]; then
   versionNumber=$(echo $gitLongTag | sed -r "s/v([0-9]+\.[0-9]+\.[0-9]+)-[0-9]+-.+/\1/")
 else
   echo "WARNING: invalid tag for an official release $gitLongTag"
-  versionNumber=$branchName-$(date "+%Y%m%d%H%M%S")-SNAPSHOT
+  versionNumber=$branchName-$(date "+%Y%m%d%H%M%S")-beta.0
 fi
 
 echo $versionNumber > ./ci/version
