@@ -24,7 +24,7 @@ else
 fi
 
 
-if [[ $TAG -ne "none" ]]; then
+if [[ $TAG != "none" ]]; then
 docker build --rm -f scripts/docker/Dockerfile-publish.build -t cytomine/cytomine-js-client-publish \
         --build-arg VERSION_NUMBER=$VERSION_NUMBER  \
         --build-arg TAG=$TAG  \
