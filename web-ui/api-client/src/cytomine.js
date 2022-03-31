@@ -176,8 +176,7 @@ export default class Cytomine {
    */
   async login(username, password, rememberMe=true) {
     const params = { username: username, password: password, rememberMe: rememberMe };
-    let host = 'http://localhost-core';
-    let {data} = await axios.post(`${host}/api/authenticate`, params, {withCredentials: true});
+    let {data} = await axios.post(`${this._host}/api/authenticate`, params, {withCredentials: true});
     const jwt = data['token'];
 
     if (rememberMe) {
