@@ -12,12 +12,12 @@
 #  * See the License for the specific language governing permissions and
 #  * limitations under the License.
 from datetime import datetime
-from functools import cached_property
 from typing import Optional
 
 from pint import Quantity
 from tifffile import astype
 
+from pims.cache import cached_property
 from pims.formats import AbstractFormat
 from pims.formats.utils.abstract import CachedDataPath
 from pims.formats.utils.engines.tifffile import TifffileChecker, TifffileParser, cached_tifffile
@@ -57,13 +57,16 @@ class SVSParser(TifffileParser):
             raise ValueError('invalid Aperio image description')
 
         result = {}
-        lines = description.split('\n')
-        key, value = lines[0].strip().rsplit(None, 1)  # 'Aperio Image Library'
+        items = description.split('|')
+        headers = items[0].split('\n', 1)
+        key, value = headers[0].strip().rsplit(None, 1)  # 'Aperio Image Library'
         result[key.strip()] = value.strip()
-        if len(lines) == 1:
+        if len(headers) == 1:
             return result
-        items = lines[1].split('|')
-        result['Description'] = items[0].strip()  # TODO: parse this?
+        result['Description'] = headers[1].strip()  # TODO: parse this?
+
+        if len(items) == 1:
+            return result
         for item in items[1:]:
             key, value = item.split(' = ')
             result[key.strip()] = astype(value.strip())
@@ -73,8 +76,10 @@ class SVSParser(TifffileParser):
     def parse_physical_size(
         physical_size: Optional[str], unit: Optional[str] = None
     ) -> Optional[Quantity]:
-        if physical_size is not None and parse_float(physical_size) is not None:
-            return parse_float(physical_size) * UNIT_REGISTRY("micrometers")
+        if physical_size is not None:
+            physical_size = parse_float(physical_size)
+            if physical_size is not None and physical_size > 0:
+                return physical_size * UNIT_REGISTRY("micrometers")
         return None
 
     @staticmethod

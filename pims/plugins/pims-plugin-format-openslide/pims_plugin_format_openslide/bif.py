@@ -12,9 +12,9 @@
 #  * See the License for the specific language governing permissions and
 #  * limitations under the License.
 from datetime import datetime
-from functools import cached_property
 from typing import Optional
 
+from pims.cache import cached_property
 from pims.formats import AbstractFormat
 from pims.formats.utils.abstract import CachedDataPath
 from pims.formats.utils.engines.tifffile import TifffileChecker
@@ -31,10 +31,7 @@ class BifChecker(TifffileChecker):
         try:
             if super().match(pathlike):
                 tf = cls.get_tifffile(pathlike)
-                if len(tf.pages) == 0:
-                    return False
-                xmp = tf.pages[0].tags.get('XMP')
-                return xmp and b'<iScan' in xmp.value
+                return tf.is_bif
             return False
         except RuntimeError:
             return False
@@ -47,10 +44,11 @@ class BifParser(OpenslideVipsParser):
 
         imd = super().parse_known_metadata()
 
-        imd.acquisition_date = self.parse_acquisition_date(
+        imd.acquisition_datetime = self.parse_acquisition_date(
             get_vips_field(image, 'ventana.ScanDate')
         )
 
+        imd.microscope.model = get_vips_field(image, 'ventana.ScannerModel')
         imd.is_complete = True
         return imd
 
