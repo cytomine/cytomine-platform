@@ -22,7 +22,7 @@ def get_image(path, filename):
     filepath = os.path.join(path,filename)
     # If image does not exist locally -> download image
     if not os.path.exists(path):
-        os.mkdir("/data/pims/upload_test_mrxs")
+        os.mkdir(path)
 
     if not os.path.exists(filepath):
         try:
@@ -34,23 +34,22 @@ def get_image(path, filename):
 
     if not os.path.exists(os.path.join(path, "processed")):
         try:
-            fi = FileImporter(f"/data/pims/upload_test_mrxs/{filename}")
-            fi.upload_dir = "/data/pims/upload_test_mrxs"
+            fi = FileImporter(filepath)
+            fi.upload_dir = path
             fi.processed_dir = fi.upload_dir / Path("processed")
             fi.mkdir(fi.processed_dir)
-            print("processed is created")
         except Exception as e:
             print(path + "processed could not be created")
             print(e)
     if not os.path.exists(os.path.join(path, "processed/visualisation.MRXS")):
         if os.path.exists(os.path.join(path, "processed")):
-            fi = FileImporter(f"/data/pims/upload_test_mrxs/{filename}")
-            fi.upload_dir = "/data/pims/upload_test_mrxs"
+            fi = FileImporter(filepath)
+            fi.upload_dir = path
             fi.processed_dir = fi.upload_dir / Path("processed")
         try:
             fi.upload_path = Path(filepath)
             original_filename = Path(f"{ORIGINAL_STEM}.MRXS")
-            fi.original_path = fi.processed_dir / original_filename # unsupported operand type(s) for /: 'NoneType' and 'Path'
+            fi.original_path = fi.processed_dir / original_filename
             archive = Archive.from_path(fi.upload_path)
             archive.extract(fi.original_path)
             new_original_path = fi.processed_dir / original_filename
@@ -61,19 +60,19 @@ def get_image(path, filename):
             fi.spatial_path = fi.processed_dir / spatial_filename
             fi.mksymlink(fi.spatial_path, fi.original_path)
         except Exception as e:
-            print("Importation of images could not be done")
+            print("Creation of original/spatial representations could not be done")
             print(e)
 
     if not os.path.exists(os.path.join(path, "processed/histogram")):
         if os.path.exists(os.path.join(path, "processed")):
-            fi = FileImporter(f"/data/pims/upload_test_mrxs/{filename}")
-            fi.upload_dir = Path("/data/pims/upload_test_mrxs")
+            fi = FileImporter(filepath)
+            fi.upload_dir = Path(path)
             fi.processed_dir = fi.upload_dir / Path("processed")
             original_filename = Path(f"{ORIGINAL_STEM}.MRXS")
             fi.original_path = fi.processed_dir / original_filename
         try:
             from pims.files.image import Image
-            fi.histogram_path = fi.processed_dir/Path(HISTOGRAM_STEM) #/data/pims/upload1641567540187798/processed/histogram
+            fi.histogram_path = fi.processed_dir/Path(HISTOGRAM_STEM)
             format = FormatFactory().match(fi.original_path)
             fi.original = Image(fi.original_path, format=format)
             fi.histogram = build_histogram_file(fi.original, fi.histogram_path, HistogramType.FAST)
