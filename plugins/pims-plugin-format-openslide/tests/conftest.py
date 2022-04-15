@@ -55,13 +55,13 @@ def client(app):
 
 @pytest.fixture
 def image_path_mrxs():
-	path = "/data/pims/upload_test_mrxs/"
+	path = f"{test_root()}/upload_test_mrxs/"
 	image = "CMU-2.zip"
 	return [path, image]
 
 @pytest.fixture
 def image_path_ndpi():
-	path = "/data/pims/upload_test_ndpi/"
+	path = f"{test_root()}/upload_test_ndpi/"
 	image = "lombric-c-sagit-111.ndpi"
 	return [path, image]
 

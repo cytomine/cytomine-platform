@@ -19,7 +19,7 @@ def get_image(path, filename):
     filepath = os.path.join(path,filename)
     # If image does not exist locally -> download image
     if not os.path.exists(path):
-        os.mkdir("/data/pims/upload_test_ndpi")
+        os.mkdir(path)
 	    
     if not os.path.exists(filepath):
         try:
@@ -31,8 +31,8 @@ def get_image(path, filename):
 	
     if not os.path.exists(os.path.join(path, "processed")):
         try:
-            fi = FileImporter(f"/data/pims/upload_test_ndpi/{filename}")
-            fi.upload_dir = "/data/pims/upload_test_ndpi"
+            fi = FileImporter(filepath)
+            fi.upload_dir = path
             fi.processed_dir = fi.upload_dir / Path("processed")
             fi.mkdir(fi.processed_dir)
         except Exception as e:
@@ -40,8 +40,8 @@ def get_image(path, filename):
             print(e)
     if not os.path.exists(os.path.join(path, "processed/visualisation.NDPI")):
         if os.path.exists(os.path.join(path, "processed")):
-            fi = FileImporter(f"/data/pims/upload_test_ndpi/{filename}")
-            fi.upload_dir = "/data/pims/upload_test_ndpi"
+            fi = FileImporter(filepath)
+            fi.upload_dir = path
             fi.processed_dir = fi.upload_dir / Path("processed")
         try:
             fi.upload_path = Path(filepath)
@@ -57,14 +57,14 @@ def get_image(path, filename):
 			
     if not os.path.exists(os.path.join(path, "processed/histogram")):
         if os.path.exists(os.path.join(path, "processed")):
-            fi = FileImporter(f"/data/pims/upload_test_ndpi/{filename}")
-            fi.upload_dir = Path("/data/pims/upload_test_ndpi")
+            fi = FileImporter(filepath)
+            fi.upload_dir = Path(path)
             fi.processed_dir = fi.upload_dir / Path("processed")
             original_filename = Path(f"{ORIGINAL_STEM}.NDPI")
             fi.original_path = fi.processed_dir / original_filename
         try:
             from pims.files.image import Image
-            fi.histogram_path = fi.processed_dir/Path(HISTOGRAM_STEM) #/data/pims/upload1641567540187798/processed/histogram
+            fi.histogram_path = fi.processed_dir/Path(HISTOGRAM_STEM)
             format = FormatFactory().match(fi.original_path)
             fi.original = Image(fi.original_path, format=format)
             fi.histogram = build_histogram_file(fi.original, fi.histogram_path, HistogramType.FAST)
