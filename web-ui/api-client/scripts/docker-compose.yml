@@ -9,18 +9,17 @@ services:
     restart: unless-stopped
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
-      - "${PWD}/scripts/config/nginx/nginxCORS.conf:/usr/local/nginx/conf/nginx.conf"
+      - "./config/nginx/nginxCORS.conf:/usr/local/nginx/conf/nginx.conf"
     links:
       - "core:core"
 
   core:
-    image: cytomine/core:v3.2.0
+    image: cytomine/core:v4.0.0-beta.14
     restart: unless-stopped
     ports: [ "8090:8080" ]
     volumes:
-      - "${PWD}/scripts/config/cytomineconfig.groovy:/usr/share/tomcat7/.grails/cytomineconfig.groovy"
-      - "${PWD}/scripts/config/application.properties:/var/lib/tomcat7/application.properties"
-      - "${PWD}/scripts/config/addHosts.sh:/tmp/addHosts.sh"
+      - "./config/application.yml:/app/application.yml"
+      - "./config/addHosts.sh:/tmp/addHosts.sh"
     links:
       - "postgresql:postgresql"
       - "mongodb:mongodb"
@@ -31,8 +30,13 @@ services:
     restart: unless-stopped
 
   mongodb:
-    image: cytomine/mongodb:v1.1.2
+    image: mongo:4.4
     restart: unless-stopped
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=mongoadmin
+      - MONGO_INITDB_ROOT_PASSWORD=secret
+      - MONGO_INITDB_DATABASE=cytomine
+
 
   rabbitmq:
     image: cytomine/rabbitmq:v1.1.2
@@ -43,12 +47,12 @@ services:
     image: cytomine/memcached:v1.1.2
     restart: unless-stopped
     volumes:
-      - "${PWD}/scripts/config/memcached/memcached.conf:/etc/memcached.conf"
+      - "./config/memcached/memcached.conf:/etc/memcached.conf"
 
   iipOff:
     image: cytomine/iipofficial:v1.2.0
     volumes:
-      - "${PWD}/scripts/config/iipOff/nginx.conf.sample:/tmp/nginx.conf.sample"
+      - "./config/iipOff/nginx.conf.sample:/tmp/nginx.conf.sample"
       - "/tmp/data/images:/data/images"
     restart: unless-stopped
     privileged: true
@@ -58,7 +62,7 @@ services:
   iipCyto:
     image: cytomine/iipcyto:v1.2.2
     volumes:
-      - "${PWD}/scripts/config/iipCyto/nginx.conf.sample:/tmp/nginx.conf.sample"
+      - "./config/iipCyto/nginx.conf.sample:/tmp/nginx.conf.sample"
       - "/tmp/data/images:/data/images"
     restart: unless-stopped
     privileged: true
@@ -79,8 +83,8 @@ services:
     volumes:
       - "/tmp/data/images:/data/images"
       - "/tmp/data/images/_buffer:/tmp/uploaded"
-      - "${PWD}/scripts/config/ims/imageserverconfig.properties:/usr/share/tomcat7/.grails/imageserverconfig.properties"
-      - "${PWD}/scripts/config/ims/ims-config.groovy:/usr/share/tomcat7/.grails/ims-config.groovy"
-      - "${PWD}/scripts/config/ims/addHosts.sh:/tmp/addHosts.sh"
+      - "./config/ims/imageserverconfig.properties:/usr/share/tomcat7/.grails/imageserverconfig.properties"
+      - "./config/ims/ims-config.groovy:/usr/share/tomcat7/.grails/ims-config.groovy"
+      - "./config/ims/addHosts.sh:/tmp/addHosts.sh"
     environment:
       - IMS_STORAGE_PATH=/data/images
