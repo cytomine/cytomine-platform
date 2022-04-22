@@ -88,9 +88,9 @@ class WSIDicomParser(AbstractParser):
         
         imd.duration = 1
         if "Samples per Pixel" in metadata:
-            imd.n_channels = metadata["Samples per Pixel"] 
+            imd.n_samples = metadata["Samples per Pixel"] 
         imd.depth = 1
-        imd.n_intrinsic_channels = 1
+        imd.n_concrete_channels = 1
         imd.pixel_type = np_dtype(imd.significant_bits)
         if "Manufacturer's Model Name" in metadata: 
             imd.microscope.model = metadata["Manufacturer's Model Name"]
