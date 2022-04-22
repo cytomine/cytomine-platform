@@ -1,7 +1,7 @@
 import * as utils from './utils.js';
 import {Software, SoftwareCollection} from '@';
 
-describe('Software', function() {
+describe.skip('Software', function() {
 
   let name = utils.randomString();
   let serviceName = 'createRabbitJobService';

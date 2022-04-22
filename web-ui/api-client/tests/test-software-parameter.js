@@ -1,7 +1,7 @@
 import * as utils from './utils.js';
 import {SoftwareParameter, SoftwareParameterCollection} from '@';
 
-describe('SoftwareParameter', function() {
+describe.skip('SoftwareParameter', function() {
 
   let name = utils.randomString();
   let type = 'String';

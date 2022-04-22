@@ -1,7 +1,7 @@
 import * as utils from './utils.js';
 import {Job, JobStatus, JobCollection, JobParameter} from '@';
 
-describe('Job', function() {
+describe.skip('Job', function() {
 
   let software;
   let softwareParameter;

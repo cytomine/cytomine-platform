@@ -1,7 +1,7 @@
 import * as utils from './utils.js';
 import {SoftwareProject, SoftwareProjectCollection} from '@';
 
-describe('SoftwareProject', function() {
+describe.skip('SoftwareProject', function() {
 
   let software;
   let project;
