@@ -1,5 +1,5 @@
 from PIL import Image
-import os
+import os, json
 import urllib.request
 from fastapi import APIRouter
 from pims.formats import FORMATS
@@ -77,6 +77,10 @@ def test_ndpi_exists(image_path_ndpi):
 	path, filename = image_path_ndpi
 	get_image(path, filename)
 	assert os.path.exists(os.path.join(path, filename)) == True
+	
+def test_format_exists(client):
+    response = client.get(f'/formats')
+    assert "ndpi" in json.dumps(response.json()).lower()
 
 def test_ndpi_info(client, image_path_ndpi):
     path, filename = image_path_ndpi 
