@@ -179,7 +179,7 @@ export default class Annotation extends Model {
       throw new Error('Cannot simplify an annotation with no ID.');
     }
 
-    let {data} = await Cytomine.instance.api.get(`${this.callbackIdentifier}/${this.id}/simplify.json?
+    let {data} = await Cytomine.instance.api.put(`${this.callbackIdentifier}/${this.id}/simplify.json?
             minPoint=${minNbPoints}&maxPoint=${maxNbPoints}`);
 
     this.populate(data);
@@ -196,7 +196,7 @@ export default class Annotation extends Model {
       throw new Error('Cannot fill an annotation with no ID.');
     }
 
-    let {data} = await Cytomine.instance.api.post(`${this.callbackIdentifier}/${this.id}/fill`);
+    let {data} = await Cytomine.instance.api.post(`${this.callbackIdentifier}/${this.id}/fill.json`);
     this.populate(data.data.annotation || data.data.reviewedannotation);
     Cytomine.instance.lastCommand = data.command;
     return this;
