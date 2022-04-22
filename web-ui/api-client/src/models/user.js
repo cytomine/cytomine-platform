@@ -142,7 +142,7 @@ export default class User extends Model {
       throw new Error('Cannot lock a user with no ID.');
     }
 
-    let {data} = await Cytomine.instance.api.post(`user/${this.id}/lock`);
+    let {data} = await Cytomine.instance.api.post(`user/${this.id}/lock.json`);
     this.populate(data.user);
     return this;
   }
@@ -157,7 +157,7 @@ export default class User extends Model {
       throw new Error('Cannot unlock a user with no ID.');
     }
 
-    let {data} = await Cytomine.instance.api.delete(`user/${this.id}/lock`);
+    let {data} = await Cytomine.instance.api.delete(`user/${this.id}/lock.json`);
     this.populate(data.user);
     return this;
   }
