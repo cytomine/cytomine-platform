@@ -1,5 +1,5 @@
 from PIL import Image
-import os
+import os, json
 import urllib.request
 from fastapi import APIRouter
 from pims.formats import FORMATS
@@ -85,6 +85,10 @@ def test_mrxs_exists(image_path_mrxs):
     path, filename = image_path_mrxs
     get_image(path, filename)
     assert os.path.exists(os.path.join(path,filename)) == True
+    
+def test_format_exists(client):
+    response = client.get(f'/formats')
+    assert "mrxs" in json.dumps(response.json()).lower()
 
 def test_mrxs_info(client, image_path_mrxs):
     _, filename = image_path_mrxs
