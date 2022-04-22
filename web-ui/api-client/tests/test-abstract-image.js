@@ -55,12 +55,6 @@ describe('AbstractImage', function() {
       let currentUser = await User.fetchCurrent();
       expect(user.id).to.equal(currentUser.id);
     });
-
-    it('Get image servers', async function() {
-      let imageServers = await abstractImage.fetchImageServers();
-      expect(imageServers).to.be.instanceof(Array);
-      expect(imageServers).to.have.lengthOf.at.least(1);
-    });
   });
 
   describe('Update', function() {

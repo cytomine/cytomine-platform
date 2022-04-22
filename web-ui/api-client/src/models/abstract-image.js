@@ -70,24 +70,6 @@ export default class AbstractImage extends Model {
   }
 
   /**
-   * Get the list of image servers (as URLs) associated with the abstract image
-   *
-   * @returns {Array<String>}
-   */
-  async fetchImageServers() {
-    if(this.isNew()) {
-      throw new Error('Cannot get image servers for an abstract image with no ID.');
-    }
-
-    if(!this._imageServers) {
-      let {data} = await Cytomine.instance.api.get(`${this.callbackIdentifier}/${this.id}/imageservers.json`);
-      this._imageServers = data.imageServersURLs;
-    }
-
-    return this._imageServers;
-  }
-
-  /**
    * @returns {String} the download URL of the image (valid iff the identifier of the image was previously defined)
    */
   get downloadURL() {
