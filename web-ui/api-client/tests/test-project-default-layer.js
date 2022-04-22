@@ -13,6 +13,7 @@ describe('ProjectDefaultLayer', function() {
     await utils.connect(true);
     ({id: project} = await utils.getProject());
     ({id: user} = await utils.getUser());
+    await project.addUser(user);
   });
 
   after(async function() {
