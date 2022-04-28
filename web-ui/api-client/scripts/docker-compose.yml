@@ -84,8 +84,8 @@ services:
     volumes:
       - "/tmp/data/images:/data/images"
       - "/tmp/data/images/_buffer:/tmp/uploaded"
-      - "./config/ims/imageserverconfig.properties:/usr/share/tomcat7/.grails/imageserverconfig.properties"
-      - "./config/ims/ims-config.groovy:/usr/share/tomcat7/.grails/ims-config.groovy"
+      - "./config/ims/imageserverconfig.properties:/usr/share/tomcat9/.grails/imageserverconfig.properties"
+      - "./config/ims/ims-config.groovy:/usr/share/tomcat9/.grails/ims-config.groovy"
       - "./config/ims/addHosts.sh:/tmp/addHosts.sh"
     environment:
       - IMS_STORAGE_PATH=/data/images
