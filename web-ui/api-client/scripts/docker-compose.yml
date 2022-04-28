@@ -15,7 +15,7 @@ services:
       - "ims:ims"
 
   core:
-    image: cytomine/core:main-20220428144919-SNAPSHOT
+    image: cytomine/core:main-20220428150514-SNAPSHOT
     restart: unless-stopped
     ports: [ "8090:8080" ]
     volumes:
