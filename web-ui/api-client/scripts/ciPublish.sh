@@ -8,21 +8,15 @@ echo "************************************** BUILD JAR *************************
 file='./ci/version'
 VERSION_NUMBER=$(<"$file")
 
+file='./ci/tag'
+TAG=$(<"$file")
+
 echo "Publish npm for $VERSION_NUMBER"
 echo "$NPM_TOKEN"
 
 
-if [[ $VERSION_NUMBER =~ [0-9]+.[0-9]+.[0-9]+-beta.[0-9]+$ ]]; then
-  echo "BETA"
-  TAG=beta
-elif [[ $VERSION_NUMBER =~ [0-9]+.[0-9]+.[0-9]+$ ]]; then
-  echo "OFFICIAL"
-  TAG=latest
-else
-  echo "WARNING: invalid tag for an official release, do not publish; if you want to publish a beta: write something like this: git tag -a v1.2.3-beta.3"
-  TAG=none
-  VERSION_NUMBER=0.0.0 # prevent build issue because bad format
-fi
+echo $TAG
+echo $VERSION_NUMBER
 
 
 if [[ $TAG != "none" ]]; then
