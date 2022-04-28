@@ -12,7 +12,7 @@ ARG NPM_TOKEN
 ENV NPM_TOKEN=$NPM_TOKEN
 
 ARG VERSION_NUMBER
-ENV VERSION_NUMBER_ENV=$VERSION_NUMBER
+ENV VERSION_NUMBER=$VERSION_NUMBER
 
 ARG TAG
 ENV TAG=$TAG
@@ -21,6 +21,7 @@ COPY . /app
 RUN echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > /app/.npmrc
 
 WORKDIR /app
+RUN npm version $VERSION_NUMBER
 RUN cat /app/package.json
 RUN npm run build
 RUN npm publish --tag $TAG
