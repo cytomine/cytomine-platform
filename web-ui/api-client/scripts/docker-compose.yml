@@ -12,6 +12,7 @@ services:
       - "./config/nginx/nginxCORS.conf:/usr/local/nginx/conf/nginx.conf"
     links:
       - "core:core"
+      - "ims:ims"
 
   core:
     image: cytomine/core:v4.0.0-beta.19
