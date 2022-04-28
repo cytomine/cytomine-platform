@@ -5,7 +5,7 @@ spring:
     password: docker
 
   mail:
-    host: smtp.gmail.com
+    host: disabled
     port: 587
     username: your.email@gmail.com
     password: passwd
@@ -76,5 +76,5 @@ application:
     jwt:
       # This token must be encoded using Base64 and be at least 256 bits long (you can type `openssl rand -base64 256` on your command line to generate a 256 bits one)
       secret: KPZsGs9gBdU7NQrVT2pvT6kQ4QGfYrzhQ94Mkr+CwxhmRrx1YHRS1b1BSKNaGGHa
-  
+
  # grails.messageBrokerServerURL='rabbitmq:5672

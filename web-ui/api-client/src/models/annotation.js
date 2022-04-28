@@ -197,7 +197,7 @@ export default class Annotation extends Model {
     }
 
     let {data} = await Cytomine.instance.api.post(`${this.callbackIdentifier}/${this.id}/fill.json`);
-    this.populate(data.data.annotation || data.data.reviewedannotation);
+    this.populate(data.annotation || data.reviewedannotation);
     Cytomine.instance.lastCommand = data.command;
     return this;
   }

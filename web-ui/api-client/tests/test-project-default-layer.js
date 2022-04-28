@@ -5,15 +5,17 @@ describe('ProjectDefaultLayer', function() {
 
   let user;
   let project;
+  let projectObject;
 
   let projectDefaultLayer;
   let id = 0;
 
   before(async function() {
     await utils.connect(true);
-    ({id: project} = await utils.getProject());
+    projectObject = await utils.getProject();
+    project = projectObject.id;
     ({id: user} = await utils.getUser());
-    await project.addUser(user);
+    await projectObject.addUser(user);
   });
 
   after(async function() {
@@ -79,6 +81,7 @@ describe('ProjectDefaultLayer', function() {
       async function createUserAndProjectDefaultLayer() {
         let tempUser = await utils.getUser();
         let projectDefaultLayer = new ProjectDefaultLayer({project, user: tempUser.id});
+        await projectObject.addUser(tempUser.id);
         await projectDefaultLayer.save();
         return projectDefaultLayer;
       }

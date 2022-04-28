@@ -134,14 +134,6 @@ describe('AbstractImage', function() {
       });
     });
 
-
-    describe('Filtering', function() {
-      it('Filter on project', async function() {
-        let collection = await AbstractImageCollection.fetchAll({filterKey: 'project', filterValue: project});
-        expect(collection).to.have.lengthOf(0);
-      });
-    });
-
     describe('Pagination', function() {
       let nbPerPage = 1;
 
