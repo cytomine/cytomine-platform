@@ -21,6 +21,7 @@ elif [[ $VERSION_NUMBER =~ [0-9]+.[0-9]+.[0-9]+$ ]]; then
 else
   echo "WARNING: invalid tag for an official release, do not publish; if you want to publish a beta: write something like this: git tag -a v1.2.3-beta.3"
   TAG=none
+  VERSION_NUMBER=0.0.0 # prevent build issue because bad format
 fi
 
 
