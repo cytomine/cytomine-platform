@@ -37,6 +37,6 @@ export default class AbstractImageCollection extends Collection {
   // HACK: remove (temporary hack due to lack of consistency in API endpoint)
   /** @inheritdoc */
   get uri() {
-      return super.uri;
+    return super.uri;
   }
 }
