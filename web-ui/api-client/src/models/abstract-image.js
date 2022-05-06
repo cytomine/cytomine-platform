@@ -94,7 +94,7 @@ export default class AbstractImage extends Model {
       return null;
     }
     let url = this.macroURL.split('?')[0].split('.').slice(0,-1).join('.');
-    url = url.substr(0, url.lastIndexOf('/'));
+    url = url.substring(0, url.lastIndexOf('/'));
     let parameters = {maxSize, ...otherParameters};
     let query = new URLSearchParams(parameters).toString();
     return `${url}/${kind}.${format}?${query}`;
