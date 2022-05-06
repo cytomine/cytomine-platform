@@ -1,7 +1,7 @@
 var path = require('path');
 var config = {
   mode: 'development',
-  entry: ['idempotent-babel-polyfill', './src/index.js'],
+  entry: './src/index.js',
   output: {
     path: path.resolve(__dirname, 'dist'),
     filename: 'cytomine-client.js',
