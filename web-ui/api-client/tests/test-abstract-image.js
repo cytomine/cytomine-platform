@@ -20,6 +20,7 @@ describe('AbstractImage', function() {
     ({id: storage} = await utils.getStorage({user}));
     ({id: uploadedFile} = await utils.getUploadedFile({storage, originalFilename}));
   });
+
   describe('Create', function() {
     it('Create', async function() {
       abstractImage = new AbstractImage({originalFilename, uploadedFile, width : 1000, height : 1000});
@@ -162,7 +163,8 @@ describe('AbstractImage', function() {
         try {
           await collection.fetchNextPage();
           expect(collection).to.have.lengthOf(nbPerPage);
-        } catch (oobError) {
+        }
+        catch (oobError) {
           // ignore, may happen as we have only 1 image
         }
       });
