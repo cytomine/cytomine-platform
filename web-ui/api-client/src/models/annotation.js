@@ -40,7 +40,7 @@ export default class Annotation extends Model {
     this.term = null;
 
     this.imageURL = null;
-    this.cropURL = null;
+    this.url = null;
     this.smallCropURL = null;
   }
 
@@ -70,6 +70,24 @@ export default class Annotation extends Model {
         }
       }
     }
+  }
+
+  /**
+   * Get the annotation crop URL.
+   *
+   * @param maxSize the desired crop size along largest side
+   * @param format the desired crop format (jpg, png, webp)
+   * @param otherParameters optional other parameters to include in the crop URL
+   * @returns {String} the crop URL of the annotation with a specified size
+   */
+  annotationCropURL(maxSize = 256, format = 'jpg', otherParameters = {}) {
+    if (this.url === null) {
+      return null;
+    }
+    let url = this.url.split('?')[0].split('.').slice(0,-1).join('.');
+    let parameters = {maxSize, ...otherParameters};
+    let query = new URLSearchParams(parameters).toString();
+    return `${url}.${format}?${query}`;
   }
 
   /**

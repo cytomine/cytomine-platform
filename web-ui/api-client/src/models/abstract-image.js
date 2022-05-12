@@ -45,10 +45,59 @@ export default class AbstractImage extends Model {
   }
 
   /**
+  * Get the preview URL.
+  *
+  * @param maxSize the desired preview size along largest side
+  * @param format the desired preview format (jpg, png, webp)
+  * @param otherParameters optional other parameters to include in the preview URL
   * @returns {String} the preview URL of the image with a specified size
   */
-  previewURL(size) {
-    return this.preview.replace(/maxSize=\d+/, 'maxSize='+size);
+  previewURL(maxSize = 256, format = 'jpg', otherParameters = {}) {
+    if (this.preview === null) {
+      return null;
+    }
+    let url = this.preview.split('?')[0].split('.').slice(0,-1).join('.');
+    let parameters = {maxSize, ...otherParameters};
+    let query = new URLSearchParams(parameters).toString();
+    return `${url}.${format}?${query}`;
+  }
+
+  /**
+  * Get the thumbnail URL.
+  *
+  * @param maxSize the desired thumb size along largest side
+  * @param format the desired thumb format (jpg, png, webp)
+  * @param otherParameters optional other parameters to include in the thumb URL
+  * @returns {String} the thumb URL of the image with a specified size
+  */
+  thumbURL(maxSize = 256, format = 'jpg', otherParameters = {}) {
+    if (this.thumb === null) {
+      return null;
+    }
+    let url = this.thumb.split('?')[0].split('.').slice(0,-1).join('.');
+    let parameters = {maxSize, ...otherParameters};
+    let query = new URLSearchParams(parameters).toString();
+    return `${url}.${format}?${query}`;
+  }
+
+  /**
+  * Get the associated image URL.
+  *
+  * @param kind the associated type (macro, label)
+  * @param maxSize the desired associated image size along largest side
+  * @param format the desired associated image format (jpg, png, webp)
+  * @param otherParameters optional other parameters to include in the associated image URL
+  * @returns {String} the associated image URL of the image with a specified size
+  */
+  associatedImageURL(kind = 'macro', maxSize = 256, format = 'jpg', otherParameters = {}) {
+    if (this.macroURL === null) {
+      return null;
+    }
+    let url = this.macroURL.split('?')[0].split('.').slice(0,-1).join('.');
+    url = url.substr(0, url.lastIndexOf('/'));
+    let parameters = {maxSize, ...otherParameters};
+    let query = new URLSearchParams(parameters).toString();
+    return `${url}/${kind}.${format}?${query}`;
   }
 
   /**
