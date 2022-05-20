@@ -28,11 +28,12 @@
     "license": "Apache-2.0",
     "dependencies": {
         "axios": "^0.21.1",
-        "detect-browser": "^4.4.0"
+        "core-js": "^3.22.5",
+        "detect-browser": "^4.4.0",
+        "regenerator-runtime": "^0.13.9"
     },
     "devDependencies": {
         "@babel/core": "^7.4.3",
-        "@babel/polyfill": "^7.4.3",
         "@babel/plugin-proposal-object-rest-spread": "^7.4.3",
         "@babel/preset-env": "^7.4.3",
         "babel-loader": "^8.0.5",
