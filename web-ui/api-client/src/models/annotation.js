@@ -124,6 +124,32 @@ export default class Annotation extends Model {
   }
 
   /**
+   * Get the projections of the annotation profile, if available.
+   *
+   * @param {null|string} axis The axis along which the projection is performed. If null, use highest order axis
+   * @param {boolean} cache True if the result must be cached in the annotation object.
+   *
+   * @returns {Object} The annotation profile projection
+   */
+  async fetchProfileProjections(axis=null, cache=false) {
+    if(this.isNew()) {
+      throw new Error('Cannot get profile for an annotation with no ID.');
+    }
+
+    if (this._profileProjections && cache) {
+      return this._profileProjections;
+    }
+    else {
+      let {data} = await Cytomine.instance.api.get(`${this.callbackIdentifier}/${this.id}/profile/projections.json`,
+        {params: {axis}});
+      if (cache) {
+        this._profileProjections = data;
+      }
+      return data;
+    }
+  }
+
+  /**
    * Record an action performed on the annotation
    *
    * @param {string} [action="select"] The action performed on the annotation (select, add, delete, update)
