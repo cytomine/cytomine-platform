@@ -8,6 +8,7 @@ When using our software, we kindly ask you to cite our website URL and related p
 
 ## Presentation
 Cytomine-js-client is an opensource javascript client allowing to communicate with the REST API of a Cytomine instance. For more information about Cytomine, go to https://www.cytomine.org.
+See installation instructions here : https://doc.cytomine.org/dev-guide/clients/javascript/installation
 
 ## How to use the client
 The javascript client can be used in one of the following ways:

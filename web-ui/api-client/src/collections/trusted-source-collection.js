@@ -12,4 +12,8 @@ export default class TrustedSourceCollection extends Collection {
   static get allowedFilters() {
     return [null, 'software'];
   }
+
+  get uriWithoutFilter() {
+    return 'software_user_repository.json';
+  }
 }

@@ -23,7 +23,7 @@ describe('AnnotationComment', function() {
 
   describe('Create', function() {
     it('Create', async function() {
-      annotationComment = new AnnotationComment({comment: text, receivers}, annotation);
+      annotationComment = new AnnotationComment({subject: 'test AnnotationComment', comment: text, receivers}, annotation);
       await annotationComment.save();
       expect(annotationComment).to.be.an.instanceof(AnnotationComment);
       id = annotationComment.id;
@@ -77,7 +77,7 @@ describe('AnnotationComment', function() {
     before(async function() {
       let commentsPromises = [];
       for(let i = 0; i < nbComments - 1; i++) {
-        commentsPromises.push(new AnnotationComment({comment: utils.randomString(), receivers}, annotation).save());
+        commentsPromises.push(new AnnotationComment({subject: 'test AnnotationComment', comment: utils.randomString(), receivers}, annotation).save());
       }
       await Promise.all(commentsPromises);
     });

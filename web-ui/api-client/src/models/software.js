@@ -17,6 +17,8 @@ export default class Software extends Model {
     this.resultName = null;
     this.description = null;
     this.executeCommand = null;
+    this.defaultProcessingServer = null;
+    this.deprecated = null;
 
     this.parameters = null;
 

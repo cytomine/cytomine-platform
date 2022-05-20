@@ -40,7 +40,7 @@ export default class Annotation extends Model {
     this.term = null;
 
     this.imageURL = null;
-    this.url = null;
+    this.cropURL = null;
     this.smallCropURL = null;
   }
 
@@ -81,10 +81,10 @@ export default class Annotation extends Model {
    * @returns {String} the crop URL of the annotation with a specified size
    */
   annotationCropURL(maxSize = 256, format = 'jpg', otherParameters = {}) {
-    if (this.url === null) {
+    if (this.cropURL === null) {
       return null;
     }
-    let url = this.url.split('?')[0].split('.').slice(0,-1).join('.');
+    let url = this.cropURL.split('?')[0].split('.').slice(0,-1).join('.');
     let parameters = {maxSize, ...otherParameters};
     let query = new URLSearchParams(parameters).toString();
     return `${url}.${format}?${query}`;
@@ -161,7 +161,7 @@ export default class Annotation extends Model {
       throw new Error('Cannot record an action on an annotation with no ID.');
     }
 
-    let {data} = await Cytomine.instance.api.post('annotationaction.json', {
+    let {data} = await Cytomine.instance.api.post('annotation_action.json', {
       annotationIdent: this.id,
       action
     });

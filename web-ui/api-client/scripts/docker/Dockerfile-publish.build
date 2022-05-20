@@ -1,0 +1,25 @@
+FROM node:10.24.1-slim
+# We first copy the package.json file and the binaries stored in the source repository.
+# use changes to package.json to force Docker not to use the cache
+# when we change our application's nodejs dependencies:
+RUN npm -v
+COPY package.json /app/package.json
+RUN cd /app && npm install -S --unsafe-perm=true --allow-root
+
+
+
+ARG NPM_TOKEN
+ENV NPM_TOKEN=$NPM_TOKEN
+
+
+ARG VERSION_NUMBER
+ENV VERSION_NUMBER_ENV=$VERSION_NUMBER
+
+COPY . /app
+RUN echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > /app/.npmrc
+
+WORKDIR /app
+RUN npm version $VERSION_NUMBER
+RUN cat /app/package.json
+RUN npm run build
+RUN npm publish

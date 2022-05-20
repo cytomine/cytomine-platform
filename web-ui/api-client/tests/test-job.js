@@ -13,7 +13,7 @@ describe('Job', function() {
   before(async function() {
     await utils.connect();
     ({project, software} = await utils.getSoftwareProject());
-    ({id: softwareParameter} = await utils.getSoftwareParameter({software}));
+    ({id: softwareParameter} = await utils.getSoftwareParameter({software, type:'String'}));
   });
 
   after(async function() {
@@ -23,7 +23,7 @@ describe('Job', function() {
   describe('Create', function() {
     it('Create', async function() {
       job = new Job({software, project});
-      job.jobParameters.push(new JobParameter({softwareParameter, value: 0}));
+      job.jobParameters.push(new JobParameter({softwareParameter, value: 'test'}));
       job = await job.save();
       id = job.id;
       expect(job).to.be.an.instanceof(Job);
@@ -48,6 +48,16 @@ describe('Job', function() {
 
     it('Fetch with wrong ID', function() {
       expect(Job.fetch(0)).to.be.rejected;
+    });
+  });
+
+  describe('Copy', function() {
+    it('Copy', async function() {
+      let job = await new Job({id}).fetch();
+      let copiedJob = await job.copy(id);
+      expect(copiedJob.id).to.not.equal(job.id);
+      expect(copiedJob.userJob).to.not.equal(job.userJob);
+      expect(copiedJob.software).to.equal(job.software);
     });
   });
 
@@ -82,7 +92,11 @@ describe('Job', function() {
 
   describe('Delete', function() {
     it('Delete', async function() {
-      await Job.delete(id);
+      job = new Job({software, project});
+      job = await job.save();
+      id = job.id;
+
+      await Job.delete(job.id);
     });
 
     it('Fetch deleted', function() {
@@ -139,13 +153,13 @@ describe('Job', function() {
       it('Fetch with project filter', async function() {
         let collection = await new JobCollection({project}).fetchAll();
         expect(collection).to.be.an.instanceof(JobCollection);
-        expect(collection).to.have.lengthOf(nbJobs);
+        expect(collection).to.have.lengthOf(nbJobs + 1); // +1 because 1 is created for otherSoftware in the project
       });
 
       it('Fetch with project and software filters', async function() {
         let collection = await new JobCollection({project, software}).fetchAll();
         expect(collection).to.be.an.instanceof(JobCollection);
-        expect(collection).to.have.lengthOf(nbJobs - 1);
+        expect(collection).to.have.lengthOf(nbJobs);
       });
     });
 
