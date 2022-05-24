@@ -16,7 +16,7 @@ export default class ImageInstanceCollection extends Collection {
 
   /** @inheritdoc */
   static get allowedFilters() {
-    return ['project','user'];
+    return ['project','user', 'imagegroup'];
   }
 
   /**
