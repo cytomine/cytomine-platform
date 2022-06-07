@@ -4,7 +4,7 @@ import Cytomine from '@/cytomine';
 export default class TrustedSource extends Model {
   /** @inheritdoc */
   static get callbackIdentifier() {
-    return 'software_user_repository';
+    return 'softwareuserrepository';
   }
 
   /** @inheritdoc */
@@ -22,7 +22,18 @@ export default class TrustedSource extends Model {
       throw new Error('Cannot refresh a trusted source with no ID.');
     }
 
-    await Cytomine.instance.api.get(`${this.callbackIdentifier}/${this.id}/refresh.json`);
+    await Cytomine.instance.api.get(`software_user_repository/${this.id}/refresh.json`);
     return self;
+  }
+
+  // HACK: remove (temporary hack due to lack of consistency in API endpoint)
+  /** @inheritdoc */
+  get uri() {
+    if(this.isNew()) {
+      return 'software_user_repository.json';
+    }
+    else {
+      return `software_user_repository/${this.id}.json`;
+    }
   }
 }

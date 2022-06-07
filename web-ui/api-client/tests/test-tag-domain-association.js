@@ -12,8 +12,7 @@ describe('TagDomainAssociation', function() {
     await utils.connect();
     let name = utils.randomString();
     let user = await utils.getUser();
-    tag = new Tag({name, user});
-    ({id: tag} = await tag.save());
+    ({id: tag} = await utils.getTag());
     project = await utils.getProject();
   });
 
@@ -71,6 +70,8 @@ describe('TagDomainAssociation', function() {
       try {
         let associationPromises = [];
         for(let i = 0; i < nbAssociations; i++) {
+          let tag;
+          ({id: tag} = await utils.getTag({forceCreation: true}));
           associationPromises.push(new TagDomainAssociation({tag}, project).save());
         }
         associations = await Promise.all(associationPromises);
@@ -84,6 +85,7 @@ describe('TagDomainAssociation', function() {
     after(async function() {
       let deletionPromises = associations.map(association => TagDomainAssociation.delete(association.id));
       await Promise.all(deletionPromises);
+      await utils.cleanData();
     });
 
     describe('Fetch', function() {
