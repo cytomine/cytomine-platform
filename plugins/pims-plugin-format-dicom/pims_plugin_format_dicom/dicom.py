@@ -268,6 +268,10 @@ class WSIDicomFormat(AbstractFormat):
         return "WSI Dicom"
 
     @classmethod
+    def get_remarks(cls):
+        return "A set of .dcm files packed in an archive. "
+
+    @classmethod
     def is_spatial(cls):
         return True
 
