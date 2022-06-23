@@ -12,7 +12,15 @@ gitLongTag=$(git describe --long)
 branchName=${1:-$(git rev-parse --abbrev-ref HEAD)}
 echo $gitLongTag
 # check if tag is an official release (v1.2.3) + no other commit behind (or dirty)
-if [[ $gitLongTag =~ v[0-9]+.[0-9]+.[0-9]+-beta.[0-9]+-0-[0-9a-g]{8,9}$ ]]; then
+if [[ $gitLongTag =~ v[0-9]+.[0-9]+.[0-9]+-beta.[0-9]+-EE-0-[0-9a-g]{8,9}$ ]]; then
+  echo "BETA EE"
+  versionNumber=$(echo $gitLongTag | sed -r "s/v([0-9]+\.[0-9]+\.[0-9]+-beta.[0-9]+-EE)-[0-9]+-.+/\1/")
+  tag=betaEE
+elif [[ $gitLongTag =~ v[0-9]+.[0-9]+.[0-9]+-EE-0-[0-9a-g]{8,9}$ ]]; then
+  echo "OFFICIAL EE"
+  versionNumber=$(echo $gitLongTag | sed -r "s/v([0-9]+\.[0-9]+\.[0-9]+-EE)-[0-9]+-.+/\1/")
+  tag=officialEE
+elif [[ $gitLongTag =~ v[0-9]+.[0-9]+.[0-9]+-beta.[0-9]+-0-[0-9a-g]{8,9}$ ]]; then
   echo "BETA"
   versionNumber=$(echo $gitLongTag | sed -r "s/v([0-9]+\.[0-9]+\.[0-9]+-beta.[0-9]+)-[0-9]+-.+/\1/")
   tag=beta
