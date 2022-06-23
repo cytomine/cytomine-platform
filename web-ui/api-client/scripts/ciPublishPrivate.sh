@@ -36,14 +36,15 @@ docker rmi cytomine/cytomine-js-client-publish-private
 ls
 
 echo "Publish package"
-ssh -p 50004 cytomine@185.35.173.82 "mkdir -p /data/js-client" || true
-scp -P 50004 "./ci/cytomine-client-$VERSION_NUMBER-EE.tgz" cytomine@185.35.173.82:/data/js-client
+#ssh -p 50004 cytomine@185.35.173.82 "mkdir -p /data/js-client" || true
+#scp -P 50004 "./ci/cytomine-client-$VERSION_NUMBER-EE.tgz" cytomine@185.35.173.82:/data/js-client
 
-CORE_PATH="/data/js-client/cytomine-client-$VERSION_NUMBER-EE.tgz"
-echo $CORE_PATH
+scp "./ci/cytomine-client-$VERSION_NUMBER-EE.tgz" cytomine@192.168.122.16:"/home/cytomine/public_html/drupal7/dwnld/dev/releases/js-client/cytomine-client-$VERSION_NUMBER-EE.tgz"
+
+CORE_URL="https://cytomine.com/dwnld/dev/releases/js-client/cytomine-client-$VERSION_NUMBER-EE.tgz"
+
+echo CORE_URL
 echo $CORE_PATH > ./ci/path
-
-
 
 fi
 #else
