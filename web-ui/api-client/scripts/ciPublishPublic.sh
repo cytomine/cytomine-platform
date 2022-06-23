@@ -20,12 +20,12 @@ echo $VERSION_NUMBER
 
 
 if [[ $TAG != "none" ]]; then
-docker build --rm -f scripts/docker/Dockerfile-publish.build -t cytomine/cytomine-js-client-publish \
+docker build --rm -f scripts/docker/Dockerfile-publish-public.build -t cytomine/cytomine-js-client-publish-public \
         --build-arg VERSION_NUMBER=$VERSION_NUMBER  \
         --build-arg TAG=$TAG  \
         --build-arg NPM_TOKEN=$NPM_TOKEN  .
 
-containerId=$(docker create cytomine/cytomine-js-client-publish)
+containerId=$(docker create cytomine/cytomine-js-client-publish-public)
 
 docker rm $containerId
 fi
