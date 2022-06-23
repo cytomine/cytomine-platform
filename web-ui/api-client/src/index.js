@@ -1,3 +1,7 @@
+// https://stackoverflow.com/a/54490329
+import 'core-js/stable';
+import 'regenerator-runtime/runtime';
+
 export {default as Cytomine} from './cytomine.js';
 
 export {default as AbstractImage} from './models/abstract-image.js';
@@ -10,8 +14,9 @@ export {default as AnnotationTrack} from './models/annotation-track.js';
 export {default as AttachedFile} from './models/attached-file.js';
 export {default as CompanionFile} from './models/companion-file.js';
 export {default as Configuration} from './models/configuration.js';
-export {default as ConsensusScore} from './models/consensus-score.js';
 export {default as Description} from './models/description.js';
+export {default as Discipline} from './models/discipline.js';
+export {default as Group} from './models/group.js';
 export {default as Generic} from './models/generic.js';
 export {default as ImageConsultation} from './models/image-consultation.js';
 export {default as ImageFilter} from './models/image-filter.js';
@@ -65,7 +70,9 @@ export {default as AttachedFileCollection} from './collections/attached-file-col
 export {default as CompanionFileCollection} from './collections/companion-file-collection.js';
 export {default as ConfigurationCollection} from './collections/configuration-collection.js';
 export {default as ConsensusScoreCollection} from './collections/consensus-score-collection.js';
+export {default as DisciplineCollection} from './collections/discipline-collection.js';
 export {default as GenericCollection} from './collections/generic-collection.js';
+export {default as GroupCollection} from './collections/group-collection.js';
 export {default as ImageConsultationCollection} from './collections/image-consultation-collection.js';
 export {default as ImageFilterCollection} from './collections/image-filter-collection.js';
 export {default as ImageFilterProjectCollection} from './collections/image-filter-project-collection.js';
