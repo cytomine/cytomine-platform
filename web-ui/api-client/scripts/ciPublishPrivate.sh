@@ -29,7 +29,7 @@ containerId=$(docker create cytomine/cytomine-js-client-publish-private)
 
 docker start -ai  $containerId
 docker cp "$containerId:/app/cytomine-client-$VERSION_NUMBER.tgz" ./ci
-
+mv "./ci/cytomine-client-$VERSION_NUMBER.tgz" "./ci/cytomine-client-$VERSION_NUMBER-EE.tgz"
 docker rm $containerId
 docker rmi cytomine/cytomine-js-client-publish-private
 
@@ -37,9 +37,9 @@ ls
 
 echo "Publish package"
 ssh -p 50004 cytomine@185.35.173.82 "mkdir -p /data/js-client" || true
-scp -P 50004 "./ci/cytomine-client-$VERSION_NUMBER.tgz" cytomine@185.35.173.82:/data/js-client
+scp -P 50004 "./ci/cytomine-client-$VERSION_NUMBER-EE.tgz" cytomine@185.35.173.82:/data/js-client
 
-CORE_PATH="/data/js-client/cytomine-client-$VERSION_NUMBER.tgz"
+CORE_PATH="/data/js-client/cytomine-client-$VERSION_NUMBER-EE.tgz"
 echo $CORE_PATH
 echo $CORE_PATH > ./ci/path
 
