@@ -241,18 +241,6 @@ export default class Annotation extends Model {
     return new this(data.annotation || data.reviewedannotation);
   }
 
-  async repeat(slice, number) {
-    if(this.isNew()) {
-      throw new Error('Cannot repeat an annotation with no ID.');
-    }
-
-    let {data} = await Cytomine.instance.api.post(`userannotation/${this.id}/repeat.json`, {
-      slice,
-      repeat: number
-    });
-    return data;
-  }
-
   /** @inheritdoc */
   get uri() { // cannot override callbackIdentifier because in response data, model is returned in "annotation" prop
     if(!this._type) {
