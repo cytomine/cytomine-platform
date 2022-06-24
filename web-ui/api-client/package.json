@@ -18,7 +18,6 @@
         "dist",
         "src"
     ],
-    "main": "./src/index.js",
     "author": "Burtin Elodie <elodie.burtin@cytomine.coop>",
     "contributors": [
         "Hoyoux Renaud <renaud.hoyoux@cytomine.coop>",
