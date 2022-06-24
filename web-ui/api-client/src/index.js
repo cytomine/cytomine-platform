@@ -1,9 +1,4 @@
-// https://stackoverflow.com/a/54490329
-import 'core-js/stable';
-import 'regenerator-runtime/runtime';
-
 export {default as Cytomine} from './cytomine.js';
-
 export {default as AbstractImage} from './models/abstract-image.js';
 export {default as AbstractSlice} from './models/abstract-slice.js';
 export {default as AlgoAnnotationTerm} from './models/algo-annotation-term.js';

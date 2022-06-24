@@ -9,17 +9,15 @@
         "url": "https://github.com/cytomine/Cytomine-js-client.git"
     },
     "scripts": {
-        "dev": "webpack-cli --mode=development --watch --info-verbosity verbose",
-        "build": "webpack-cli --mode=production",
+        "dev": "webpack --mode=development --watch --info-verbosity verbose",
+        "build": "webpack --mode=production",
         "test": "./node_modules/karma/bin/karma start",
-        "prepack": "npm run build",
-        "prepare": "npm run build"
+        "prepack": "npm run build"
     },
     "files": [
         "dist",
         "src"
     ],
-    "main": "./src/index.js",
     "author": "Burtin Elodie <elodie.burtin@cytomine.coop>",
     "contributors": [
         "Hoyoux Renaud <renaud.hoyoux@cytomine.coop>",
@@ -28,9 +26,8 @@
     "license": "Apache-2.0",
     "dependencies": {
         "axios": "^0.21.1",
-        "core-js": "^3.22.5",
         "detect-browser": "^4.4.0",
-        "regenerator-runtime": "^0.13.9"
+        "idempotent-babel-polyfill": "^7.0.0"
     },
     "devDependencies": {
         "@babel/core": "^7.4.3",
