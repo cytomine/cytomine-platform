@@ -17,10 +17,10 @@ export default class SoftwareParameterCollection extends Collection {
   /** @inheritdoc */
   get uri() {
     if(this._filter.key === 'software' && this._filter.value) {
-      return `software/${this._filter.value}/software_parameter.json`;
+      return `software/${this._filter.value}/parameter.json`;
     }
     else {
-      return 'software_parameter.json';
+      return 'softwareparameter.json';
     }
   }
 }
