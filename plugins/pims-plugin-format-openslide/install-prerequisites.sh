@@ -38,8 +38,8 @@ dependencies_before_vips() {
     libtool
 
   cd /tmp
-  wget http://archive.ubuntu.com/ubuntu/pool/main/p/pixman/libpixman-1-0_0.40.0-1build2_amd64.deb
-  dpkg -i libpixman-1-0_0.40.0-1build2_amd64.deb
+  wget http://archive.ubuntu.com/ubuntu/ubuntu/pool/main/p/pixman/libpixman-1-0_0.40.0-1build4_amd64.deb
+  dpkg -i libpixman-1-0_0.40.0-1build4_amd64.deb
 
   cd /usr/local/src
   wget ${OPENSLIDE_URL}/v${OPENSLIDE_VERSION}/openslide-${OPENSLIDE_VERSION}.tar.gz
