@@ -62,7 +62,7 @@ Optionally, one can define a set of configuration files that will be attached to
 
 These files should be listed on a per-service structure in the `cytomine.yml` file. The declaration should provide the target service for a mounted configuration fmount point on the target container
 
-The hierarchy is the following: `configs.{namespace}.{config-group}` where namespace defines the service and server concerned with the configuration files. There can be several config groups for a service. Each group corresponds to one mount point on the container and can list several files
+The hierarchy is the following: `configs.{namespace}.{config-group}` where namespace defines the service and server concerned with the configuration files. There can be several config groups for a service. Each group corresponds to one mount point on the container and can list several files (path relative to the cytomine root folder).
 
 ```yaml
 configs:
@@ -71,8 +71,9 @@ configs:
       mount-point: /config
       files: ["./cytomine.config", "./othercytomine.config"]
   nginx-srv2:
-  
-
+    sites-enabled:
+      mount-point: /etc/nginx/sites-enabled
+      files: ["nginx/main.conf"]
 ```
 
 # Bootstrapping and outputs
