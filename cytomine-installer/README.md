@@ -12,7 +12,7 @@ It should not support:
 - automatic generation of Docker Compose files
 
 Additional goals:
-- deprecate `Cytomine-boostrap` and `Cytomine-boostrap-generator`
+- deprecate `Cytomine-bootstrap` and `Cytomine-bootstrap-generator`
 
 # Inputs
 
