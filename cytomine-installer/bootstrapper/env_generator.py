@@ -118,7 +118,7 @@ class OpenSSLGenerator(EnvValueGenerator):
     if self._is_base64(field):
       command.append("-base64")
     command.append(f"{self._get_length(field)}")
-    return str(subprocess.check_output(command)).strip()
+    return subprocess.check_output(command).decode("utf8").strip()
 
   @property
   def method_key(self):
