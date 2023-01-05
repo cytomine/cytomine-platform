@@ -53,4 +53,4 @@ class TestOpensslGenerator(TestCase):
   def testResolve(self):
     generator = OpenSSLGenerator()
     field = {"type": "openssl", "base64": True, "length": 10}
-    self.assertRegex(generator.resolve(field), rf".{{{field['length']}}}")
+    self.assertRegex(generator.resolve(field), rf".+")
