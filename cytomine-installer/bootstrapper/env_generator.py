@@ -12,6 +12,11 @@ class EnvValueGenerator(ABC):
   def method_key(self):
     pass
 
+  @property
+  @abstractmethod
+  def accept_string_field(self):
+    pass
+
   @abstractmethod
   def _resolve(self, field):
     """
@@ -48,7 +53,6 @@ class EnvValueGenerator(ABC):
     self.validate(field)
     return self._resolve(field)
 
-  @abstractmethod
   def validate(self, field):
     """
     Returns
@@ -63,8 +67,23 @@ class EnvValueGenerator(ABC):
       cannot be used for generating the value with the given method
     UnrecognizedGenerationField:
       When the content of the field does not match the generation method
-    """    
-    pass
+    """
+    standardized_field = dict()
+    if isinstance(field, str) and self.accept_string_field:
+      standardized_field["type"] = field
+    elif isinstance(field, dict) and "type" in field:
+      if "freeze" in field and not isinstance(field["freeze"], bool):
+        raise InvalidAutoGenerationData(self, "invalid type for 'freeze' parameter")
+      standardized_field = field
+    else:
+      raise UnrecognizedGenerationField(self)
+    if standardized_field["type"] != self.method_key:
+      raise UnrecognizedGenerationField(self)
+    return self._validate(standardized_field)
+
+  def _validate(self, field: dict):
+    # to implement custom checks on the content of a field 
+    return self
 
 
 class InvalidAutoGenerationData(ValueError):
@@ -82,13 +101,12 @@ class RandomUUIDGenerator(EnvValueGenerator):
     return str(uuid.uuid4())
 
   @property
+  def accept_string_field(self):
+    return True
+
+  @property
   def method_key(self):
     return "random_uuid"
-
-  def validate(self, field):
-    if not (isinstance(field, str) and field == self.method_key):
-      raise UnrecognizedGenerationField(self)
-    return self
 
 
 class OpenSSLGenerator(EnvValueGenerator):
@@ -105,6 +123,10 @@ class OpenSSLGenerator(EnvValueGenerator):
   @property
   def method_key(self):
     return "openssl"
+  
+  @property
+  def accept_string_field(self):
+    return False
 
   def _is_base64(self, field):
     return field.get("base64", False) 
@@ -112,10 +134,7 @@ class OpenSSLGenerator(EnvValueGenerator):
   def _get_length(self, field):
     return field.get("length", 0)
 
-  def validate(self, field):
-    if not isinstance(field, dict) or field.get("type", None) != self.method_key:
-      raise UnrecognizedGenerationField(self)
-    
+  def _validate(self, field):
     base64 = field.get("base64")
     if base64 is not None and not isinstance(base64, bool):
       raise InvalidAutoGenerationData(self, "base64 should be a boolean")
