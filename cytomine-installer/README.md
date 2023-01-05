@@ -54,7 +54,7 @@ The subsections:
 
 The per-service namespace should match `{SERVICE}-{SERVER-IDENTIFIER}` where `SERVICE` is the name of the service in the docker compose file and `SERVER-IDENTIFIER` is the name of the identifier of the server (the same as for the corresponding server folder). In the case of single-server install this latter term can be omitted and the namespace can just be: `{SERVICE}`. 
 
-The `global` variables can be referred to in the docker compose files following the following naming convention: `${NAMESPACE}_{ENV-VAR-NAME}` or `${{{NAMESPACE}_{ENV-VAR-NAME}}}` (eg. `$IMGS_CORE` or `${IMGS_CORE}` if namespace is `imgs` and var name is `CORE`).  
+The `global` variables can be referred to in the docker compose files following the following naming convention: `${NAMESPACE}_{ENV-VAR-NAME}` or `${{{NAMESPACE}_{ENV-VAR-NAME}}}` (eg. `$IMGS_CORE` or `${IMGS_CORE}` if namespace is `imgs` and var name is `CORE`). Dashes/hyphens in namespaces will be converted into underscores in environment variables names.
 
 ### Automatic env generation
 This section documents the accepted values for the `value-type` `'auto'`:
