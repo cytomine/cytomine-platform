@@ -3,7 +3,7 @@
 A tool for deploying Cytomine with Docker Compose on one or more servers.
 
 It should support:
-- the most simple and self-contained initial configuration for a cytomine instance: `cytomine.yml`, one `docker compose.*.yml` file per target server and optional configuration files
+- the most simple and self-contained initial configuration for a cytomine instance: `cytomine.yml`, one `docker compose.yml` file per target server and optional configuration files
 - zero or minimal duplication of environment variables definition (e.g. urls, path, etc)
 - a straightforward and simple way of converting the initial configuration files into deployment-ready files
 - Cytomine services deployment on each target server with a simple `docker compose up` command (using the deployment files)
