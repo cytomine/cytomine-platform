@@ -1,25 +1,80 @@
-
-
 from bootstrapper.env_store import EnvStore, KeyAlreadyExistsError
 from unittest import TestCase
 
 
-class TestConstantEnvStore(TestCase):
-  def testConstantEnvStore(self):
-    namespaces = {
-      "ns1": {
-        "constant": {
-          "VAR1": "value1",
-          "VAR2": "value2"
-        }
-      },
-      "ns2": {
-        "constant": {
-          "VAR1": "value3",
-          "VAR3": "value4"
-        }
+def phony_namespaces_constant():
+  return {
+    "ns1": {
+      "constant": {
+        "VAR1": "value1",
+        "VAR2": "value2"
+      }
+    },
+    "ns2": {
+      "constant": {
+        "VAR1": "value3",
+        "VAR3": "value4"
       }
     }
+  }
+
+
+def phony_namespaces_and_global():
+  nss = phony_namespaces_constant()
+  
+  nss["ns1"]["global"] = {
+    "VAR3": "base.VAR1",
+    "VAR9": "advanced.GVAR1"
+  }
+
+  nss["ns2"]["global"] = {
+    "VAR2": "base.VAR3",
+    "VAR8": "advanced.GVAR2"
+  }
+
+  env_store = EnvStore()
+  env_store.add_namespace("base", {
+    "constant": {
+      "VAR1": "gvalue1",
+      "VAR3": "gvalue2"
+    }
+  })
+  env_store.add_namespace("advanced", {
+    "constant": {
+      "GVAR1": "gvalue3",
+      "GVAR2": "gvalue4"
+    }
+  })
+  
+  return env_store, nss
+
+
+def phony_namespaces_all():
+  env_store, nss = phony_namespaces_and_global()
+  nss["ns1"]["auto"] = {
+    "VARAUTO1": "random_uuid",
+    "VARAUTO2": {
+      "type": "random_uuid",
+      "freeze": False
+    }
+  } 
+  nss["ns2"]["auto"] = {
+    "VARAUTO3": "random_uuid",
+    "VARAUTO4": {
+      "type": "openssl",
+      "base64": True,
+      "length": 8,
+      "freeze": True
+    }
+  }
+  return env_store, nss
+
+class TestEnvStore(TestCase):
+  def setUp(self):
+    self._global, _ = phony_namespaces_and_global()
+
+  def testValidEnvStoreWithConstantOnly(self):
+    namespaces = phony_namespaces_constant()
 
     env_store = EnvStore()
     for ns, entries in namespaces.items():
@@ -29,25 +84,7 @@ class TestConstantEnvStore(TestCase):
       for env_name, env_value in entries["constant"].items():
         self.assertEqual(env_store.get_value(ns, env_name), env_value)
 
-
-class TestGlobalEnvStore(TestCase):
-  def setUp(self):
-    self._global = EnvStore()
-    self._global.add_namespace("base", {
-      "constant": {
-        "VAR1": "gvalue1",
-        "VAR3": "gvalue2"
-      }
-    })
-    self._global.add_namespace("advanced", {
-      "constant": {
-        "GVAR1": "gvalue3",
-        "GVAR2": "gvalue4"
-      }
-    })
-
-
-  def testAlreadyExists(self):
+  def testEnvVarAlreadyExists(self):
     namespace =  {
       "global": { "VAR1": "base.VAR1" },
       "constant": { "VAR1": "cst_value" }
@@ -57,27 +94,8 @@ class TestGlobalEnvStore(TestCase):
       env_store = EnvStore()
       env_store.add_namespace("ns1", namespace, store=self._global)
 
-  def testGlobalEnvStore(self):
-    namespaces = {
-      "ns1": {
-        "global": {
-          "VAR1": "base.VAR1",
-          "VAR9": "advanced.GVAR1"
-        },
-        "constant": {
-          "VAR3": "value"
-        }
-      },
-      "ns2": {
-        "global": {
-          "VAR2": "base.VAR3",
-          "VAR8": "advanced.GVAR2"
-        },
-        "constant": {
-          "VAR4": "value"
-        }
-      }
-    }
+  def testValidEnvStoreWithGlobal(self):
+    _, namespaces = phony_namespaces_and_global()
 
     env_store = EnvStore()
     for ns, entries in namespaces.items():
@@ -88,3 +106,17 @@ class TestGlobalEnvStore(TestCase):
         self.assertEqual(env_store.get_value(ns, env_name), self._global.get_value(*env_value.split(".")))
       for env_name, env_value in entries["constant"].items():
         self.assertEqual(env_store.get_value(ns, env_name), env_value)
+
+  def testValidEnvStoreWithAuto(self):
+    _, namespaces = phony_namespaces_all()
+
+    env_store = EnvStore()
+    for ns, entries in namespaces.items():
+      env_store.add_namespace(ns, entries, store=self._global)
+  
+    uuid_pattern = r"[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}"
+    self.assertRegex(env_store.get_value("ns1", "VARAUTO1"), uuid_pattern)
+    self.assertRegex(env_store.get_value("ns1", "VARAUTO2"), uuid_pattern)
+    self.assertRegex(env_store.get_value("ns2", "VARAUTO3"), uuid_pattern)
+    self.assertRegex(env_store.get_value("ns2", "VARAUTO4"), r".+")
+
