@@ -119,4 +119,28 @@ class TestEnvStore(TestCase):
     self.assertRegex(env_store.get_value("ns1", "VARAUTO2"), uuid_pattern)
     self.assertRegex(env_store.get_value("ns2", "VARAUTO3"), uuid_pattern)
     self.assertRegex(env_store.get_value("ns2", "VARAUTO4"), r".+")
+  
+  def testAsDict(self):
+    _, namespaces = phony_namespaces_all()
 
+    env_store = EnvStore()
+    for ns, entries in namespaces.items():
+      env_store.add_namespace(ns, entries, store=self._global)
+    
+    generated_dict = env_store.as_dict()
+    
+    for ns, entries in namespaces.items():
+      self.assertIn(ns, generated_dict)
+      for env_type in ["constant", "global"]:
+        for k, v in entries.get(env_type).items():
+          self.assertIn(k, generated_dict[ns][env_type])
+          self.assertEqual(generated_dict[ns][env_type][k], v)
+      for k, v in entries.get("auto").items():
+        if not isinstance(v, dict) or "freeze" not in v or v["freeze"]:
+          self.assertIn(k, generated_dict[ns]["constant"])
+        else:
+          self.assertIn(k, generated_dict[ns]["auto"])
+          self.assertEqual(generated_dict[ns]["auto"][k], v)
+ 
+          
+      
