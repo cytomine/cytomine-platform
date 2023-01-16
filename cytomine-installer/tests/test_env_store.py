@@ -1,6 +1,8 @@
 from bootstrapper.env_store import EnvStore, KeyAlreadyExistsError
 from unittest import TestCase
 
+from tests.util import UUID_PATTERN
+
 
 def phony_namespaces_constant():
   return {
@@ -114,10 +116,9 @@ class TestEnvStore(TestCase):
     for ns, entries in namespaces.items():
       env_store.add_namespace(ns, entries, store=self._global)
   
-    uuid_pattern = r"[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}"
-    self.assertRegex(env_store.get_value("ns1", "VARAUTO1"), uuid_pattern)
-    self.assertRegex(env_store.get_value("ns1", "VARAUTO2"), uuid_pattern)
-    self.assertRegex(env_store.get_value("ns2", "VARAUTO3"), uuid_pattern)
+    self.assertRegex(env_store.get_value("ns1", "VARAUTO1"), UUID_PATTERN)
+    self.assertRegex(env_store.get_value("ns1", "VARAUTO2"), UUID_PATTERN)
+    self.assertRegex(env_store.get_value("ns2", "VARAUTO3"), UUID_PATTERN)
     self.assertRegex(env_store.get_value("ns2", "VARAUTO4"), r".+")
   
   def testAsDict(self):

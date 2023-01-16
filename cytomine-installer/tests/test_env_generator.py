@@ -4,6 +4,7 @@
 from unittest import TestCase
 from bootstrapper.env_generator import RandomUUIDGenerator, OpenSSLGenerator
 from bootstrapper.env_generator import UnrecognizedGenerationField, InvalidAutoGenerationData
+from tests.util import UUID_PATTERN
 
 
 class TestUUIDGenerator(TestCase):
@@ -24,7 +25,7 @@ class TestUUIDGenerator(TestCase):
 
   def testResolve(self):
     generator = RandomUUIDGenerator()
-    self.assertRegex(generator.resolve("random_uuid"), r"[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}")
+    self.assertRegex(generator.resolve("random_uuid"), UUID_PATTERN)
 
 
 class TestOpensslGenerator(TestCase):

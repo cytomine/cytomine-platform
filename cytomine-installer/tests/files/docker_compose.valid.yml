@@ -1,0 +1,55 @@
+version: "3.4"
+services:
+
+  nginx:
+    image: cytomine/nginx:v1.3.1
+    container_name: nginxTest
+    hostname: nginxTest
+    ports: [ "80:80" ]
+    restart: unless-stopped
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "./config/nginx/nginxCORS.conf:/usr/local/nginx/conf/nginx.conf"
+
+  core:
+    image: cytomine/core:v4.3.0-beta.3
+    restart: unless-stopped
+    ports: [ "8090:8080" ]
+    volumes:
+      - "./config/application.yml:/app/application.yml"
+      - "./config/addHosts.sh:/tmp/addHosts.sh"
+
+  postgresql:
+    image: cytomine/postgis:v2.0.0
+    restart: unless-stopped
+
+  mongodb:
+    image: mongo:4.4
+    restart: unless-stopped
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=mongoadmin
+      - MONGO_INITDB_ROOT_PASSWORD=secret
+      - MONGO_INITDB_DATABASE=cytomine
+
+
+  rabbitmq:
+    image: cytomine/rabbitmq:v1.1.2
+    ports: [ "5672:5672", "15672:15672" ]
+    restart: unless-stopped
+
+  memcached:
+    image: cytomine/memcached:v1.1.2
+    restart: unless-stopped
+    volumes:
+      - "./config/memcached/memcached.conf:/etc/memcached.conf"
+
+  pims:
+    image: cytomine/pims:v0.12.3
+    restart: unless-stopped
+    volumes:
+      - "/tmp/data/images:/data/images"
+      - "/tmp/data/images/_buffer:/tmp/uploaded"
+      - "./config/pims/pims-config.env:/app/pims-config.env"
+      - "./config/ims/addHosts.sh:/tmp/addHosts.sh"
+    environment:
+      - IMS_STORAGE_PATH=/data/images

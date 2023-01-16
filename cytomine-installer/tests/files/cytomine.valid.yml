@@ -1,0 +1,107 @@
+
+global:
+  imgs:
+    constant:
+      MEMCACHED: memcached:1.6.17-bullseye
+      RABBITMQ: rabbitmq:3.11.4
+      POSTGRESQL: postgis/postgis:14-3.3-alpine
+      MONGODB: mongo:4.4
+      BIOFORMAT: cytomine/bioformat:v1.2.0
+      PIMS_CACHE: redis
+      PIMS: repository.cytom.in:5004/pims-corporate:v0.2.1-beta.0
+      CORE: cytomine/core:v4.3.1
+      UI: nginx:1.23.2
+  urls:
+    constant:
+      CORE_URL: localhost-core
+      IMS_URL1: localhost-ims
+      IMS_URL2: localhost-ims2
+      UPLOAD_URL: localhost-upload
+  paths:
+    constant:
+      STORAGE_PATH: /data/images
+      BUFFER_PATH: /data/images/_buffer
+      SOFTWARE_PATH: /data/softwares/code
+  auth:
+    auto:
+      RABBITMQ_PUB_KEY: random_uuid
+      RABBITMQ_PRIV_KEY: random_uuid
+      IMS_PUB_KEY: random_uuid
+      IMS_PRIV_KEY: random_uuid
+
+services:
+  core:
+    constant:
+      ADMIN_EMAIL: info@cytomine.coop
+      SENDER_EMAIL_SMTP_HOST: smtp.gmail.com
+      SENDER_EMAIL_SMTP_PORT: 587
+      SENDER_EMAIL: your.email@gmail.com
+      RECEIVER_EMAIL: receiver@XXX.com
+    global:
+      CORE_URL: urls.CORE_URL
+      IMS_URL1: urls.IMS_URL1
+      IMS_URL2: urls.IMS_URL2
+      IMS_STORAGE_PATH: paths.STORAGE_PATH
+      RABBITMQ_PUB_KEY: auth.RABBITMQ_PUB_KEY
+      RABBITMQ_PRIV_KEY: auth.RABBITMQ_PRIV_KEY
+      IMS_PUB_KEY: auth.IMS_PUB_KEY
+      IMS_PRIV_KEY: auth.IMS_PRIV_KEY
+    auto:
+      SENDER_EMAIL_PASS: random_uuid
+      ADMIN_PWD: random_uuid
+      ADMIN_PUB_KEY: random_uuid
+      ADMIN_PRIV_KEY: random_uuid
+      SUPERADMIN_PUB_KEY: random_uuid
+      SUPERADMIN_PRIV_KEY: random_uuid
+      SERVER_ID: random_uuid
+      JWT_SECRET_KEY:
+        type: openssl
+        base: 64
+        length: 48
+      JAVA_MELODY_PWD: random_uuid
+
+  rabbitmq: 
+    constant: 
+      LOGIN: router
+      PASSWORD: router
+
+  memcached: 
+    auto:
+      PASS: random_uuid
+
+  bioformat:
+    constant:
+      ENABLED: true
+      ALIAS: bioformat
+      PORT: 4321
+
+  mongodb: 
+    constant:
+      MONGO_INITDB_ROOT_USERNAME: mongoadmin
+      MONGO_INITDB_DATABASE: cytomine
+    auto:
+      MONGO_INITDB_ROOT_PASSWORD: random_uuid
+
+  nginx:
+    constant:
+      ENVIRONMENT: production
+    global:
+      CORE_URL: urls.CORE_URL
+      IMS_URL1: urls.IMS_URL1
+      IMS_URL2: urls.IMS_URL2
+      IMS_STORAGE_PATH: paths.STORAGE_PATH
+
+  pims:
+    constant:
+      MAX_REQUESTS: 125
+      WEB_CONCURRENCY: 2
+    global:
+      IMS_STORAGE_PATH: paths.STORAGE_PATH
+      IMS_PUB_KEY: auth.IMS_PUB_KEY
+      IMS_PRIV_KEY: auth.IMS_PRIV_KEY
+      IMS_URL1: urls.IMS_URL1
+
+  web_ui:
+    global:
+      CORE_URL: urls.CORE_URL 
+      UPLOAD_URL: urls.UPLOAD_URL 
