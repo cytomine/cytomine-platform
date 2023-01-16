@@ -1,25 +1,49 @@
+import enum
 import os
 import yaml
 from collections import defaultdict
-from env_store import EnvStore
+from .env_store import EnvStore
 
 DOCKER_COMPOSE_FILENAME = "docker-compose.yml"
 
 
+class UnknownServerError(ValueError):
+  def __init__(self, server, *args: object) -> None:
+    super().__init__(f"unknown server '{server}'", *args)
+
+
+class CytomineEnvSectionEnum(enum.Enum):
+  GLOBAL = "global"
+  SERVICES = "services"
+
+
+class UnknownCytomineEnvSection(ValueError):
+  def __init__(self, section, *args: object) -> None:
+    available_values = ', '.join(list(map(lambda v: v.value, CytomineEnvSectionEnum)))
+    super().__init__(f"unknown section '{section}', expects one of {{{available_values}}}", *args)
+
+
 class CytomineEnvsFile:
   """parses a cytomine.yml file"""
-  def __init__(self, config_path="cytomine.yml") -> None:
-    self._config_path = config_path
+  def __init__(self, path, filename="cytomine.yml") -> None:
+    self._config_path = os.path.join(path, filename)
     
-    with open(config_path, "r", encoding="utf8") as file:
+    with open(self._config_path, "r", encoding="utf8") as file:
       self._raw_config = yaml.load(file)
+
+    # both top-level sections are optional
+    for section in self._raw_config.keys():
+      try:
+        CytomineEnvSectionEnum(section)
+      except ValueError:
+        raise UnknownCytomineEnvSection(section)
     
     self._global_envs = EnvStore()
-    for ns, entries in self._raw_config.get("global", {}).items():
+    for ns, entries in self._raw_config.get(CytomineEnvSectionEnum.GLOBAL.value, {}).items():
       self._global_envs.add_namespace(ns, entries)
     
     self._servers_env_stores = defaultdict(lambda: EnvStore())
-    for server, envs in self._raw_config.get("services", {}).items():
+    for server, envs in self._raw_config.get(CytomineEnvSectionEnum.SERVICES.value, {}).items():
       for ns, entries in envs.items():
         self._servers_env_stores[server].add_namespace(ns, entries, store=self._global_envs)
 
@@ -32,7 +56,16 @@ class CytomineEnvsFile:
     return list(self._servers_env_stores.keys())
 
   def services(self, server: str):
+    """Returns the list of services for a given server"""
+    if server not in self._servers_env_stores:
+      raise UnknownServerError(server)
     return list(self._servers_env_stores[server].keys())
+
+  def server_store(self, server: str):
+    """Returns the env store for a given server"""
+    if server not in self._servers_env_stores:
+      raise UnknownServerError(server)
+    return self._servers_env_stores.get(server, None)
 
   def as_dict(self):
     target_dict = dict()
