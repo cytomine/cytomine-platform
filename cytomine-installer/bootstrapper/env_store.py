@@ -16,6 +16,11 @@ class KeyAlreadyExistsError(KeyError):
     super().__init__(f"key '{key}' already exists in namespace '{ns}'", *args)
 
 
+class UnknownValueTypeError(ValueError):
+  def __init__(self, value_type, *args: object) -> None:
+    super().__init__(f"unknown value type: {value_type}", *args)
+
+
 class BaseEnvStore(ABC):
   @abstractmethod
   def get_value(namespace: str, key: str):
@@ -44,7 +49,14 @@ class EnvStore(BaseEnvStore):
   def add_namespace(self, ns: str, entries: dict, store=None):
     if ns in self._store:
       raise ValueError(f"namespace '{ns}' already exists in env store")
-    
+
+    # check for unknown value-type
+    for value_type in entries.keys():
+      try:
+        EnvValueTypeEnum(value_type)
+      except ValueError:
+        raise UnknownValueTypeError(value_type)
+
     for k, v in entries.get(EnvValueTypeEnum.CONSTANT.value, {}).items():
       self._add_env(ns, k, v, lambda: v, EnvValueTypeEnum.CONSTANT)
     
