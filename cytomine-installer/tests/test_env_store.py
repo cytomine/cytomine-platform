@@ -86,6 +86,8 @@ class TestEnvStore(TestCase):
       for env_name, env_value in entries["constant"].items():
         self.assertEqual(env_store.get_env(ns, env_name), env_value)
 
+    self.assertDictEqual(namespaces["ns1"]["constant"], env_store.get_namespace_envs("ns1"))
+
   def testEnvVarAlreadyExists(self):
     namespace =  {
       "global": { "VAR1": "base.VAR1" },
@@ -109,6 +111,12 @@ class TestEnvStore(TestCase):
       for env_name, env_value in entries["constant"].items():
         self.assertEqual(env_store.get_env(ns, env_name), env_value)
 
+    self.assertDictEqual({
+      **namespaces["ns1"]["constant"],
+      "VAR3": "gvalue1",
+      "VAR9": "gvalue3"
+    }, env_store.get_namespace_envs("ns1"))
+
   def testValidEnvStoreWithAuto(self):
     _, namespaces = phony_namespaces_all()
 
@@ -121,7 +129,7 @@ class TestEnvStore(TestCase):
     self.assertRegex(env_store.get_env("ns2", "VARAUTO3"), UUID_PATTERN)
     self.assertRegex(env_store.get_env("ns2", "VARAUTO4"), r".+")
   
-  def testAsDict(self):
+  def testExportDict(self):
     _, namespaces = phony_namespaces_all()
 
     env_store = EnvStore()
