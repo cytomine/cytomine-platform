@@ -23,19 +23,19 @@ class TestCytomineEnvsFile(TestCase):
     ce_path = os.path.join(tests_path, "files")
     ce_filename = "cytomine.mini.yml"
     cytomine_envs_file = CytomineEnvsFile(ce_path, filename=ce_filename)
-    self.assertEqual(cytomine_envs_file.global_envs.get_value("namespace1", "VAR1"), "value1")
-    self.assertEqual(cytomine_envs_file.global_envs.get_value("namespace1", "VAR2"), "value2")
-    self.assertRegex(cytomine_envs_file.global_envs.get_value("namespace2", "KEY1"), UUID_PATTERN)
-    self.assertRegex(cytomine_envs_file.global_envs.get_value("namespace2", "KEY2"), UUID_PATTERN)
+    self.assertEqual(cytomine_envs_file.global_envs.get_env("namespace1", "VAR1"), "value1")
+    self.assertEqual(cytomine_envs_file.global_envs.get_env("namespace1", "VAR2"), "value2")
+    self.assertRegex(cytomine_envs_file.global_envs.get_env("namespace2", "KEY1"), UUID_PATTERN)
+    self.assertRegex(cytomine_envs_file.global_envs.get_env("namespace2", "KEY2"), UUID_PATTERN)
 
     self.assertEqual(len(cytomine_envs_file.servers), 1)
     self.assertEqual(cytomine_envs_file.servers[0], "default")
     default_store = cytomine_envs_file.server_store("default")
-    self.assertEqual(default_store.get_value("core", "EMAIL"), "emailcore")
-    self.assertEqual(default_store.get_value("core", "VAR1"), cytomine_envs_file.global_envs.get_value("namespace1", "VAR1"))
-    self.assertRegex(default_store.get_value("core", "GENERATED"), UUID_PATTERN)
-    self.assertEqual(default_store.get_value("rabbitmq", "VAR1"), cytomine_envs_file.global_envs.get_value("namespace1", "VAR1"))
-    self.assertEqual(default_store.get_value("rabbitmq", "VAR2"), cytomine_envs_file.global_envs.get_value("namespace2", "KEY1"))
+    self.assertEqual(default_store.get_env("core", "EMAIL"), "emailcore")
+    self.assertEqual(default_store.get_env("core", "VAR1"), cytomine_envs_file.global_envs.get_env("namespace1", "VAR1"))
+    self.assertRegex(default_store.get_env("core", "GENERATED"), UUID_PATTERN)
+    self.assertEqual(default_store.get_env("rabbitmq", "VAR1"), cytomine_envs_file.global_envs.get_env("namespace1", "VAR1"))
+    self.assertEqual(default_store.get_env("rabbitmq", "VAR2"), cytomine_envs_file.global_envs.get_env("namespace2", "KEY1"))
 
   def testFileWithInvalidValueType(self):
     tests_path = os.path.dirname(__file__)

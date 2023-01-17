@@ -23,13 +23,17 @@ class UnknownValueTypeError(ValueError):
 
 class BaseEnvStore(ABC):
   @abstractmethod
-  def get_value(namespace: str, key: str):
+  def get_env(self, namespace: str, key: str):
     """Get a value stored in the EnvStore"""
     pass
 
   @abstractmethod
-  def as_dict(self):
-    """Generates a directory"""
+  def get_namespace_envs(self, namespace: str):
+    """Get all values of a given namespace as a flat dictionary"""
+  
+  @abstractmethod
+  def export_dict(self):
+    """Generates an dictionary for env store export"""
     pass
 
 class EnvStore(BaseEnvStore):
@@ -65,7 +69,7 @@ class EnvStore(BaseEnvStore):
 
     for k, v in entries.get(EnvValueTypeEnum.GLOBAL.value, {}).items():
       other_ns, other_key = v.split(".")
-      self._add_env(ns, k, v, lambda: store.get_value(other_ns, other_key), EnvValueTypeEnum.GLOBAL)
+      self._add_env(ns, k, v, lambda: store.get_env(other_ns, other_key), EnvValueTypeEnum.GLOBAL)
 
     gen_factory = EnvValueGeneratorFactory()
     for k, v in entries.get(EnvValueTypeEnum.AUTOGENERATE.value, {}).items():
@@ -76,14 +80,14 @@ class EnvStore(BaseEnvStore):
   def namespaces(self):
     return list(self._store.keys())
 
-  def get_value(self, ns: str, key: str):
+  def get_env(self, ns: str, key: str):
     if ns not in self._store:
       raise ValueError(f"unknown namespace '{ns}'")
     if key not in self._store[ns]:
       raise ValueError(f"unknown key '{key}' in namespace '{ns}'")
     return self._store[ns][key]
 
-  def as_dict(self):
+  def export_dict(self):
     output_dict = defaultdict(lambda: defaultdict(dict))
     for ns in self.namespaces:
       for key in self._store[ns].keys():
@@ -93,3 +97,8 @@ class EnvStore(BaseEnvStore):
         else:
           output_dict[ns][init_type.value][key] = self._initial_value[ns][key]
     return output_dict
+
+  def get_namespace_envs(self, ns: str):
+    if ns not in self._store:
+      raise ValueError(f"unknown namespace '{ns}'")
+    return {**self._store[ns]}

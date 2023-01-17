@@ -69,10 +69,10 @@ class CytomineEnvsFile:
 
   def as_dict(self):
     target_dict = dict()
-    target_dict["global"] = self._global_envs.as_dict()
+    target_dict["global"] = self._global_envs.export_dict()
     target_dict["services"] = dict()
     for server, env_store in self._servers_env_stores.items():
-      target_dict["services"][server] = env_store.as_dict()
+      target_dict["services"][server] = env_store.export_dict()
     return target_dict
 
 
@@ -88,6 +88,10 @@ class DockerComposeFile:
   @property
   def filepath(self):
     return os.path.join(self._path, self._filename)
+  
+  @property
+  def filename(self):
+    return self._filename
 
   @property
   def services(self):

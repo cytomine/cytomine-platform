@@ -84,7 +84,7 @@ class TestEnvStore(TestCase):
     
     for ns, entries in namespaces.items():
       for env_name, env_value in entries["constant"].items():
-        self.assertEqual(env_store.get_value(ns, env_name), env_value)
+        self.assertEqual(env_store.get_env(ns, env_name), env_value)
 
   def testEnvVarAlreadyExists(self):
     namespace =  {
@@ -105,9 +105,9 @@ class TestEnvStore(TestCase):
 
     for ns, entries in namespaces.items():
       for env_name, env_value in entries["global"].items():
-        self.assertEqual(env_store.get_value(ns, env_name), self._global.get_value(*env_value.split(".")))
+        self.assertEqual(env_store.get_env(ns, env_name), self._global.get_env(*env_value.split(".")))
       for env_name, env_value in entries["constant"].items():
-        self.assertEqual(env_store.get_value(ns, env_name), env_value)
+        self.assertEqual(env_store.get_env(ns, env_name), env_value)
 
   def testValidEnvStoreWithAuto(self):
     _, namespaces = phony_namespaces_all()
@@ -116,10 +116,10 @@ class TestEnvStore(TestCase):
     for ns, entries in namespaces.items():
       env_store.add_namespace(ns, entries, store=self._global)
   
-    self.assertRegex(env_store.get_value("ns1", "VARAUTO1"), UUID_PATTERN)
-    self.assertRegex(env_store.get_value("ns1", "VARAUTO2"), UUID_PATTERN)
-    self.assertRegex(env_store.get_value("ns2", "VARAUTO3"), UUID_PATTERN)
-    self.assertRegex(env_store.get_value("ns2", "VARAUTO4"), r".+")
+    self.assertRegex(env_store.get_env("ns1", "VARAUTO1"), UUID_PATTERN)
+    self.assertRegex(env_store.get_env("ns1", "VARAUTO2"), UUID_PATTERN)
+    self.assertRegex(env_store.get_env("ns2", "VARAUTO3"), UUID_PATTERN)
+    self.assertRegex(env_store.get_env("ns2", "VARAUTO4"), r".+")
   
   def testAsDict(self):
     _, namespaces = phony_namespaces_all()
@@ -128,7 +128,7 @@ class TestEnvStore(TestCase):
     for ns, entries in namespaces.items():
       env_store.add_namespace(ns, entries, store=self._global)
     
-    generated_dict = env_store.as_dict()
+    generated_dict = env_store.export_dict()
     
     for ns, entries in namespaces.items():
       self.assertIn(ns, generated_dict)
