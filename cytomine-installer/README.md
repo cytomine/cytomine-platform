@@ -14,6 +14,25 @@ It should not support:
 Additional goals:
 - deprecate `Cytomine-bootstrap` and `Cytomine-bootstrap-generator`
 
+# Docker images 
+
+The docker image encapsulating Cytomine services must all follow a set of conventions for interacing them with the bootstrapper logic. 
+
+Container configuration is done exclusively via environment variables and configuration files. These are bound to the container when it is spawned (with `docker compose up` for instance). Binding is defined with a `docker-compose.override.yml` file alongside the main `docker-compose.yml` file (no `docker cp` !!). 
+
+The environment files are attached via a volume mounted on `/cm_configs`. The full path of a configuration files can be summerized as `/cm_configs/{FILEPATH}/{CONFIG-FILE}[.sample]` where:
+
+- `CONFIG-FILE` is the name of the configuration file
+- `.sample` is an optional suffix indicating that file is **templated** and should be interpolated. It can be omitted if a file should not be interpolated at all.
+- `FILEPATH` defines where the configuration files must eventually be located when the container starts.  
+
+It is the responsibility of the container to optionally interpolate the configuration files with values of corresponding environment variables and to place the files them within the right directories inside the container before launching the service. An example path is `/cm_configs/etc/nginx/sites-enabled/mysite.conf.sample` which means that the interpolated file `mysite.conf` must be placed in directory `/{FILEPATH}` where `FILEPATH=etc/nginx/sites-enabled`.   
+
+## Template configuration files
+TODO spec for templating config files:
+- link with our `cytomine.yml` environment variable file 
+- what about supported files formats: `json`, `nginx conf`, `yaml`, ... ?
+
 # Inputs
 
 The inputs are the following:
@@ -21,7 +40,7 @@ The inputs are the following:
 - a `./cytomine.yml` file: environment variables and configurations files
 - one folder `./{SERVER-IDENTIFIER}` per target server where `SERVER-IDENTIFIER` is a string identifier for the server (e.g. server name). Each folder contains:
   - a classical `docker-compose.yml` file defining what and how services should run on this server
-  - an optional subfolder containing groups of configuration files to mount at deployment: `./{SERVER-IDENTIFIER}/configs/{CONFIG-GROUP}/{CONFIG-FILE}`. A config group contains a set of files that should all be mounted on the same 
+  - an optional subfolder of configuration files to mount at deployment: `./{SERVER-IDENTIFIER}/configs/{SERVICE}/{FILEPATH}/{CONFIG-FILE}[.sample]`. The `SERVICE` denotes which service will receive the configuration files in the underlying directory tree. Within the container of this service, the file `{CONFIG-FILE}[.sample]` will be available in path `/cm_configs/{FILEPATH}`.  
 
 In the case of a single-server install, the bootstrapper supports a simplified folder hierarchy can where the server folder can be omitted: the `docker-compose.yml` file and `configs` folder can be located at the same level as the `cytomine.yml` file. 
 
@@ -103,5 +122,3 @@ This will generate a deployment folder in `/bootstrap/{FOLDER}` containing all f
   - `{SERVER-IDENTIFIER}/docker-compose.override.yml`: an override Docker Compose file to attach environment variables (using files in `{SERVER-IDENTIFIER}/envs`) and mounting configuration files to each service
   - `{SERVER-IDENTIFIER}/envs/{SERVICE}.env`: .env files containing environment variables defined for the given service running on this server
   - `{SERVER-IDENTIFIER}/configs/{SERVICE}/{CONFIG-GROUP}/{CONFIG-FILE}`: configuration files organized by service and config groups.
-
-
