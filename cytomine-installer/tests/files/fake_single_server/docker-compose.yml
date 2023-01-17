@@ -1,0 +1,7 @@
+version: "3.8"
+services:
+  core:
+    image: cytomine/$NS1_GLOBAL_VAR1
+    
+  ims:
+    image: cytomine/ims:v1.2

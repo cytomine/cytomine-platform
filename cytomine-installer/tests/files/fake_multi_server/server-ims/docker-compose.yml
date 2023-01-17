@@ -1,0 +1,4 @@
+version: "3.8"
+services:
+  ims:
+    image: cytomine/ims:v1.2
