@@ -30,11 +30,18 @@ class BaseEnvStore(ABC):
   @abstractmethod
   def get_namespace_envs(self, namespace: str):
     """Get all values of a given namespace as a flat dictionary"""
+    pass
+
+  @abstractmethod
+  def has_namespace(self, ns: str):
+    """Checks whether a namespace exists or not"""
+    pass
   
   @abstractmethod
   def export_dict(self):
     """Generates an dictionary for env store export"""
     pass
+
 
 class EnvStore(BaseEnvStore):
   def __init__(self) -> None:
@@ -102,3 +109,6 @@ class EnvStore(BaseEnvStore):
     if ns not in self._store:
       raise ValueError(f"unknown namespace '{ns}'")
     return {**self._store[ns]}
+
+  def has_namespace(self, ns: str):
+    return ns in self._store

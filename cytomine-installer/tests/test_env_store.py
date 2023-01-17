@@ -86,6 +86,14 @@ class TestEnvStore(TestCase):
       for env_name, env_value in entries["constant"].items():
         self.assertEqual(env_store.get_env(ns, env_name), env_value)
 
+    for ns in env_store.namespaces:
+      self.assertTrue(env_store.has_namespace(ns))
+      
+    self.assertTrue(env_store.has_namespace("ns1"))
+    self.assertTrue(env_store.has_namespace("ns2"))
+    self.assertFalse(env_store.has_namespace("ns3"))
+    self.assertFalse(env_store.has_namespace("other"))
+
     self.assertDictEqual(namespaces["ns1"]["constant"], env_store.get_namespace_envs("ns1"))
 
   def testEnvVarAlreadyExists(self):
