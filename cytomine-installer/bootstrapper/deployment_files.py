@@ -23,6 +23,11 @@ class UnknownCytomineEnvSection(ValueError):
     super().__init__(f"unknown section '{section}', expects one of {{{available_values}}}", *args)
 
 
+class UnknownServiceError(ValueError):
+  def __init__(self, service, *args: object) -> None:
+    super().__init__(f"unknown service '{service}'", *args)
+
+
 class CytomineEnvsFile:
   """parses a cytomine.yml file"""
   def __init__(self, path, filename="cytomine.yml") -> None:
@@ -100,3 +105,44 @@ class DockerComposeFile:
   @property
   def version(self):
     return self._content.get("version")
+
+
+class EditableDockerCompose:
+  """A class for creating and changing a docker compose (intentionally very limited scope).
+  Supports edition of:
+  - service 'env-file'
+  - service 'volumes'
+  """
+  def __init__(self, version="3.9") -> None:
+    self._compose = dict()
+    self._compose["services"] = {}
+    self._compose["version"] = version
+
+  def _get_service_dict(self, service):
+    if service not in self._compose["services"]:
+      self._compose["services"][service] = {}
+    return self._compose["services"][service]
+
+  def set_service_env_file(self, service, filepath):
+    self._get_service_dict(service)["env-file"] = filepath
+
+  def get_service_volumes(self, service):
+    if service not in self._compose["services"]:
+      raise UnknownServiceError(service)
+    return self._compose["services"][service]["volumes"] 
+
+  def add_service_volume(self, service, mapping):
+    service_dict = self._get_service_dict(service)
+    if "volumes" not in service_dict:
+      self._compose["services"][service]["volumes"] = list()
+    self._compose["services"][service]["volumes"].append(mapping)
+
+  def clear_service_volumes(self, service):
+    if service in self._compose["services"] and \
+        "volumes" in self._compose["services"][service]:
+      del self._compose["services"][service]["volumes"]
+
+  def write_to(self, path, filename="docker-compose.yml"):
+    filepath = os.path.join(path, filename)
+    with open(filepath, "w", encoding="utf8") as file:
+      yaml.dump(self._compose, file)

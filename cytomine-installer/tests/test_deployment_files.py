@@ -1,8 +1,10 @@
 import os
+import yaml
+from tempfile import TemporaryDirectory
 from unittest import TestCase
 
 from bootstrapper.env_store import UnknownValueTypeError
-from bootstrapper.deployment_files import DockerComposeFile, CytomineEnvsFile, UnknownCytomineEnvSection
+from bootstrapper.deployment_files import DockerComposeFile, CytomineEnvsFile, EditableDockerCompose, UnknownCytomineEnvSection
 from tests.util import UUID_PATTERN
 
 
@@ -50,3 +52,62 @@ class TestCytomineEnvsFile(TestCase):
     ce_filename = "cytomine.invalid-top-level-sections.yml"
     with self.assertRaises(UnknownCytomineEnvSection):
       CytomineEnvsFile(ce_path, filename=ce_filename)
+
+
+class TestEditableDockerCompose(TestCase):
+  def testEmpty(self):
+    dc_version = "3.8"
+    edc = EditableDockerCompose(dc_version)
+
+    with TemporaryDirectory() as tmpdir:
+      edc.write_to(tmpdir)
+      with open(os.path.join(tmpdir, "docker-compose.yml"), "r", encoding="utf8") as file:
+        edc_content = yaml.load(file)
+
+    self.assertDictEqual({"version": dc_version, "services": {}}, edc_content)
+  
+  def testWithEnvFileInOneService(self):
+    dc_version = "3.8"
+    edc = EditableDockerCompose(dc_version)
+    service = "myservice"
+    env_file_path = "/my/path"
+    edc.set_service_env_file(service, env_file_path)
+
+    with TemporaryDirectory() as tmpdir:
+      edc.write_to(tmpdir)
+      with open(os.path.join(tmpdir, "docker-compose.yml"), "r", encoding="utf8") as file:
+        edc_content = yaml.load(file)
+    
+    self.assertDictEqual({
+      "version": dc_version, 
+      "services": {
+        service: {
+          "env-file": env_file_path
+        }  
+      }
+    }, edc_content)
+
+  def testWithVolumes(self):
+    dc_version = "3.8"
+    edc = EditableDockerCompose(dc_version)
+    service = "myservice"
+    volumes = [
+      "a:b",
+      "c:d"
+    ]
+    for volume in volumes:
+      edc.add_service_volume(service, volume)
+
+    with TemporaryDirectory() as tmpdir:
+      edc.write_to(tmpdir)
+      with open(os.path.join(tmpdir, "docker-compose.yml"), "r", encoding="utf8") as file:
+        edc_content = yaml.load(file)
+    
+    self.assertDictEqual({
+      "version": dc_version, 
+      "services": {
+        service: {
+          "volumes": volumes
+        }  
+      }
+    }, edc_content)
