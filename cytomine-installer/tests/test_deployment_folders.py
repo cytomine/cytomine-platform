@@ -105,4 +105,23 @@ class TestDeploymentFolder(FileSystemTestCase):
           self.assertSameTextFileContent(generated_filepath, reference_filepath)
 
   def testMultiServerConfiguration(self):
-    pass
+    tests_path = os.path.dirname(__file__)
+    deploy_path = os.path.join(tests_path, "files", "fake_multi_server", "in")
+    output_ref_path = os.path.join(tests_path, "files", "fake_multi_server", "out") 
+    deployment_folder = DeploymentFolder(directory=deploy_path)
+    with TemporaryDirectory() as tmpdir:
+      deployment_folder.deploy_files(tmpdir)
+      out_rel_files = list_rel_files(output_ref_path)
+
+      for out_rel_file in out_rel_files:
+        reference_filepath = os.path.join(output_ref_path, out_rel_file)
+        generated_filepath = os.path.join(tmpdir, out_rel_file)
+        self.assertIsFile(generated_filepath)
+
+        if out_rel_file.endswith("yml"):
+          ### Check *.yml files
+          self.assertSameYamlFileContent(generated_filepath, reference_filepath)
+        elif out_rel_file.endswith(".env"):
+          self.assertSameDotenvFileContent(generated_filepath, reference_filepath)
+        else:
+          self.assertSameTextFileContent(generated_filepath, reference_filepath)
