@@ -5,7 +5,9 @@ RUN apk upgrade --update-cache --available && \
     rm -rf /var/cache/apk/*
 
 RUN python -m pip install --upgrade pip
-RUN pip install pyyaml -y
+RUN pip install pyyaml
 
 WORKDIR /app
-ADD configurator.py /app/configurator.py
+ADD bootstrapper /app/
+
+CMD ["python", "/app/deploy.py"]
