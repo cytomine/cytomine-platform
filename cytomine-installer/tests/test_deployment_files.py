@@ -65,7 +65,7 @@ class TestEditableDockerCompose(TestCase):
     with TemporaryDirectory() as tmpdir:
       edc.write_to(tmpdir)
       with open(os.path.join(tmpdir, "docker-compose.yml"), "r", encoding="utf8") as file:
-        edc_content = yaml.load(file)
+        edc_content = yaml.load(file, Loader=yaml.Loader)
 
     self.assertDictEqual({"version": dc_version, "services": {}}, edc_content)
   
@@ -79,7 +79,7 @@ class TestEditableDockerCompose(TestCase):
     with TemporaryDirectory() as tmpdir:
       edc.write_to(tmpdir)
       with open(os.path.join(tmpdir, "docker-compose.yml"), "r", encoding="utf8") as file:
-        edc_content = yaml.load(file)
+        edc_content = yaml.load(file, Loader=yaml.Loader)
     
     self.assertDictEqual({
       "version": dc_version, 
@@ -104,7 +104,7 @@ class TestEditableDockerCompose(TestCase):
     with TemporaryDirectory() as tmpdir:
       edc.write_to(tmpdir)
       with open(os.path.join(tmpdir, "docker-compose.yml"), "r", encoding="utf8") as file:
-        edc_content = yaml.load(file)
+        edc_content = yaml.load(file, Loader=yaml.Loader)
     
     self.assertDictEqual({
       "version": dc_version, 

@@ -1,4 +1,5 @@
 import enum
+import json
 import os
 import yaml
 from collections import defaultdict
@@ -35,7 +36,7 @@ class CytomineEnvsFile(DictExportable):
     self._path = path
     
     with open(self.filepath, "r", encoding="utf8") as file:
-      self._raw_config = yaml.load(file)
+      self._raw_config = yaml.load(file, Loader=yaml.Loader)
 
     # both top-level sections are optional
     for section in self._raw_config.keys():
@@ -91,7 +92,9 @@ class CytomineEnvsFile(DictExportable):
     target_dict["services"] = dict()
     for server, env_store in self._servers_env_stores.items():
       target_dict["services"][server] = env_store.export_dict()
-    return target_dict
+    # https://stackoverflow.com/a/32303615
+    # convert to plain dict
+    return json.loads(json.dumps(target_dict))
 
 
 class DockerComposeFile:
@@ -101,7 +104,7 @@ class DockerComposeFile:
     self._filename = filename
 
     with open(self.filepath, "r", encoding="utf8") as file:
-      self._content = yaml.load(file)
+      self._content = yaml.load(file, Loader=yaml.Loader)
  
   @property
   def filepath(self):

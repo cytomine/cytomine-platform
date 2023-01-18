@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 import enum
 from collections import defaultdict
+import json
 
 from bootstrapper.env_generator import EnvValueGeneratorFactory
 
@@ -105,7 +106,9 @@ class EnvStore(BaseEnvStore):
           output_dict[ns][EnvValueTypeEnum.CONSTANT.value][key] = self._store[ns][key]
         else:
           output_dict[ns][init_type.value][key] = self._initial_value[ns][key]
-    return output_dict
+    # https://stackoverflow.com/a/32303615
+    # convert to plain dict
+    return json.loads(json.dumps(output_dict))
 
   def get_namespace_envs(self, ns: str):
     if ns not in self._store:
