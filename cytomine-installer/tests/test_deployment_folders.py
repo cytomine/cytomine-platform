@@ -4,16 +4,8 @@ import pathlib
 from tempfile import TemporaryDirectory
 from unittest import TestCase
 from bootstrapper.deployment_folders import DeploymentFolder
+from bootstrapper.util import list_relative_files
 
-
-def list_rel_files(dir: str):
-  curr, dirs, files = next(os.walk(dir))
-  for dirname in dirs:
-    files.extend([
-      os.path.join(dirname, filepath)
-      for filepath in list_rel_files(os.path.join(curr, dirname))
-    ])
-  return files
 
 
 def parse_yaml(path, filename):
@@ -61,7 +53,7 @@ class TestDeploymentFolder(FileSystemTestCase):
     deployment_folder = DeploymentFolder(directory=deploy_path)
     with TemporaryDirectory() as tmpdir:
       deployment_folder.deploy_files(tmpdir)
-      out_rel_files = list_rel_files(output_ref_path)
+      out_rel_files = list_relative_files(output_ref_path)
 
       for out_rel_file in out_rel_files:
         reference_filepath = os.path.join(output_ref_path, out_rel_file)
@@ -108,7 +100,7 @@ class TestDeploymentFolder(FileSystemTestCase):
     deployment_folder = DeploymentFolder(directory=deploy_path)
     with TemporaryDirectory() as tmpdir:
       deployment_folder.deploy_files(tmpdir)
-      out_rel_files = list_rel_files(output_ref_path)
+      out_rel_files = list_relative_files(output_ref_path)
 
       for out_rel_file in out_rel_files:
         reference_filepath = os.path.join(output_ref_path, out_rel_file)
