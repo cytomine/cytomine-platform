@@ -8,10 +8,13 @@ services:
     core:
       constant:
         CORE_VAR1: value2
+    postgres:
+      constant:
+        POSTGRES_VAR1: value3
   server-ims:
     ims:
-      auto:
-        IMS_VAR1: random_uuid
+      constant:
+        IMS_VAR1: moved
       global:
         IMS_VAR2: ns1.GLOBAL_VAR1
     

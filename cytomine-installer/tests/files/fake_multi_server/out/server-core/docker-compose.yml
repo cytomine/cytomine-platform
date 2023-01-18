@@ -1,0 +1,10 @@
+version: "3.3"
+services:
+  core:
+    image: cytomine/$NS1_GLOBAL_VAR1
+
+  postgres:
+    image: cytomine/postgres:v11
+
+  mongodb:
+    image: cytomine/mongo:v22

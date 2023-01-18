@@ -1,0 +1,20 @@
+global:
+  ns1:
+    constant:
+      GLOBAL_VAR1: value1
+
+services:
+  server-core:
+    core:
+      constant:
+        CORE_VAR1: value2
+    postgres:
+      constant:
+        POSTGRES_VAR1: value3
+  server-ims:
+    ims:
+      constant:
+        IMS_VAR1: moved
+      global:
+        IMS_VAR2: ns1.GLOBAL_VAR1
+    
