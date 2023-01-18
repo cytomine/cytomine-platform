@@ -87,20 +87,17 @@ class TestDeploymentFolder(FileSystemTestCase):
         elif out_rel_file.endswith("yml"):
           ### Check other *.yml files
           self.assertSameYamlFileContent(generated_filepath, reference_filepath)
-        elif os.path.basename(out_rel_file) == ".env":
+        elif out_rel_file.endswith(".env") and "ims" in os.path.basename(out_rel_file):
+          ### Check service ims.env files 
+          # need to replace the auto generated value !!
+          reference_dotenv = parse_dotenv(reference_filepath)
+          generated_dotenv = parse_dotenv(generated_filepath)
+          self.assertIn("IMS_VAR1", generated_dotenv)
+          reference_dotenv["IMS_VAR1"] = generated_dotenv["IMS_VAR1"]
+          self.assertDictEqual(generated_dotenv, reference_dotenv)
+        elif out_rel_file.endswith(".env"):
           ### Check .env file
           self.assertSameDotenvFileContent(generated_filepath, reference_filepath)
-        elif out_rel_file.endswith(".env"):
-          ### Check service *.env files 
-          # need to replace the auto generated value !!
-          if "ims" in os.path.basename(out_rel_file): 
-            reference_dotenv = parse_dotenv(reference_filepath)
-            generated_dotenv = parse_dotenv(generated_filepath)
-            self.assertIn("IMS_VAR1", generated_dotenv)
-            reference_dotenv["IMS_VAR1"] = generated_dotenv["IMS_VAR1"]
-            self.assertDictEqual(generated_dotenv, reference_dotenv)
-          else:
-            self.assertSameDotenvFileContent(generated_filepath, reference_filepath)
         else: # check configuration files
           self.assertSameTextFileContent(generated_filepath, reference_filepath)
 
