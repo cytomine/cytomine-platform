@@ -104,27 +104,29 @@ class DeploymentFolder(Deployable):
   SERVER_DEFAULT = "default"
 
   def __init__(self, directory="/bootstrap", cytomine_envs_filename="cytomine.yml", 
-               configs_folder="configs", envs_folder="envs", ignore_dirs=None, 
+               configs_folder="configs", envs_folder="envs", ignored_folders=None, 
                in_container_configs_folder="cm_configs") -> None:
     """
     Parameters
     ----------
     directory: str
-      path of the directory where cytomine.yml is stored
+      Path of the directory where cytomine.yml is stored
     cytomine_envs_filename: str
-      name of the cytomine environment variables file
+      Name of the cytomine environment variables file
     configs_folder: str
       Name of the configs folder in each server folder (default: 'configs')
-    envs_folder:
+    envs_folder: str
       Name of the target environment folder in the target server folder (default: 'envs')
+    ignored_folders: set|list|NoneType
+      Folders to ignore in the root directory
     in_container_configs_folder:
       Name of the configuration target folder within the container (default: 'cm_configs)
     """
-    if ignore_dirs is None:
-      ignore_dirs = set()
+    if ignored_folders is None:
+      ignored_folders = set()
 
     self._directory = directory
-    self._ignore_dirs = set(ignore_dirs)
+    self._ignore_dirs = set(ignored_folders)
     self._configs_folder = configs_folder
     self._envs_folder = envs_folder
     self._in_container_configs_folder = in_container_configs_folder
@@ -155,7 +157,7 @@ class DeploymentFolder(Deployable):
         **server_folder_common_params
       )
     else:    
-      for subdir in subdirectories.difference(ignore_dirs):
+      for subdir in subdirectories.difference(ignored_folders):
         self._server_folders[subdir] = ServerFolder(
           server_name=subdir,
           directory=os.path.join(self._directory, subdir),
@@ -176,6 +178,3 @@ class DeploymentFolder(Deployable):
         os.makedirs(server_target_dir)
       server_folder.deploy_files(server_target_dir)
     
-
-    
-      
