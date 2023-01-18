@@ -1,4 +1,4 @@
-version: "3.8"
+version: "3.3"
 services:
   core:
     image: cytomine/$NS1_GLOBAL_VAR1
