@@ -21,7 +21,14 @@ class UnknownValueTypeError(ValueError):
     super().__init__(f"unknown value type: {value_type}", *args)
 
 
-class BaseEnvStore(ABC):
+class DictExportable(ABC):
+  @abstractmethod
+  def export_dict(self):
+    """Generates an dictionary for env store export"""
+    pass
+
+
+class BaseEnvStore(DictExportable):
   @abstractmethod
   def get_env(self, namespace: str, key: str):
     """Get a value stored in the EnvStore"""
@@ -35,11 +42,6 @@ class BaseEnvStore(ABC):
   @abstractmethod
   def has_namespace(self, ns: str):
     """Checks whether a namespace exists or not"""
-    pass
-  
-  @abstractmethod
-  def export_dict(self):
-    """Generates an dictionary for env store export"""
     pass
 
 

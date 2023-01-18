@@ -2,7 +2,7 @@ import enum
 import os
 import yaml
 from collections import defaultdict
-from .env_store import EnvStore
+from .env_store import DictExportable, EnvStore
 
 DOCKER_COMPOSE_FILENAME = "docker-compose.yml"
 
@@ -28,7 +28,7 @@ class UnknownServiceError(ValueError):
     super().__init__(f"unknown service '{service}'", *args)
 
 
-class CytomineEnvsFile:
+class CytomineEnvsFile(DictExportable):
   """parses a cytomine.yml file"""
   def __init__(self, path, filename="cytomine.yml") -> None:
     self._config_path = os.path.join(path, filename)
@@ -72,7 +72,7 @@ class CytomineEnvsFile:
       raise UnknownServerError(server)
     return self._servers_env_stores.get(server, None)
 
-  def as_dict(self):
+  def export_dict(self):
     target_dict = dict()
     target_dict["global"] = self._global_envs.export_dict()
     target_dict["services"] = dict()
