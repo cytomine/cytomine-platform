@@ -31,9 +31,10 @@ class UnknownServiceError(ValueError):
 class CytomineEnvsFile(DictExportable):
   """parses a cytomine.yml file"""
   def __init__(self, path, filename="cytomine.yml") -> None:
-    self._config_path = os.path.join(path, filename)
+    self._filename = filename
+    self._path = path
     
-    with open(self._config_path, "r", encoding="utf8") as file:
+    with open(self.filepath, "r", encoding="utf8") as file:
       self._raw_config = yaml.load(file)
 
     # both top-level sections are optional
@@ -51,6 +52,18 @@ class CytomineEnvsFile(DictExportable):
     for server, envs in self._raw_config.get(CytomineEnvSectionEnum.SERVICES.value, {}).items():
       for ns, entries in envs.items():
         self._servers_env_stores[server].add_namespace(ns, entries, store=self._global_envs)
+
+  @property
+  def filename(self):
+    return self._filename
+
+  @property
+  def path(self):
+    return self._path
+
+  @property
+  def filepath(self):
+    return os.path.join(self.path, self.filename)
 
   @property
   def global_envs(self):

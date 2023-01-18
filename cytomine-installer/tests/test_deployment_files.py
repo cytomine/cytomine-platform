@@ -25,6 +25,9 @@ class TestCytomineEnvsFile(TestCase):
     ce_path = os.path.join(tests_path, "files")
     ce_filename = "cytomine.mini.yml"
     cytomine_envs_file = CytomineEnvsFile(ce_path, filename=ce_filename)
+    self.assertEqual(cytomine_envs_file.path, ce_path)
+    self.assertEqual(cytomine_envs_file.filename, ce_filename)
+    self.assertEqual(cytomine_envs_file.filepath, os.path.join(ce_path, ce_filename))
     self.assertEqual(cytomine_envs_file.global_envs.get_env("namespace1", "VAR1"), "value1")
     self.assertEqual(cytomine_envs_file.global_envs.get_env("namespace1", "VAR2"), "value2")
     self.assertRegex(cytomine_envs_file.global_envs.get_env("namespace2", "KEY1"), UUID_PATTERN)
