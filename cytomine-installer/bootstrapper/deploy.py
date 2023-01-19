@@ -10,7 +10,7 @@ import warnings
 import yaml
 from argparse import ArgumentParser
 import zipfile
-from bootstrapper.deployment_folders import DeploymentFolder
+from bootstrapper.deployment_folders import DeploymentFolder, InvalidServerConfigurationError
 from bootstrapper.util import list_relative_files
 
 
@@ -24,7 +24,7 @@ def deploy(working_path, ignored_dirs=None, do_zip=False):
   with TemporaryDirectory() as tmp_dir:
     print("deployment...")
     deployment_folder = DeploymentFolder(directory=working_path)
-    deployment_folder.deploy_files(tmp_dir)    
+    deployment_folder.deploy_files(tmp_dir)
 
     # zip current files
     if do_zip:
@@ -77,10 +77,12 @@ def main(argv):
       raise ValueError(f"ignored folder at '{ignored_path}' is not a directory")
     ignored_dirs.append(ignored)
 
+  # TODO better error handling and displaying
   deploy(
     args.working_path, 
     ignored_dirs=ignored_dirs,
     do_zip=args.do_zip)
+
 
 if __name__ == "__main__":
   import sys

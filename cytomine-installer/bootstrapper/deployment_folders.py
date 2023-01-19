@@ -14,6 +14,10 @@ class Deployable(ABC):
     pass
 
 
+class InvalidServerConfigurationError(ValueError):
+  pass 
+
+
 class ServerFolder(Deployable):
   def __init__(self, server_name, directory, envs: CytomineEnvsFile, configs_folder="configs", envs_folder="envs", in_container_configs_folder="cm_configs") -> None:
     """
@@ -130,10 +134,11 @@ class DeploymentFolder(Deployable):
     self._configs_folder = configs_folder
     self._envs_folder = envs_folder
     self._in_container_configs_folder = in_container_configs_folder
-    self._cytomine_envs = CytomineEnvsFile(path=self._directory, filename=cytomine_envs_filename)
-    
-    # check whether single-server or multi-server
-    
+    self._cytomine_envs_filename = cytomine_envs_filename
+      
+  def deploy_files(self, target_directory):
+    cytomine_envs = CytomineEnvsFile(path=self._directory, filename=self._cytomine_envs_filename)
+
     server_folder_common_params = {
       "configs_folder": self._configs_folder,
       "envs_folder": self._envs_folder,
@@ -141,34 +146,45 @@ class DeploymentFolder(Deployable):
     }
 
     self._server_folders = dict()
-    _, subdirectories, _ = next(os.walk(self._directory))
-    subdirectories = set(subdirectories)
+    _, subdirectories, subfiles = next(os.walk(self._directory))
+    subdirectories = set(subdirectories).difference(self._ignore_dirs)
 
-    self._single_server = len(self._cytomine_envs.servers) == 1 and \
-        self._cytomine_envs.servers[0] == self.SERVER_DEFAULT and \
-        self.SERVER_DEFAULT not in subdirectories
+    ## checking server configuration (single or multi-server?)  
+    # we are in single-server mode if a docker-compose file is at the root
+    self._single_server = DOCKER_COMPOSE_FILENAME in subfiles
+    nb_servers_in_envs = len(cytomine_envs.servers) 
+    if self._single_server and nb_servers_in_envs > 1:
+      raise InvalidServerConfigurationError(
+        f"it appears to be a single-server configuration ({DOCKER_COMPOSE_FILENAME} found in root directory) but several server entries have been found in cytomine.yml"
+      )
+    elif not self._single_server:
+      envs_servers = set(cytomine_envs.servers)
+      folder_servers = subdirectories
+      if not envs_servers.issubset(folder_servers):
+        raise InvalidServerConfigurationError(
+          f"it appears to be a multi-server configuration ({DOCKER_COMPOSE_FILENAME} not found in root directory) but some server entries in cytomine.yml have no matching server folder"
+        )
 
     if self._single_server:
       # single server
       self._server_folders[self.SERVER_DEFAULT] = ServerFolder(
         server_name=self.SERVER_DEFAULT,
         directory=self._directory,
-        envs=self._cytomine_envs,
+        envs=cytomine_envs,
         **server_folder_common_params
       )
     else:    
-      for subdir in subdirectories.difference(ignored_folders):
+      for subdir in subdirectories:
         self._server_folders[subdir] = ServerFolder(
           server_name=subdir,
           directory=os.path.join(self._directory, subdir),
-          envs=self._cytomine_envs,
+          envs=cytomine_envs,
           **server_folder_common_params
         )
-      
-  def deploy_files(self, target_directory):
-    dst_cytomine_envs_path = os.path.join(target_directory, self._cytomine_envs.filename)
+
+    dst_cytomine_envs_path = os.path.join(target_directory, cytomine_envs.filename)
     with open(dst_cytomine_envs_path, "w", encoding="utf8") as file:
-      yaml.dump(self._cytomine_envs.export_dict(), file)
+      yaml.dump(cytomine_envs.export_dict(), file)
     
     for server_folder in self._server_folders.values():
       if self._single_server:
@@ -177,4 +193,3 @@ class DeploymentFolder(Deployable):
         server_target_dir = os.path.join(target_directory, server_folder.server_name)
         os.makedirs(server_target_dir)
       server_folder.deploy_files(server_target_dir)
-    

@@ -3,7 +3,7 @@ import yaml
 import pathlib
 from tempfile import TemporaryDirectory
 from unittest import TestCase
-from bootstrapper.deployment_folders import DeploymentFolder
+from bootstrapper.deployment_folders import DeploymentFolder, InvalidServerConfigurationError
 from bootstrapper.util import list_relative_files
 
 
@@ -114,3 +114,14 @@ class TestDeploymentFolder(FileSystemTestCase):
           self.assertSameDotenvFileContent(generated_filepath, reference_filepath)
         else:
           self.assertSameTextFileContent(generated_filepath, reference_filepath)
+
+  def testMultiServerMissingServerFolder(self):
+    tests_path = os.path.dirname(__file__)
+    deploy_path = os.path.join(tests_path, "files", "fake_multi_server_missing_folder")
+    deployment_folder = DeploymentFolder(directory=deploy_path)
+    with TemporaryDirectory() as tmpdir:
+      with self.assertRaises(InvalidServerConfigurationError):
+        deployment_folder.deploy_files(tmpdir)
+      # on error, it should not generate anything
+      self.assertEqual(len(list_relative_files(tmpdir)), 0)
+      

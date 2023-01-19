@@ -1,10 +1,10 @@
 import os
 from distutils.dir_util import copy_tree
 from tempfile import TemporaryDirectory
-from unittest import TestCase
 import zipfile
 
 from bootstrapper.deploy import deploy
+from bootstrapper.deployment_folders import InvalidServerConfigurationError
 from bootstrapper.util import list_relative_files
 from tests.test_deployment_folders import FileSystemTestCase
 
@@ -38,4 +38,13 @@ class TestDeploy(FileSystemTestCase):
       
       with zipfile.ZipFile(os.path.join(tmpdir, zip_file), "r", zipfile.ZIP_DEFLATED) as zip_archive:
         self.assertListEqual(sorted(zip_archive.namelist()), sorted(list_relative_files(deploy_file_path)))
+
+  def testDeployMultiServerMissingFolder(self):
+    tests_path = os.path.dirname(__file__)
+    deploy_file_path = os.path.join(tests_path, "files", "fake_multi_server_missing_folder")
+    with TemporaryDirectory() as tmpdir:
+      copy_tree(deploy_file_path, tmpdir)
+      with self.assertRaises(InvalidServerConfigurationError):
+        deploy(tmpdir, do_zip=True)
+
       
