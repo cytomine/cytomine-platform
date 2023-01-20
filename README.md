@@ -25,11 +25,11 @@ bash build.sh
 
 This scripts supports the following environment variables (optionally located in a `.env` file) as inputs:
 
-* `POSTGIS_VERSION`: the PostGIS version used in the image (default: `15-3.3`). It must be a [valid Docker tag for official `postgis` image](https://github.com/docker-library/docs/tree/master/PostGIS#supported-tags-and-respective-dockerfile-links).
+* `POSTGIS_VERSION`: the PostGIS version used in the image. It must be a [valid Docker tag for official `postgis` image](https://github.com/docker-library/docs/tree/master/PostGIS#supported-tags-and-respective-dockerfile-links).
 * `IMAGE_VERSION`: version of the custom image
-* `DOCKER_NAMESPACE` is the Docker namespace for the built image (default: `cytomine`)
+* `DOCKER_NAMESPACE` is the Docker namespace for the built image
 * `SCRIPTS_REPO_URL`: full url (http/https) of the git repository containing the initialization scripts (including git credentials if necessary).  
-* `SCRIPTS_REPO_TAG`: tag of the commit from which the scripts must be extracted (default: `v0.1.3`)
-* `SCRIPTS_REPO_BRANCH`: branch from which the scripts must be extracted (default: `master`)
+* `SCRIPTS_REPO_TAG`: tag of the commit from which the scripts must be extracted
+* `SCRIPTS_REPO_BRANCH`: branch from which the scripts must be extracted
 
 It builds an image `NAMESPACE/postgis:POSTGIS_VERSION-IMAGE_VERSION`.
