@@ -1,0 +1,10 @@
+/var/log/mongodb/mongo.log {
+  copytruncate
+  weekly
+  size 250M
+  rotate 14
+  compress
+  missingok
+  create 640 mongodb mongodb
+  su root root
+}
