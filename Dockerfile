@@ -46,8 +46,9 @@ RUN mkdir -p /etc/postgres/conf.d
 COPY files/postgres.conf /etc/postgres/postgres.conf
 COPY files/postgres.default.conf /etc/postgres/00-default.conf
 
+RUN mkdir /docker-entrypoint-cytomine.d/
 COPY --from=downloader --chmod=774 /root/scripts/cytomine-entrypoint.sh /usr/local/bin/
-COPY --from=downloader --chmod=774 /root/scripts/envsubst-on-templates-and-move.sh /docker-entrypoint.d/050-envsubst-on-templates-and-move.sh
+COPY --from=downloader --chmod=774 /root/scripts/envsubst-on-templates-and-move.sh /docker-entrypoint-cytomine.d/500-envsubst-on-templates-and-move.sh
 
 ENTRYPOINT ["cytomine-entrypoint.sh", "docker-entrypoint.sh"]
 CMD ["postgres", "-c", "config_file=/etc/postgres/postgres.conf"]

@@ -14,9 +14,9 @@
 #
 #
 # Input environment variables:
+# - IMAGE_VERSION: [REQUIRED] an cytomine specific image version to append to rabbitmq version
 # - SCRIPTS_REPO_URL: the complete url of the docker scripts repository including credentials (if necessary)
 # - SCRIPTS_REPO_TAG: version for extracting initialization scripts
-# - IMAGE_VERSION: an cytomine specific image version to append to rabbitmq version
 # - POSTGIS_VERSION: version of the postgis official docker image
 # - DOCKER_NAMESPACE: the namespace of the cytomine rabbitmq image built by this repository
 
@@ -27,11 +27,18 @@ then
   export $(cat .env | xargs)
 fi
 
-IMAGE_VERSION=${IMAGE_VERSION:-"0.1.0"}
+IMAGE_VERSION=${IMAGE_VERSION}
 POSTGIS_VERSION=${POSTGIS_VERSION:-"15-3.3"}
 SCRIPTS_REPO_TAG=${SCRIPTS_REPO_TAG:-"v0.1.3"}
 DOCKER_NAMESPACE=${DOCKER_NAMESPACE:-"cytomine"}
 SCRIPTS_REPO_BRANCH=${SCRIPTS_REPO_BRANCH:-"master"}
+
+ME=$(basename $0)
+
+if [ -z "$IMAGE_VERSION" ]; then
+  echo >&2 "$ME: ERROR: IMAGE_VERSION not provided"
+  exit 1
+fi
 
 docker build \
   --build-arg POSTGIS_VERSION=$POSTGIS_VERSION \
