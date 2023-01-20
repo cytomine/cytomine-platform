@@ -1,12 +1,12 @@
 # Customized Mongo image
 
-This Dockerfile relies on [official Mongo Dockerfile](https://github.com/postgis/docker-postgis), which itself relies on [official library Mongo Dockerfile](https://github.com/docker-library/postgres) with a  customized database initialization and custom Mongo configuration overriding.
+This Dockerfile relies on [official Mongo Dockerfile](https://github.com/docker-library/mongo) with a customized entrypoint allowing to perform custom configuration with shell scripts found in `/docker-entrypoint-cytomine.d/` during container startup.
 
 Currently registered Cytomine script(s):
 
 1. optionally interpolate the environment variable present in any file under `/cm_configs` with a filename suffix `.sample` and move all files to their respective directory (see below)
 
-## PostGIS-specific configuration
+## Mongo-specific configuration
 
 This image works off-the-shelf but, if additional configuration is required, one can supply a Mongo configuration file. This file can be mounted in `/cm_configs/etc/mongo/conf.d/`. It can optionally be templated with environment variables in which case the file must be suffixed with `.sample`.
 
@@ -30,4 +30,4 @@ This scripts supports the following environment variables (optionally located in
 * `SCRIPTS_REPO_TAG`: tag of the commit from which the scripts must be extracted 
 * `SCRIPTS_REPO_BRANCH`: branch from which the scripts must be extracted 
 
-It builds an image `NAMESPACE/postgis:POSTGIS_VERSION-IMAGE_VERSION`.
+It builds an image `NAMESPACE/mongo:MONGO_VERSION-IMAGE_VERSION`.
