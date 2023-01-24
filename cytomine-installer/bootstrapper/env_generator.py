@@ -111,12 +111,9 @@ class RandomUUIDGenerator(EnvValueGenerator):
 
 class OpenSSLGenerator(EnvValueGenerator):
   LENGTH_FIELD = "length"
-  BASE64_FIELD = "base64"
 
   def _resolve(self, field):
-    command = ["openssl", "rand"]
-    if self._is_base64(field):
-      command.append("-base64")
+    command = ["openssl", "rand", "-base64"]
     command.append(f"{self._get_length(field)}")
     return subprocess.check_output(command).decode("utf8").strip()
 
@@ -128,17 +125,10 @@ class OpenSSLGenerator(EnvValueGenerator):
   def accept_string_field(self):
     return False
 
-  def _is_base64(self, field):
-    return field.get("base64", False) 
-
   def _get_length(self, field):
     return field.get("length", 0)
 
   def _validate(self, field):
-    base64 = field.get("base64")
-    if base64 is not None and not isinstance(base64, bool):
-      raise InvalidAutoGenerationData(self, "base64 should be a boolean")
-    
     length = field.get("length")
     if length is not None and not (isinstance(length, int) and length > 0):
       raise InvalidAutoGenerationData(self, "length should be an integer > 0")

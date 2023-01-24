@@ -39,13 +39,10 @@ class TestOpensslGenerator(TestCase):
       generator.validate({"type": "open"})
 
     with self.assertRaises(InvalidAutoGenerationData):
-      generator.validate({"type": "openssl", "base64": True, "length": -1})
-
-    with self.assertRaises(InvalidAutoGenerationData):
-      generator.validate({"type": "openssl", "base64": 25, "length": 10})
+      generator.validate({"type": "openssl", "length": -1})
 
     self.assertEqual(generator, generator.validate({"type": "openssl"}))
-    self.assertEqual(generator, generator.validate({"type": "openssl", "base64": True, "length": 10}))
+    self.assertEqual(generator, generator.validate({"type": "openssl", "length": 10}))
 
   def testMethodKey(self):
     generator = OpenSSLGenerator()
@@ -53,6 +50,6 @@ class TestOpensslGenerator(TestCase):
 
   def testResolve(self):
     generator = OpenSSLGenerator()
-    field = {"type": "openssl", "base64": True, "length": 10}
+    field = {"type": "openssl", "length": 10}
     # not sure how 'length' affects final string length
     self.assertRegex(generator.resolve(field), rf".+")

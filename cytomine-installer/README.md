@@ -97,10 +97,9 @@ Generates a random UUID such as `801acff7-ccc5-48b3-bf9f-52f55e530f88`.
 
 Type: `openssl`
 
-Generates a random string using `openssl`.
+Generates a random string using `openssl` in base 64.
 
 Parameters:
-- (optional) `base64`, boolean, default `true`: whether or not encode the generated string in base 64
 - (optional) `length`, int, default `0`: the length of the final string    
 
 # Bootstrapping and outputs
