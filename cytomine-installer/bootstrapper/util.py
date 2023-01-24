@@ -11,8 +11,10 @@ def write_dotenv(directory: str, envs: dict, filename: str=".env"):
   return filepath
 
 
-def list_relative_files(dir: str):
-  curr, dirs, files = next(os.walk(dir))
+def list_relative_files(_dir: str):
+  if not os.path.isdir(_dir):
+    return []
+  curr, dirs, files = next(os.walk(_dir))
   for dirname in dirs:
     files.extend([
       os.path.join(dirname, filepath)

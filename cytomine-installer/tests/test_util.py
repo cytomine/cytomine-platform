@@ -20,6 +20,10 @@ class TestUtil(TestCase):
         parsed_envs = {line.split("=", 1)[0]: line.strip().split("=", 1)[1] for line in file.readlines()}
     
     self.assertDictEqual(envs, parsed_envs)
+
+  def testListRelativeFilesInvalidPath(self):
+    with TemporaryDirectory() as tmpdir:
+      self.assertEqual(len(list_relative_files(os.path.join(tmpdir, "aa"))), 0)
   
   def testListRelativeFilesEmptyPath(self):
     with TemporaryDirectory() as tmpdir:
