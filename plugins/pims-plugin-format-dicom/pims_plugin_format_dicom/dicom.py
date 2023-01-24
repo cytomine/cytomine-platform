@@ -1,7 +1,8 @@
 import os
 from datetime import datetime
 from functools import cached_property
-from typing import List
+from pathlib import Path
+from typing import List, Optional
 
 import shapely
 from pydicom.multival import MultiValue
@@ -43,6 +44,16 @@ def recurse_if_SQ(ds):
     return list_ds
 
 
+def get_root_file(path: Path) -> Optional[Path]:
+    """Try to get WSI DICOM directory (as it is a multi-file format)."""
+    if path.is_dir():
+        if sum(1 for _ in Path(path).glob('*')):
+            for child in path.iterdir():
+                if child.is_dir():
+                    return path
+    return None
+
+
 class WSIDicomChecker(AbstractChecker):
     OFFSET = 128
 
@@ -51,29 +62,29 @@ class WSIDicomChecker(AbstractChecker):
         from pims.files.file import Path
         path = pathlike.path
         if os.path.isdir(path):
-            list_subdir = [f.path for f in os.scandir(path) if os.path.isdir(f)]
-            if len(list_subdir) == 1:
-                for child in os.listdir(list_subdir[0]):
-                    # verification on the format signature for each .dcm file
-                    complete_path = Path(os.path.join(path, list_subdir[0], child))
-                    cached_child = CachedDataPath(complete_path)
-                    buf = cached_child.get_cached('signature', cached_child.path.signature)
-                    if not (len(buf) > cls.OFFSET + 4 and
-                            buf[cls.OFFSET] == 0x44 and
-                            buf[cls.OFFSET + 1] == 0x49 and
-                            buf[cls.OFFSET + 2] == 0x43 and
-                            buf[cls.OFFSET + 3] == 0x4D):
-                        return False
-                return True
-            return False
+            # list_subdir = [f.path for f in os.scandir(path) if os.path.isdir(f)]
+            # if len(list_subdir) == 1:
+            for child in os.listdir(path):
+                # verification on the format signature for each .dcm file
+                complete_path = Path(os.path.join(path, child))
+                cached_child = CachedDataPath(complete_path)
+                buf = cached_child.get_cached('signature', cached_child.path.signature)
+                if not (len(buf) > cls.OFFSET + 4 and
+                        buf[cls.OFFSET] == 0x44 and
+                        buf[cls.OFFSET + 1] == 0x49 and
+                        buf[cls.OFFSET + 2] == 0x43 and
+                        buf[cls.OFFSET + 3] == 0x4D):
+                    return False
+            return True
+            # return False
         return False
 
 
 class WSIDicomParser(AbstractParser):
 
     def parse_main_metadata(self):
-        list_subdir = [f.path for f in os.scandir(self.format.path) if f.is_dir()]
-        wsidicom_object = WsiDicom.open(str(list_subdir[0]))
+        # list_subdir = [f.path for f in os.scandir(self.format.path) if f.is_dir()]
+        wsidicom_object = WsiDicom.open(str(self.format.path))
         levels = wsidicom_object.levels
         imd = ImageMetadata()
 
@@ -121,8 +132,8 @@ class WSIDicomParser(AbstractParser):
         return imd
 
     def parse_known_metadata(self):
-        list_subdir = [f.path for f in os.scandir(self.format.path) if f.is_dir()]
-        wsidicom_object = WsiDicom.open(str(list_subdir[0]))
+        # list_subdir = [f.path for f in os.scandir(self.format.path) if f.is_dir()]
+        wsidicom_object = WsiDicom.open(str(self.format.path))
         levels = wsidicom_object.levels
 
         metadata = dictify(wsidicom_object.levels.groups[0].datasets[0])
@@ -137,8 +148,8 @@ class WSIDicomParser(AbstractParser):
         return imd
 
     def parse_raw_metadata(self):
-        list_subdir = [f.path for f in os.scandir(self.format.path) if f.is_dir()]
-        wsidicom_object = WsiDicom.open(str(list_subdir[0]))
+        # list_subdir = [f.path for f in os.scandir(self.format.path) if f.is_dir()]
+        wsidicom_object = WsiDicom.open(str(self.format.path))
         levels = wsidicom_object.levels
         store = super().parse_raw_metadata()
         ds = wsidicom_object.levels.groups[0].datasets[0]
@@ -161,8 +172,8 @@ class WSIDicomParser(AbstractParser):
     def parse_pyramid(self):
         pyramid = Pyramid()
 
-        list_subdir = [f.path for f in os.scandir(self.format.path) if f.is_dir()]
-        wsidicom_object = WsiDicom.open(str(list_subdir[0]))
+        # list_subdir = [f.path for f in os.scandir(self.format.path) if f.is_dir()]
+        wsidicom_object = WsiDicom.open(str(self.format.path))
         levels = wsidicom_object.levels
 
         for level in wsidicom_object.levels.levels:
@@ -174,8 +185,8 @@ class WSIDicomParser(AbstractParser):
         return pyramid
 
     def parse_annotations(self) -> List[ParsedMetadataAnnotation]:
-        list_subdir = [f.path for f in os.scandir(self.format.path) if f.is_dir()]
-        wsidicom_object = WsiDicom.open(str(list_subdir[0]))
+        # list_subdir = [f.path for f in os.scandir(self.format.path) if f.is_dir()]
+        wsidicom_object = WsiDicom.open(str(self.format.path))
         channels = list(range(self.format.main_imd.n_channels))
         parsed_annots = []
         pixel_spacing = wsidicom_object.levels.groups[0].pixel_spacing.width
@@ -225,14 +236,14 @@ class WSIDicomParser(AbstractParser):
 class WSIDicomReader(AbstractReader):
 
     def read_thumb(self, out_width, out_height, precomputed=True, c=None, z=None, t=None):
-        list_subdir = [f.path for f in os.scandir(self.format.path) if f.is_dir()]
-        img = WsiDicom.open(str(list_subdir[0]))
+        # list_subdir = [f.path for f in os.scandir(self.format.path) if f.is_dir()]
+        img = WsiDicom.open(str(self.format.path))
 
         return img.read_thumbnail((out_width, out_height))
 
     def read_window(self, region, out_width, out_height, c=None, z=None, t=None):
-        list_subdir = [f.path for f in os.scandir(self.format.path) if f.is_dir()]
-        img = WsiDicom.open(str(list_subdir[0]))
+        # list_subdir = [f.path for f in os.scandir(self.format.path) if f.is_dir()]
+        img = WsiDicom.open(str(self.format.path))
 
         tier = self.format.pyramid.most_appropriate_tier(region, (out_width, out_height))
         region = region.scale_to_tier(tier)
@@ -244,13 +255,13 @@ class WSIDicomReader(AbstractReader):
         return self.read_window(tile, tile.width, tile.height, c, z, t)
 
     def read_macro(self, out_width, out_height):
-        list_subdir = [f.path for f in os.scandir(self.format.path) if f.is_dir()]
-        img = WsiDicom.open(str(list_subdir[0]))
+        # list_subdir = [f.path for f in os.scandir(self.format.path) if f.is_dir()]
+        img = WsiDicom.open(str(self.format.path))
         return img.read_overview()
 
     def read_label(self, out_width, out_height):
-        list_subdir = [f.path for f in os.scandir(self.format.path) if f.is_dir()]
-        img = WsiDicom.open(str(list_subdir[0]))
+        # list_subdir = [f.path for f in os.scandir(self.format.path) if f.is_dir()]
+        img = WsiDicom.open(str(self.format.path))
         return img.read_label()
 
 
@@ -260,8 +271,14 @@ class WSIDicomFormat(AbstractFormat):
     reader_class = WSIDicomReader
     histogram_reader_class = DefaultHistogramReader
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, path, *args, **kwargs):
+        super().__init__(path, *args, **kwargs)
+
+        root = get_root_file(path)
+        if root:
+            self._path = root
+            self.clear_cache()
+
         self._enabled = True
 
     @classmethod
@@ -270,7 +287,7 @@ class WSIDicomFormat(AbstractFormat):
 
     @classmethod
     def get_remarks(cls):
-        return "A set of .dcm files packed in an archive. "
+        return "A set of .dcm files packed in archive directory."
 
     @classmethod
     def is_spatial(cls):
