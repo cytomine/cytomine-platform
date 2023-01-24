@@ -158,6 +158,13 @@ class TestEnvStore(TestCase):
         else:
           self.assertIn(k, generated_dict[ns]["auto"])
           self.assertEqual(generated_dict[ns]["auto"][k], v)
- 
           
-      
+  def testFreezeOmittedInAutogenerate(self):
+    namespaces = {"ns1": {"auto": {"VAR1": {"type": "openssl"}}}}
+    env_store = EnvStore()
+    for ns, entries in namespaces.items():
+      env_store.add_namespace(ns, entries, store=self._global)
+
+    generated_dict = env_store.export_dict()
+
+    self.assertRegex(generated_dict["ns1"]["constant"]["VAR1"], r".+")

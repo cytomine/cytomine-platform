@@ -100,7 +100,7 @@ Type: `openssl`
 Generates a random string using `openssl` in base 64.
 
 Parameters:
-- (optional) `length`, int, default `0`: the length of the final string    
+- (optional) `length`, int, default `32`: the length of the final string    
 
 # Bootstrapping and outputs
 

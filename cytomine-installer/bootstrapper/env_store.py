@@ -102,7 +102,7 @@ class EnvStore(BaseEnvStore):
     for ns in self.namespaces:
       for key in self._store[ns].keys():
         init_type, init_value = self._initial_type[ns][key], self._initial_value[ns][key]
-        if init_type == EnvValueTypeEnum.AUTOGENERATE and (isinstance(init_value, str) or init_value["freeze"]):
+        if init_type == EnvValueTypeEnum.AUTOGENERATE and (isinstance(init_value, str) or init_value.get("freeze", True)):
           output_dict[ns][EnvValueTypeEnum.CONSTANT.value][key] = self._store[ns][key]
         else:
           output_dict[ns][init_type.value][key] = self._initial_value[ns][key]

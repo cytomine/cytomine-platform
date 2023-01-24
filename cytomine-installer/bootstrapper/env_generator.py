@@ -126,7 +126,7 @@ class OpenSSLGenerator(EnvValueGenerator):
     return False
 
   def _get_length(self, field):
-    return field.get("length", 0)
+    return field.get("length", 32)
 
   def _validate(self, field):
     length = field.get("length")
