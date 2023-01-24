@@ -44,6 +44,10 @@ def recurse_if_SQ(ds):
     return list_ds
 
 
+def cached_wsi_dicom_file(format: AbstractFormat) -> WsiDicom:
+    return format.get_cached('_wsi_dicom', WsiDicom.open, str(format.path))
+
+
 def get_root_file(path: Path) -> Optional[Path]:
     """Try to get WSI DICOM directory (as it is a multi-file format)."""
     if path.is_dir():
@@ -83,8 +87,7 @@ class WSIDicomChecker(AbstractChecker):
 class WSIDicomParser(AbstractParser):
 
     def parse_main_metadata(self):
-        # list_subdir = [f.path for f in os.scandir(self.format.path) if f.is_dir()]
-        wsidicom_object = WsiDicom.open(str(self.format.path))
+        wsidicom_object = cached_wsi_dicom_file(self.format)
         levels = wsidicom_object.levels
         imd = ImageMetadata()
 
@@ -132,8 +135,7 @@ class WSIDicomParser(AbstractParser):
         return imd
 
     def parse_known_metadata(self):
-        # list_subdir = [f.path for f in os.scandir(self.format.path) if f.is_dir()]
-        wsidicom_object = WsiDicom.open(str(self.format.path))
+        wsidicom_object = cached_wsi_dicom_file(self.format)
         levels = wsidicom_object.levels
 
         metadata = dictify(wsidicom_object.levels.groups[0].datasets[0])
@@ -148,8 +150,7 @@ class WSIDicomParser(AbstractParser):
         return imd
 
     def parse_raw_metadata(self):
-        # list_subdir = [f.path for f in os.scandir(self.format.path) if f.is_dir()]
-        wsidicom_object = WsiDicom.open(str(self.format.path))
+        wsidicom_object = cached_wsi_dicom_file(self.format)
         levels = wsidicom_object.levels
         store = super().parse_raw_metadata()
         ds = wsidicom_object.levels.groups[0].datasets[0]
@@ -172,8 +173,7 @@ class WSIDicomParser(AbstractParser):
     def parse_pyramid(self):
         pyramid = Pyramid()
 
-        # list_subdir = [f.path for f in os.scandir(self.format.path) if f.is_dir()]
-        wsidicom_object = WsiDicom.open(str(self.format.path))
+        wsidicom_object = cached_wsi_dicom_file(self.format)
         levels = wsidicom_object.levels
 
         for level in wsidicom_object.levels.levels:
@@ -185,8 +185,7 @@ class WSIDicomParser(AbstractParser):
         return pyramid
 
     def parse_annotations(self) -> List[ParsedMetadataAnnotation]:
-        # list_subdir = [f.path for f in os.scandir(self.format.path) if f.is_dir()]
-        wsidicom_object = WsiDicom.open(str(self.format.path))
+        wsidicom_object = cached_wsi_dicom_file(self.format)
         channels = list(range(self.format.main_imd.n_channels))
         parsed_annots = []
         pixel_spacing = wsidicom_object.levels.groups[0].pixel_spacing.width
@@ -236,14 +235,12 @@ class WSIDicomParser(AbstractParser):
 class WSIDicomReader(AbstractReader):
 
     def read_thumb(self, out_width, out_height, precomputed=True, c=None, z=None, t=None):
-        # list_subdir = [f.path for f in os.scandir(self.format.path) if f.is_dir()]
-        img = WsiDicom.open(str(self.format.path))
+        img = cached_wsi_dicom_file(self.format)
 
         return img.read_thumbnail((out_width, out_height))
 
     def read_window(self, region, out_width, out_height, c=None, z=None, t=None):
-        # list_subdir = [f.path for f in os.scandir(self.format.path) if f.is_dir()]
-        img = WsiDicom.open(str(self.format.path))
+        img = cached_wsi_dicom_file(self.format)
 
         tier = self.format.pyramid.most_appropriate_tier(region, (out_width, out_height))
         region = region.scale_to_tier(tier)
@@ -255,13 +252,11 @@ class WSIDicomReader(AbstractReader):
         return self.read_window(tile, tile.width, tile.height, c, z, t)
 
     def read_macro(self, out_width, out_height):
-        # list_subdir = [f.path for f in os.scandir(self.format.path) if f.is_dir()]
-        img = WsiDicom.open(str(self.format.path))
+        img = cached_wsi_dicom_file(self.format)
         return img.read_overview()
 
     def read_label(self, out_width, out_height):
-        # list_subdir = [f.path for f in os.scandir(self.format.path) if f.is_dir()]
-        img = WsiDicom.open(str(self.format.path))
+        img = cached_wsi_dicom_file(self.format)
         return img.read_label()
 
 
