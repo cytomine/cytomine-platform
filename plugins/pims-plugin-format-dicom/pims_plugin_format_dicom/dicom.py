@@ -1,28 +1,23 @@
-import sys, os, io
-import numpy as np
+import os
+from datetime import datetime
 from functools import cached_property
-from pydicom.multival import MultiValue
 from typing import List
+
 import shapely
-from pims.formats.utils.checker import SignatureChecker
+from pydicom.multival import MultiValue
+from wsidicom.graphical_annotations import Point as WsiPoint
+from wsidicom.graphical_annotations import Polygon as WsiPolygon
+from wsidicom.wsidicom import WsiDicom
+
 from pims.formats.utils.abstract import AbstractChecker, AbstractParser, AbstractReader, AbstractFormat, CachedDataPath
-from pims.formats.utils.structures.metadata import ImageMetadata, ImageChannel
-from pims.formats.utils.structures.annotations import ParsedMetadataAnnotation
 from pims.formats.utils.histogram import DefaultHistogramReader
-from pims.utils.types import parse_float, parse_int, parse_datetime
-from pims.processing.region import Region
+from pims.formats.utils.structures.annotations import ParsedMetadataAnnotation
+from pims.formats.utils.structures.metadata import ImageMetadata, ImageChannel
 from pims.formats.utils.structures.pyramid import Pyramid
 from pims.utils import UNIT_REGISTRY
-from PIL import Image
-import numpy as np
 from pims.utils.dtypes import np_dtype
-import wsidicom
-from wsidicom.wsidicom import WsiDicom
-from wsidicom.graphical_annotations import AnnotationGroup
-from wsidicom.graphical_annotations import Polygon as WsiPolygon
-from wsidicom.graphical_annotations import Point as WsiPoint
-from datetime import datetime
-import json
+from pims.utils.types import parse_float
+
 
 def dictify(ds):
     output = dict()
@@ -33,21 +28,24 @@ def dictify(ds):
             output[elem.name] = [dictify(item) for item in elem]
     return output
 
+
 def recurse_if_SQ(ds):
-        list_ds = []
-        
-        for data_element in ds:
-            if data_element.VR != 'SQ':
-                list_ds.append(data_element)
-            
-            else:
-                for elmt in data_element:
-                    list_recursive = recurse_if_SQ(elmt)
-                    list_ds.extend(list_recursive)
-        return list_ds
+    list_ds = []
+
+    for data_element in ds:
+        if data_element.VR != 'SQ':
+            list_ds.append(data_element)
+
+        else:
+            for elmt in data_element:
+                list_recursive = recurse_if_SQ(elmt)
+                list_ds.extend(list_recursive)
+    return list_ds
+
 
 class WSIDicomChecker(AbstractChecker):
     OFFSET = 128
+
     @classmethod
     def match(cls, pathlike: CachedDataPath) -> bool:
         from pims.files.file import Path
@@ -69,15 +67,16 @@ class WSIDicomChecker(AbstractChecker):
                 return True
             return False
         return False
-    
+
+
 class WSIDicomParser(AbstractParser):
-        
+
     def parse_main_metadata(self):
         list_subdir = [f.path for f in os.scandir(self.format.path) if f.is_dir()]
         wsidicom_object = WsiDicom.open(str(list_subdir[0]))
         levels = wsidicom_object.levels
         imd = ImageMetadata()
-        
+
         imd.width = levels.base_level.size.width
         imd.height = levels.base_level.size.height
         metadata = dictify(wsidicom_object.levels.groups[0].datasets[0])
@@ -85,19 +84,20 @@ class WSIDicomParser(AbstractParser):
             imd.significant_bits = metadata["Bits Stored"]
         else:
             imd.significant_bits = 8
-        
+
         imd.duration = 1
         if "Samples per Pixel" in metadata:
-            imd.n_samples = metadata["Samples per Pixel"] 
+            imd.n_samples = metadata["Samples per Pixel"]
         imd.depth = 1
         imd.n_concrete_channels = 1
         imd.pixel_type = np_dtype(imd.significant_bits)
-        if "Manufacturer's Model Name" in metadata: 
+        if "Manufacturer's Model Name" in metadata:
             imd.microscope.model = metadata["Manufacturer's Model Name"]
-        
+
         if 'Objective Lens Power' in metadata['Optical Path Sequence'][0]:
-            imd.objective.nominal_magnification = parse_float(metadata['Optical Path Sequence'][0]['Objective Lens Power'])
-            
+            imd.objective.nominal_magnification = parse_float(
+                metadata['Optical Path Sequence'][0]['Objective Lens Power'])
+
         if imd.n_channels == 3:
             imd.set_channel(ImageChannel(index=0, suggested_name='R'))
             imd.set_channel(ImageChannel(index=1, suggested_name='G'))
@@ -105,40 +105,41 @@ class WSIDicomParser(AbstractParser):
         else:
             imd.set_channel(ImageChannel(index=0, suggested_name='L'))
         imd.n_channels_per_read = imd.n_channels
-        
+
         if wsidicom_object.labels:
             label_img = wsidicom_object.read_label()
             imd.associated_label.width = label_img.width
             imd.associated_label.height = label_img.height
             imd.associated_label.n_channels = 3
-        
+
         if wsidicom_object.overviews:
             overview = wsidicom_object.read_overview()
             imd.associated_macro.width = overview.width
             imd.associated_macro.height = overview.height
             imd.associated_macro.n_channels = 3
-        
+
         return imd
-        
+
     def parse_known_metadata(self):
         list_subdir = [f.path for f in os.scandir(self.format.path) if f.is_dir()]
         wsidicom_object = WsiDicom.open(str(list_subdir[0]))
         levels = wsidicom_object.levels
-                
-        metadata = dictify(wsidicom_object.levels.groups[0].datasets[0])     
+
+        metadata = dictify(wsidicom_object.levels.groups[0].datasets[0])
         imd = super().parse_known_metadata()
         imd.physical_size_x = wsidicom_object.levels.groups[0].mpp.width * UNIT_REGISTRY("micrometers")
         imd.physical_size_y = wsidicom_object.levels.groups[0].mpp.height * UNIT_REGISTRY("micrometers")
-        
-        imd.physical_size_z = self.parse_physical_size(metadata['Shared Functional Groups Sequence'][0]['Pixel Measures Sequence'][0]['Spacing Between Slices'])
+
+        imd.physical_size_z = self.parse_physical_size(
+            metadata['Shared Functional Groups Sequence'][0]['Pixel Measures Sequence'][0]['Spacing Between Slices'])
         if 'Acquisition DateTime' in metadata:
             imd.acquisition_datetime = self.parse_acquisition_date(metadata['Acquisition DateTime'])
         return imd
-        
+
     def parse_raw_metadata(self):
         list_subdir = [f.path for f in os.scandir(self.format.path) if f.is_dir()]
         wsidicom_object = WsiDicom.open(str(list_subdir[0]))
-        levels = wsidicom_object.levels                
+        levels = wsidicom_object.levels
         store = super().parse_raw_metadata()
         ds = wsidicom_object.levels.groups[0].datasets[0]
         data_elmts = recurse_if_SQ(ds)
@@ -156,14 +157,14 @@ class WSIDicomParser(AbstractParser):
             store.set(name, value, namespace="DICOM")
 
         return store
-    
+
     def parse_pyramid(self):
         pyramid = Pyramid()
-        
+
         list_subdir = [f.path for f in os.scandir(self.format.path) if f.is_dir()]
         wsidicom_object = WsiDicom.open(str(list_subdir[0]))
         levels = wsidicom_object.levels
-                
+
         for level in wsidicom_object.levels.levels:
             level_info = wsidicom_object.levels.get_level(level)
             level_size = level_info.size
@@ -171,23 +172,23 @@ class WSIDicomParser(AbstractParser):
             pyramid.insert_tier(level_size.width, level_size.height, (tile_size.width, tile_size.height))
 
         return pyramid
-    
+
     def parse_annotations(self) -> List[ParsedMetadataAnnotation]:
         list_subdir = [f.path for f in os.scandir(self.format.path) if f.is_dir()]
         wsidicom_object = WsiDicom.open(str(list_subdir[0]))
         channels = list(range(self.format.main_imd.n_channels))
         parsed_annots = []
         pixel_spacing = wsidicom_object.levels.groups[0].pixel_spacing.width
-        
+
         ds_annot = wsidicom_object.annotations
         for annot in ds_annot:
             annotation_groups = annot.groups
             for annotation_group in annotation_groups:
                 for annotation in annotation_group:
-                    coords = annotation.geometry.to_coords() # list of tuples
+                    coords = annotation.geometry.to_coords()  # list of tuples
                     coords_pixels = []
-                    for xy in coords: #tuple
-                        new_xy = tuple(int(value/pixel_spacing) for value in xy)
+                    for xy in coords:  # tuple
+                        new_xy = tuple(int(value / pixel_spacing) for value in xy)
                         coords_pixels.append(new_xy)
                     if isinstance(annotation.geometry, WsiPolygon):
                         annotation_geom = shapely.geometry.Polygon(coords_pixels)
@@ -198,7 +199,7 @@ class WSIDicomParser(AbstractParser):
                     parsed = ParsedMetadataAnnotation(annotation_geom, channels, 0, 0)
                     parsed_annots.append(parsed)
         return parsed_annots
-    
+
     @staticmethod
     def parse_acquisition_date(date: str):
         """
@@ -208,28 +209,28 @@ class WSIDicomParser(AbstractParser):
             if date:
                 str_date = datetime.strptime(date.split('.')[0], "%Y%m%d%H%M%S")
                 return f'{str_date}'
-                
+
             else:
                 return None
         except (ValueError, TypeError):
             return None
-            
+
     @staticmethod
     def parse_physical_size(physical_size: str):
         if physical_size is not None and parse_float(physical_size) is not None:
             return parse_float(physical_size) * UNIT_REGISTRY("millimeter")
-        return None        
-        
+        return None
+
+
 class WSIDicomReader(AbstractReader):
-        
+
     def read_thumb(self, out_width, out_height, precomputed=True, c=None, z=None, t=None):
         list_subdir = [f.path for f in os.scandir(self.format.path) if f.is_dir()]
         img = WsiDicom.open(str(list_subdir[0]))
-               
+
         return img.read_thumbnail((out_width, out_height))
-    
+
     def read_window(self, region, out_width, out_height, c=None, z=None, t=None):
-        
         list_subdir = [f.path for f in os.scandir(self.format.path) if f.is_dir()]
         img = WsiDicom.open(str(list_subdir[0]))
 
@@ -238,26 +239,26 @@ class WSIDicomReader(AbstractReader):
         level = tier.level
         norm_level = img.levels.levels[level]
         return img.read_region((region.left, region.top), norm_level, (region.width, region.height))
-    
+
     def read_tile(self, tile, c=None, z=None, t=None):
         return self.read_window(tile, tile.width, tile.height, c, z, t)
-        
+
     def read_macro(self, out_width, out_height):
         list_subdir = [f.path for f in os.scandir(self.format.path) if f.is_dir()]
         img = WsiDicom.open(str(list_subdir[0]))
         return img.read_overview()
-        
+
     def read_label(self, out_width, out_height):
         list_subdir = [f.path for f in os.scandir(self.format.path) if f.is_dir()]
         img = WsiDicom.open(str(list_subdir[0]))
         return img.read_label()
-        
-        
+
+
 class WSIDicomFormat(AbstractFormat):
     checker_class = WSIDicomChecker
     parser_class = WSIDicomParser
     reader_class = WSIDicomReader
-    histogram_reader_class = DefaultHistogramReader 
+    histogram_reader_class = DefaultHistogramReader
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
