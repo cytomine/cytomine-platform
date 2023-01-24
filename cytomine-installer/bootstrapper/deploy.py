@@ -1,28 +1,26 @@
 
-from collections import defaultdict
-from datetime import datetime
-from distutils.dir_util import copy_tree
-import enum
 import os
 import shutil
-from tempfile import TemporaryDirectory
-import warnings
-import yaml
-from argparse import ArgumentParser
 import zipfile
-from bootstrapper.deployment_folders import DeploymentFolder, InvalidServerConfigurationError
+from datetime import datetime
+from argparse import ArgumentParser
+from tempfile import TemporaryDirectory
 from bootstrapper.util import list_relative_files
+from bootstrapper.deployment_folders import DeploymentFolder
 
 
 def deploy(working_path, ignored_dirs=None, do_zip=False):
   if ignored_dirs is None:
     ignored_dirs = set()
+  
+  print(f"deployment from '{working_path}':")
+
   working_files = list_relative_files(working_path)
   working_files = [file for file in working_files if not any([file.startswith(d) for d in ignored_dirs])]
 
   # generate in a temporary folder
   with TemporaryDirectory() as tmp_dir:
-    print("deployment...")
+    print("> intermediate deployment...")
     deployment_folder = DeploymentFolder(directory=working_path)
     deployment_folder.deploy_files(tmp_dir)
 
@@ -35,7 +33,7 @@ def deploy(working_path, ignored_dirs=None, do_zip=False):
         for file in working_files:
           zip_archive.write(os.path.join(working_path, file), file)
         
-    print("cleaning...")
+    print("> cleaning...")
     _, dirs, files = next(os.walk(working_path))
     for dirname in dirs:
       if dirname not in ignored_dirs:
@@ -44,13 +42,13 @@ def deploy(working_path, ignored_dirs=None, do_zip=False):
       if not file.endswith(".zip"):
         os.remove(os.path.join(working_path, file))
 
-    print("moving generated files to working path...")
+    print("> moving generated files to working path...")
     _, dirs_to_copy, files_to_copy = next(os.walk(tmp_dir))
     for to_copy in dirs_to_copy:
       shutil.copytree(os.path.join(tmp_dir, to_copy), os.path.join(working_path, to_copy))
     for to_copy in files_to_copy:
       shutil.copyfile(os.path.join(tmp_dir, to_copy), os.path.join(working_path, to_copy))
-    print("done...")
+    print("> done...")
 
 
 
@@ -63,7 +61,10 @@ def main(argv):
   parser.add_argument("-i", "--ignore", dest="ignored", nargs="*", action="append", help="folders from the working path to be ignored by the bootstrapper")
   parser.set_defaults(do_zip=False)
   args, _ = parser.parse_known_args(argv)
-  
+
+  if args.ignored is None:
+    args.ignored = list()
+
   # normalize and filter ignored path
   ignored_dirs = list()
   for ignored in args.ignored:
