@@ -41,6 +41,9 @@ class TestOpensslGenerator(TestCase):
     with self.assertRaises(InvalidAutoGenerationData):
       generator.validate({"type": "openssl", "length": -1})
 
+    with self.assertRaises(InvalidAutoGenerationData):
+      generator.validate({"type": "openssl", "length": 0})
+    
     self.assertEqual(generator, generator.validate({"type": "openssl"}))
     self.assertEqual(generator, generator.validate({"type": "openssl", "length": 10}))
 
