@@ -14,4 +14,4 @@ COPY requirements.txt /app/requirements.txt
 COPY bootstrapper /app/bootstrapper
 RUN pip install -e .
 
-CMD ["cytoboot"]
+ENTRYPOINT ["cytoboot"]
