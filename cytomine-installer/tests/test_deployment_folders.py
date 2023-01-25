@@ -59,6 +59,43 @@ class TestServerFolder(FileSystemTestCase):
       "docker-compose.yml"
     })
 
+  def testGeneratedFiles(self):
+    tests_path = os.path.dirname(__file__)
+    deploy_path = os.path.join(tests_path, "files", "fake_single_server", "in")
+    envs_file = CytomineEnvsFile(deploy_path)
+    server_folder = ServerFolder("default", deploy_path, envs_file)
+    self.assertSetEqual(set(server_folder.generated_files), {
+      "envs/core.env",
+      "envs/ims.env",
+      ".env",
+      "docker-compose.override.yml"
+    })
+
+  def testTargetFiles(self):
+    tests_path = os.path.dirname(__file__)
+    deploy_path = os.path.join(tests_path, "files", "fake_single_server", "in")
+    envs_file = CytomineEnvsFile(deploy_path)
+    server_folder = ServerFolder("default", deploy_path, envs_file)
+    self.assertSetEqual(set(server_folder.target_files), set(server_folder.source_files).union(server_folder.generated_files))
+
+  def testFilesFunctionsOneServiceWithoutEnvs(self):
+    tests_path = os.path.dirname(__file__)
+    deploy_path = os.path.join(tests_path, "files", "fake_multi_server", "in")
+    server_path = os.path.join(deploy_path, "server-core")
+    envs_file = CytomineEnvsFile(deploy_path)
+    server_folder = ServerFolder("server-core", server_path, envs_file)
+    self.assertSetEqual(set(server_folder.source_files), {
+      "configs/core/etc/cytomine/cytomine-app.yml",
+      "docker-compose.yml"
+    })
+    self.assertSetEqual(set(server_folder.generated_files), {
+      "envs/core.env",
+      "envs/postgres.env",
+      ".env",
+      "docker-compose.override.yml"
+    })
+
+
 class TestDeploymentFolder(FileSystemTestCase):
   def testSingleServerDeployment(self):
     tests_path = os.path.dirname(__file__)
