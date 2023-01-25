@@ -3,7 +3,8 @@ import enum
 from collections import defaultdict
 import json
 
-from bootstrapper.env_generator import EnvValueGeneratorFactory
+from .errors import KeyAlreadyExistsError, UnknownValueTypeError
+from .env_generator import EnvValueGeneratorFactory
 
 
 class EnvValueTypeEnum(enum.Enum):
@@ -12,14 +13,6 @@ class EnvValueTypeEnum(enum.Enum):
   AUTOGENERATE = "auto"
 
 
-class KeyAlreadyExistsError(KeyError):
-  def __init__(self, ns, key, *args: object) -> None:
-    super().__init__(f"key '{key}' already exists in namespace '{ns}'", *args)
-
-
-class UnknownValueTypeError(ValueError):
-  def __init__(self, value_type, *args: object) -> None:
-    super().__init__(f"unknown value type: {value_type}", *args)
 
 
 class DictExportable(ABC):

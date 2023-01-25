@@ -3,6 +3,9 @@ import json
 import os
 import yaml
 from collections import defaultdict
+
+from .errors import UnknownCytomineEnvSection, UnknownServiceError
+from .enums import CytomineEnvSectionEnum
 from .env_store import DictExportable, EnvStore
 
 DOCKER_COMPOSE_FILENAME = "docker-compose.yml"
@@ -12,21 +15,6 @@ class UnknownServerError(ValueError):
   def __init__(self, server, *args: object) -> None:
     super().__init__(f"unknown server '{server}'", *args)
 
-
-class CytomineEnvSectionEnum(enum.Enum):
-  GLOBAL = "global"
-  SERVICES = "services"
-
-
-class UnknownCytomineEnvSection(ValueError):
-  def __init__(self, section, *args: object) -> None:
-    available_values = ', '.join(list(map(lambda v: v.value, CytomineEnvSectionEnum)))
-    super().__init__(f"unknown section '{section}', expects one of {{{available_values}}}", *args)
-
-
-class UnknownServiceError(ValueError):
-  def __init__(self, service, *args: object) -> None:
-    super().__init__(f"unknown service '{service}'", *args)
 
 
 class CytomineEnvsFile(DictExportable):

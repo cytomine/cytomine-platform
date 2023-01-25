@@ -1,27 +1,26 @@
-
 import os
 import shutil
 import zipfile
 from datetime import datetime
 from argparse import ArgumentParser
 from tempfile import TemporaryDirectory
-from bootstrapper.util import list_relative_files
-from bootstrapper.deployment_folders import DeploymentFolder
+from .deployment_folders import DeploymentFolder
+from ..util import list_relative_files
 
 
-def deploy(working_path, ignored_dirs=None, do_zip=False):
-  if ignored_dirs is None:
-    ignored_dirs = set()
+def deploy(working_path, ignored_folders=None, do_zip=False):
+  if ignored_folders is None:
+    ignored_folders = set()
   
   print(f"deployment from '{working_path}':")
 
   working_files = list_relative_files(working_path)
-  working_files = [file for file in working_files if not any([file.startswith(d) for d in ignored_dirs])]
+  working_files = [file for file in working_files if not any([file.startswith(d) for d in ignored_folders])]
 
   # generate in a temporary folder
   with TemporaryDirectory() as tmp_dir:
-    print("> intermediate deployment...")
-    deployment_folder = DeploymentFolder(directory=working_path)
+    print("intermediate deployment...")
+    deployment_folder = DeploymentFolder(directory=working_path, ignored_folders=ignored_folders)
     deployment_folder.deploy_files(tmp_dir)
 
     # zip current files
@@ -36,7 +35,7 @@ def deploy(working_path, ignored_dirs=None, do_zip=False):
     print("> cleaning...")
     _, dirs, files = next(os.walk(working_path))
     for dirname in dirs:
-      if dirname not in ignored_dirs:
+      if dirname not in ignored_folders:
         shutil.rmtree(os.path.join(working_path, dirname))
     for file in files:
       if not file.endswith(".zip"):
@@ -49,7 +48,6 @@ def deploy(working_path, ignored_dirs=None, do_zip=False):
     for to_copy in files_to_copy:
       shutil.copyfile(os.path.join(tmp_dir, to_copy), os.path.join(working_path, to_copy))
     print("> done...")
-
 
 
 
@@ -81,7 +79,7 @@ def main(argv):
   # TODO better error handling and displaying
   deploy(
     args.working_path, 
-    ignored_dirs=ignored_dirs,
+    ignored_folders=ignored_dirs,
     do_zip=args.do_zip)
 
 
