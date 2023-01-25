@@ -1,10 +1,11 @@
 
 
 import os
+from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest import TestCase
 
-from bootstrapper.util import list_relative_files, write_dotenv
+from bootstrapper.util import delete_dir_content, list_relative_files, write_dotenv
 
 
 class TestUtil(TestCase):
@@ -59,4 +60,14 @@ class TestUtil(TestCase):
       self.assertEqual(len(relative), 2)
       self.assertListEqual(sorted(files), sorted(relative))
 
-    
+  def testDeleteDirContent(self):
+    with TemporaryDirectory() as tmpdir:
+      # create fake files and folders
+      Path(os.path.join(tmpdir, "file.txt")).touch()
+      os.makedirs(os.path.join(tmpdir, "folder"))
+      Path(os.path.join(tmpdir, "folder", "file2.txt")).touch()
+
+      delete_dir_content(tmpdir)
+      os.makedirs(tmpdir)
+
+      self.assertListEqual(list_relative_files(tmpdir), [])

@@ -21,3 +21,15 @@ def list_relative_files(_dir: str):
       for filepath in list_relative_files(os.path.join(curr, dirname))
     ])
   return files
+
+
+def delete_dir_content(_dir: str):
+  for file_to_remove in list_relative_files(_dir):
+    file_path = os.path.join(_dir, file_to_remove)
+    if not os.path.exists(file_path):
+      continue
+    os.remove(file_path)
+    try:
+      os.removedirs(os.path.dirname(file_path))
+    except OSError:
+      pass

@@ -5,6 +5,8 @@ import zipfile
 from datetime import datetime
 from argparse import ArgumentParser
 
+from bootstrapper.util import delete_dir_content
+
 from .errors import InvalidTargetDirectoryError
 from .base import AbstractAction
 from ..deployment.deployment_folders import DeploymentFolder
@@ -42,7 +44,7 @@ class DeployAction(AbstractAction):
     if len(os.listdir(namespace.target_directory)) > 0:
       if not namespace.overwrite:
         raise InvalidTargetDirectoryError(namespace.target_directory)
-      shutil.rmtree(namespace.target_directory)
+      delete_dir_content(namespace.target_directory)
 
     # generate in a temporary folder
     if not os.path.exists(namespace.target_directory):
