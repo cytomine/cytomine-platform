@@ -1,14 +1,17 @@
-FROM python:3.10-rc-alpine
+FROM python:3.12-rc-bullseye
 
-RUN apk upgrade --update-cache --available && \
-    apk add openssl && \
-    rm -rf /var/cache/apk/*
+RUN apt-get upgrade \
+    && apt-get install openssl \
+    && apt-get clean
 
 RUN python -m pip install --upgrade pip
-RUN pip install pyyaml
 
 WORKDIR /app
-ADD bootstrapper /app/bootstrapper
-ADD main.py /app/main.py
+COPY setup.cfg /app/setup.cfg
+COPY setup.py /app/setup.py
+COPY README.md /app/README.md
+COPY requirements.txt /app/requirements.txt
+COPY bootstrapper /app/bootstrapper
+RUN pip install -e .
 
-CMD ["python", "/app/main.py"]
+CMD ["cytoboot"]
