@@ -1,5 +1,6 @@
 
 import os
+import shutil
 import zipfile
 from datetime import datetime
 from argparse import ArgumentParser
@@ -22,6 +23,8 @@ class DeployAction(AbstractAction):
     sub_parser.add_argument("--configs-mount-point", dest="configs_mount_point", default="/cm_configs", help="mount point for config files in the container")
     sub_parser.add_argument("--env-config-filename", dest="env_config_filename", default="cytomine.yml", help="name of the environment config file")
     sub_parser.add_argument("-i", "--ignored", dest="ignored_dirs", help="folders to ignores in working directory")
+    sub_parser.add_argument("--overwrite", dest="overwrite", action="store_true", help="to clear content of the target_directory before generating the deployment files")
+    sub_parser.set_defaults(do_zip=False, overwirte=False)
 
   def run(self, namespace):
     """Executes the actions.
@@ -36,13 +39,16 @@ class DeployAction(AbstractAction):
     namespace.source_directory = os.path.normpath(namespace.source_directory)
     namespace.target_directory = os.path.normpath(namespace.target_directory)
 
+    if len(os.listdir(namespace.target_directory)) > 0:
+      if not namespace.overwrite:
+        raise InvalidTargetDirectoryError(namespace.target_directory)
+      shutil.rmtree(namespace.target_directory)
+
     # generate in a temporary folder
     if not os.path.exists(namespace.target_directory):
       self.get_logger().info("> target directory does not exist: create it...")
       os.makedirs(namespace.target_directory)
-    elif len(os.listdir(namespace.target_directory)) > 0:
-      raise InvalidTargetDirectoryError(namespace.target_directory)
-
+    
     self.get_logger().info(f"deployment from '{namespace.source_directory}'")
     
     deployment_folder = DeploymentFolder(

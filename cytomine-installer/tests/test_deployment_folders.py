@@ -47,6 +47,22 @@ class FileSystemTestCase(TestCase):
     dotenv2 = parse_dotenv(path2)
     self.assertDictEqual(dotenv1, dotenv2)
 
+  def assertSameDirectories(self, gen_path, ref_path):
+    ref_rel_files = list_relative_files(ref_path)
+    for out_rel_file in ref_rel_files:
+      ref_filepath = os.path.join(ref_path, out_rel_file)
+      gen_filepath = os.path.join(gen_path, out_rel_file)
+      self.assertIsFile(gen_filepath)
+
+      if out_rel_file.endswith("yml"):
+        ### Check *.yml files
+        self.assertSameYamlFileContent(gen_filepath, ref_filepath)
+      elif out_rel_file.endswith(".env"):
+        self.assertSameDotenvFileContent(gen_filepath, ref_filepath)
+      else:
+        self.assertSameTextFileContent(gen_filepath, ref_filepath)
+
+
 
 class TestServerFolder(FileSystemTestCase):
   def testListSourceFiles(self):
