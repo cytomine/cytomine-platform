@@ -5,6 +5,7 @@ from tempfile import TemporaryDirectory
 from unittest import TestCase
 from bootstrapper.deployment.deployment_files import CytomineEnvsFile
 from bootstrapper.deployment.deployment_folders import DeploymentFolder, InvalidServerConfigurationError, ServerFolder
+from bootstrapper.deployment.errors import MissingCytomineYamlFileError, NoDockerComposeYamlFileError
 from bootstrapper.util import list_relative_files
 
 
@@ -136,6 +137,12 @@ class TestDeploymentFolder(FileSystemTestCase):
 
   def testNoCytomineYml(self):
     tests_path = os.path.dirname(__file__)
-    deploy_path = os.path.join(tests_path, "files", "no_cytomine_yml")
+    deploy_path = os.path.join(tests_path, "files", "fake_no_cytomine_yml")
+    with self.assertRaises(MissingCytomineYamlFileError):
+      DeploymentFolder(directory=deploy_path)
+
+  def testNoDockerComposeFile(self):
+    tests_path = os.path.dirname(__file__)
+    deploy_path = os.path.join(tests_path, "files", "fake_no_docker_compose_yml")
     with self.assertRaises(InvalidServerConfigurationError):
       DeploymentFolder(directory=deploy_path)

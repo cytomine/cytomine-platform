@@ -18,7 +18,19 @@ class InvalidServerConfigurationError(BootstrapperError):
   pass 
 
 
-class MissingCytomineYamlFile(InvalidServerConfigurationError):
+class MissingCytomineYamlFileError(InvalidServerConfigurationError):
+  def __init__(self, path, filename="cytomine.yml", *args: object) -> None:
+    super().__init__(f"missing cytomine configuration '{filename}' in '{path}'", *args)
+
+
+
+class NoDockerComposeYamlFileError(InvalidServerConfigurationError):
+  def __init__(self, path, *args: object) -> None:
+    super().__init__(f"no docker-compose.yml file found in '{path}'", *args)
+
+
+
+class MissingCytomineYamlFileError(InvalidServerConfigurationError):
   def __init__(self, path, filename="cytomine.yml", *args: object) -> None:
     super().__init__(f"missing cytomine configuration '{filename}' in '{path}'", *args)
 

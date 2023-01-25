@@ -4,7 +4,7 @@ import os
 import yaml
 from collections import defaultdict
 
-from .errors import MissingCytomineYamlFile, UnknownCytomineEnvSection, UnknownServiceError
+from .errors import MissingCytomineYamlFileError, NoDockerComposeYamlFileError, UnknownCytomineEnvSection, UnknownServiceError
 from .enums import CytomineEnvSectionEnum
 from .env_store import DictExportable, EnvStore
 
@@ -24,7 +24,7 @@ class CytomineEnvsFile(DictExportable):
     self._path = path
     
     if not os.path.isfile(self.filepath): 
-      raise MissingCytomineYamlFile(path, filename)
+      raise MissingCytomineYamlFileError(path, filename)
     
     with open(self.filepath, "r", encoding="utf8") as file:
       self._raw_config = yaml.load(file, Loader=yaml.Loader)
@@ -93,6 +93,9 @@ class DockerComposeFile:
   def __init__(self, path, filename=DOCKER_COMPOSE_FILENAME) -> None:
     self._path = path
     self._filename = filename
+
+    if not os.path.isfile(self.filepath): 
+      raise NoDockerComposeYamlFileError(self._path)
 
     with open(self.filepath, "r", encoding="utf8") as file:
       self._content = yaml.load(file, Loader=yaml.Loader)
