@@ -1,9 +1,9 @@
 version: "3.3"
 services:
   core:
-    env-file: envs/core.env
+    env_file: envs/core.env
     volumes:
       - configs/core:/cm_configs
 
   postgres:
-    env-file: envs/postgres.env
+    env_file: envs/postgres.env

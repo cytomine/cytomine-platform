@@ -85,7 +85,7 @@ class TestEditableDockerCompose(TestCase):
       "version": dc_version, 
       "services": {
         service: {
-          "env-file": env_file_path
+          "env_file": env_file_path
         }  
       }
     }, edc_content)

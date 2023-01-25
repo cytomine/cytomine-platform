@@ -120,7 +120,7 @@ class DockerComposeFile:
 class EditableDockerCompose:
   """A class for creating and changing a docker compose (intentionally very limited scope).
   Supports edition of:
-  - service 'env-file'
+  - service 'env_file'
   - service 'volumes'
   """
   def __init__(self, version="3.9") -> None:
@@ -134,7 +134,7 @@ class EditableDockerCompose:
     return self._compose["services"][service]
 
   def set_service_env_file(self, service, filepath):
-    self._get_service_dict(service)["env-file"] = filepath
+    self._get_service_dict(service)["env_file"] = filepath
 
   def get_service_volumes(self, service):
     if service not in self._compose["services"]:

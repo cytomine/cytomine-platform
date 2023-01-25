@@ -2,6 +2,6 @@ version: "3.3"
 services:
 
   ims:
-    env-file: envs/ims.env
+    env_file: envs/ims.env
     volumes:
       - configs/ims:/cm_configs
