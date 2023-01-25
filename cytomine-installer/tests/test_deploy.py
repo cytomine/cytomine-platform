@@ -3,8 +3,8 @@ from distutils.dir_util import copy_tree
 from tempfile import TemporaryDirectory
 import zipfile
 
-from bootstrapper.deploy import deploy
-from bootstrapper.deployment_folders import InvalidServerConfigurationError
+from bootstrapper.deployment.deploy import deploy
+from bootstrapper.deployment.deployment_folders import InvalidServerConfigurationError
 from bootstrapper.util import list_relative_files
 from tests.test_deployment_folders import FileSystemTestCase
 

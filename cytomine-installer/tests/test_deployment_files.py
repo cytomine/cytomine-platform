@@ -3,8 +3,8 @@ import yaml
 from tempfile import TemporaryDirectory
 from unittest import TestCase
 
-from bootstrapper.env_store import UnknownValueTypeError
-from bootstrapper.deployment_files import DockerComposeFile, CytomineEnvsFile, EditableDockerCompose, UnknownCytomineEnvSection
+from bootstrapper.deployment.env_store import UnknownValueTypeError
+from bootstrapper.deployment.deployment_files import DockerComposeFile, CytomineEnvsFile, EditableDockerCompose, UnknownCytomineEnvSection
 from tests.util import UUID_PATTERN
 
 

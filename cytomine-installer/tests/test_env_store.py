@@ -1,4 +1,4 @@
-from bootstrapper.env_store import EnvStore, KeyAlreadyExistsError
+from bootstrapper.deployment.env_store import EnvStore, KeyAlreadyExistsError
 from unittest import TestCase
 
 from tests.util import UUID_PATTERN

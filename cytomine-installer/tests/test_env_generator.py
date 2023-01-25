@@ -2,8 +2,8 @@
 
 
 from unittest import TestCase
-from bootstrapper.env_generator import RandomUUIDGenerator, OpenSSLGenerator
-from bootstrapper.env_generator import UnrecognizedGenerationField, InvalidAutoGenerationData
+from bootstrapper.deployment.env_generator import RandomUUIDGenerator, OpenSSLGenerator
+from bootstrapper.deployment.env_generator import UnrecognizedGenerationField, InvalidAutoGenerationData
 from tests.util import UUID_PATTERN
 
 
