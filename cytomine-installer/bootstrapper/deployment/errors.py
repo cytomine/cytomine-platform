@@ -18,6 +18,11 @@ class InvalidServerConfigurationError(BootstrapperError):
   pass 
 
 
+class MissingCytomineYamlFile(InvalidServerConfigurationError):
+  def __init__(self, path, filename="cytomine.yml", *args: object) -> None:
+    super().__init__(f"missing cytomine configuration '{filename}' in '{path}'", *args)
+
+
 class UnknownCytomineEnvSection(BootstrapperError):
   def __init__(self, section, *args: object) -> None:
     available_values = ', '.join(list(map(lambda v: v.value, CytomineEnvSectionEnum)))

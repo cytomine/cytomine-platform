@@ -4,11 +4,12 @@ import os
 import yaml
 from collections import defaultdict
 
-from .errors import UnknownCytomineEnvSection, UnknownServiceError
+from .errors import MissingCytomineYamlFile, UnknownCytomineEnvSection, UnknownServiceError
 from .enums import CytomineEnvSectionEnum
 from .env_store import DictExportable, EnvStore
 
 DOCKER_COMPOSE_FILENAME = "docker-compose.yml"
+DOCKER_COMPOSE_OVERRIDE_FILENAME = "docker-compose.override.yml"
 
 
 class UnknownServerError(ValueError):
@@ -16,12 +17,14 @@ class UnknownServerError(ValueError):
     super().__init__(f"unknown server '{server}'", *args)
 
 
-
 class CytomineEnvsFile(DictExportable):
   """parses a cytomine.yml file"""
   def __init__(self, path, filename="cytomine.yml") -> None:
     self._filename = filename
     self._path = path
+    
+    if not os.path.isfile(self.filepath): 
+      raise MissingCytomineYamlFile(path, filename)
     
     with open(self.filepath, "r", encoding="utf8") as file:
       self._raw_config = yaml.load(file, Loader=yaml.Loader)

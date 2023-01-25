@@ -3,7 +3,8 @@ import yaml
 import pathlib
 from tempfile import TemporaryDirectory
 from unittest import TestCase
-from bootstrapper.deployment.deployment_folders import DeploymentFolder, InvalidServerConfigurationError
+from bootstrapper.deployment.deployment_files import CytomineEnvsFile
+from bootstrapper.deployment.deployment_folders import DeploymentFolder, InvalidServerConfigurationError, ServerFolder
 from bootstrapper.util import list_relative_files
 
 
@@ -44,6 +45,18 @@ class FileSystemTestCase(TestCase):
     dotenv2 = parse_dotenv(path2)
     self.assertDictEqual(dotenv1, dotenv2)
 
+
+class TestServerFolder(FileSystemTestCase):
+  def testListSourceFiles(self):
+    tests_path = os.path.dirname(__file__)
+    deploy_path = os.path.join(tests_path, "files", "fake_single_server", "in")
+    envs_file = CytomineEnvsFile(deploy_path)
+    server_folder = ServerFolder("default", deploy_path, envs_file)
+    self.assertSetEqual(set(server_folder.source_files), {
+      "configs/core/etc/cytomine/cytomine-app.yml",
+      "configs/ims/usr/local/cytom/ims.conf",
+      "docker-compose.yml"
+    })
 
 class TestDeploymentFolder(FileSystemTestCase):
   def testSingleServerDeployment(self):
@@ -118,5 +131,11 @@ class TestDeploymentFolder(FileSystemTestCase):
   def testMultiServerMissingServerFolder(self):
     tests_path = os.path.dirname(__file__)
     deploy_path = os.path.join(tests_path, "files", "fake_multi_server_missing_folder")
+    with self.assertRaises(InvalidServerConfigurationError):
+      DeploymentFolder(directory=deploy_path)
+
+  def testNoCytomineYml(self):
+    tests_path = os.path.dirname(__file__)
+    deploy_path = os.path.join(tests_path, "files", "no_cytomine_yml")
     with self.assertRaises(InvalidServerConfigurationError):
       DeploymentFolder(directory=deploy_path)
