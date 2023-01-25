@@ -124,7 +124,7 @@ class DeploymentFolder(Deployable):
   SERVER_DEFAULT = "default"
 
   def __init__(self, directory="/bootstrap", cytomine_envs_filename="cytomine.yml", 
-               configs_folder="configs", envs_folder="envs", ignored_folders=None, 
+               configs_folder="configs", envs_folder="envs", ignored_dirs=None, 
                in_container_configs_folder="cm_configs") -> None:
     """
     Parameters
@@ -142,11 +142,11 @@ class DeploymentFolder(Deployable):
     in_container_configs_folder:
       Name of the configuration target folder within the container (default: 'cm_configs)
     """
-    if ignored_folders is None:
-      ignored_folders = set()
+    if ignored_dirs is None:
+      ignored_dirs = set()
 
     self._directory = directory
-    self._ignore_dirs = set(ignored_folders)
+    self._ignore_dirs = set(ignored_dirs)
     self._configs_folder = configs_folder
     self._envs_folder = envs_folder
     self._in_container_configs_folder = in_container_configs_folder

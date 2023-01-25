@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from argparse import ArgumentParser
+import logging
 
 
 class AbstractAction(ABC):
@@ -23,3 +24,7 @@ class AbstractAction(ABC):
     self._fill_in_subparser(sub_parser)
     sub_parser.set_defaults(func=self.run)
     return sub_parser
+
+  def get_logger(self):
+    # TODO tailor logger per action  
+    return logging.getLogger()
