@@ -1,4 +1,4 @@
-from bootstrapper.errors import BootstrapperError
+from ..errors import BootstrapperError
 
 
 class StoppedByUserError(BootstrapperError):
@@ -6,6 +6,6 @@ class StoppedByUserError(BootstrapperError):
     super().__init__(msg=reason)
 
 
-class SameDirectoryError(BootstrapperError):
+class InvalidTargetDirectoryError(BootstrapperError):
   def __init__(self, path, *args: object) -> None:
-    super().__init__(f"target directory '{path}' is not empty", *args)
+    super().__init__(f"target directory '{path}' exists and is not empty", *args)

@@ -4,8 +4,7 @@ import zipfile
 import datetime
 from argparse import ArgumentParser
 
-from bootstrapper.actions.errors import SameDirectoryError
-
+from .errors import InvalidTargetDirectoryError
 from .base import AbstractAction
 from ..deployment.deployment_folders import DeploymentFolder
 
@@ -37,11 +36,15 @@ class DeployAction(AbstractAction):
     namespace.source_directory = os.path.normpath(namespace.source_directory)
     namespace.target_directory = os.path.normpath(namespace.target_directory)
 
+    # generate in a temporary folder
+    if not os.path.exists(namespace.target_directory):
+      self.get_logger().info("> target directory does not exist: create it...")
+      os.makedirs(namespace.target_directory)
+    elif len(os.listdir(namespace.target_directory)) > 0:
+      raise InvalidTargetDirectoryError(namespace.target_directory)
+
     self.get_logger().info(f"deployment from '{namespace.source_directory}'")
-
-    if namespace.source_directory == namespace.target_directory:
-      raise SameDirectoryError(namespace.source_directory)
-
+    
     deployment_folder = DeploymentFolder(
       directory=namespace.source_directory,
       ignored_dirs=ignored_dirs,
@@ -63,13 +66,9 @@ class DeployAction(AbstractAction):
         for file in deployment_folder.source_files:
           zip_archive.write(os.path.join(namespace.source_directory, file), file)
 
-    # generate in a temporary folder
-    if not os.path.exists(namespace.target_directory):
-      self.get_logger().info("> target directory does not exist: create it...")
-      os.makedirs(namespace.target_directory)
-
-    self.get_logger().info("> generate intermediate files...")
-    self.get_logger().debug(deployment_folder.generated_files)
+    self.get_logger().info("> generate deployment files...")
+    self.get_logger().debug(f"  copied : {deployment_folder.source_files}")
+    self.get_logger().debug(f"  created: {deployment_folder.generated_files}")
     deployment_folder.deploy_files(namespace.target_directory)
 
     self.get_logger().info("> done...")
