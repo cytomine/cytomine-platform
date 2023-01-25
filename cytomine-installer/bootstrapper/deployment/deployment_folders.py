@@ -42,7 +42,7 @@ class Deployable(ABC):
 
 class ServerFolder(Deployable):
   def __init__(self, server_name, directory, envs: CytomineEnvsFile, configs_folder="configs", 
-               envs_folder="envs", configs_mount_point="cm_configs") -> None:
+               envs_folder="envs", configs_mount_point="/cm_configs") -> None:
     """
     Parameters:
     -----------
@@ -50,11 +50,11 @@ class ServerFolder(Deployable):
     directory: str
       Server directory path
     configs_folder: str
-      Name of the configs folder (default: 'configs')
+      Name of the configs folder
     envs_folder:
-      Name of the target environment folder (default: 'envs')
+      Name of the target environment folder
     configs_mount_point:
-      Name of the configuration target folder within the container (default: 'cm_configs)
+      Name of the configuration target folder within the container 
     """
     self._server_name = server_name
     self._directory = directory
@@ -139,7 +139,7 @@ class ServerFolder(Deployable):
       src_service_configs_path = os.path.join(self._directory, self._configs_folder, service)
       if os.path.exists(src_service_configs_path):
         target_config_relpath = os.path.join(self._configs_folder, service)
-        override_file.add_service_volume(service, f"{target_config_relpath}:/{self._configs_mount_point}")
+        override_file.add_service_volume(service, f"{target_config_relpath}:{self._configs_mount_point}")
 
     shutil.copytree(
       os.path.join(self._directory, self._configs_folder),
@@ -172,7 +172,7 @@ class DeploymentFolder(Deployable):
 
   def __init__(self, directory="/bootstrap", cytomine_envs_filename="cytomine.yml", 
                configs_folder="configs", envs_folder="envs", ignored_dirs=None, 
-               configs_mount_point="cm_configs") -> None:
+               configs_mount_point="/cm_configs") -> None:
     """
     Parameters
     ----------
@@ -181,13 +181,13 @@ class DeploymentFolder(Deployable):
     cytomine_envs_filename: str
       Name of the cytomine environment variables file
     configs_folder: str
-      Name of the configs folder in each server folder (default: 'configs')
+      Name of the configs folder in each server folder
     envs_folder: str
-      Name of the target environment folder in the target server folder (default: 'envs')
+      Name of the target environment folder in the target server folder
     ignored_folders: set|list|NoneType
       Folders to ignore in the root directory
     configs_mount_point :
-      Name of the configuration files mount path within the container (default: 'cm_configs)
+      Name of the configuration files mount path within the container 
     """
     if ignored_dirs is None:
       ignored_dirs = set()
@@ -271,7 +271,7 @@ class DeploymentFolder(Deployable):
     for server_folder in self._server_folders.values():
       server_folder.clean_generated_files(target_directory)
 
-  def _abs_to_relative(src_dir, files, ref_dir):
+  def _abs_to_relative(self, src_dir, files, ref_dir):
     return [os.path.relpath(os.path.join(src_dir, file), ref_dir) for file in files]
   
   @property
@@ -285,7 +285,7 @@ class DeploymentFolder(Deployable):
       files.extend(self._abs_to_relative(
         src_dir=server_folder.directory, 
         files=server_folder.source_files,
-        ref_dor=self._directory 
+        ref_dir=self._directory 
       ))
 
     return files
@@ -297,6 +297,6 @@ class DeploymentFolder(Deployable):
       files.extend(self._abs_to_relative(
         src_dir=server_folder.directory, 
         files=server_folder.generated_files,
-        ref_dor=self._directory 
+        ref_dir=self._directory 
       ))
     return files

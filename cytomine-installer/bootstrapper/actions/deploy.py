@@ -1,7 +1,7 @@
 
 import os
 import zipfile
-import datetime
+from datetime import datetime
 from argparse import ArgumentParser
 
 from .errors import InvalidTargetDirectoryError
@@ -19,7 +19,7 @@ class DeployAction(AbstractAction):
     sub_parser.add_argument("--zip-filename", dest="zip_filename", help="when do_zip=True, specify the name of the zip file. By default a name will be generated based on datetime")
     sub_parser.add_argument("--envs-folder-name", dest="envs_folder", default="envs", help="name of the environment variables folder")
     sub_parser.add_argument("--configs-folder-name", dest="configs_folder", default="configs", help="name of the configs folder")
-    sub_parser.add_argument("--configs-mount-point", dest="config_mount_point", default="/cm_configs", help="mount point for config files in the container")
+    sub_parser.add_argument("--configs-mount-point", dest="configs_mount_point", default="/cm_configs", help="mount point for config files in the container")
     sub_parser.add_argument("--env-config-filename", dest="env_config_filename", default="cytomine.yml", help="name of the environment config file")
     sub_parser.add_argument("-i", "--ignored", dest="ignored_dirs", help="folders to ignores in working directory")
 
@@ -60,7 +60,7 @@ class DeployAction(AbstractAction):
         zip_filename = f"backup_{zip_filename}.zip"
       else:
         zip_filename = namespace.zip_filename
-      zip_filepath = os.path.join(namespace.source_directory, zip_filename)
+      zip_filepath = os.path.join(namespace.target_directory, zip_filename)
       self.get_logger().info(f"> zipping target files into '{zip_filepath}'...")
       with zipfile.ZipFile(zip_filepath, 'w', zipfile.ZIP_DEFLATED) as zip_archive:
         for file in deployment_folder.source_files:
