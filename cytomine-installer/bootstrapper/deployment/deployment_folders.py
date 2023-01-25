@@ -42,7 +42,7 @@ class Deployable(ABC):
 
 class ServerFolder(Deployable):
   def __init__(self, server_name, directory, envs: CytomineEnvsFile, configs_folder="configs", 
-               envs_folder="envs", in_container_configs_folder="cm_configs") -> None:
+               envs_folder="envs", configs_mount_point="cm_configs") -> None:
     """
     Parameters:
     -----------
@@ -53,13 +53,13 @@ class ServerFolder(Deployable):
       Name of the configs folder (default: 'configs')
     envs_folder:
       Name of the target environment folder (default: 'envs')
-    in_container_configs_folder:
+    configs_mount_point:
       Name of the configuration target folder within the container (default: 'cm_configs)
     """
     self._server_name = server_name
     self._directory = directory
     self._configs_folder = configs_folder
-    self._in_container_configs_folder = in_container_configs_folder
+    self._configs_mount_point = configs_mount_point
     self._envs_folder = envs_folder
     self._docker_compose_file = DockerComposeFile(directory)
     self._envs = envs
@@ -139,7 +139,7 @@ class ServerFolder(Deployable):
       src_service_configs_path = os.path.join(self._directory, self._configs_folder, service)
       if os.path.exists(src_service_configs_path):
         target_config_relpath = os.path.join(self._configs_folder, service)
-        override_file.add_service_volume(service, f"{target_config_relpath}:/{self._in_container_configs_folder}")
+        override_file.add_service_volume(service, f"{target_config_relpath}:/{self._configs_mount_point}")
 
     shutil.copytree(
       os.path.join(self._directory, self._configs_folder),
@@ -172,7 +172,7 @@ class DeploymentFolder(Deployable):
 
   def __init__(self, directory="/bootstrap", cytomine_envs_filename="cytomine.yml", 
                configs_folder="configs", envs_folder="envs", ignored_dirs=None, 
-               in_container_configs_folder="cm_configs") -> None:
+               configs_mount_point="cm_configs") -> None:
     """
     Parameters
     ----------
@@ -186,8 +186,8 @@ class DeploymentFolder(Deployable):
       Name of the target environment folder in the target server folder (default: 'envs')
     ignored_folders: set|list|NoneType
       Folders to ignore in the root directory
-    in_container_configs_folder:
-      Name of the configuration target folder within the container (default: 'cm_configs)
+    configs_mount_point :
+      Name of the configuration files mount path within the container (default: 'cm_configs)
     """
     if ignored_dirs is None:
       ignored_dirs = set()
@@ -196,7 +196,7 @@ class DeploymentFolder(Deployable):
     self._ignore_dirs = set(ignored_dirs)
     self._configs_folder = configs_folder
     self._envs_folder = envs_folder
-    self._in_container_configs_folder = in_container_configs_folder
+    self._configs_mount_point = configs_mount_point
     self._cytomine_envs_filename = cytomine_envs_filename
     self._envs = CytomineEnvsFile(path=self._directory, filename=self._cytomine_envs_filename)
 
@@ -224,7 +224,7 @@ class DeploymentFolder(Deployable):
     server_folder_common_params = {
       "configs_folder": self._configs_folder,
       "envs_folder": self._envs_folder,
-      "in_container_configs_folder": self._in_container_configs_folder
+      "configs_mount_point": self._configs_mount_point
     }
 
     if self._single_server:
@@ -243,6 +243,14 @@ class DeploymentFolder(Deployable):
           envs=self._envs,
           **server_folder_common_params
         )
+
+  @property
+  def is_single_server(self):
+    return self._single_server
+
+  @property
+  def server_folders(self):
+    return self._server_folders
 
   def deploy_files(self, target_directory):
     dst_cytomine_envs_path = os.path.join(target_directory, self._envs.filename)
