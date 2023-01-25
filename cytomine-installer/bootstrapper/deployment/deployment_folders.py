@@ -161,6 +161,11 @@ class ServerFolder(Deployable):
         os.removedirs(os.path.dirname(file_path))
       except OSError:
         pass
+
+    # double-check 'envs' folder
+    envs_folder = os.path.join(self._directory, self._envs_folder)
+    if os.path.isdir(envs_folder):
+      os.rmdir(envs_folder)
       
 class DeploymentFolder(Deployable):
   SERVER_DEFAULT = "default"
