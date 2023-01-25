@@ -1,11 +1,9 @@
-from argparse import ArgumentParser
 import sys
+from argparse import ArgumentParser
 
 from .actions.base import AbstractAction
-from .actions.clean import CleanAction
 from .actions.deploy import DeployAction
 from .errors import BootstrapperError
-
 
 
 def _recursive_parser_register(subparsers, actions: dict):
@@ -39,7 +37,7 @@ def make_parser():
   root_subparsers = main_parser.add_subparsers()
 
   all_actions = {
-    "clean": CleanAction(),
+    #TODO "clean": CleanAction(),
     "deploy": DeployAction()
   }
 
