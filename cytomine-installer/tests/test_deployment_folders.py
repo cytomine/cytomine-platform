@@ -1,4 +1,5 @@
 import os
+import shutil
 import yaml
 import pathlib
 from tempfile import TemporaryDirectory
@@ -94,6 +95,28 @@ class TestServerFolder(FileSystemTestCase):
       ".env",
       "docker-compose.override.yml"
     })
+    
+  def testCleanValid(self):
+    tests_path = os.path.dirname(__file__)
+    deploy_path = os.path.join(tests_path, "files", "fake_multi_server", "in")
+    server_path = os.path.join(deploy_path, "server-core")
+    out_deploy_path = os.path.join(tests_path, "files", "fake_multi_server", "out")
+    out_server_path = os.path.join(out_deploy_path, "server-core")
+    envs_file = CytomineEnvsFile(deploy_path)
+    server_folder = ServerFolder("server-core", server_path, envs_file)
+    with TemporaryDirectory() as tmpdir:
+      target_server_path = os.path.join(tmpdir, "out")
+      shutil.copytree(out_server_path, target_server_path)
+      self.assertSetEqual(
+        set(list_relative_files(target_server_path)), 
+        set(server_folder.target_files)
+      )
+      server_folder.clean_generated_files(target_server_path)
+      self.assertSetEqual(
+        set(list_relative_files(target_server_path)), 
+        set(server_folder.source_files)
+      )
+
 
 
 class TestDeploymentFolder(FileSystemTestCase):
