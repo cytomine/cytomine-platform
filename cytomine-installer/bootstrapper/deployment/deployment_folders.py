@@ -139,7 +139,7 @@ class ServerFolder(Deployable):
       src_service_configs_path = os.path.join(self._directory, self._configs_folder, service)
       if os.path.exists(src_service_configs_path):
         target_config_relpath = os.path.join(self._configs_folder, service)
-        override_file.add_service_volume(service, f"{target_config_relpath}:{self._configs_mount_point}")
+        override_file.add_service_volume(service, f"./{target_config_relpath}:{self._configs_mount_point}")
 
     shutil.copytree(
       os.path.join(self._directory, self._configs_folder),
