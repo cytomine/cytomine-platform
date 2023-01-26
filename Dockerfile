@@ -39,7 +39,8 @@ FROM postgis/postgis:${POSTGIS_VERSION}
 ENV POSTGRES_USER=docker
 
 # database init
-COPY files/initdb-cytomine.sh /docker-entrypoint-initdb.d/11_cytomine.sh
+COPY files/initdb-cytomine-extensions.sh /docker-entrypoint-initdb.d/11_cytomine_extensions.sh
+COPY files/initdb-cytomine-users.sh /docker-entrypoint-initdb.d/12_cytomine_users.sh
 
 # default configuration
 RUN mkdir -p /etc/postgres/conf.d
