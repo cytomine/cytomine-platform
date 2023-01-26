@@ -38,6 +38,6 @@ RUN mkdir /docker-entrypoint-cytomine.d/
 COPY --from=scripts-downloader --chmod=774 /root/scripts/cytomine-entrypoint.sh /usr/local/bin/
 COPY --from=scripts-downloader --chmod=774 /root/scripts/envsubst-on-templates-and-move.sh /docker-entrypoint-cytomine.d/500-envsubst-on-templates-and-move.sh
 
-ENTRYPOINT ["cytomine-entrypoint.sh", "docker-entrypoint.sh"]
+ENTRYPOINT ["cytomine-entrypoint.sh", "/docker-entrypoint.sh"]
 CMD ["nginx", "-g", "daemon off;"]
 
