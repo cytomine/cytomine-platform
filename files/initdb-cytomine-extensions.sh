@@ -9,3 +9,4 @@ echo "Loading other Cytomine-required extensions into $POSTGRES_DB"
 "${psql[@]}" --dbname="$POSTGRES_DB" <<-'EOSQL'
   CREATE EXTENSION IF NOT EXISTS ltree;
 EOSQL
+
