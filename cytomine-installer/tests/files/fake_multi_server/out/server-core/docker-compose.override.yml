@@ -3,7 +3,7 @@ services:
   core:
     env_file: envs/core.env
     volumes:
-      - configs/core:/cm_configs
+      - ./configs/core:/cm_configs
 
   postgres:
     env_file: envs/postgres.env

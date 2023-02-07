@@ -3,9 +3,9 @@ services:
   core:
     env_file: envs/core.env
     volumes:
-      - configs/core:/cm_configs
+      - ./configs/core:/cm_configs
     
   ims:
     env_file: envs/ims.env
     volumes:
-      - configs/ims:/cm_configs
+      - ./configs/ims:/cm_configs

@@ -4,4 +4,4 @@ services:
   ims:
     env_file: envs/ims.env
     volumes:
-      - configs/ims:/cm_configs
+      - ./configs/ims:/cm_configs
