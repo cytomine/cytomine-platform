@@ -3,7 +3,6 @@ stages:
 
 tests:
   stage: tests
-  needs: build-test-image
   variables:
     IMAGE_NAME: boostrapper-test
   script:
