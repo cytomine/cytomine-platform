@@ -28,10 +28,12 @@ then
 fi
 
 IMAGE_VERSION=${IMAGE_VERSION}
-NGINX_VERSION=${NGINX_VERSION:-"1.22.1-alpine"}
+NGINX_VERSION=${NGINX_VERSION:-"1.22.1"}
 SCRIPTS_REPO_TAG=${SCRIPTS_REPO_TAG:-"latest"}  # TODO automatically get latest tag
 DOCKER_NAMESPACE=${DOCKER_NAMESPACE:-"cytomine"}
 SCRIPTS_REPO_BRANCH=${SCRIPTS_REPO_BRANCH:-"master"}
+UPLOAD_MODULE_REPO=${UPLOAD_MODULE_REPO:-"https://github.com/fdintino/nginx-upload-module"}
+UPLOAD_MODULE_COMMIT=${UPLOAD_MODULE_COMMIT:-"643b4c1fa6993da6bc1f82e7121ca62a7696ee6b"}
 
 ME=$(basename $0)
 
@@ -44,5 +46,8 @@ cat Dockerfile | docker build \
   --build-arg NGINX_VERSION=$NGINX_VERSION \
   --build-arg SCRIPTS_REPO_TAG=$SCRIPTS_REPO_TAG \
   --build-arg SCRIPTS_REPO_BRANCH=$SCRIPTS_REPO_BRANCH \
+  --build-arg UPLOAD_MODULE_REPO=$UPLOAD_MODULE_REPO \
+  --build-arg UPLOAD_MODULE_COMMIT=$UPLOAD_MODULE_COMMIT \
   --secret id=scripts_repo_url,env=SCRIPTS_REPO_URL \
   -t "$DOCKER_NAMESPACE/nginx:$NGINX_VERSION-$IMAGE_VERSION" -
+
