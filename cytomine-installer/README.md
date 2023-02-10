@@ -100,7 +100,19 @@ Type: `openssl`
 Generates a random string using `openssl` in base 64.
 
 Parameters:
-- (optional) `length`, int, default `32`: the length of the final string    
+- (optional) `length`, int, default `32`, number of bytes
+
+#### Random string
+
+Type: `secret`
+
+Generates a random string of a given length from the default alphabet (see below).
+
+Parameters:
+- (optional) `length`, int, default `0`: the number of characters in the final string
+- (optional) `excluded`, str, default `''`: characters of the default alphabet to exclude for generation 
+
+Default alphabet: `abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!"#$%&'()*+,-./:;<=>?@[\]^``_{|}~`
 
 # Bootstrapping and outputs
 

@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 import subprocess
 import uuid
+import string
+import secrets
 
 
 class EnvValueGenerator(ABC):
@@ -108,7 +110,7 @@ class RandomUUIDGenerator(EnvValueGenerator):
 
 
 class OpenSSLGenerator(EnvValueGenerator):
-  LENGTH_FIELD = "length"
+  FIELD_LENGTH = "length"
 
   def _resolve(self, field):
     command = ["openssl", "rand", "-base64"]
@@ -124,14 +126,50 @@ class OpenSSLGenerator(EnvValueGenerator):
     return False
 
   def _get_length(self, field):
-    return field.get("length", 32)
+    return field.get(self.FIELD_LENGTH, 32)
 
   def _validate(self, field):
-    length = field.get("length")
+    length = field.get(self.FIELD_LENGTH)
     if length is not None and not (isinstance(length, int) and length > 0):
       raise InvalidAutoGenerationData(self, "length should be an integer > 0")
     
     return self
+
+
+class SecretGenerator(EnvValueGenerator):
+  FIELD_LENGTH = "length"
+  FIELD_EXCLUDED = "excluded"
+
+  def __init__(self) -> None:
+    super().__init__()
+    self._base_alphabet = string.ascii_letters + string.digits + string.punctuation
+
+  def _resolve(self, field):
+    length = field.get(self.FIELD_LENGTH, 0)
+    alphabet = {*self._base_alphabet}
+    alphabet = "".join(alphabet.difference(*field.get(self.FIELD_EXCLUDED, "")))
+    return "".join(secrets.choice(alphabet) for i in range(length))
+
+  def _validate(self, field):
+    length = field.get("length")
+    if length is not None and not (isinstance(length, int) and length > 0):
+      raise InvalidAutoGenerationData(self, "length should be an integer >= 0")
+    excluded = field.get("excluded")
+    if excluded is not None and not (isinstance(excluded, str) and length > 0):
+      raise InvalidAutoGenerationData(self, "excluded characters list must be a string with one or more characters")
+    return self
+
+  @property
+  def accept_string_field(self):
+    return True
+
+  @property
+  def method_key(self):
+    return "secret"
+
+  @property
+  def base_alphabet(self):
+    return self._base_alphabet
 
 
 class EnvValueGeneratorFactory(object):
@@ -140,7 +178,8 @@ class EnvValueGeneratorFactory(object):
     """
     generators = [
       RandomUUIDGenerator(),
-      OpenSSLGenerator()
+      OpenSSLGenerator(),
+      SecretGenerator()
     ]
 
     for generator in generators:
@@ -153,3 +192,4 @@ class EnvValueGeneratorFactory(object):
         return generator
     
     raise ValueError("impossible to identify the generation method")
+

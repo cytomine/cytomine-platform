@@ -2,7 +2,7 @@
 
 
 from unittest import TestCase
-from bootstrapper.deployment.env_generator import RandomUUIDGenerator, OpenSSLGenerator
+from bootstrapper.deployment.env_generator import RandomUUIDGenerator, OpenSSLGenerator, SecretGenerator
 from bootstrapper.deployment.env_generator import UnrecognizedGenerationField, InvalidAutoGenerationData
 from tests.util import UUID_PATTERN
 
@@ -56,3 +56,35 @@ class TestOpensslGenerator(TestCase):
     field = {"type": "openssl", "length": 10}
     # not sure how 'length' affects final string length
     self.assertRegex(generator.resolve(field), rf".+")
+
+
+class TestSercretGenerator(TestCase):
+  def testValidate(self):
+    generator = SecretGenerator()
+    with self.assertRaises(UnrecognizedGenerationField):
+      generator.validate("aa")
+
+    with self.assertRaises(UnrecognizedGenerationField):
+      generator.validate({"type": "sec"})
+
+    with self.assertRaises(InvalidAutoGenerationData):
+      generator.validate({"type": "secret", "length": -1})
+    
+    self.assertEqual(generator, generator.validate({"type": "secret"}))
+    self.assertEqual(generator, generator.validate({"type": "secret", "length": 10}))
+
+  def testMethodKey(self):
+    generator = SecretGenerator()
+    self.assertEqual("secret", generator.method_key)
+
+  def testResolve(self):
+    generator = SecretGenerator()
+    self.assertEqual(len(generator.resolve({"type": "secret", "length": 1})), 1)
+    self.assertEqual(len(generator.resolve({"type": "secret", "length": 10})), 10)
+    self.assertEqual(len(generator.resolve({"type": "secret", "length": 20})), 20)
+    self.assertEqual(generator.resolve({
+      "type": "secret",
+      "length": 10,
+      "excluded": generator.base_alphabet[1:]
+    }), generator.base_alphabet[0] * 10)
+    print(generator.base_alphabet)
