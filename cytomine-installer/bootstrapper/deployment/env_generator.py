@@ -138,7 +138,8 @@ class OpenSSLGenerator(EnvValueGenerator):
 
 class SecretGenerator(EnvValueGenerator):
   FIELD_LENGTH = "length"
-  FIELD_EXCLUDED = "excluded"
+  FIELD_WHITELIST = "whitelist"
+  FIELD_BLACKLIST = "blacklist"
 
   def __init__(self) -> None:
     super().__init__()
@@ -146,17 +147,28 @@ class SecretGenerator(EnvValueGenerator):
 
   def _resolve(self, field):
     length = field.get(self.FIELD_LENGTH, 0)
+    return "".join(secrets.choice(self._get_alphabet(field)) for i in range(length))
+
+  def _get_alphabet(self, field):
+    whitelist = field.get(self.FIELD_WHITELIST)
+    if whitelist is not None:
+      return whitelist
     alphabet = {*self._base_alphabet}
-    alphabet = "".join(alphabet.difference(*field.get(self.FIELD_EXCLUDED, "")))
-    return "".join(secrets.choice(alphabet) for i in range(length))
+    alphabet = "".join(alphabet.difference(*field.get(self.FIELD_BLACKLIST, "")))
+    return alphabet
 
   def _validate(self, field):
-    length = field.get("length")
+    length = field.get(self.FIELD_LENGTH)
     if length is not None and not (isinstance(length, int) and length > 0):
       raise InvalidAutoGenerationData(self, "length should be an integer >= 0")
-    excluded = field.get("excluded")
-    if excluded is not None and not (isinstance(excluded, str) and length > 0):
-      raise InvalidAutoGenerationData(self, "excluded characters list must be a string with one or more characters")
+    whitelist = field.get(self.FIELD_WHITELIST)
+    if whitelist is not None and not (isinstance(whitelist, str) and length > 0):
+      raise InvalidAutoGenerationData(self, "characters whitelist must be a string with one or more characters")
+    blacklist = field.get(self.FIELD_BLACKLIST)
+    if blacklist is not None and not (isinstance(blacklist, str) and length > 0):
+      raise InvalidAutoGenerationData(self, "characters blacklist must be a string with one or more characters")
+    if blacklist is not None and whitelist is not None:
+      raise InvalidAutoGenerationData(self, "characters blacklist and whitelist cannot be set at the same time")
     return self
 
   @property

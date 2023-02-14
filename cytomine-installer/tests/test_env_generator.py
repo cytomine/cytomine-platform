@@ -85,6 +85,11 @@ class TestSercretGenerator(TestCase):
     self.assertEqual(generator.resolve({
       "type": "secret",
       "length": 10,
-      "excluded": generator.base_alphabet[1:]
+      "blacklist": generator.base_alphabet[1:]
     }), generator.base_alphabet[0] * 10)
+    self.assertEqual(generator.resolve({
+      "type": "secret",
+      "length": 10,
+      "whitelist": "a"
+    }), "a" * 10)
     print(generator.base_alphabet)

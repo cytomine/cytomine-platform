@@ -110,7 +110,10 @@ Generates a random string of a given length from the default alphabet (see below
 
 Parameters:
 - (optional) `length`, int, default `0`: the number of characters in the final string
-- (optional) `excluded`, str, default `''`: characters of the default alphabet to exclude for generation 
+- (optional) `whitelist`, str, default `''`: characters to include for generation
+- (optional) `blacklist`, str, default `''`: characters of the default alphabet to exclude for generation 
+
+The `whitelist` and `blacklist` parameters are mutually exclusive. 
 
 Default alphabet: `abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!"#$%&'()*+,-./:;<=>?@[\]^``_{|}~`
 
