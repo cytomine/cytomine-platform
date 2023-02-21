@@ -13,6 +13,8 @@ unittest:
 
 format-black:
   stage: format
+  tags:
+    - docker
   image:
     name: cytopia/black
     entrypoint: ["/bin/ash", "-c"]
