@@ -1,6 +1,7 @@
 stages:
   - format
   - test
+  - publish
 
 unittest:
   stage: test
@@ -11,12 +12,25 @@ unittest:
     - python -m pip install -r requirements.txt
     - python -m unittest discover tests/
 
-format-black:
-  stage: format
+# format-black:
+#   stage: format
+#   tags:
+#     - docker
+#   image:
+#     name: cytopia/black
+#     entrypoint: ["/bin/ash", "-c"]
+#   script:
+#     - python3 -m black --check --diff bootstrapper
+
+docker-image:
+  stage: publish
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_TAG != null'
   tags:
     - docker
-  image:
-    name: cytopia/black
-    entrypoint: ["/bin/ash", "-c"]
-  script:
-    - python3 -m black --check --diff bootstrapper
+  image: docker:latest
+  script: 
+    - docker build -f docker/Dockerfile -t $CI_REGISTRY_IMAGE:$CI_COMMIT_TAG .
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_TAG
+
