@@ -1,10 +1,11 @@
 stages:
   - tests
 
-tests:
+test:
   stage: tests
-  variables:
-    IMAGE_NAME: boostrapper-test
+  tags: 
+    - docker
+  image: python:3.10-bullseye
   script:
-    - docker build -f docker/Dockerfile -t $IMAGE_NAME .
-    - docker run -v $(pwd):/code -w /code --entrypoint /bin/bash --rm -it $IMAGE_NAME -c python3 -m unittest discover tests/
+    - python -m pip install -r requirements.txt
+    - python -m unittest discover tests/
