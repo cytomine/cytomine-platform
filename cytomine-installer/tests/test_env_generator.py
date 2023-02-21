@@ -92,4 +92,3 @@ class TestSercretGenerator(TestCase):
       "length": 10,
       "whitelist": "a"
     }), "a" * 10)
-    print(generator.base_alphabet)

@@ -1,3 +1,5 @@
+import contextlib
+import io
 import os
 from distutils.dir_util import copy_tree
 from pathlib import Path
@@ -24,12 +26,15 @@ class TestDeploy(FileSystemTestCase):
       os.makedirs(os.path.join(tmpdir, "folder"))
       Path(os.path.join(tmpdir, "folder", "file2.txt")).touch()
 
-      with self.assertRaises(InvalidTargetDirectoryError):
+      stream = io.StringIO()
+      with self.assertRaises(InvalidTargetDirectoryError), contextlib.redirect_stderr(stream):
         parser.call([
           "deploy", 
           "-s", deploy_file_path,
           "-t", tmpdir
         ])
+
+      self.assertIn("error:", stream.getvalue())
     
   def testDeployInNonEmptyDirectoryWithOverwrite(self):
     tests_path = os.path.dirname(__file__)
@@ -110,13 +115,16 @@ class TestDeploy(FileSystemTestCase):
   def testMultiServerMissingFolder(self):
     tests_path = os.path.dirname(__file__)
     deploy_file_path = os.path.join(tests_path, "files", "fake_multi_server_missing_folder")
-    with TemporaryDirectory() as tmpdir:
-      with self.assertRaises(InvalidServerConfigurationError):
-        parser.call([
-          "deploy", 
-          "-s", deploy_file_path,
-          "-t", tmpdir,
-          "-z", 
-        ], raise_boostrapper_errors=True)
+    
+    stream = io.StringIO()
+    with TemporaryDirectory() as tmpdir, self.assertRaises(InvalidServerConfigurationError), contextlib.redirect_stderr(stream):
+      parser.call([
+        "deploy", 
+        "-s", deploy_file_path,
+        "-t", tmpdir,
+        "-z", 
+      ], raise_boostrapper_errors=True)
+
+    self.assertIn("error:", stream.getvalue())
 
       
