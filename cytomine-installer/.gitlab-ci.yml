@@ -12,15 +12,15 @@ unittest:
     - python -m pip install -r requirements.txt
     - python -m unittest discover tests/
 
-# format-black:
-#   stage: format
-#   tags:
-#     - docker
-#   image:
-#     name: cytopia/black
-#     entrypoint: ["/bin/ash", "-c"]
-#   script:
-#     - python3 -m black --check --diff bootstrapper
+format-black:
+  stage: format
+  tags:
+    - docker
+  image:
+    name: cytopia/black
+    entrypoint: ["/bin/ash", "-c"]
+  script:
+    - python3 -m black --check --diff bootstrapper
 
 docker-image:
   stage: publish
