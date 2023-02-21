@@ -1,11 +1,20 @@
 stages:
-  - tests
+  - format
+  - test
 
-test:
-  stage: tests
+unittest:
+  stage: test
   tags: 
     - docker
   image: python:3.10-bullseye
   script:
     - python -m pip install -r requirements.txt
     - python -m unittest discover tests/
+
+format-black:
+  stage: format
+  image:
+    name: cytopia/black
+    entrypoint: ["/bin/ash", "-c"]
+  script:
+    - python3 -m black --check --diff bootstrapper
