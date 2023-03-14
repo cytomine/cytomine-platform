@@ -7,6 +7,9 @@ stages:
 default:
   tags:
     - docker
+  before_script:
+    - sed -i -- "s/\"0.0.0\"/\"$CI_COMMIT_TAG\"/g" package.json
+    - sed -i -- "s/\"cytomine-client\"/\"@${CI_PROJECT_ROOT_NAMESPACE}\/cytomine-client\"/g" package.json
   cache:
     key: ${CI_COMMIT_REF_SLUG}
     paths:
@@ -33,12 +36,11 @@ build-js-package:
   rules:
     - if: $PUBLISH_PACKAGE == "true"
   script:
-    - sed -i -- "s/\"0.0.0\"/\"$CI_COMMIT_TAG\"/g" package.json
     - npm ci --cache .npm --prefer-offline
     - npm run build
   artifacts:
     paths:
-      - dist
+      - dist/cytomine*
 
 # TODO upload to npm public packaget registry 
 publish-js-package:
