@@ -1,4 +1,4 @@
-FROM python:3.12-rc-bullseye
+FROM python:3.12-rc-slim-bullseye
 
 RUN apt-get upgrade \
     && apt-get install openssl \
