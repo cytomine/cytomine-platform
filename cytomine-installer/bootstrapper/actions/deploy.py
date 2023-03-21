@@ -87,18 +87,24 @@ class DeployAction(AbstractAction):
             namespace.target_directory = namespace.source_directory
         else:
             namespace.target_directory = os.path.normpath(namespace.target_directory)
-        
-        if namespace.source_directory != namespace.target_directory \
-            and os.path.exists(namespace.target_directory) \
-            and len(os.listdir(namespace.target_directory)) > 0 \
-            and not namespace.overwrite:
+
+        if (
+            namespace.source_directory != namespace.target_directory
+            and os.path.exists(namespace.target_directory)
+            and len(os.listdir(namespace.target_directory)) > 0
+            and not namespace.overwrite
+        ):
             raise InvalidTargetDirectoryError(namespace.target_directory)
 
         if namespace.source_directory == namespace.target_directory:
-            self.get_logger().info(f"deploy files in-place in '{namespace.source_directory}'")
+            self.get_logger().info(
+                f"deploy files in-place in '{namespace.source_directory}'"
+            )
         else:
             os.makedirs(namespace.target_directory, exist_ok=True)
-            self.get_logger().info(f"deploy files from '{namespace.source_directory}' to '{namespace.target_directory}'")
+            self.get_logger().info(
+                f"deploy files from '{namespace.source_directory}' to '{namespace.target_directory}'"
+            )
 
         deployment_folder = DeploymentFolder(
             directory=namespace.source_directory,
@@ -108,7 +114,7 @@ class DeployAction(AbstractAction):
         )
 
         with TemporaryDirectory() as tmpdir:
-        # zip current files     
+            # zip current files
             if namespace.do_zip:
                 if namespace.zip_filename is None:
                     zip_filename = datetime.utcnow().strftime("%Y%m%d%H%M%S")
@@ -126,30 +132,47 @@ class DeployAction(AbstractAction):
                         )
 
             self.get_logger().info("generate deployment files...")
-            self.deploy_and_move(deployment_folder=deployment_folder, gen_dir=tmpdir, target_dir=namespace.target_directory)
+            self.deploy_and_move(
+                deployment_folder=deployment_folder,
+                gen_dir=tmpdir,
+                target_dir=namespace.target_directory,
+            )
 
         self.get_logger().info("done...")
 
-    def deploy_and_move(self, deployment_folder: DeploymentFolder, gen_dir: str, target_dir: str):
+    def deploy_and_move(
+        self, deployment_folder: DeploymentFolder, gen_dir: str, target_dir: str
+    ):
         # generate relative paths
         deployment_folder.deploy_files(gen_dir)
-        for file_relpath in (deployment_folder.generated_files + deployment_folder.source_files):
+        for file_relpath in (
+            deployment_folder.generated_files + deployment_folder.source_files
+        ):
             self.move_file_or_folder(
-                source_dir=gen_dir, 
+                source_dir=gen_dir,
                 target_dir=target_dir,
                 relpath=file_relpath,
                 delete_target_before=True,
-                skip_missing_source=False
+                skip_missing_source=False,
             )
-    
-    def move_file_or_folder(self, source_dir, target_dir, relpath, delete_target_before=False, skip_missing_source=True):
+
+    def move_file_or_folder(
+        self,
+        source_dir,
+        target_dir,
+        relpath,
+        delete_target_before=False,
+        skip_missing_source=True,
+    ):
         source_path = os.path.normpath(os.path.join(source_dir, relpath))
         target_path = os.path.normpath(os.path.join(target_dir, relpath))
         if not os.path.exists(source_path):
             if skip_missing_source:
                 return
-            raise FileNotFoundError(f"cannot find source file or folder '{source_path}'")
-        if os.path.exists(target_path): 
+            raise FileNotFoundError(
+                f"cannot find source file or folder '{source_path}'"
+            )
+        if os.path.exists(target_path):
             self.get_logger().debug(f"> '{relpath}' (replace)")
         else:
             self.get_logger().debug(f"> '{relpath}' (create)")
