@@ -1,8 +1,11 @@
+from distutils.dir_util import copy_tree
 import os
+import pathlib
 import shutil
+from tempfile import TemporaryDirectory
 import zipfile
 from datetime import datetime
-from argparse import ArgumentParser
+from argparse import ArgumentParser, Namespace
 
 from bootstrapper.util import delete_dir_content
 
@@ -25,8 +28,7 @@ class DeployAction(AbstractAction):
             "-t",
             "--target_directory",
             dest="target_directory",
-            default=os.getcwd(),
-            help="path to the target directory (should not exist or be empty)",
+            help="path to the target directory (by default, the target is the source directory)",
         )
         sub_parser.add_argument(
             "-z",
@@ -66,18 +68,12 @@ class DeployAction(AbstractAction):
             help="name of the environment config file",
         )
         sub_parser.add_argument(
-            "-i",
-            "--ignored",
-            dest="ignored_dirs",
-            help="folders to ignores in working directory",
-        )
-        sub_parser.add_argument(
             "--overwrite",
             dest="overwrite",
             action="store_true",
-            help="to clear content of the target_directory before generating the deployment files",
+            help="to clear content of the target_directory before generating the deployment files (only used if a target directory different from the source directory is specified)",
         )
-        sub_parser.set_defaults(do_zip=False, overwirte=False)
+        sub_parser.set_defaults(do_zip=False, overwrite=False)
 
     def run(self, namespace):
         """Executes the actions.
@@ -86,52 +82,81 @@ class DeployAction(AbstractAction):
         namespace: Namespace
           Command line arguments of the action (including local/global scope information)
         """
-        if namespace.ignored_dirs is None:
-            ignored_dirs = set()
-
         namespace.source_directory = os.path.normpath(namespace.source_directory)
-        namespace.target_directory = os.path.normpath(namespace.target_directory)
+        if namespace.target_directory is None:  # in-place
+            namespace.target_directory = namespace.source_directory
+        else:
+            namespace.target_directory = os.path.normpath(namespace.target_directory)
+        
+        if namespace.source_directory != namespace.target_directory \
+            and os.path.exists(namespace.target_directory) \
+            and len(os.listdir(namespace.target_directory)) > 0 \
+            and not namespace.overwrite:
+            raise InvalidTargetDirectoryError(namespace.target_directory)
 
-        if len(os.listdir(namespace.target_directory)) > 0:
-            if not namespace.overwrite:
-                raise InvalidTargetDirectoryError(namespace.target_directory)
-            delete_dir_content(namespace.target_directory)
-
-        # generate in a temporary folder
-        if not os.path.exists(namespace.target_directory):
-            self.get_logger().info("> target directory does not exist: create it...")
-            os.makedirs(namespace.target_directory)
-
-        self.get_logger().info(f"deployment from '{namespace.source_directory}'")
+        if namespace.source_directory == namespace.target_directory:
+            self.get_logger().info(f"deploy files in-place in '{namespace.source_directory}'")
+        else:
+            os.makedirs(namespace.target_directory, exist_ok=True)
+            self.get_logger().info(f"deploy files from '{namespace.source_directory}' to '{namespace.target_directory}'")
 
         deployment_folder = DeploymentFolder(
             directory=namespace.source_directory,
-            ignored_dirs=ignored_dirs,
             configs_folder=namespace.configs_folder,
             envs_folder=namespace.envs_folder,
             configs_mount_point=namespace.configs_mount_point,
         )
 
-        # zip current files
-        if namespace.do_zip:
-            if namespace.zip_filename is None:
-                zip_filename = datetime.utcnow().strftime("%Y%m%d%H%M%S")
-                zip_filename = f"backup_{zip_filename}.zip"
-            else:
-                zip_filename = namespace.zip_filename
-            zip_filepath = os.path.join(namespace.target_directory, zip_filename)
-            self.get_logger().info(f"> zipping target files into '{zip_filepath}'...")
-            with zipfile.ZipFile(
-                zip_filepath, "w", zipfile.ZIP_DEFLATED
-            ) as zip_archive:
-                for file in deployment_folder.source_files:
-                    zip_archive.write(
-                        os.path.join(namespace.source_directory, file), file
-                    )
+        with TemporaryDirectory() as tmpdir:
+        # zip current files     
+            if namespace.do_zip:
+                if namespace.zip_filename is None:
+                    zip_filename = datetime.utcnow().strftime("%Y%m%d%H%M%S")
+                    zip_filename = f"backup_{zip_filename}.zip"
+                else:
+                    zip_filename = namespace.zip_filename
+                zip_filepath = os.path.join(namespace.target_directory, zip_filename)
+                self.get_logger().info(f"zipping source files into '{zip_filepath}'...")
+                with zipfile.ZipFile(
+                    zip_filepath, "w", zipfile.ZIP_DEFLATED
+                ) as zip_archive:
+                    for file in deployment_folder.source_files:
+                        zip_archive.write(
+                            os.path.join(namespace.source_directory, file), file
+                        )
 
-        self.get_logger().info("> generate deployment files...")
-        self.get_logger().debug(f"  copied : {deployment_folder.source_files}")
-        self.get_logger().debug(f"  created: {deployment_folder.generated_files}")
-        deployment_folder.deploy_files(namespace.target_directory)
+            self.get_logger().info("generate deployment files...")
+            self.deploy_and_move(deployment_folder=deployment_folder, gen_dir=tmpdir, target_dir=namespace.target_directory)
 
-        self.get_logger().info("> done...")
+        self.get_logger().info("done...")
+
+    def deploy_and_move(self, deployment_folder: DeploymentFolder, gen_dir: str, target_dir: str):
+        # generate relative paths
+        deployment_folder.deploy_files(gen_dir)
+        for file_relpath in (deployment_folder.generated_files + deployment_folder.source_files):
+            self.move_file_or_folder(
+                source_dir=gen_dir, 
+                target_dir=target_dir,
+                relpath=file_relpath,
+                delete_target_before=True,
+                skip_missing_source=False
+            )
+    
+    def move_file_or_folder(self, source_dir, target_dir, relpath, delete_target_before=False, skip_missing_source=True):
+        source_path = os.path.normpath(os.path.join(source_dir, relpath))
+        target_path = os.path.normpath(os.path.join(target_dir, relpath))
+        if not os.path.exists(source_path):
+            if skip_missing_source:
+                return
+            raise FileNotFoundError(f"cannot find source file or folder '{source_path}'")
+        if os.path.exists(target_path): 
+            self.get_logger().debug(f"> '{relpath}' (replace)")
+        else:
+            self.get_logger().debug(f"> '{relpath}' (create)")
+        if delete_target_before:
+            pathlib.Path(target_path).unlink(missing_ok=True)
+        os.makedirs(os.path.dirname(target_path), exist_ok=True)
+        if os.path.isdir(source_path):
+            copy_tree(source_path, target_path)
+        else:
+            shutil.copyfile(source_path, target_path)
