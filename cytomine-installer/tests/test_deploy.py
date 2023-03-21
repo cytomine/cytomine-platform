@@ -10,12 +10,9 @@ from bootstrapper import parser
 from bootstrapper.actions.errors import InvalidTargetDirectoryError
 from bootstrapper.deployment.deployment_folders import InvalidServerConfigurationError
 from bootstrapper.util import list_relative_files
-from tests.test_deployment_folders import FileSystemTestCase
+from tests.util import TestDeploymentGeneric
 
-
-
-
-class TestDeploy(FileSystemTestCase): 
+class TestDeploy(TestDeploymentGeneric):
 
   def testDeployInNonEmptyDirectory(self):
     tests_path = os.path.dirname(__file__)
@@ -78,7 +75,7 @@ class TestDeploy(FileSystemTestCase):
         "deploy", 
         "-s", deploy_file_path,
         "-t", tmpdir,
-        "-z", 
+        "-z"
       ])
 
       self.assertSameDirectories(tmpdir, output_ref_path)
@@ -104,13 +101,7 @@ class TestDeploy(FileSystemTestCase):
       ])
 
       self.assertSameDirectories(tmpdir, output_ref_path)
-
-      zip_files = [f for f in os.listdir(tmpdir) if f.endswith(".zip")]
-      self.assertTrue(len(zip_files), 1)
-      zip_file = zip_files[0]
-      
-      with zipfile.ZipFile(os.path.join(tmpdir, zip_file), "r", zipfile.ZIP_DEFLATED) as zip_archive:
-        self.assertListEqual(sorted(zip_archive.namelist()), sorted(list_relative_files(deploy_file_path)))
+      self.check_zip(deploy_file_path, tmpdir)
 
   def testMultiServerMissingFolder(self):
     tests_path = os.path.dirname(__file__)
@@ -127,4 +118,60 @@ class TestDeploy(FileSystemTestCase):
 
     self.assertIn("error:", stream.getvalue())
 
-      
+  def testDeploySingleServerInPlace(self):
+    tests_path = os.path.dirname(__file__)
+    deploy_ref = os.path.join(tests_path, "files", "fake_single_server")
+    deploy_ref_in = os.path.join(deploy_ref, "in")
+    deploy_ref_out = os.path.join(deploy_ref, "out")
+    
+    stream = io.StringIO()
+    with TemporaryDirectory() as tmpdir, contextlib.redirect_stderr(stream):
+      copy_tree(src=deploy_ref_in, dst=tmpdir)
+      parser.call([
+        "deploy", 
+        "-s", tmpdir
+      ], raise_boostrapper_errors=True)
+
+      self.check_single_server_deployment(deploy_ref_out, tmpdir)
+
+  def testDeploySingleServerInPlaceWithZip(self):
+    tests_path = os.path.dirname(__file__)
+    deploy_ref = os.path.join(tests_path, "files", "fake_single_server")
+    deploy_ref_in = os.path.join(deploy_ref, "in")
+    deploy_ref_out = os.path.join(deploy_ref, "out")
+    
+    stream = io.StringIO()
+    with TemporaryDirectory() as tmpdir, contextlib.redirect_stderr(stream):
+      copy_tree(src=deploy_ref_in, dst=tmpdir)
+      parser.call([
+        "deploy", 
+        "-s", tmpdir,
+        "-z"
+      ], raise_boostrapper_errors=True)
+
+      self.check_single_server_deployment(deploy_ref_out, tmpdir)
+      self.check_zip(deploy_ref_in, tmpdir)
+
+      # check zip is still there after second call
+      parser.call([
+        "deploy", 
+        "-s", tmpdir
+      ], raise_boostrapper_errors=True)
+      self.check_zip(deploy_ref_in, tmpdir)
+
+  def testDeploySingleServerInPlaceWithUnrelatedFiles(self):
+    tests_path = os.path.dirname(__file__)
+    deploy_ref = os.path.join(tests_path, "files", "fake_single_server_with_unrelated_files")
+    deploy_ref_in = os.path.join(deploy_ref, "in")
+    deploy_ref_out = os.path.join(deploy_ref, "out")
+    
+    stream = io.StringIO()
+    with TemporaryDirectory() as tmpdir, contextlib.redirect_stderr(stream):
+      copy_tree(src=deploy_ref_in, dst=tmpdir)
+      parser.call([
+        "deploy", 
+        "-s", tmpdir,
+      ], raise_boostrapper_errors=True)
+
+      self.assertIsFile(os.path.join(tmpdir, "myfile.txt"))
+      self.check_single_server_deployment(deploy_ref_out, tmpdir)

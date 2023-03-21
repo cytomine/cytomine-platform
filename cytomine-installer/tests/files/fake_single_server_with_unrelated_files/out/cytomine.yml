@@ -1,0 +1,16 @@
+global:
+  ns1:
+    constant:
+      GLOBAL_VAR1: value1
+
+services:
+  default:
+    core:
+      constant:
+        CORE_VAR1: value2
+    
+    ims:
+      constant:
+        IMS_VAR1: "moved"
+      global:
+        IMS_VAR2: ns1.GLOBAL_VAR1
