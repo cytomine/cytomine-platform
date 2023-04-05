@@ -30,25 +30,26 @@ OPENSLIDE_URL=https://github.com/openslide/openslide/releases/download
 dependencies_before_vips() {
   echo "Prerequisites to install before vips for ${PLUGIN_NAME}";
 
-  apt-get -y install --no-install-recommends --no-install-suggests \
-    libcairo2-dev \
-    libgdk-pixbuf2.0-dev \
-    libxml2-dev \
-    libsqlite3-dev \
-    libtool
+  # apt-get -y install --no-install-recommends --no-install-suggests \
+  #   libcairo2-dev \
+  #   libgdk-pixbuf2.0-dev \
+  #   libxml2-dev \
+  #   libsqlite3-dev \
+  #   libtool
 
-  cd /tmp
-  wget http://archive.ubuntu.com/ubuntu/ubuntu/pool/main/p/pixman/libpixman-1-0_0.40.0-1build4_amd64.deb
-  dpkg -i libpixman-1-0_0.40.0-1build4_amd64.deb
+  # cd /tmp
+  # wget http://archive.ubuntu.com/ubuntu/ubuntu/pool/main/p/pixman/libpixman-1-0_0.40.0-1build4_amd64.deb
+  # dpkg -i libpixman-1-0_0.40.0-1build4_amd64.deb
 
-  cd /usr/local/src
-  wget ${OPENSLIDE_URL}/v${OPENSLIDE_VERSION}/openslide-${OPENSLIDE_VERSION}.tar.gz
-  tar -zxvf openslide-${OPENSLIDE_VERSION}.tar.gz
-  rm -rf openslide-${OPENSLIDE_VERSION}.tar.gz
-  cd openslide-${OPENSLIDE_VERSION}
-  ./configure
-  make
-  make install
+  # cd /usr/local/src
+  # wget ${OPENSLIDE_URL}/v${OPENSLIDE_VERSION}/openslide-${OPENSLIDE_VERSION}.tar.gz
+  # tar -zxvf openslide-${OPENSLIDE_VERSION}.tar.gz
+  # rm -rf openslide-${OPENSLIDE_VERSION}.tar.gz
+  # cd openslide-${OPENSLIDE_VERSION}
+  # ./configure
+  # make
+  # make install
+  apt-get -y install --no-install-recommends --no-instal-suggests libopenslide-dev=3.4.1
 }
 
 dependencies_before_python() {
