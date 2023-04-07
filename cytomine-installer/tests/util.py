@@ -6,7 +6,7 @@ import zipfile
 
 import yaml
 
-from bootstrapper.util import list_relative_files
+from cytomine_installer.util import list_relative_files
 
 
 UUID_PATTERN = r"[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}"

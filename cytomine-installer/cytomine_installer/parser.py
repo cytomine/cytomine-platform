@@ -3,7 +3,7 @@ from argparse import ArgumentParser
 
 from .actions.base import AbstractAction
 from .actions.deploy import DeployAction
-from .errors import BootstrapperError
+from .errors import InstallerError
 
 
 def _recursive_parser_register(subparsers, actions: dict):
@@ -33,7 +33,7 @@ def make_parser():
     """Build and return the parser"""
     main_parser = ArgumentParser(
         prog="cytoboot",
-        description="Cytomine bootstrapper, a tool for generating docker-compose-based deployment configuration of cytomine.",
+        description="Cytomine installer, a tool for generating docker-compose-based deployment configuration of cytomine.",
     )
 
     root_subparsers = main_parser.add_subparsers()
@@ -56,7 +56,7 @@ def call(argv, raise_boostrapper_errors=True):
     else:
         try:
             args.func(args)
-        except BootstrapperError as e:
+        except InstallerError as e:
             print(f"error: {e}", file=sys.stderr, flush=True)
             if raise_boostrapper_errors:
                 raise e

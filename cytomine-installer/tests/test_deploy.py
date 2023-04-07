@@ -6,10 +6,10 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 import zipfile
 
-from bootstrapper import parser
-from bootstrapper.actions.errors import InvalidTargetDirectoryError
-from bootstrapper.deployment.deployment_folders import InvalidServerConfigurationError
-from bootstrapper.util import list_relative_files
+from cytomine_installer import parser
+from cytomine_installer.actions.errors import InvalidTargetDirectoryError
+from cytomine_installer.deployment.deployment_folders import InvalidServerConfigurationError
+from cytomine_installer.util import list_relative_files
 from tests.util import TestDeploymentGeneric
 
 

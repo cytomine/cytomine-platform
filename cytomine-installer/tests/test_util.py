@@ -3,7 +3,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest import TestCase
 
-from bootstrapper.util import delete_dir_content, list_relative_files, write_dotenv
+from cytomine_installer.util import delete_dir_content, list_relative_files, write_dotenv
 
 
 class TestUtil(TestCase):

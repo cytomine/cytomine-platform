@@ -1,10 +1,10 @@
 from unittest import TestCase
-from bootstrapper.deployment.env_generator import (
+from cytomine_installer.deployment.env_generator import (
     RandomUUIDGenerator,
     OpenSSLGenerator,
     SecretGenerator,
 )
-from bootstrapper.deployment.env_generator import (
+from cytomine_installer.deployment.env_generator import (
     UnrecognizedGenerationField,
     InvalidAutoGenerationData,
 )

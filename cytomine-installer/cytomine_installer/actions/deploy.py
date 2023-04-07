@@ -7,7 +7,7 @@ import zipfile
 from datetime import datetime
 from argparse import ArgumentParser, Namespace
 
-from bootstrapper.util import delete_dir_content
+from cytomine_installer.util import delete_dir_content
 
 from .errors import InvalidTargetDirectoryError
 from .base import AbstractAction

@@ -3,8 +3,8 @@ import yaml
 from tempfile import TemporaryDirectory
 from unittest import TestCase
 
-from bootstrapper.deployment.env_store import UnknownValueTypeError
-from bootstrapper.deployment.deployment_files import (
+from cytomine_installer.deployment.env_store import UnknownValueTypeError
+from cytomine_installer.deployment.deployment_files import (
     DockerComposeFile,
     CytomineEnvsFile,
     EditableDockerCompose,

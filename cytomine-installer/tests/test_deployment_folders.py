@@ -1,17 +1,17 @@
 import os
 import shutil
 from tempfile import TemporaryDirectory
-from bootstrapper.deployment.deployment_files import CytomineEnvsFile
-from bootstrapper.deployment.deployment_folders import (
+from cytomine_installer.deployment.deployment_files import CytomineEnvsFile
+from cytomine_installer.deployment.deployment_folders import (
     DeploymentFolder,
     InvalidServerConfigurationError,
     ServerFolder,
 )
-from bootstrapper.deployment.errors import (
+from cytomine_installer.deployment.errors import (
     MissingCytomineYamlFileError,
     NoDockerComposeYamlFileError,
 )
-from bootstrapper.util import list_relative_files
+from cytomine_installer.util import list_relative_files
 from tests.util import FileSystemTestCase, TestDeploymentGeneric
 
 

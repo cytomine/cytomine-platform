@@ -1,18 +1,18 @@
 from .enums import CytomineEnvSectionEnum
-from ..errors import BootstrapperError
+from ..errors import InstallerError
 
 
-class KeyAlreadyExistsError(BootstrapperError):
+class KeyAlreadyExistsError(InstallerError):
     def __init__(self, ns, key, *args: object) -> None:
         super().__init__(f"key '{key}' already exists in namespace '{ns}'", *args)
 
 
-class UnknownValueTypeError(BootstrapperError):
+class UnknownValueTypeError(InstallerError):
     def __init__(self, value_type, *args: object) -> None:
         super().__init__(f"unknown value type: {value_type}", *args)
 
 
-class InvalidServerConfigurationError(BootstrapperError):
+class InvalidServerConfigurationError(InstallerError):
     pass
 
 
@@ -35,7 +35,7 @@ class MissingCytomineYamlFileError(InvalidServerConfigurationError):
         )
 
 
-class UnknownCytomineEnvSection(BootstrapperError):
+class UnknownCytomineEnvSection(InstallerError):
     def __init__(self, section, *args: object) -> None:
         available_values = ", ".join(
             list(map(lambda v: v.value, CytomineEnvSectionEnum))
@@ -45,6 +45,6 @@ class UnknownCytomineEnvSection(BootstrapperError):
         )
 
 
-class UnknownServiceError(BootstrapperError):
+class UnknownServiceError(InstallerError):
     def __init__(self, service, *args: object) -> None:
         super().__init__(f"unknown service '{service}'", *args)

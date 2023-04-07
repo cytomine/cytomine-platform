@@ -20,7 +20,7 @@ format-black:
     name: cytopia/black
     entrypoint: ["/bin/ash", "-c"]
   script:
-    - python3 -m black --check --diff bootstrapper
+    - python3 -m black --check --diff cytomine_installer
 
 docker-image:
   stage: publish

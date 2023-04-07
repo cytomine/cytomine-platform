@@ -11,7 +11,7 @@ COPY setup.cfg /app/setup.cfg
 COPY setup.py /app/setup.py
 COPY README.md /app/README.md
 COPY requirements.txt /app/requirements.txt
-COPY bootstrapper /app/bootstrapper
+COPY cytomine_installer /app/cytomine_installer
 RUN pip install -e .
 
-ENTRYPOINT ["cytoboot"]
+ENTRYPOINT ["ctmn"]
