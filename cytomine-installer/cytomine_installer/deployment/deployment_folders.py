@@ -247,7 +247,9 @@ class DeploymentFolder(Deployable):
         self._single_server = DOCKER_COMPOSE_FILENAME in subfiles
 
         if not self._single_server:
-            raise InvalidServerConfigurationError(f"cannot find {DOCKER_COMPOSE_FILENAME} at the root of the install folder")
+            raise InvalidServerConfigurationError(
+                f"cannot find {DOCKER_COMPOSE_FILENAME} at the root of the install folder"
+            )
 
         nb_servers_in_envs = len(self._envs.servers)
         if self._single_server and nb_servers_in_envs > 1:
