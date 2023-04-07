@@ -14,15 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 ARG NGINX_VERSION
-ARG SCRIPTS_REPO_TAG
-ARG SCRIPTS_REPO_BRANCH
-ARG UPLOAD_MODULE_REPO
-ARG UPLOAD_MODULE_COMMIT
+
 
 ## Stage 1: building nginx and modules builder
 FROM nginx:${NGINX_VERSION}-alpine as modules-builder
-ARG UPLOAD_MODULE_REPO
-ARG UPLOAD_MODULE_COMMIT
+ARG UPLOAD_MODULE_REPO="https://github.com/fdintino/nginx-upload-module"
+ARG UPLOAD_MODULE_COMMIT="643b4c1fa6993da6bc1f82e7121ca62a7696ee6b"
+
 
 # For latest build deps, see https://github.com/nginxinc/docker-nginx/blob/master/mainline/alpine/Dockerfile
 RUN  apk add --no-cache --virtual .build-deps \
@@ -66,15 +64,14 @@ RUN CONFARGS=$(nginx -V 2>&1 | sed -n -e 's/^.*arguments: //p') \
 
 ## Stage 2: downloading provisioning scripts
 FROM alpine/git:2.36.3 as scripts-downloader
-ARG SCRIPTS_REPO_TAG
-ARG SCRIPTS_REPO_BRANCH
+ARG SCRIPTS_REPO_TAG="latest"
+ARG SCRIPTS_REPO_URL="https://github.com/cytomine/cytomine-docker-entrypoint-scripts.git"
 
 WORKDIR /root
 RUN mkdir scripts
-RUN --mount=type=secret,id=scripts_repo_url \
-    git clone $(cat /run/secrets/scripts_repo_url) /root/scripts \
+RUN git clone $SCRIPTS_REPO_URL /root/scripts \
     && cd /root/scripts \
-    && git checkout tags/${SCRIPTS_REPO_TAG} -b ${SCRIPTS_REPO_BRANCH}
+    && git checkout tags/${SCRIPTS_REPO_TAG}
 
 ## Stage 3: nginx
 ARG NGINX_VERSION
