@@ -246,6 +246,9 @@ class DeploymentFolder(Deployable):
         # we are in single-server mode if a docker-compose file is at the root
         self._single_server = DOCKER_COMPOSE_FILENAME in subfiles
 
+        if not self._single_server:
+            raise InvalidServerConfigurationError(f"cannot find {DOCKER_COMPOSE_FILENAME} at the root of the install folder")
+
         nb_servers_in_envs = len(self._envs.servers)
         if self._single_server and nb_servers_in_envs > 1:
             raise InvalidServerConfigurationError(

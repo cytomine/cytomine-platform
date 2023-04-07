@@ -4,6 +4,7 @@ import os
 from distutils.dir_util import copy_tree
 from pathlib import Path
 from tempfile import TemporaryDirectory
+import unittest
 import zipfile
 
 from cytomine_installer import parser
@@ -91,6 +92,7 @@ class TestDeploy(TestDeploymentGeneric):
                     sorted(list_relative_files(deploy_file_path)),
                 )
 
+    @unittest.skip("implement later")
     def testMultiServer(self):
         tests_path = os.path.dirname(__file__)
         deploy_file_path = os.path.join(tests_path, "files", "fake_multi_server", "in")
@@ -111,6 +113,7 @@ class TestDeploy(TestDeploymentGeneric):
             self.assertSameDirectories(tmpdir, output_ref_path)
             self.check_zip(deploy_file_path, tmpdir)
 
+    @unittest.skip("implement later")
     def testMultiServerMissingFolder(self):
         tests_path = os.path.dirname(__file__)
         deploy_file_path = os.path.join(

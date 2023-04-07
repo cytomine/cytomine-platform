@@ -1,6 +1,7 @@
 import os
 import shutil
 from tempfile import TemporaryDirectory
+import unittest
 from cytomine_installer.deployment.deployment_files import CytomineEnvsFile
 from cytomine_installer.deployment.deployment_folders import (
     DeploymentFolder,
@@ -102,6 +103,7 @@ class TestDeploymentFolder(TestDeploymentGeneric):
             deployment_folder.deploy_files(tmpdir)
             self.check_single_server_deployment(output_ref_path, tmpdir)
 
+    @unittest.skip("implement later")
     def testMultiServerConfiguration(self):
         tests_path = os.path.dirname(__file__)
         deploy_path = os.path.join(tests_path, "files", "fake_multi_server", "in")
