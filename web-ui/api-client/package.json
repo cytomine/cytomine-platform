@@ -1,9 +1,13 @@
 {
     "name": "cytomine-client",
-    "version": "0.0.1",
-    "description": "Client to communicate with Cytomine API in javascript. For more information about Cytomine, go to http://www.cytomine.be.",
+    "version": "0.0.0",
+    "description": "Client to communicate with Cytomine API in javascript. For more information about Cytomine, go to http://www.cytomine.org.",
     "browser": "dist/cytomine-client.min.js",
     "unpkg": "dist/cytomine-client.min.js",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/cytomine/Cytomine-js-client.git"
+    },
     "scripts": {
         "dev": "webpack --mode=development --watch --info-verbosity verbose",
         "build": "webpack --mode=production",
@@ -15,31 +19,36 @@
         "src"
     ],
     "author": "Burtin Elodie <elodie.burtin@cytomine.coop>",
-    "contributors": ["Hoyoux Renaud <renaud.hoyoux@cytomine.coop"],
+    "contributors": [
+        "Hoyoux Renaud <renaud.hoyoux@cytomine.coop>",
+        "Rubens Ulysse <urubens@uliege.be>"
+    ],
     "license": "Apache-2.0",
     "dependencies": {
-        "axios": "^0.18.0",
-        "detect-browser": "^3.0.0",
-        "idempotent-babel-polyfill": "^6.26.0-1"
+        "axios": "^0.21.1",
+        "detect-browser": "^4.4.0",
+        "idempotent-babel-polyfill": "^7.0.0"
     },
     "devDependencies": {
-        "babel-core": "^6.26.3",
-        "babel-loader": "^7.1.5",
-        "babel-preset-env": "^1.7.0",
-        "chai": "^4.1.2",
-        "chai-as-promised": "5.3.0",
-        "eslint": "^5.2.0",
-        "eslint-loader": "^2.1.0",
-        "karma": "^2.0.5",
+        "@babel/core": "^7.4.3",
+        "@babel/plugin-proposal-object-rest-spread": "^7.4.3",
+        "@babel/preset-env": "^7.4.3",
+        "babel-loader": "^8.0.5",
+        "chai": "^4.2.0",
+        "chai-as-promised": "^5.3.0",
+        "eslint": "^5.16.0",
+        "eslint-loader": "^2.1.2",
+        "karma": "^6.0.0",
         "karma-chai": "^0.1.0",
         "karma-chai-as-promised": "0.1.2",
         "karma-firefox-launcher": "^1.1.0",
-        "karma-mocha": "^1.3.0",
+        "karma-junit-reporter": "^2.0.1",
+        "karma-mocha": "^2.0.0",
         "karma-mocha-reporter": "^2.2.5",
-        "karma-webpack": "^3.0.0",
-        "mocha": "^5.2.0",
+        "karma-webpack": "^4.0.2",
+        "mocha": "^6.1.4",
         "randomstring": "^1.1.5",
-        "webpack": "^4.16.3",
-        "webpack-cli": "^3.1.0"
+        "webpack": "^4.46.0",
+        "webpack-cli": "^3.3.0"
     }
 }

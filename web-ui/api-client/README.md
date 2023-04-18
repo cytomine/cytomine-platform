@@ -3,11 +3,12 @@
 When using our software, we kindly ask you to cite our website URL and related publications in all your work (publications, studies, oral presentations,...). In particular, we recommend to cite (Marée et al., Bioinformatics 2016) paper, and to use our logo when appropriate. See our license files for additional details.
 
 - URL: http://www.cytomine.org/
-- Logo: [Available here](https://cytomine.coop/sites/cytomine.coop/files/inline-images/logo-300-org.png)
+- Logo: [Available here](https://doc.cytomine.org/img/logo_cyto_org.png)
 - Scientific paper: Raphaël Marée, Loïc Rollus, Benjamin Stévens, Renaud Hoyoux, Gilles Louppe, Rémy Vandaele, Jean-Michel Begon, Philipp Kainz, Pierre Geurts and Louis Wehenkel. Collaborative analysis of multi-gigapixel imaging data using Cytomine, Bioinformatics, DOI: 10.1093/bioinformatics/btw013, 2016. http://dx.doi.org/10.1093/bioinformatics/btw013
 
 ## Presentation
 Cytomine-js-client is an opensource javascript client allowing to communicate with the REST API of a Cytomine instance. For more information about Cytomine, go to https://www.cytomine.org.
+See installation instructions here : https://doc.cytomine.org/dev-guide/clients/javascript/installation
 
 ## How to use the client
 The javascript client can be used in one of the following ways:
@@ -31,7 +32,7 @@ let user = await User.fetchCurrent();
 console.log("Hello " + user.username);
 
 // Fetch the projects available to the current user and log their names in the console
-let projects = await ProjectCollection.fetch();
+let projects = await ProjectCollection.fetchAll();
 console.log("You have access to these projects:");
 for(let project of projects) {
     console.log(project.name);

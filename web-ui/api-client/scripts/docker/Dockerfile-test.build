@@ -1,0 +1,23 @@
+FROM node:10.24.1-slim
+# We first copy the package.json file and the binaries stored in the source repository.
+# use changes to package.json to force Docker not to use the cache
+# when we change our application's nodejs dependencies:
+RUN npm -v
+COPY package.json /app/package.json
+RUN cd /app && npm install -S --unsafe-perm=true --allow-root
+
+RUN apt-get -y update
+RUN apt-get -y upgrade
+RUN apt-get -y install firefox-esr
+
+# update version number in package
+ARG VERSION_NUMBER
+ENV VERSION_NUMBER_ENV=$VERSION_NUMBER
+RUN sed -i -- 's/"version": "0.0.0"/"version": "'$VERSION_NUMBER'"/g' /app/package.json
+RUN cat /app/package.json
+COPY . /app
+WORKDIR /app
+RUN pwd
+RUN npm -v
+
+CMD npm run test

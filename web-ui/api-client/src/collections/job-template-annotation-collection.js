@@ -1,29 +1,21 @@
-import Collection from "./collection.js";
-import JobTemplateAnnotation from "../models/job-template-annotation.js";
+import Collection from './collection.js';
+import JobTemplateAnnotation from '../models/job-template-annotation.js';
 
 export default class JobTemplateAnnotationCollection extends Collection {
 
-    constructor(props, nbPerPage, filterKey, filterValue) {
-        super(nbPerPage, filterKey, filterValue);
+  /** @inheritdoc */
+  _initProperties() {
+    this.jobtemplate = null;
+    this.annotation = null;
+  }
 
-        this.jobtemplate = null;
-        this.annotation = null;
+  /** @inheritdoc */
+  static get model() {
+    return JobTemplateAnnotation;
+  }
 
-        this.setProps(props);
-    }
-
-    static async fetch(props, nbPerPage) {
-        let collection = new this(props);
-        return collection.fetch(nbPerPage);
-    }
-
-    /** @inheritdoc */
-    static get model() {
-        return JobTemplateAnnotation;
-    }
-
-    /** @inheritdoc */
-    static get allowedFilters() {
-        return [null];
-    }
+  /** @inheritdoc */
+  static get allowedFilters() {
+    return [null];
+  }
 }
