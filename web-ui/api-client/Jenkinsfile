@@ -39,11 +39,40 @@ node {
       }
     }
     stage 'Publish if official release'
-    withCredentials(
-        [
-            string(credentialsId: 'NPM_TOKEN', variable: 'NPM_TOKEN')
-        ]
-        ) {
-            sh 'scripts/ciPublish.sh'
+
+
+    withFolderProperties{
+        // if PRIVATE is define in jenkins, the war and the docker image are send to the private cytomine repository.
+        // otherwise, public repo for war and public dockerhub repo for docker image
+        echo("Private: ${env.PRIVATE}")
+
+        if (env.PRIVATE && env.PRIVATE.equals("true")) {
+            stage 'Publish package (private)'
+            withCredentials(
+                [
+                    string(credentialsId: 'NPM_TOKEN', variable: 'NPM_TOKEN')
+                ]
+                ) {
+                    sh 'scripts/ciPublishPrivate.sh'
+                }
+        } else {
+            stage 'Publish package (public)'
+            withCredentials(
+                [
+                    string(credentialsId: 'NPM_TOKEN', variable: 'NPM_TOKEN')
+                ]
+                ) {
+                    sh 'scripts/ciPublishPublic.sh'
+                }
         }
+    }
+
+
+
+
+
+
+
+
+
 }

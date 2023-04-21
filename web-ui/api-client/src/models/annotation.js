@@ -160,6 +160,18 @@ export default class Annotation extends Model {
     return reviewedAnnotation;
   }
 
+  async repeat(slice, number) {
+    if(this.isNew()) {
+      throw new Error('Cannot repeat an annotation with no ID.');
+    }
+
+    let {data} = await Cytomine.instance.api.post(`userannotation/${this.id}/repeat.json`, {
+      slice,
+      repeat: number
+    });
+    return data;
+  }
+
   /**
    * Cancel the review of the current annotation (thus deleting associated reviewed annotations)
    */
@@ -185,7 +197,7 @@ export default class Annotation extends Model {
       throw new Error('Cannot simplify an annotation with no ID.');
     }
 
-    let {data} = await Cytomine.instance.api.get(`${this.callbackIdentifier}/${this.id}/simplify.json?
+    let {data} = await Cytomine.instance.api.put(`${this.callbackIdentifier}/${this.id}/simplify.json?
             minPoint=${minNbPoints}&maxPoint=${maxNbPoints}`);
 
     this.populate(data);
@@ -202,8 +214,8 @@ export default class Annotation extends Model {
       throw new Error('Cannot fill an annotation with no ID.');
     }
 
-    let {data} = await Cytomine.instance.api.post(`${this.callbackIdentifier}/${this.id}/fill`);
-    this.populate(data.data.annotation || data.data.reviewedannotation);
+    let {data} = await Cytomine.instance.api.post(`${this.callbackIdentifier}/${this.id}/fill.json`);
+    this.populate(data.annotation || data.reviewedannotation);
     Cytomine.instance.lastCommand = data.command;
     return this;
   }
@@ -227,18 +239,6 @@ export default class Annotation extends Model {
     let {data} = await Cytomine.instance.api.post('annotationcorrection.json', params);
     Cytomine.instance.lastCommand = data.command;
     return new this(data.annotation || data.reviewedannotation);
-  }
-
-  async repeat(slice, number) {
-    if(this.isNew()) {
-      throw new Error('Cannot repeat an annotation with no ID.');
-    }
-
-    let {data} = await Cytomine.instance.api.post(`userannotation/${this.id}/repeat.json`, {
-      slice,
-      repeat: number
-    });
-    return data;
   }
 
   /** @inheritdoc */

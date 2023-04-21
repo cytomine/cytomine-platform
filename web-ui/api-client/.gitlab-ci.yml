@@ -42,7 +42,7 @@ build-js-package:
     paths:
       - dist/cytomine*
 
-# TODO upload to npm public packaget registry 
+# TODO upload to npm public packaget registry
 publish-js-package:
   image: node:14.16.1
   stage: publish

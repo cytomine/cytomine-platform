@@ -105,20 +105,20 @@ describe('ProjectRepresentative', function() {
       it('Fetch (instance method)', async function() {
         let collection = await new ProjectRepresentativeCollection({filterKey: 'project', filterValue: project}).fetchAll();
         expect(collection).to.be.an.instanceof(ProjectRepresentativeCollection);
-        expect(collection).to.have.lengthOf(nbProjectRepresentatives);
+        expect(collection).to.have.lengthOf(nbProjectRepresentatives + 1); // creator is by default representative
       });
 
       it('Fetch (static method)', async function() {
         let collection = await ProjectRepresentativeCollection.fetchAll({filterKey: 'project', filterValue: project});
         expect(collection).to.be.an.instanceof(ProjectRepresentativeCollection);
-        expect(collection).to.have.lengthOf(nbProjectRepresentatives);
+        expect(collection).to.have.lengthOf(nbProjectRepresentatives + 1); // creator is by default representative
       });
 
       it('Fetch with several requests', async function() {
         let collection = await ProjectRepresentativeCollection.fetchAll({nbPerPage: 1,
           filterKey: 'project', filterValue: project});
         expect(collection).to.be.an.instanceof(ProjectRepresentativeCollection);
-        expect(collection).to.have.lengthOf(nbProjectRepresentatives);
+        expect(collection).to.have.lengthOf(nbProjectRepresentatives+1);
       });
 
       it('Fetch without filter', async function() {

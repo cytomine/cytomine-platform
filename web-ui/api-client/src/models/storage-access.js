@@ -1,15 +1,17 @@
 import Model from './model.js';
 
-export default class Discipline extends Model {
+export default class StorageAccess extends Model {
   /** @inheritdoc */
   static get callbackIdentifier() {
-    return 'discipline';
+    return 'storageaccess';
   }
 
   /** @inheritdoc */
   _initProperties() {
     super._initProperties();
 
-    this.name = null;
+    this.id = null;
+    this.permission = null;
   }
+
 }

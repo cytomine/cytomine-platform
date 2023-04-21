@@ -25,8 +25,6 @@ export default class Project extends Model {
     this.name = null;
     this.ontology = null;
     this.ontologyName = null;
-    this.discipline = null;
-    this.disciplineName = null;
 
     this.numberOfSlides = null;
     this.numberOfImages = null;

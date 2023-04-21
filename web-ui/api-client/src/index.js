@@ -1,9 +1,4 @@
-// https://stackoverflow.com/a/54490329
-import 'core-js/stable';
-import 'regenerator-runtime/runtime';
-
 export {default as Cytomine} from './cytomine.js';
-
 export {default as AbstractImage} from './models/abstract-image.js';
 export {default as AbstractSlice} from './models/abstract-slice.js';
 export {default as AlgoAnnotationTerm} from './models/algo-annotation-term.js';
@@ -15,8 +10,6 @@ export {default as AttachedFile} from './models/attached-file.js';
 export {default as CompanionFile} from './models/companion-file.js';
 export {default as Configuration} from './models/configuration.js';
 export {default as Description} from './models/description.js';
-export {default as Discipline} from './models/discipline.js';
-export {default as Group} from './models/group.js';
 export {default as ImageConsultation} from './models/image-consultation.js';
 export {default as ImageFilter} from './models/image-filter.js';
 export {default as ImageFilterProject} from './models/image-filter-project.js';
@@ -40,6 +33,8 @@ export {default as Software} from './models/software.js';
 export {default as SoftwareParameter} from './models/software-parameter.js';
 export {default as SoftwareProject} from './models/software-project.js';
 export {default as Storage} from './models/storage.js';
+export {default as StorageUser} from './models/storage-user.js';
+export {default as StorageAccess} from './models/storage-access.js';
 export {default as Task} from './models/task.js';
 export {default as Tag} from './models/tag.js';
 export {default as TagDomainAssociation} from './models/tag-domain-association.js';
@@ -63,8 +58,6 @@ export {default as AnnotationTrackCollection} from './collections/annotation-tra
 export {default as AttachedFileCollection} from './collections/attached-file-collection.js';
 export {default as CompanionFileCollection} from './collections/companion-file-collection.js';
 export {default as ConfigurationCollection} from './collections/configuration-collection.js';
-export {default as DisciplineCollection} from './collections/discipline-collection.js';
-export {default as GroupCollection} from './collections/group-collection.js';
 export {default as ImageConsultationCollection} from './collections/image-consultation-collection.js';
 export {default as ImageFilterCollection} from './collections/image-filter-collection.js';
 export {default as ImageFilterProjectCollection} from './collections/image-filter-project-collection.js';
@@ -88,6 +81,8 @@ export {default as SoftwareCollection} from './collections/software-collection.j
 export {default as SoftwareParameterCollection} from './collections/software-parameter-collection.js';
 export {default as SoftwareProjectCollection} from './collections/software-project-collection.js';
 export {default as StorageCollection} from './collections/storage-collection.js';
+export {default as StorageUserCollection} from './collections/storage-user-collection.js';
+export {default as StorageAccessCollection} from './collections/storage-access-collection.js';
 export {default as TagCollection} from './collections/tag-collection.js';
 export {default as TagDomainAssociationCollection} from './collections/tag-domain-association-collection.js';
 export {default as TermCollection} from './collections/term-collection.js';

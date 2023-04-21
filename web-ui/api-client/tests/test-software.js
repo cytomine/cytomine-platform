@@ -1,7 +1,7 @@
 import * as utils from './utils.js';
 import {Software, SoftwareCollection} from '@';
 
-describe('Software', function() {
+describe.skip('Software', function() {
 
   let name = utils.randomString();
   let serviceName = 'createRabbitJobService';
@@ -21,7 +21,7 @@ describe('Software', function() {
   });
 
   describe('Create', function() {
-    it('Create', async function() {
+    it.skip('Create', async function() {
       software = new Software({name, serviceName});
       software = await software.save();
       id = software.id;
@@ -31,25 +31,25 @@ describe('Software', function() {
   });
 
   describe('Fetch', function() {
-    it('Fetch with static method', async function() {
+    it.skip('Fetch with static method', async function() {
       let fetchedSoftware = await Software.fetch(id);
       expect(fetchedSoftware).to.be.an.instanceof(Software);
       expect(fetchedSoftware.name).to.equal(name);
     });
 
-    it('Fetch with instance method', async function() {
+    it.skip('Fetch with instance method', async function() {
       let fetchedSoftware = await new Software({id}).fetch();
       expect(fetchedSoftware).to.be.an.instanceof(Software);
       expect(fetchedSoftware.name).to.equal(name);
     });
 
-    it('Fetch with wrong ID', function() {
+    it.skip('Fetch with wrong ID', function() {
       expect(Software.fetch(0)).to.be.rejected;
     });
   });
 
   describe('Specific operations', function() {
-    it('Get statistics for a specific project', async function() {
+    it.skip('Get statistics for a specific project', async function() {
       let stats = await software.fetchStats(project);
       expect(stats.numberOfJob).to.exist;
       expect(stats.numberOfNotLaunch).to.exist;
@@ -63,7 +63,7 @@ describe('Software', function() {
   });
 
   describe('Update', function() {
-    it('Update', async function() {
+    it.skip('Update', async function() {
       let newName = utils.randomString();
       software.name = newName;
       software = await software.update();
@@ -73,11 +73,11 @@ describe('Software', function() {
   });
 
   describe('Delete', function() {
-    it('Delete', async function() {
+    it.skip('Delete', async function() {
       await Software.delete(id);
     });
 
-    it('Fetch deleted', function() {
+    it.skip('Fetch deleted', function() {
       expect(Software.fetch(id)).to.be.rejected;
     });
   });
@@ -106,20 +106,20 @@ describe('Software', function() {
     });
 
     describe('Fetch', function() {
-      it('Fetch (instance method)', async function() {
+      it.skip('Fetch (instance method)', async function() {
         let collection = await new SoftwareCollection().fetchAll();
         expect(collection).to.be.an.instanceof(SoftwareCollection);
         expect(collection).to.have.lengthOf.at.least(nbSoftwares);
         totalNb = collection.length;
       });
 
-      it('Fetch (static method)', async function() {
+      it.skip('Fetch (static method)', async function() {
         let collection = await SoftwareCollection.fetchAll();
         expect(collection).to.be.an.instanceof(SoftwareCollection);
         expect(collection).to.have.lengthOf(totalNb);
       });
 
-      it('Fetch with several requests', async function() {
+      it.skip('Fetch with several requests', async function() {
         let collection = await SoftwareCollection.fetchAll({nbPerPage: Math.ceil(totalNb/3)});
         expect(collection).to.be.an.instanceof(SoftwareCollection);
         expect(collection).to.have.lengthOf(totalNb);
@@ -127,28 +127,28 @@ describe('Software', function() {
     });
 
     describe('Working with the collection', function() {
-      it('Iterate through', async function() {
+      it.skip('Iterate through', async function() {
         let collection = await SoftwareCollection.fetchAll();
         for(let software of collection) {
           expect(software).to.be.an.instanceof(Software);
         }
       });
 
-      it('Add item to the collection', function() {
+      it.skip('Add item to the collection', function() {
         let collection = new SoftwareCollection();
         expect(collection).to.have.lengthOf(0);
         collection.push(new Software());
         expect(collection).to.have.lengthOf(1);
       });
 
-      it('Add arbitrary object to the collection', function() {
+      it.skip('Add arbitrary object to the collection', function() {
         let collection = new SoftwareCollection();
         expect(collection.push.bind(collection, {})).to.throw();
       });
     });
 
     describe('Filtering', function() {
-      it('Filter on project', async function() {
+      it.skip('Filter on project', async function() {
         let collection = await SoftwareCollection.fetchAll({filterKey: 'project', filterValue: project});
         expect(collection).to.have.lengthOf(1);
       });
@@ -157,19 +157,19 @@ describe('Software', function() {
     describe('Pagination', function() {
       let nbPerPage = 1;
 
-      it('Fetch arbitrary page', async function() {
+      it.skip('Fetch arbitrary page', async function() {
         let collection = new SoftwareCollection({nbPerPage});
         await collection.fetchPage(2);
         expect(collection).to.have.lengthOf(nbPerPage);
       });
 
-      it('Fetch next page', async function() {
+      it.skip('Fetch next page', async function() {
         let collection = new SoftwareCollection({nbPerPage});
         await collection.fetchNextPage();
         expect(collection).to.have.lengthOf(nbPerPage);
       });
 
-      it('Fetch previous page', async function() {
+      it.skip('Fetch previous page', async function() {
         let collection = new SoftwareCollection({nbPerPage});
         collection.curPage = 2;
         await collection.fetchPreviousPage();

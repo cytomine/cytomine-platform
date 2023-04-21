@@ -187,6 +187,20 @@ export default class ImageInstance extends Model {
   }
 
   /**
+   * Fetch the information about the annotation layers present in the image instance
+   *
+   * @returns {Array<user, image, countAnnotation, countReviewedAnnotation>} The list of annotation layers with counts
+   */
+  async fetchAnnotationsIndex() {
+    if(this.isNew()) {
+      throw new Error('Cannot fetch annotations index of image with no ID.');
+    }
+
+    let {data} = await Cytomine.instance.api.get(`${this.callbackIdentifier}/${this.id}/annotationindex.json`);
+    return data.collection;
+  }
+
+  /**
    * Copy to the image instance the properties and description associated with the provided source image
    *
    * @param {number} idSource Identifier of the source image instance
@@ -290,5 +304,42 @@ export default class ImageInstance extends Model {
 
     return this._referenceSlice;
   }
+
+  async fetchHistogram({nBins} = {}) {
+    if (this.isNew()) {
+      throw new Error('Cannot get histogram for an image with no ID.');
+    }
+    let params = {nBins};
+    let {data} = await Cytomine.instance.api.get(`${this.callbackIdentifier}/${this.id}/histogram.json`, {params});
+    return data;
+  }
+
+  async fetchHistogramBounds() {
+    if (this.isNew()) {
+      throw new Error('Cannot get histogram bounds for an image with no ID.');
+    }
+
+    let {data} = await Cytomine.instance.api.get(`${this.callbackIdentifier}/${this.id}/histogram/bounds.json`);
+    return data;
+  }
+
+  async fetchChannelHistograms({nBins} = {}) {
+    if (this.isNew()) {
+      throw new Error('Cannot get channel histograms for an image with no ID.');
+    }
+    let params = {nBins};
+    let {data} = await Cytomine.instance.api.get(`${this.callbackIdentifier}/${this.id}/channelhistogram.json`, {params});
+    return data.collection;
+  }
+
+  async fetchChannelHistogramBounds() {
+    if (this.isNew()) {
+      throw new Error('Cannot get channel histogram bounds for an image with no ID.');
+    }
+
+    let {data} = await Cytomine.instance.api.get(`${this.callbackIdentifier}/${this.id}/channelhistogram/bounds.json`);
+    return data.collection;
+  }
+
 
 }

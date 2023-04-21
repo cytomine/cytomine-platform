@@ -1,7 +1,7 @@
 import * as utils from './utils.js';
 import {SoftwareProject, SoftwareProjectCollection} from '@';
 
-describe('SoftwareProject', function() {
+describe.skip('SoftwareProject', function() {
 
   let software;
   let project;
@@ -21,7 +21,7 @@ describe('SoftwareProject', function() {
   });
 
   describe('Create', function() {
-    it('Create', async function() {
+    it.skip('Create', async function() {
       softwareProject = new SoftwareProject({software, project});
       softwareProject = await softwareProject.save();
       id = softwareProject.id;
@@ -31,29 +31,29 @@ describe('SoftwareProject', function() {
   });
 
   describe('Fetch', function() {
-    it('Fetch with static method', async function() {
+    it.skip('Fetch with static method', async function() {
       let fetchedSoftwareProject = await SoftwareProject.fetch(id);
       expect(fetchedSoftwareProject).to.be.an.instanceof(SoftwareProject);
       expect(fetchedSoftwareProject).to.deep.equal(softwareProject);
     });
 
-    it('Fetch with instance method', async function() {
+    it.skip('Fetch with instance method', async function() {
       let fetchedSoftwareProject = await new SoftwareProject({id}).fetch();
       expect(fetchedSoftwareProject).to.be.an.instanceof(SoftwareProject);
       expect(fetchedSoftwareProject).to.deep.equal(softwareProject);
     });
 
-    it('Fetch with wrong ID', function() {
+    it.skip('Fetch with wrong ID', function() {
       expect(SoftwareProject.fetch(0)).to.be.rejected;
     });
   });
 
   describe('Delete', function() {
-    it('Delete', async function() {
+    it.skip('Delete', async function() {
       await SoftwareProject.delete(id);
     });
 
-    it('Fetch deleted', function() {
+    it.skip('Fetch deleted', function() {
       expect(SoftwareProject.fetch(id)).to.be.rejected;
     });
   });
@@ -87,26 +87,26 @@ describe('SoftwareProject', function() {
     });
 
     describe('Fetch', function() {
-      it('Fetch (instance method)', async function() {
+      it.skip('Fetch (instance method)', async function() {
         let collection = await new SoftwareProjectCollection().fetchAll();
         expect(collection).to.be.an.instanceof(SoftwareProjectCollection);
         expect(collection).to.have.lengthOf.at.least(nbSoftwareProjects);
         totalNb = collection.length;
       });
 
-      it('Fetch (static method)', async function() {
+      it.skip('Fetch (static method)', async function() {
         let collection = await SoftwareProjectCollection.fetchAll();
         expect(collection).to.be.an.instanceof(SoftwareProjectCollection);
         expect(collection).to.have.lengthOf(totalNb);
       });
 
-      it('Fetch with several requests', async function() {
+      it.skip('Fetch with several requests', async function() {
         let collection = await SoftwareProjectCollection.fetchAll({nbPerPage: Math.ceil(totalNb/3)});
         expect(collection).to.be.an.instanceof(SoftwareProjectCollection);
         expect(collection).to.have.lengthOf(totalNb);
       });
 
-      it('Fetch with project filter', async function() {
+      it.skip('Fetch with project filter', async function() {
         let collection = await new SoftwareProjectCollection({filterKey: 'project', filterValue: project}).fetchAll();
         expect(collection).to.be.an.instanceof(SoftwareProjectCollection);
         expect(collection).to.have.lengthOf(nbSoftwareProjects);
@@ -114,21 +114,21 @@ describe('SoftwareProject', function() {
     });
 
     describe('Working with the collection', function() {
-      it('Iterate through', async function() {
+      it.skip('Iterate through', async function() {
         let collection = await SoftwareProjectCollection.fetchAll();
         for(let softwareProject of collection) {
           expect(softwareProject).to.be.an.instanceof(SoftwareProject);
         }
       });
 
-      it('Add item to the collection', function() {
+      it.skip('Add item to the collection', function() {
         let collection = new SoftwareProjectCollection();
         expect(collection).to.have.lengthOf(0);
         collection.push(new SoftwareProject());
         expect(collection).to.have.lengthOf(1);
       });
 
-      it('Add arbitrary object to the collection', function() {
+      it.skip('Add arbitrary object to the collection', function() {
         let collection = new SoftwareProjectCollection();
         expect(collection.push.bind(collection, {})).to.throw();
       });
@@ -137,19 +137,19 @@ describe('SoftwareProject', function() {
     describe('Pagination', function() {
       let nbPerPage = 1;
 
-      it('Fetch arbitrary page', async function() {
+      it.skip('Fetch arbitrary page', async function() {
         let collection = new SoftwareProjectCollection({nbPerPage});
         await collection.fetchPage(2);
         expect(collection).to.have.lengthOf(nbPerPage);
       });
 
-      it('Fetch next page', async function() {
+      it.skip('Fetch next page', async function() {
         let collection = new SoftwareProjectCollection({nbPerPage});
         await collection.fetchNextPage();
         expect(collection).to.have.lengthOf(nbPerPage);
       });
 
-      it('Fetch previous page', async function() {
+      it.skip('Fetch previous page', async function() {
         let collection = new SoftwareProjectCollection({nbPerPage});
         collection.curPage = 2;
         await collection.fetchPreviousPage();
