@@ -121,7 +121,7 @@ Before a docker-compose can be up'ed, the installer must read the `cytomine.yml`
 
 This can be done by mounting the directory containing the inputs files (`cytomine.yml`, etc.) to an installer container as a `/install` folder and launching it:
 
-```
+```shell
 # the target user must have the user permissions so it should not be created by docker
 mkdir /tmp/install_out
 docker run -v $(pwd):/install --user "$(id -u):$(id -g)" --rm --it INSTALLER_IMAGE deploy -s /install
