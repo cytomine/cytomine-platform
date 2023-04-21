@@ -12,6 +12,7 @@ Cytomine-js-client is an opensource javascript client allowing to communicate wi
 See installation instructions here : https://doc.cytomine.org/dev-guide/clients/javascript/installation
 
 ## How to use the client
+
 The javascript client can be used in one of the following ways:
 * As an NPM module for a browser application (install with `npm install cytomine-client`);
 * With a direct `<script>` include.
