@@ -4,7 +4,7 @@ This Dockerfile relies on [official PostGIS Dockerfile](https://github.com/postg
 
 Currently registered Cytomine script(s):
 
-1. optionally interpolate the environment variable present in any file under `/cm_configs` with a filename suffix `.sample` and move all files to their respective directory (see below)
+1. optionally interpolate the environment variable present in any file under `/cm_configs` with a filename suffix `.sample` and move all files to their respective directory (see below).
 
 Currently registered Cytomine db scripts(s):
 
