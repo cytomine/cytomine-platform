@@ -29,6 +29,7 @@ The environment files are attached via a volume mounted on `/cm_configs`. The fu
 It is the responsibility of the container to optionally interpolate the configuration files with values of corresponding environment variables and to place the files them within the right directories inside the container before launching the service. An example path is `/cm_configs/etc/nginx/sites-enabled/mysite.conf.sample` which means that the interpolated file `mysite.conf` must be placed in directory `/{FILEPATH}` where `FILEPATH=etc/nginx/sites-enabled`.   
 
 ## Template configuration files
+
 TODO spec for templating config files:
 - link with our `cytomine.yml` environment variable file 
 - what about supported files formats: `json`, `nginx conf`, `yaml`, ... ?
