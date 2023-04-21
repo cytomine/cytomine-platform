@@ -8,7 +8,7 @@ Currently registered Cytomine script(s):
 
 Currently registered Cytomine db scripts(s):
 
-1. Cytomine-specific database initialization (`ltree` extension loading)
+1. Cytomine-specific database initialization (`ltree` extension loading).
 
 ## PostGIS-specific configuration
 
