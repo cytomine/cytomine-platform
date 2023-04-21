@@ -7,6 +7,7 @@ When using our software, we kindly ask you to cite our website URL and related p
 - Scientific paper: Raphaël Marée, Loïc Rollus, Benjamin Stévens, Renaud Hoyoux, Gilles Louppe, Rémy Vandaele, Jean-Michel Begon, Philipp Kainz, Pierre Geurts and Louis Wehenkel. Collaborative analysis of multi-gigapixel imaging data using Cytomine, Bioinformatics, DOI: 10.1093/bioinformatics/btw013, 2016. http://dx.doi.org/10.1093/bioinformatics/btw013
 
 ## Presentation
+
 Cytomine-js-client is an opensource javascript client allowing to communicate with the REST API of a Cytomine instance. For more information about Cytomine, go to https://www.cytomine.org.
 See installation instructions here : https://doc.cytomine.org/dev-guide/clients/javascript/installation
 
