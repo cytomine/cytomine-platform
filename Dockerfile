@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-LABEL maintainer="Cytomine <dev@cytomine.com>"
 
 ARG POSTGIS_VERSION="15-3.3-alpine"
 
@@ -23,6 +22,7 @@ FROM cytomine/entrypoint-scripts:1.2.0 as entrypoint-scripts
 
 # Stage 2: Postgis
 FROM postgis/postgis:${POSTGIS_VERSION}
+LABEL maintainer="Cytomine <dev@cytomine.com>"
 
 #set default user (and default DB name) to docker by default
 ENV POSTGRES_USER=docker
