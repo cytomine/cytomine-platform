@@ -17,7 +17,7 @@
 ARG POSTGIS_VERSION="15-3.3-alpine"
 
 # Stage 1: fetch entry point scripts from another Docker image
-FROM cytomine/entrypoint-scripts:latest as entrypoint-scripts
+FROM cytomine/entrypoint-scripts:1.2.0 as entrypoint-scripts
 
 # Stage 2: Postgis
 FROM postgis/postgis:${POSTGIS_VERSION}
