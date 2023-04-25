@@ -14,6 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+LABEL maintainer="Cytomine <dev@cytomine.com>"
+
 ARG POSTGIS_VERSION="15-3.3-alpine"
 
 # Stage 1: fetch entry point scripts from another Docker image
