@@ -49,7 +49,7 @@ dependencies_before_vips() {
   # ./configure
   # make
   # make install
-  apt-get -y install --no-install-recommends --no-instal-suggests libopenslide-dev=3.4.1
+  apt-get -y install --no-install-recommends --no-install-suggests libopenslide-dev=3.4.1
 }
 
 dependencies_before_python() {
