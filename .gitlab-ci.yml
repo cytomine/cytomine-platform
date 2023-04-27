@@ -1,0 +1,69 @@
+stages:
+  - lint
+  - build
+
+variables:
+  IMAGE_NAME: "postgis"
+  POSTGIS_VERSION: "15-3.3-alpine"
+  IMAGE_VERSION: "${POSTGIS_VERSION}-1.2.0"
+  # Those other vars should be inherited from GitLab:
+  # DOCKER_HUB_AUTH_CONFIG
+
+
+workflow:
+  rules:
+    # Avoid the pipeline to be triggered for merge request event, because it would be a duplicated event when
+    #  a push is made on a branch that has an open merge request linked (as suggested in the default GitLab workflow)
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+      when: never
+
+    # Publish it if it has ANY tag.
+    - if: $CI_COMMIT_TAG != null
+      variables:
+        IS_OPEN_SOURCE_RELEASE_CANDIDATE: "true"
+
+    - when: always
+
+default:
+  tags:
+    - docker
+
+
+lint-dockerfiles:
+  stage: lint
+  image: hadolint/hadolint:latest-alpine
+  # Uncomment to silent some warnings if needed
+  #variables:
+  #  HADOLINT_OPT: --ignore DL3008
+  script:
+    - hadolint ${HADOLINT_OPT} Dockerfile
+  rules:
+    - changes:
+        - Dockerfile
+      when: always
+
+    # If the Dockerfile has not been changed, this job can be skipped and manually invoked later
+    - when: manual
+      allow_failure: true
+
+build-docker-image:
+  stage: build
+  image: docker:latest
+  rules:
+    - if: $IS_OPEN_SOURCE_RELEASE_CANDIDATE == 'true'
+  script:
+    - echo "The tag $CI_COMMIT_TAG has been pushed. Build & publish the image."
+
+    - echo "Build command is \n\t docker build -t cytomine/${IMAGE_NAME}:${IMAGE_VERSION} -t cytomine/${IMAGE_NAME}:latest -f Dockerfile ."
+    - docker build -t cytomine/${IMAGE_NAME}:${IMAGE_VERSION} -t cytomine/${IMAGE_NAME}:latest -f Dockerfile .
+
+    # Use credential helper (see https://docs.docker.com/engine/reference/commandline/login/#credentials-store)
+    - mkdir -p $HOME/.docker && echo $DOCKER_HUB_AUTH_CONFIG > $HOME/.docker/config.json
+    - echo "Registry credentials configured at $HOME/.docker/config.json"
+
+    - echo "Pushing image to registry, tagged as cytomine/${IMAGE_NAME}:${IMAGE_VERSION}"
+    - docker push cytomine/${IMAGE_NAME}:${IMAGE_VERSION}
+    - echo "Pushing image to registry, tagged as cytomine/${IMAGE_NAME}:latest"
+    - docker push cytomine/${IMAGE_NAME}:latest
+
+    # - echo "No tag has been pushed, this build will not be published."

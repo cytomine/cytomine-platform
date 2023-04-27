@@ -14,24 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ARG POSTGIS_VERSION
+ARG POSTGIS_VERSION="15-3.3-alpine"
 
-## Stage 1: downloading provisioning scripts
-FROM alpine/git:2.36.3 as downloader
-
-ARG SCRIPTS_REPO_TAG="latest"
-ARG SCRIPTS_REPO_URL="https://github.com/cytomine/cytomine-docker-entrypoint-scripts.git"
-
-WORKDIR /root
-RUN mkdir scripts
-RUN git clone $SCRIPTS_REPO_URL /root/scripts \
-    && cd /root/scripts \
-    && git checkout tags/${SCRIPTS_REPO_TAG}
-
-
-# Stage 2: Postgis
-ARG POSTGIS_VERSION
 FROM postgis/postgis:${POSTGIS_VERSION}
+LABEL maintainer="Cytomine <dev@cytomine.com>"
 
 #set default user (and default DB name) to docker by default
 ENV POSTGRES_USER=docker
@@ -46,8 +32,8 @@ COPY files/postgres.conf /etc/postgres/postgres.conf
 COPY files/postgres.default.conf /etc/postgres/00-default.conf
 
 RUN mkdir /docker-entrypoint-cytomine.d/
-COPY --from=downloader --chmod=774 /root/scripts/cytomine-entrypoint.sh /usr/local/bin/
-COPY --from=downloader --chmod=774 /root/scripts/envsubst-on-templates-and-move.sh /docker-entrypoint-cytomine.d/500-envsubst-on-templates-and-move.sh
+COPY --from=cytomine/entrypoint-scripts:1.2.0 --chmod=774 /cytomine-entrypoint.sh /usr/local/bin/
+COPY --from=cytomine/entrypoint-scripts:1.2.0 --chmod=774 /envsubst-on-templates-and-move.sh /docker-entrypoint-cytomine.d/500-envsubst-on-templates-and-move.sh
 
 ENTRYPOINT ["cytomine-entrypoint.sh", "docker-entrypoint.sh"]
 CMD ["postgres", "-c", "config_file=/etc/postgres/postgres.conf"]
