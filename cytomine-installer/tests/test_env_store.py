@@ -140,3 +140,40 @@ class TestEnvStore(TestCase):
         generated_dict = env_store.export_dict()
 
         self.assertRegex(generated_dict["ns1"]["constant"]["VAR1"], r".+")
+
+    def testMergeSameNamespaceNewVar(self):
+        nss1 = {"ns1": {"auto": {"VAR1": {"type": "openssl"}}}}
+        nss2 = {"ns1": {"auto": {"VAR2": {"type": "openssl"}}}}
+        env_store1 = EnvStore()
+        for ns, entries in nss1.items():
+            env_store1.add_namespace(ns, entries, store=self._global)
+        env_store2 = EnvStore()
+        for ns, entries in nss2.items():
+            env_store2.add_namespace(ns, entries, store=self._global)
+        
+        # merge
+        env_store3 = EnvStore.merge(env_store1, env_store2)
+        
+        generated_dict3 = env_store3.export_dict()
+        self.assertRegex(generated_dict3["ns1"]["constant"]["VAR1"], r".+")
+        self.assertRegex(generated_dict3["ns1"]["constant"]["VAR2"], r".+")
+        
+
+    def testMergeSameNamespaceSameVar(self):
+        nss1 = {"ns1": {"auto": {"VAR1": {"type": "openssl"}}}}
+        nss2 = {"ns1": {"auto": {"VAR1": {"type": "openssl"}}}}
+        env_store1 = EnvStore()
+        for ns, entries in nss1.items():
+            env_store1.add_namespace(ns, entries, store=self._global)
+        env_store2 = EnvStore()
+        for ns, entries in nss2.items():
+            env_store2.add_namespace(ns, entries, store=self._global)
+        
+        # merge
+        env_store3 = EnvStore.merge(env_store1, env_store2)
+        generated_dict1 = env_store1.export_dict()
+        generated_dict2 = env_store2.export_dict()
+        generated_dict3 = env_store3.export_dict()
+
+        self.assertEqual(generated_dict1["ns1"]["constant"]["VAR1"], generated_dict3["ns1"]["constant"]["VAR1"])
+        self.assertNotEqual(generated_dict2["ns1"]["constant"]["VAR1"], generated_dict3["ns1"]["constant"]["VAR1"])

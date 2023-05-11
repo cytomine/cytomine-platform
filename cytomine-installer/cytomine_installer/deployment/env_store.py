@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 import enum
 from collections import defaultdict
 import json
+import logging
 
 from .errors import KeyAlreadyExistsError, UnknownValueTypeError
 from .env_generator import EnvValueGeneratorFactory
@@ -11,6 +12,10 @@ class EnvValueTypeEnum(enum.Enum):
     CONSTANT = "constant"
     GLOBAL = "global"
     AUTOGENERATE = "auto"
+
+
+class MergeEnvStorePolicy(enum.Enum):
+    PRESERVE = "preserve_target"  # merge by preserving variables inside the merge target envstore
 
 
 class DictExportable(ABC):
@@ -24,6 +29,11 @@ class BaseEnvStore(DictExportable):
     @abstractmethod
     def get_env(self, namespace: str, key: str):
         """Get a value stored in the EnvStore"""
+        pass
+
+    @abstractmethod
+    def has_env(self, namespace: str, key: str):
+        """Check if a namespace has a key"""
         pass
 
     @abstractmethod
@@ -42,6 +52,9 @@ class EnvStore(BaseEnvStore):
         self._store = defaultdict(dict)
         self._initial_type = defaultdict(dict)
         self._initial_value = defaultdict(dict)
+
+    def has_env(self, namespace: str, key: str):
+        return namespace in self._store and key in self._store[namespace]
 
     def _add_env(
         self, ns: str, key: str, value, store_value_fn, _type: EnvValueTypeEnum
@@ -129,3 +142,57 @@ class EnvStore(BaseEnvStore):
 
     def has_namespace(self, ns: str):
         return ns in self._store
+
+    def _merge_inplace(
+        self,
+        other_env_store,
+        merge_policy: MergeEnvStorePolicy = MergeEnvStorePolicy.PRESERVE,
+    ):
+        """Merge another env store inside a this  env store
+
+        Parameters
+        ----------
+        other_env_store: EnvStore
+        merge_policy: MergeEnvStorePolicy
+            Defines how merging is performed. With PRESERVE, keys of this env_store have precedence over keys of other_env_store
+
+        """
+        for other_ns, other_ns_entries in other_env_store._store.items():
+            for other_key, other_value in other_ns_entries.items():
+                other_initial_type = other_env_store._initial_type[other_ns][other_key]
+                other_initial_value = other_env_store._initial_value[other_ns][
+                    other_key
+                ]
+                if merge_policy == MergeEnvStorePolicy.PRESERVE:
+                    if self.has_env(other_ns, other_key):
+                        continue  # if exists in current env store, just ignore key
+                    self._store[other_ns][other_key] = other_value
+                    self._initial_type[other_ns][other_key] = other_initial_type
+                    self._initial_value[other_ns][other_key] = other_initial_value
+                else:
+                    raise ValueError(f"unknown merge policy '{merge_policy}'")
+
+    @staticmethod
+    def merge(
+        env_store1,
+        env_store2,
+        merge_policy: MergeEnvStorePolicy = MergeEnvStorePolicy.PRESERVE,
+    ):
+        """Merge another env store inside a new env store.
+
+        Parameters
+        ----------
+        env_store1: EnvStore
+        env_store2: EnvStore
+        merge_policy: MergeEnvStorePolicy
+            Defines how merging is performed. With PRESERVE, keys of the env_store1 have precedence over keys of env_store2
+
+        Returns
+        -------
+        env_store: EnvStore
+            Merged env store
+        """
+        new_env_store = EnvStore()
+        new_env_store._merge_inplace(env_store1, merge_policy=merge_policy)
+        new_env_store._merge_inplace(env_store2, merge_policy=merge_policy)
+        return new_env_store
