@@ -37,41 +37,41 @@ class TestConfigFile(TestCase):
         tests_path = os.path.dirname(__file__)
         ce_path = os.path.join(tests_path, "files")
         ce_filename = "cytomine.mini.yml"
-        cytomine_envs_file = ConfigFile(ce_path, filename=ce_filename)
-        self.assertEqual(cytomine_envs_file.path, ce_path)
-        self.assertEqual(cytomine_envs_file.filename, ce_filename)
+        config_file = ConfigFile(ce_path, filename=ce_filename)
+        self.assertEqual(config_file.path, ce_path)
+        self.assertEqual(config_file.filename, ce_filename)
         self.assertEqual(
-            cytomine_envs_file.filepath, os.path.join(ce_path, ce_filename)
+            config_file.filepath, os.path.join(ce_path, ce_filename)
         )
         self.assertEqual(
-            cytomine_envs_file.global_envs.get_env("namespace1", "VAR1"), "value1"
+            config_file.global_envs.get_env("namespace1", "VAR1"), "value1"
         )
         self.assertEqual(
-            cytomine_envs_file.global_envs.get_env("namespace1", "VAR2"), "value2"
+            config_file.global_envs.get_env("namespace1", "VAR2"), "value2"
         )
         self.assertRegex(
-            cytomine_envs_file.global_envs.get_env("namespace2", "KEY1"), UUID_PATTERN
+            config_file.global_envs.get_env("namespace2", "KEY1"), UUID_PATTERN
         )
         self.assertRegex(
-            cytomine_envs_file.global_envs.get_env("namespace2", "KEY2"), UUID_PATTERN
+            config_file.global_envs.get_env("namespace2", "KEY2"), UUID_PATTERN
         )
 
-        self.assertEqual(len(cytomine_envs_file.servers), 1)
-        self.assertEqual(cytomine_envs_file.servers[0], "default")
-        default_store = cytomine_envs_file.server_store("default")
+        self.assertEqual(len(config_file.servers), 1)
+        self.assertEqual(config_file.servers[0], "default")
+        default_store = config_file.server_store("default")
         self.assertEqual(default_store.get_env("core", "EMAIL"), "emailcore")
         self.assertEqual(
             default_store.get_env("core", "VAR1"),
-            cytomine_envs_file.global_envs.get_env("namespace1", "VAR1"),
+            config_file.global_envs.get_env("namespace1", "VAR1"),
         )
         self.assertRegex(default_store.get_env("core", "GENERATED"), UUID_PATTERN)
         self.assertEqual(
             default_store.get_env("rabbitmq", "VAR1"),
-            cytomine_envs_file.global_envs.get_env("namespace1", "VAR1"),
+            config_file.global_envs.get_env("namespace1", "VAR1"),
         )
         self.assertEqual(
             default_store.get_env("rabbitmq", "VAR2"),
-            cytomine_envs_file.global_envs.get_env("namespace2", "KEY1"),
+            config_file.global_envs.get_env("namespace2", "KEY1"),
         )
 
     def testFileWithInvalidValueType(self):

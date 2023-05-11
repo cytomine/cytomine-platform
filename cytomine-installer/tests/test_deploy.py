@@ -11,7 +11,7 @@ from cytomine_installer import parser
 from cytomine_installer.actions.errors import InvalidTargetDirectoryError
 from cytomine_installer.deployment.deployment_folders import InvalidServerConfigurationError
 from cytomine_installer.util import list_relative_files
-from tests.util import TestDeploymentGeneric
+from tests.util import UUID_PATTERN, TestDeploymentGeneric
 
 
 class TestDeploy(TestDeploymentGeneric):
@@ -91,6 +91,22 @@ class TestDeploy(TestDeploymentGeneric):
                     sorted(zip_archive.namelist()),
                     sorted(list_relative_files(deploy_file_path)),
                 )
+
+    def testDeploySingleServerTemplateOnly(self):
+        tests_path = os.path.dirname(__file__)
+        deploy_file_path = os.path.join(tests_path, "files", "fake_single_server_template_only", "in")
+        output_ref_path = os.path.join(tests_path, "files", "fake_single_server_template_only", "out")
+        with TemporaryDirectory() as tmpdir:
+            parser.call(["deploy", "-s", deploy_file_path, "-t", tmpdir])
+            self.assertSameDirectories(tmpdir, output_ref_path)
+    
+    def testDeploySingleServerTemplateAndConfig(self):
+        tests_path = os.path.dirname(__file__)
+        deploy_file_path = os.path.join(tests_path, "files", "fake_single_server_template_and_config", "in")
+        output_ref_path = os.path.join(tests_path, "files", "fake_single_server_template_and_config", "out")
+        with TemporaryDirectory() as tmpdir:
+            parser.call(["deploy", "-s", deploy_file_path, "-t", tmpdir])
+            self.assertSameDirectories(tmpdir, output_ref_path)
 
     @unittest.skip("implement later")
     def testMultiServer(self):

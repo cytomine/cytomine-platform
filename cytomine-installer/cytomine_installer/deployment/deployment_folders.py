@@ -2,6 +2,8 @@ from abc import ABC, abstractmethod
 import os
 import yaml
 import shutil
+
+from cytomine_installer.deployment.env_store import MergeEnvStorePolicy
 from .deployment_files import (
     DOCKER_COMPOSE_FILENAME,
     ConfigFile,
@@ -256,6 +258,12 @@ class DeploymentFolder(Deployable):
                 f"either {self._working_config.filepath} or {self._template_config.filepath} should exist, none found"
             )
 
+        self._merge_config = ConfigFile.merge(
+            self._working_config,
+            self._template_config,
+            merge_policy=MergeEnvStorePolicy.PRESERVE,
+        )
+
         self._server_folders = dict()
         _, subdirs, subfiles = next(os.walk(self._directory))
         self._subdirs = set(subdirs).difference(self._ignore_dirs)
@@ -269,13 +277,13 @@ class DeploymentFolder(Deployable):
                 f"cannot find {DOCKER_COMPOSE_FILENAME} at the root of the install folder"
             )
 
-        nb_servers_in_envs = len(self._working_config.servers)
+        nb_servers_in_envs = len(self._merge_config.servers)
         if self._single_server and nb_servers_in_envs > 1:
             raise InvalidServerConfigurationError(
                 f"it appears to be a single-server configuration ({DOCKER_COMPOSE_FILENAME} found in root directory) but several server entries have been found in cytomine.yml"
             )
         elif not self._single_server:
-            envs_servers = set(self._working_config.servers)
+            envs_servers = set(self._merge_config.servers)
             folder_servers = self._subdirs
             if not envs_servers.issubset(folder_servers):
                 raise InvalidServerConfigurationError(
@@ -293,7 +301,7 @@ class DeploymentFolder(Deployable):
             self._server_folders[self.SERVER_DEFAULT] = ServerFolder(
                 server_name=self.SERVER_DEFAULT,
                 directory=self._directory,
-                envs=self._working_config,
+                envs=self._merge_config,
                 **server_folder_common_params,
             )
         else:
@@ -301,7 +309,7 @@ class DeploymentFolder(Deployable):
                 self._server_folders[subdir] = ServerFolder(
                     server_name=subdir,
                     directory=os.path.join(self._directory, subdir),
-                    envs=self._working_config,
+                    envs=self._merge_config,
                     **server_folder_common_params,
                 )
 
@@ -314,12 +322,19 @@ class DeploymentFolder(Deployable):
         return self._server_folders
 
     def deploy_files(self, target_directory):
-        dst_cytomine_envs_path = os.path.join(
-            target_directory, self._working_config.filename
-        )
-        with open(dst_cytomine_envs_path, "w", encoding="utf8") as file:
-            yaml.dump(self._working_config.export_dict(), file)
+        # write config (cytomine.yml)
+        dst_config_path = os.path.join(target_directory, self._merge_config.filename)
+        with open(dst_config_path, "w", encoding="utf8") as file:
+            yaml.dump(self._merge_config.export_dict(), file)
 
+        # write template (if any in the base repository), copy file to avoid any change
+        if os.path.isfile(self._template_config.filepath):
+            dst_template_path = os.path.join(
+                target_directory, self._template_config.filename
+            )
+            shutil.copyfile(self._template_config.filepath, dst_template_path)
+
+        # write server folders
         for server_folder in self._server_folders.values():
             if self._single_server:
                 server_target_dir = target_directory
@@ -343,6 +358,9 @@ class DeploymentFolder(Deployable):
     def source_files(self):
         """List (existing) source files"""
         files = [self._working_config_filename]
+
+        if os.path.isfile(self._template_config.filepath):
+            files.append(self._template_config.filename)
 
         for server_folder in self._server_folders.values():
             files.extend(

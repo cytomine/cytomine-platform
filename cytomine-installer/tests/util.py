@@ -62,7 +62,7 @@ class FileSystemTestCase(TestCase):
             gen_filepath = os.path.join(gen_path, out_rel_file)
             self.assertIsFile(gen_filepath)
 
-            if out_rel_file.endswith("yml"):
+            if out_rel_file.endswith("yml") or out_rel_file.endswith("template"):
                 ### Check *.yml files
                 self.assertSameYamlFileContent(gen_filepath, ref_filepath)
             elif out_rel_file.endswith(".env"):
