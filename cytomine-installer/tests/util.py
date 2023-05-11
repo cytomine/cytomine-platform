@@ -46,7 +46,10 @@ class FileSystemTestCase(TestCase):
         ) as file2:
             yml1 = yaml.load(file1, Loader=yaml.Loader)
             yml2 = yaml.load(file2, Loader=yaml.Loader)
-            self.assertDictEqual(yml1, yml2)
+            if yml1 is not None and yml2 is not None: 
+                self.assertDictEqual(yml1, yml2)
+            else: 
+                self.assertEqual(yml1, yml2)
 
     def assertSameDotenvFileContent(self, path1, path2):
         self.assertIsFile(path1)

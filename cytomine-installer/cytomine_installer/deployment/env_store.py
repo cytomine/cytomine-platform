@@ -131,9 +131,12 @@ class EnvStore(BaseEnvStore):
                     ][key]
                 else:
                     output_dict[ns][init_type.value][key] = self._initial_value[ns][key]
-        # https://stackoverflow.com/a/32303615
-        # convert to plain dict
-        return json.loads(json.dumps(output_dict))
+        if len(output_dict) == 0:
+            return None
+        else:
+            # https://stackoverflow.com/a/32303615
+            # convert to plain dict
+            return json.loads(json.dumps(output_dict))
 
     def get_namespace_envs(self, ns: str):
         if ns not in self._store:

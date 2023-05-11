@@ -45,6 +45,9 @@ class ConfigFile(DictExportable):
         with open(self.filepath, "r", encoding="utf8") as file:
             raw_config = yaml.load(file, Loader=yaml.Loader)
 
+        if raw_config is None:
+            return
+
         # both top-level sections are optional
         for section in raw_config.keys():
             try:
@@ -89,6 +92,9 @@ class ConfigFile(DictExportable):
             raise UnknownServerError(server)
         return list(self._servers_env_stores[server].keys())
 
+    def has_server(self, server: str):
+        return server in self._servers_env_stores
+
     def server_store(self, server: str):
         """Returns the env store for a given server"""
         if server not in self._servers_env_stores:
@@ -101,6 +107,8 @@ class ConfigFile(DictExportable):
         target_dict["services"] = dict()
         for server, env_store in self._servers_env_stores.items():
             target_dict["services"][server] = env_store.export_dict()
+        if len(target_dict["services"]) == 0:
+            target_dict["services"] = None
         # https://stackoverflow.com/a/32303615
         # convert to plain dict
         return json.loads(json.dumps(target_dict))

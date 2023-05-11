@@ -117,6 +117,8 @@ class ServerFolder(Deployable):
         target_files = list()
         target_files.append(".env")
         target_files.append(DOCKER_COMPOSE_OVERRIDE_FILENAME)
+        if not self._envs.has_server(self._server_name):
+            return target_files
         for service in self._docker_compose_file.services:
             env_store = self._envs.server_store(self._server_name)
             if env_store.has_namespace(service):
@@ -147,19 +149,20 @@ class ServerFolder(Deployable):
         override_file = EditableDockerCompose(version=self._docker_compose_file.version)
 
         # envs/{SERVICE}.env files
-        target_envs = os.path.join(target_directory, self._envs_folder)
-        os.makedirs(target_envs)
-        for service in self._docker_compose_file.services:
-            env_store = self._envs.server_store(self._server_name)
-            if not env_store.has_namespace(service):
-                continue
-            service_envs = env_store.get_namespace_envs(service)
-            env_filepath = write_dotenv(
-                target_envs, service_envs, filename=f"{service}.env"
-            )
-            override_file.set_service_env_file(
-                service, os.path.relpath(env_filepath, target_directory)
-            )
+        if self._envs.has_server(self._server_name):
+            target_envs = os.path.join(target_directory, self._envs_folder)
+            os.makedirs(target_envs)
+            for service in self._docker_compose_file.services:
+                env_store = self._envs.server_store(self._server_name)
+                if not env_store.has_namespace(service):
+                    continue
+                service_envs = env_store.get_namespace_envs(service)
+                env_filepath = write_dotenv(
+                    target_envs, service_envs, filename=f"{service}.env"
+                )
+                override_file.set_service_env_file(
+                    service, os.path.relpath(env_filepath, target_directory)
+                )
 
         # configs
         for service in self._docker_compose_file.services:
