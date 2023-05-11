@@ -240,7 +240,8 @@ class DeploymentFolder(Deployable):
         self._template_config_filename = template_config_filename
         self._working_config = ConfigFile(
             path=self._directory,
-            filename=self._working_config_filename
+            filename=self._working_config_filename,
+            file_must_exists=False,
         )
         self._template_config = ConfigFile(
             path=self._directory,

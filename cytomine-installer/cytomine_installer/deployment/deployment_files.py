@@ -11,7 +11,7 @@ from .errors import (
     UnknownServiceError,
 )
 from .enums import ConfigSectionEnum
-from .env_store import DictExportable, EnvStore
+from .env_store import DictExportable, EnvStore, MergeEnvStorePolicy
 
 DOCKER_COMPOSE_FILENAME = "docker-compose.yml"
 DOCKER_COMPOSE_OVERRIDE_FILENAME = "docker-compose.override.yml"
@@ -25,7 +25,9 @@ class UnknownServerError(ValueError):
 class ConfigFile(DictExportable):
     """parses a yml config file"""
 
-    def __init__(self, path, filename="cytomine.yml", file_must_exists=True) -> None:
+    def __init__(
+        self, path="./", filename="cytomine.yml", file_must_exists=False
+    ) -> None:
         self._filename = filename
         self._path = path
 
@@ -36,27 +38,24 @@ class ConfigFile(DictExportable):
         # empty configuration
         self._global_envs = EnvStore()
         self._servers_env_stores = defaultdict(EnvStore)
-        self._raw_config = dict()
 
         if not file_exists:
             return
 
         with open(self.filepath, "r", encoding="utf8") as file:
-            self._raw_config = yaml.load(file, Loader=yaml.Loader)
+            raw_config = yaml.load(file, Loader=yaml.Loader)
 
         # both top-level sections are optional
-        for section in self._raw_config.keys():
+        for section in raw_config.keys():
             try:
                 ConfigSectionEnum(section)
             except ValueError:
                 raise UnknownConfigSection(section)
 
-        for ns, entries in self._raw_config.get(
-            ConfigSectionEnum.GLOBAL.value, {}
-        ).items():
+        for ns, entries in raw_config.get(ConfigSectionEnum.GLOBAL.value, {}).items():
             self._global_envs.add_namespace(ns, entries)
 
-        for server, envs in self._raw_config.get(
+        for server, envs in raw_config.get(
             ConfigSectionEnum.SERVICES.value, {}
         ).items():
             for ns, entries in envs.items():
@@ -105,6 +104,34 @@ class ConfigFile(DictExportable):
         # https://stackoverflow.com/a/32303615
         # convert to plain dict
         return json.loads(json.dumps(target_dict))
+
+    @staticmethod
+    def merge(
+        config_file1,
+        config_file2,
+        merge_policy: MergeEnvStorePolicy = MergeEnvStorePolicy.PRESERVE,
+    ):
+        new_config_file = ConfigFile()
+        new_config_file._global_envs = EnvStore.merge(
+            config_file1._global_envs,
+            config_file2._global_envs,
+            merge_policy=merge_policy,
+        )
+        # merge existing servers
+        for server_name1, env_store1 in config_file1._servers_env_stores.items():
+            env_store2 = config_file2._servers_env_stores.get(server_name1, EnvStore())
+            new_config_file._servers_env_stores[server_name1] = EnvStore.merge(
+                env_store1, env_store2, merge_policy=merge_policy
+            )
+        # add new servers from config file 2
+        new_servers = set(config_file2._servers_env_stores.keys()).difference(
+            config_file1._servers_env_stores.keys()
+        )
+        for server_name2 in new_servers:
+            env_store2 = config_file2._servers_env_stores[server_name2]
+            env_store2 = EnvStore.merge(env_store2, EnvStore())  # deep copy
+            new_config_file._servers_env_stores[server_name2] = env_store2
+        return new_config_file
 
 
 class DockerComposeFile:

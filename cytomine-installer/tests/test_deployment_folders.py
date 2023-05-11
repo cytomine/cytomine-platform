@@ -124,7 +124,7 @@ class TestDeploymentFolder(TestDeploymentGeneric):
     def testNoCytomineYml(self):
         tests_path = os.path.dirname(__file__)
         deploy_path = os.path.join(tests_path, "files", "fake_no_cytomine_yml")
-        with self.assertRaises(MissingConfigFileError):
+        with self.assertRaises(FileNotFoundError):
             DeploymentFolder(directory=deploy_path)
 
     def testNoDockerComposeFile(self):

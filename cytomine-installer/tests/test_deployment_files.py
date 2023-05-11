@@ -32,7 +32,7 @@ class TestDockerComposeFile(TestCase):
         self.assertEqual(docker_compose_file.version, "3.4")
 
 
-class TestCytomineEnvsFile(TestCase):
+class TestConfigFile(TestCase):
     def testMinimalFile(self):
         tests_path = os.path.dirname(__file__)
         ce_path = os.path.join(tests_path, "files")
@@ -87,6 +87,20 @@ class TestCytomineEnvsFile(TestCase):
         ce_filename = "cytomine.invalid-top-level-sections.yml"
         with self.assertRaises(UnknownConfigSection):
             ConfigFile(ce_path, filename=ce_filename)
+
+    def testMerge(self):
+        tests_path = os.path.dirname(__file__)
+        ce_path = os.path.join(tests_path, "files")
+        ce_filename1 = "cytomine.mini.2.yml"
+        ce_filename2 = "cytomine.mini.3.yml"
+        ce_filename3 = "cytomine.mini.merge2->3.yml"
+        config_file1 = ConfigFile(ce_path, filename=ce_filename1)
+        config_file2 = ConfigFile(ce_path, filename=ce_filename2)
+        merge_config_file = ConfigFile(ce_path, filename=ce_filename3)
+        config_file3 = ConfigFile.merge(config_file1, config_file2)
+        
+        export3 = config_file3.export_dict()
+        self.assertDictEqual(export3, merge_config_file.export_dict())
 
 
 class TestEditableDockerCompose(TestCase):
