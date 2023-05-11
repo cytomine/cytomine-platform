@@ -10,7 +10,7 @@ from .errors import (
     UnknownCytomineEnvSection,
     UnknownServiceError,
 )
-from .enums import CytomineEnvSectionEnum
+from .enums import ConfigSectionEnum
 from .env_store import DictExportable, EnvStore
 
 DOCKER_COMPOSE_FILENAME = "docker-compose.yml"
@@ -22,9 +22,8 @@ class UnknownServerError(ValueError):
         super().__init__(f"unknown server '{server}'", *args)
 
 
-class CytomineEnvsFile(DictExportable):
-    """parses a cytomine.yml file"""
-
+class ConfigFile(DictExportable):
+    """parses a yml config file"""
     def __init__(self, path, filename="cytomine.yml") -> None:
         self._filename = filename
         self._path = path
@@ -38,19 +37,19 @@ class CytomineEnvsFile(DictExportable):
         # both top-level sections are optional
         for section in self._raw_config.keys():
             try:
-                CytomineEnvSectionEnum(section)
+                ConfigSectionEnum(section)
             except ValueError:
                 raise UnknownCytomineEnvSection(section)
 
         self._global_envs = EnvStore()
         for ns, entries in self._raw_config.get(
-            CytomineEnvSectionEnum.GLOBAL.value, {}
+            ConfigSectionEnum.GLOBAL.value, {}
         ).items():
             self._global_envs.add_namespace(ns, entries)
 
         self._servers_env_stores = defaultdict(lambda: EnvStore())
         for server, envs in self._raw_config.get(
-            CytomineEnvSectionEnum.SERVICES.value, {}
+            ConfigSectionEnum.SERVICES.value, {}
         ).items():
             for ns, entries in envs.items():
                 self._servers_env_stores[server].add_namespace(

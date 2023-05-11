@@ -1,4 +1,4 @@
-from .enums import CytomineEnvSectionEnum
+from .enums import ConfigSectionEnum
 from ..errors import InstallerError
 
 
@@ -38,7 +38,7 @@ class MissingCytomineYamlFileError(InvalidServerConfigurationError):
 class UnknownCytomineEnvSection(InstallerError):
     def __init__(self, section, *args: object) -> None:
         available_values = ", ".join(
-            list(map(lambda v: v.value, CytomineEnvSectionEnum))
+            list(map(lambda v: v.value, ConfigSectionEnum))
         )
         super().__init__(
             f"unknown section '{section}', expects one of {{{available_values}}}", *args

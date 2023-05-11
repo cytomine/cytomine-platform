@@ -1,6 +1,6 @@
 import enum
 
 
-class CytomineEnvSectionEnum(enum.Enum):
+class ConfigSectionEnum(enum.Enum):
     GLOBAL = "global"
     SERVICES = "services"

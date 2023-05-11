@@ -6,7 +6,7 @@ from unittest import TestCase
 from cytomine_installer.deployment.env_store import UnknownValueTypeError
 from cytomine_installer.deployment.deployment_files import (
     DockerComposeFile,
-    CytomineEnvsFile,
+    ConfigFile,
     EditableDockerCompose,
     UnknownCytomineEnvSection,
 )
@@ -37,7 +37,7 @@ class TestCytomineEnvsFile(TestCase):
         tests_path = os.path.dirname(__file__)
         ce_path = os.path.join(tests_path, "files")
         ce_filename = "cytomine.mini.yml"
-        cytomine_envs_file = CytomineEnvsFile(ce_path, filename=ce_filename)
+        cytomine_envs_file = ConfigFile(ce_path, filename=ce_filename)
         self.assertEqual(cytomine_envs_file.path, ce_path)
         self.assertEqual(cytomine_envs_file.filename, ce_filename)
         self.assertEqual(
@@ -79,14 +79,14 @@ class TestCytomineEnvsFile(TestCase):
         ce_path = os.path.join(tests_path, "files")
         ce_filename = "cytomine.unknown-value-type.yml"
         with self.assertRaises(UnknownValueTypeError):
-            CytomineEnvsFile(ce_path, filename=ce_filename)
+            ConfigFile(ce_path, filename=ce_filename)
 
     def testFileWithInvalidTopLevelSection(self):
         tests_path = os.path.dirname(__file__)
         ce_path = os.path.join(tests_path, "files")
         ce_filename = "cytomine.invalid-top-level-sections.yml"
         with self.assertRaises(UnknownCytomineEnvSection):
-            CytomineEnvsFile(ce_path, filename=ce_filename)
+            ConfigFile(ce_path, filename=ce_filename)
 
 
 class TestEditableDockerCompose(TestCase):

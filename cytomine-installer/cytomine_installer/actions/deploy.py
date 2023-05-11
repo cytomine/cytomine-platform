@@ -62,10 +62,16 @@ class DeployAction(AbstractAction):
             help="mount point for config files in the container",
         )
         sub_parser.add_argument(
-            "--env-config-filename",
-            dest="env_config_filename",
+            "--working-config-filename",
+            dest="working_config_filename",
             default="cytomine.yml",
-            help="name of the environment config file",
+            help="name of the working yaml config file",
+        )
+        sub_parser.add_argument(
+            "--template-config-filename",
+            dest="template_config_filename",
+            default="cytomine.template",
+            help="name of the template yaml config file",
         )
         sub_parser.add_argument(
             "--overwrite",
@@ -111,6 +117,8 @@ class DeployAction(AbstractAction):
             configs_folder=namespace.configs_folder,
             envs_folder=namespace.envs_folder,
             configs_mount_point=namespace.configs_mount_point,
+            working_config_filename=namespace.working_config_filename,
+            template_config_filename=namespace.template_config_filename
         )
 
         with TemporaryDirectory() as tmpdir:

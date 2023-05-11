@@ -4,7 +4,7 @@ import yaml
 import shutil
 from .deployment_files import (
     DOCKER_COMPOSE_FILENAME,
-    CytomineEnvsFile,
+    ConfigFile,
     DockerComposeFile,
     EditableDockerCompose,
 )
@@ -50,7 +50,7 @@ class ServerFolder(Deployable):
         self,
         server_name,
         directory,
-        envs: CytomineEnvsFile,
+        envs: ConfigFile,
         configs_folder="configs",
         envs_folder="envs",
         configs_mount_point="/cm_configs",
@@ -203,7 +203,8 @@ class DeploymentFolder(Deployable):
     def __init__(
         self,
         directory="/bootstrap",
-        cytomine_envs_filename="cytomine.yml",
+        working_config_filename="cytomine.yml",
+        template_config_filename="cytomine.template",
         configs_folder="configs",
         envs_folder="envs",
         ignored_dirs=None,
@@ -214,8 +215,10 @@ class DeploymentFolder(Deployable):
         ----------
         directory: str
           Path of the directory where cytomine.yml is stored
-        cytomine_envs_filename: str
-          Name of the cytomine environment variables file
+        working_config_filename: str
+          Name of the working config file
+        template_config_filename: str
+          Name of the template config file
         configs_folder: str
           Name of the configs folder in each server folder
         envs_folder: str
@@ -233,9 +236,10 @@ class DeploymentFolder(Deployable):
         self._configs_folder = configs_folder
         self._envs_folder = envs_folder
         self._configs_mount_point = configs_mount_point
-        self._cytomine_envs_filename = cytomine_envs_filename
-        self._envs = CytomineEnvsFile(
-            path=self._directory, filename=self._cytomine_envs_filename
+        self._working_config_filename = working_config_filename
+        self._template_config_filename = template_config_filename
+        self._envs = ConfigFile(
+            path=self._directory, filename=self._working_config_filename
         )
 
         self._server_folders = dict()
@@ -322,7 +326,7 @@ class DeploymentFolder(Deployable):
     @property
     def source_files(self):
         """List (existing) source files"""
-        files = [self._cytomine_envs_filename]
+        files = [self._working_config_filename]
 
         for server_folder in self._server_folders.values():
             files.extend(

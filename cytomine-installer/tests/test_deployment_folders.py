@@ -2,7 +2,7 @@ import os
 import shutil
 from tempfile import TemporaryDirectory
 import unittest
-from cytomine_installer.deployment.deployment_files import CytomineEnvsFile
+from cytomine_installer.deployment.deployment_files import ConfigFile
 from cytomine_installer.deployment.deployment_folders import (
     DeploymentFolder,
     InvalidServerConfigurationError,
@@ -20,7 +20,7 @@ class TestServerFolder(FileSystemTestCase):
     def testListSourceFiles(self):
         tests_path = os.path.dirname(__file__)
         deploy_path = os.path.join(tests_path, "files", "fake_single_server", "in")
-        envs_file = CytomineEnvsFile(deploy_path)
+        envs_file = ConfigFile(deploy_path)
         server_folder = ServerFolder("default", deploy_path, envs_file)
         self.assertSetEqual(
             set(server_folder.source_files),
@@ -34,7 +34,7 @@ class TestServerFolder(FileSystemTestCase):
     def testGeneratedFiles(self):
         tests_path = os.path.dirname(__file__)
         deploy_path = os.path.join(tests_path, "files", "fake_single_server", "in")
-        envs_file = CytomineEnvsFile(deploy_path)
+        envs_file = ConfigFile(deploy_path)
         server_folder = ServerFolder("default", deploy_path, envs_file)
         self.assertSetEqual(
             set(server_folder.generated_files),
@@ -44,7 +44,7 @@ class TestServerFolder(FileSystemTestCase):
     def testTargetFiles(self):
         tests_path = os.path.dirname(__file__)
         deploy_path = os.path.join(tests_path, "files", "fake_single_server", "in")
-        envs_file = CytomineEnvsFile(deploy_path)
+        envs_file = ConfigFile(deploy_path)
         server_folder = ServerFolder("default", deploy_path, envs_file)
         self.assertSetEqual(
             set(server_folder.target_files),
@@ -55,7 +55,7 @@ class TestServerFolder(FileSystemTestCase):
         tests_path = os.path.dirname(__file__)
         deploy_path = os.path.join(tests_path, "files", "fake_multi_server", "in")
         server_path = os.path.join(deploy_path, "server-core")
-        envs_file = CytomineEnvsFile(deploy_path)
+        envs_file = ConfigFile(deploy_path)
         server_folder = ServerFolder("server-core", server_path, envs_file)
         self.assertSetEqual(
             set(server_folder.source_files),
@@ -77,7 +77,7 @@ class TestServerFolder(FileSystemTestCase):
         server_path = os.path.join(deploy_path, "server-core")
         out_deploy_path = os.path.join(tests_path, "files", "fake_multi_server", "out")
         out_server_path = os.path.join(out_deploy_path, "server-core")
-        envs_file = CytomineEnvsFile(deploy_path)
+        envs_file = ConfigFile(deploy_path)
         server_folder = ServerFolder("server-core", server_path, envs_file)
         with TemporaryDirectory() as tmpdir:
             target_server_path = os.path.join(tmpdir, "out")
