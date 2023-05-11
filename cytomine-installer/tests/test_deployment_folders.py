@@ -9,7 +9,7 @@ from cytomine_installer.deployment.deployment_folders import (
     ServerFolder,
 )
 from cytomine_installer.deployment.errors import (
-    MissingCytomineYamlFileError,
+    MissingConfigFileError,
     NoDockerComposeYamlFileError,
 )
 from cytomine_installer.util import list_relative_files
@@ -124,7 +124,7 @@ class TestDeploymentFolder(TestDeploymentGeneric):
     def testNoCytomineYml(self):
         tests_path = os.path.dirname(__file__)
         deploy_path = os.path.join(tests_path, "files", "fake_no_cytomine_yml")
-        with self.assertRaises(MissingCytomineYamlFileError):
+        with self.assertRaises(MissingConfigFileError):
             DeploymentFolder(directory=deploy_path)
 
     def testNoDockerComposeFile(self):

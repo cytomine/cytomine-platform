@@ -16,7 +16,7 @@ class InvalidServerConfigurationError(InstallerError):
     pass
 
 
-class MissingCytomineYamlFileError(InvalidServerConfigurationError):
+class MissingConfigFileError(InvalidServerConfigurationError):
     def __init__(self, path, filename="cytomine.yml", *args: object) -> None:
         super().__init__(
             f"missing cytomine configuration '{filename}' in '{path}'", *args
@@ -28,18 +28,16 @@ class NoDockerComposeYamlFileError(InvalidServerConfigurationError):
         super().__init__(f"no docker-compose.yml file found in '{path}'", *args)
 
 
-class MissingCytomineYamlFileError(InvalidServerConfigurationError):
+class MissingConfigFileError(InvalidServerConfigurationError):
     def __init__(self, path, filename="cytomine.yml", *args: object) -> None:
         super().__init__(
             f"missing cytomine configuration '{filename}' in '{path}'", *args
         )
 
 
-class UnknownCytomineEnvSection(InstallerError):
+class UnknownConfigSection(InstallerError):
     def __init__(self, section, *args: object) -> None:
-        available_values = ", ".join(
-            list(map(lambda v: v.value, ConfigSectionEnum))
-        )
+        available_values = ", ".join(list(map(lambda v: v.value, ConfigSectionEnum)))
         super().__init__(
             f"unknown section '{section}', expects one of {{{available_values}}}", *args
         )

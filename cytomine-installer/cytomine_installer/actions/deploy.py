@@ -118,7 +118,7 @@ class DeployAction(AbstractAction):
             envs_folder=namespace.envs_folder,
             configs_mount_point=namespace.configs_mount_point,
             working_config_filename=namespace.working_config_filename,
-            template_config_filename=namespace.template_config_filename
+            template_config_filename=namespace.template_config_filename,
         )
 
         with TemporaryDirectory() as tmpdir:

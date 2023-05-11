@@ -5,9 +5,9 @@ import yaml
 from collections import defaultdict
 
 from .errors import (
-    MissingCytomineYamlFileError,
+    MissingConfigFileError,
     NoDockerComposeYamlFileError,
-    UnknownCytomineEnvSection,
+    UnknownConfigSection,
     UnknownServiceError,
 )
 from .enums import ConfigSectionEnum
@@ -24,12 +24,22 @@ class UnknownServerError(ValueError):
 
 class ConfigFile(DictExportable):
     """parses a yml config file"""
-    def __init__(self, path, filename="cytomine.yml") -> None:
+
+    def __init__(self, path, filename="cytomine.yml", file_must_exists=True) -> None:
         self._filename = filename
         self._path = path
 
-        if not os.path.isfile(self.filepath):
-            raise MissingCytomineYamlFileError(path, filename)
+        file_exists = os.path.isfile(self.filepath)
+        if not file_exists and file_must_exists:
+            raise MissingConfigFileError(path, filename)
+
+        # empty configuration
+        self._global_envs = EnvStore()
+        self._servers_env_stores = defaultdict(EnvStore)
+        self._raw_config = dict()
+
+        if not file_exists:
+            return
 
         with open(self.filepath, "r", encoding="utf8") as file:
             self._raw_config = yaml.load(file, Loader=yaml.Loader)
@@ -39,15 +49,13 @@ class ConfigFile(DictExportable):
             try:
                 ConfigSectionEnum(section)
             except ValueError:
-                raise UnknownCytomineEnvSection(section)
+                raise UnknownConfigSection(section)
 
-        self._global_envs = EnvStore()
         for ns, entries in self._raw_config.get(
             ConfigSectionEnum.GLOBAL.value, {}
         ).items():
             self._global_envs.add_namespace(ns, entries)
 
-        self._servers_env_stores = defaultdict(lambda: EnvStore())
         for server, envs in self._raw_config.get(
             ConfigSectionEnum.SERVICES.value, {}
         ).items():

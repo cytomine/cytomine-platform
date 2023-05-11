@@ -8,7 +8,7 @@ from cytomine_installer.deployment.deployment_files import (
     DockerComposeFile,
     ConfigFile,
     EditableDockerCompose,
-    UnknownCytomineEnvSection,
+    UnknownConfigSection,
 )
 from tests.util import UUID_PATTERN
 
@@ -85,7 +85,7 @@ class TestCytomineEnvsFile(TestCase):
         tests_path = os.path.dirname(__file__)
         ce_path = os.path.join(tests_path, "files")
         ce_filename = "cytomine.invalid-top-level-sections.yml"
-        with self.assertRaises(UnknownCytomineEnvSection):
+        with self.assertRaises(UnknownConfigSection):
             ConfigFile(ce_path, filename=ce_filename)
 
 
