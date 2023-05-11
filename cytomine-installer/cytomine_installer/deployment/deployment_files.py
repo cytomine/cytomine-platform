@@ -55,16 +55,18 @@ class ConfigFile(DictExportable):
             except ValueError:
                 raise UnknownConfigSection(section)
 
-        for ns, entries in raw_config.get(ConfigSectionEnum.GLOBAL.value, {}).items():
-            self._global_envs.add_namespace(ns, entries)
+        global_section = raw_config.get(ConfigSectionEnum.GLOBAL.value)
+        if global_section is not None:
+            for ns, entries in global_section.items():
+                self._global_envs.add_namespace(ns, entries)
 
-        for server, envs in raw_config.get(
-            ConfigSectionEnum.SERVICES.value, {}
-        ).items():
-            for ns, entries in envs.items():
-                self._servers_env_stores[server].add_namespace(
-                    ns, entries, store=self._global_envs
-                )
+        services_section = raw_config.get(ConfigSectionEnum.SERVICES.value)
+        if services_section is not None:
+            for server, envs in services_section.items():
+                for ns, entries in envs.items():
+                    self._servers_env_stores[server].add_namespace(
+                        ns, entries, store=self._global_envs
+                    )
 
     @property
     def filename(self):
