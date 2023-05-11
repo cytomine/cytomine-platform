@@ -1,0 +1,9 @@
+version: "3.3"
+services:
+  core:
+    volumes:
+      - ./configs/core:/cm_configs
+    
+  ims:
+    volumes:
+      - ./configs/ims:/cm_configs
