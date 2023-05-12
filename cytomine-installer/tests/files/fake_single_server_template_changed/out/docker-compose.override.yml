@@ -1,0 +1,14 @@
+version: "3.3"
+services:
+  core:
+    env_file: envs/core.env
+    volumes:
+      - ./configs/core:/cm_configs
+    
+  ims:
+    env_file: envs/ims.env
+    volumes:
+      - ./configs/ims:/cm_configs
+
+  pims:
+    env_file: envs/pims.env

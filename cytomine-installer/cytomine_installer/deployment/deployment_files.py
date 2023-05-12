@@ -131,7 +131,10 @@ class ConfigFile(DictExportable):
         for server_name1, env_store1 in config_file1._servers_env_stores.items():
             env_store2 = config_file2._servers_env_stores.get(server_name1, EnvStore())
             new_config_file._servers_env_stores[server_name1] = EnvStore.merge(
-                env_store1, env_store2, merge_policy=merge_policy
+                env_store1,
+                env_store2,
+                merge_policy=merge_policy,
+                ref_store=new_config_file._global_envs,
             )
         # add new servers from config file 2
         new_servers = set(config_file2._servers_env_stores.keys()).difference(
@@ -139,7 +142,9 @@ class ConfigFile(DictExportable):
         )
         for server_name2 in new_servers:
             env_store2 = config_file2._servers_env_stores[server_name2]
-            env_store2 = EnvStore.merge(env_store2, EnvStore())  # deep copy
+            env_store2 = EnvStore.merge(
+                env_store2, EnvStore(), ref_store=new_config_file._global_envs
+            )  # deep copy
             new_config_file._servers_env_stores[server_name2] = env_store2
         return new_config_file
 

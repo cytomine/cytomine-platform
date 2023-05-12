@@ -1,0 +1,103 @@
+version: "3.9"
+services:
+
+  mongo:
+    image: $IMAGES_MONGO
+    container_name: mongo
+    restart: unless-stopped
+    volumes:
+      - mongo_data:/data/db 
+
+  postgis:
+    image: $IMAGES_POSTGIS
+    container_name: postgis
+    restart: unless-stopped
+    volumes:
+      - postgis_data:/var/lib/postgresql
+    deploy:
+      resources:
+        # limits or reservations ?
+        reservations:
+          memory: 8G
+
+  rabbitmq:
+    image: $IMAGES_RABBITMQ
+    container_name: rabbitmq
+    restart: unless-stopped
+    ports:
+      - 5672
+      - 15672
+
+  bioformat:
+    image: $IMAGES_BIOFORMAT
+    container_name: bioformat
+    restart: unless-stopped
+    volumes:
+      - images_data:$CONTAINER_PATHS_IMAGES
+  
+  pims-cache:
+    image: $IMAGES_PIMS_CACHE
+    container_name: pims-cache
+    restart: unless-stopped
+
+  pims: 
+    image: $IMAGES_PIMS
+    container_name: pims
+    restart: unless-stopped
+    depends_on:
+      - nginx
+      - pims-cache
+      - rabbitmq
+    volumes:
+      - images_data:$CONTAINER_PATHS_IMAGES
+      - download_data:$CONTAINER_PATHS_UPLOADED  # why subpath of /data/images rather than another path ???
+    deploy:
+      resources:
+        # limits or reservations ?
+        reservations:
+          memory: 4G
+    
+  core:
+    image: $IMAGES_CORE
+    container_name: core
+    restart: unless-stopped
+    depends_on:
+      - nginx
+      - postgis
+      - mongo
+      - rabbitmq
+    volumes:
+      - /etc/localtime:/etc/localtime
+
+  web_ui:
+    image: $IMAGES_WEB_UI
+    container_name: web_ui
+    restart: unless-stopped
+    volumes:
+      - /etc/localtime:/etc/localtime
+
+  nginx:
+    image: $IMAGES_NGINX
+    container_name: nginx
+    restart: unless-stopped
+    depends_on:
+      - web_ui
+    ports:
+      - 80:80
+    volumes:
+      - download_data:$CONTAINER_PATHS_UPLOADED
+  
+  # to map nginx ip with urls to host's /etc/hosts
+  etc_hosts_rewriter:
+    image: alpine:latest
+    entrypoint: ["/bin/sh", "/cm_configs/rewrite.sh"]
+    depends_on:
+      - nginx
+    volumes:
+      - /etc:/local_etc/
+
+volumes:
+  mongo_data:
+  postgis_data:
+  images_data:
+  download_data:

@@ -1,0 +1,156 @@
+global:
+  container_paths:
+    constant:
+      IMAGES: /data/images
+      UPLOADED: /tmp/uploaded
+  images:
+    constant:
+      BIOFORMAT: cytomine/bioformat:v1.2.0
+      CORE: cytomine/core:4.3.6
+      MONGO: mongo:4.4.18-focal
+      NGINX: cytomine/nginx:1.22.1-1.2.0
+      PIMS: cytomine/pims:0.13.6
+      PIMS_CACHE: redis:7.0.8
+      POSTGIS: cytomine/postgis:15-3.3-alpine-1.2.0
+      RABBITMQ: rabbitmq:3.10
+      WEB_UI: cytomine/web_ui:2.5.0
+  internal_docker_urls:
+    constant:
+      BIOFORMAT: bioformat
+      CORE: core:8080
+      MONGO: mongo
+      NGINX: nginx
+      PIMS: pims:5000
+      PIMS_CACHE: pims_cache
+      POSTGIS: postgis
+      RABBITMQ: rabbitmq
+      WEB_UI: web_ui
+  javamelody:
+    constant:
+      DATA_PATH: /javamelody-core
+      PASS: +spZ6/UlyCW7/8Csni1+6JCPI4yUHR9DHzyXwVkr9Vs=
+      USER: admin
+  keys:
+    constant:
+      IMAGE_SERVER_PRIVATE: a0808df5-2993-4b23-8f36-10247afdb983
+      IMAGE_SERVER_PUBLIC: 938d0d0d-a7c6-4bf3-9be4-006270c42cb4
+  mongodb:
+    constant:
+      DB_NAME: cytomine
+      PASS: jOgk/NW63BmWGxKaP0WzqXO0xdluXwwGy9OLTUADWFU=
+      PORT: 27017
+      USER: mongoadmin
+  postgres:
+    constant:
+      DB_NAME: docker
+      PASS: 8eZPlv3ym6qMpv83/tsJ2JLzGK1j2cu7w9/Ophc9EOk=
+      PORT: 5432
+      USER: docker
+  smtp:
+    constant:
+      HOST: mail.smtp
+      PASS: password
+      PORT: 587
+      USER: user
+  urls:
+    constant:
+      CORE: cytomine.local
+      IMAGE_SERVER: ims.cytomine.local
+      UPLOAD: upload.cytomine.local
+  urls_with_scheme:
+    constant:
+      CORE: http://cytomine.local
+      IMAGE_SERVER: http://ims.cytomine.local
+      UPLOAD: http://upload.cytomine.local
+services:
+  default:
+    bioformat:
+      constant:
+        BIOFORMAT_PORT: 4321
+    core:
+      constant:
+        ADMIN_EMAIL: info@cytomine.coop
+        ADMIN_PASSWORD: QzeIuwkpFnZlqc/YmTbjT7u12rSfUx9+QWOZJej5MMk=
+        ADMIN_PRIVATE_KEY: 9ed1d4e0-04ec-4a53-9b63-c1a281373901
+        ADMIN_PUBLIC_KEY: 8b72f181-4acc-46db-b44c-c9632d916d9c
+        INSTANCE_HOST_PHONE_NUMBER: null
+        INSTANCE_HOST_SUPPORT_MAIL: null
+        JWT_SECRET: Wn;UaAC~.zhztxD.7IgcUSBW~4P69UyXuZjc^q56p5;2MNq4sGzGKs26CNfSGMXmq9eiDog7AmB15YGaqKmfl9;Ho3CCFvPf+eD4'~zm59.mo0+Q_KS^Sc8'B5p0BOE0be9ofClvgknQtTJl;P67luTlvcrfsshD9mqy7eFnFd6hk2ufgyA_eW8UlM^M9DQ29at7xR;wl+Dw~aj7'y0Gf'mM^nBZ3rJ~j^LR3hOFrm0jJtdpx^7f7nT5kCf0YOo9
+        RABBITMQ_PRIVATE_KEY: d82d1294-b666-47cd-8dfe-0198922d2e7b
+        RABBITMQ_PUBLIC_KEY: 517cb0d4-ef01-4ba7-9877-94f0523136f2
+        REVERSE_PROXY_URL: nginx
+        SERVER_ID: 5fc472b6-e550-4b9e-87ee-35c7bcde73b9
+        SUPER_ADMIN_PRIVATE_KEY: fe1fe129-1fec-45e6-a941-69b1d5a68f84
+        SUPER_ADMIN_PUBLIC_KEY: 0e5a5779-d6b2-40b1-8c61-97eb71041098
+      global:
+        IMAGE_SERVER_PRIVATE_KEY: keys.IMAGE_SERVER_PRIVATE
+        IMAGE_SERVER_PUBLIC_KEY: keys.IMAGE_SERVER_PUBLIC
+        INSTANCE_HOST_WEBSITE_URL: urls_with_scheme.CORE
+        JAVAMELODY_PASS: javamelody.PASS
+        JAVAMELODY_PATH: javamelody.DATA_PATH
+        JAVAMELODY_USER: javamelody.USER
+        MONGO_DB_NAME: mongodb.DB_NAME
+        MONGO_HOST: internal_docker_urls.MONGO
+        MONGO_PASS: mongodb.PASS
+        MONGO_PORT: mongodb.PORT
+        MONGO_USER: mongodb.USER
+        POSTGIS_DB_NAME: postgres.DB_NAME
+        POSTGIS_HOST: internal_docker_urls.POSTGIS
+        POSTGIS_PASS: postgres.PASS
+        POSTGIS_PORT: postgres.PORT
+        POSTGIS_USER: postgres.USER
+        SMTP_HOST: smtp.HOST
+        SMTP_PASS: smtp.PASS
+        SMTP_PORT: smtp.PORT
+        SMTP_USER: smtp.USER
+        STORAGE_PATH: container_paths.IMAGES
+        URL_CORE: urls_with_scheme.CORE
+        URL_IMS1: urls_with_scheme.IMAGE_SERVER
+        URL_IMS2: urls_with_scheme.IMAGE_SERVER
+    etc_hosts_rewriter:
+      constant:
+        PROXY_HOSTNAME: nginx
+      global:
+        URL_CORE: urls.CORE
+        URL_IMS1: urls.IMAGE_SERVER
+        URL_IMS2: urls.IMAGE_SERVER
+        URL_UPLOAD: urls.UPLOAD
+    mongo:
+      global:
+        MONGO_INITDB_ROOT_PASSWORD: mongodb.PASS
+        MONGO_INITDB_ROOT_USERNAME: mongodb.USER
+        MONGO_INIT_DATABASE: mongodb.DB_NAME
+    nginx:
+      global:
+        INTERNAL_URLS_CORE: internal_docker_urls.CORE
+        INTERNAL_URLS_IMS: internal_docker_urls.PIMS
+        INTERNAL_URLS_WEB_UI: internal_docker_urls.WEB_UI
+        UPLOAD_PATH: container_paths.UPLOADED
+        URLS_CORE: urls.CORE
+        URLS_IMAGE_SERVER: urls.IMAGE_SERVER
+        URLS_UPLOAD: urls.UPLOAD
+    pims:
+      constant:
+        DEFAULT_ANNOTATION_ORIGIN: LEFT_TOP
+        DEFAULT_IMAGE_SIZE_SAFETY_MODE: SAFE_REJECT
+        LOG_CONFIG_FILE: /app/logging.yml
+        MAX_REQUESTS: 0
+        OUTPUT_SIZE_LIMIT: 10000
+        WEB_CONCURRENCY: 16
+        cache_enabled: true
+        task_queue_enabled: false
+      global:
+        CYTOMINE_PRIVATE_KEY: keys.IMAGE_SERVER_PRIVATE
+        CYTOMINE_PUBLIC_KEY: keys.IMAGE_SERVER_PUBLIC
+        PENDING_PATH: container_paths.UPLOADED
+        PIMS_URL: urls_with_scheme.IMAGE_SERVER
+        ROOT: container_paths.IMAGES
+    postgis:
+      global:
+        POSTGRES_DB: postgres.DB_NAME
+        POSTGRES_PASSWORD: postgres.PASS
+        POSTGRES_USER: postgres.USER
+    web_ui:
+      global:
+        URL_CORE: urls_with_scheme.CORE
+        URL_UPLOAD: urls_with_scheme.UPLOAD

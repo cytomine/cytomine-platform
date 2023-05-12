@@ -1,0 +1,28 @@
+services:
+  bioformat:
+    env_file: envs/bioformat.env
+  core:
+    env_file: envs/core.env
+    volumes:
+    - ./configs/core:/cm_configs
+  etc_hosts_rewriter:
+    env_file: envs/etc_hosts_rewriter.env
+    volumes:
+    - ./configs/etc_hosts_rewriter:/cm_configs
+  mongo:
+    env_file: envs/mongo.env
+  nginx:
+    env_file: envs/nginx.env
+    volumes:
+    - ./configs/nginx:/cm_configs
+  pims:
+    env_file: envs/pims.env
+    volumes:
+    - ./configs/pims:/cm_configs
+  postgis:
+    env_file: envs/postgis.env
+  web_ui:
+    env_file: envs/web_ui.env
+    volumes:
+    - ./configs/web_ui:/cm_configs
+version: '3.9'

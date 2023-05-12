@@ -1,0 +1,188 @@
+global:
+  images:
+    constant:
+      BIOFORMAT: cytomine/bioformat:v1.2.0
+      CORE: cytomine/core:4.3.6
+      MONGO: mongo:4.4.18-focal
+      NGINX: cytomine/nginx:1.22.1-1.2.0
+      PIMS_CACHE: redis:7.0.8
+      PIMS: cytomine/pims:0.13.6
+      POSTGIS: cytomine/postgis:15-3.3-alpine-1.2.0
+      RABBITMQ: rabbitmq:3.10
+      WEB_UI: cytomine/web_ui:2.5.0
+
+  urls: # add these urls to your /etc/hosts (mapping nginx container ip)
+    constant:
+      CORE: cytomine.local
+      IMAGE_SERVER: ims.cytomine.local
+      UPLOAD: upload.cytomine.local
+
+  urls_with_scheme:
+    constant:
+      CORE: http://cytomine.local
+      IMAGE_SERVER: http://ims.cytomine.local
+      UPLOAD: http://upload.cytomine.local
+
+  internal_docker_urls: # must match respective container hostnames from compose file
+    constant: 
+      WEB_UI: web_ui
+      CORE: core:8080
+      PIMS: pims:5000
+      RABBITMQ: rabbitmq
+      BIOFORMAT: bioformat
+      MONGO: mongo
+      NGINX: nginx
+      PIMS_CACHE: pims_cache
+      POSTGIS: postgis
+
+  container_paths:
+    constant:
+      IMAGES: /data/images
+      UPLOADED: /tmp/uploaded
+
+  javamelody:
+    constant:
+      DATA_PATH: /javamelody-core # inside container
+      USER: admin
+    auto:
+      PASS:
+        type: openssl
+        length: 32
+
+  postgres:
+    constant:
+      PORT: 5432
+      DB_NAME: docker
+      USER: docker
+    auto:
+      PASS:
+        type: openssl
+        length: 32
+
+  mongodb:
+    constant:
+      USER: mongoadmin
+      DB_NAME: cytomine
+      PORT: 27017
+    auto:
+      PASS:
+        type: openssl
+        length: 32
+
+  keys:
+    auto:
+      IMAGE_SERVER_PRIVATE: random_uuid
+      IMAGE_SERVER_PUBLIC: random_uuid
+
+  smtp:
+    constant:
+      HOST: mail.smtp
+      PORT: 587
+      USER: user
+      PASS: password
+
+services:
+  default:
+    core:
+      constant:
+        ADMIN_EMAIL: info@cytomine.coop
+        REVERSE_PROXY_URL: nginx
+        INSTANCE_HOST_SUPPORT_MAIL:
+        INSTANCE_HOST_PHONE_NUMBER:
+      auto:
+        SERVER_ID: random_uuid
+        JWT_SECRET:
+          type: secret
+          length: 256
+          whitelist: abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'+.;^_~
+        ADMIN_PASSWORD:
+          type: openssl
+          length: 32
+        ADMIN_PRIVATE_KEY: random_uuid
+        ADMIN_PUBLIC_KEY: random_uuid
+        SUPER_ADMIN_PRIVATE_KEY: random_uuid
+        SUPER_ADMIN_PUBLIC_KEY: random_uuid
+        RABBITMQ_PRIVATE_KEY: random_uuid
+        RABBITMQ_PUBLIC_KEY: random_uuid
+      global:
+        IMAGE_SERVER_PRIVATE_KEY: keys.IMAGE_SERVER_PRIVATE
+        IMAGE_SERVER_PUBLIC_KEY: keys.IMAGE_SERVER_PUBLIC
+        POSTGIS_HOST: internal_docker_urls.POSTGIS
+        POSTGIS_PORT: postgres.PORT
+        POSTGIS_DB_NAME: postgres.DB_NAME
+        POSTGIS_USER: postgres.USER
+        POSTGIS_PASS: postgres.PASS
+        SMTP_HOST: smtp.HOST
+        SMTP_PORT: smtp.PORT
+        SMTP_USER: smtp.USER
+        SMTP_PASS: smtp.PASS
+        MONGO_HOST: internal_docker_urls.MONGO
+        MONGO_PORT: mongodb.PORT
+        MONGO_USER: mongodb.USER
+        MONGO_PASS: mongodb.PASS
+        MONGO_DB_NAME: mongodb.DB_NAME
+        JAVAMELODY_PATH: javamelody.DATA_PATH
+        JAVAMELODY_USER: javamelody.USER
+        JAVAMELODY_PASS: javamelody.PASS
+        URL_CORE: urls_with_scheme.CORE
+        URL_IMS1: urls_with_scheme.IMAGE_SERVER
+        URL_IMS2: urls_with_scheme.IMAGE_SERVER
+        INSTANCE_HOST_WEBSITE_URL: urls_with_scheme.CORE
+        STORAGE_PATH: container_paths.IMAGES
+
+    mongo:
+      global:
+        MONGO_INITDB_ROOT_USERNAME: mongodb.USER
+        MONGO_INITDB_ROOT_PASSWORD: mongodb.PASS
+        MONGO_INIT_DATABASE: mongodb.DB_NAME
+
+    bioformat:
+      constant:
+        BIOFORMAT_PORT: 4321
+
+    pims:
+      constant:
+        WEB_CONCURRENCY: 16
+        MAX_REQUESTS: 0
+        LOG_CONFIG_FILE: /app/logging.yml
+        DEFAULT_IMAGE_SIZE_SAFETY_MODE: SAFE_REJECT
+        DEFAULT_ANNOTATION_ORIGIN: LEFT_TOP
+        OUTPUT_SIZE_LIMIT: 10000
+        task_queue_enabled: false
+        cache_enabled: true
+      global: 
+        CYTOMINE_PUBLIC_KEY: keys.IMAGE_SERVER_PUBLIC
+        CYTOMINE_PRIVATE_KEY: keys.IMAGE_SERVER_PRIVATE
+        ROOT: container_paths.IMAGES
+        PENDING_PATH: container_paths.UPLOADED
+        PIMS_URL: urls_with_scheme.IMAGE_SERVER
+
+    web_ui:
+      global:
+        URL_CORE: urls_with_scheme.CORE
+        URL_UPLOAD: urls_with_scheme.UPLOAD
+
+    postgis:
+      global:
+        POSTGRES_USER: postgres.USER
+        POSTGRES_PASSWORD: postgres.PASS
+        POSTGRES_DB: postgres.DB_NAME
+
+    nginx:
+      global:
+        INTERNAL_URLS_WEB_UI: internal_docker_urls.WEB_UI
+        INTERNAL_URLS_CORE: internal_docker_urls.CORE
+        INTERNAL_URLS_IMS: internal_docker_urls.PIMS
+        URLS_CORE: urls.CORE
+        URLS_IMAGE_SERVER: urls.IMAGE_SERVER
+        URLS_UPLOAD: urls.UPLOAD
+        UPLOAD_PATH: container_paths.UPLOADED
+
+    etc_hosts_rewriter:
+      constant:
+        PROXY_HOSTNAME: nginx
+      global:
+        URL_CORE: urls.CORE
+        URL_IMS1: urls.IMAGE_SERVER
+        URL_IMS2: urls.IMAGE_SERVER
+        URL_UPLOAD: urls.UPLOAD

@@ -160,8 +160,8 @@ class TestEnvStore(TestCase):
         
 
     def testMergeSameNamespaceSameVar(self):
-        nss1 = {"ns1": {"auto": {"VAR1": {"type": "openssl"}}}}
-        nss2 = {"ns1": {"auto": {"VAR1": {"type": "openssl"}}}}
+        nss1 = {"ns1": {"constant": {"VAR1": "varvalue"}}}
+        nss2 = {"ns1": {"constant": {"VAR1": "varvalue2"}}}
         env_store1 = EnvStore()
         for ns, entries in nss1.items():
             env_store1.add_namespace(ns, entries, store=self._global)

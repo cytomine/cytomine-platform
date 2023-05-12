@@ -126,6 +126,22 @@ class TestDeploy(TestDeploymentGeneric):
             parser.call(["deploy", "-s", deploy_file_path, "-t", tmpdir])
             self.assertSameDirectories(tmpdir, output_ref_path)
     
+    def testDeploySingleServerTemplateChanged(self):
+        tests_path = os.path.dirname(__file__)
+        deploy_file_path = os.path.join(tests_path, "files", "fake_single_server_template_changed", "in")
+        output_ref_path = os.path.join(tests_path, "files", "fake_single_server_template_changed", "out")
+        with TemporaryDirectory() as tmpdir:
+            parser.call(["deploy", "-s", deploy_file_path, "-t", tmpdir])
+            self.assertSameDirectories(tmpdir, output_ref_path)
+
+    def testDeployCommunityEditionTemplateAndYml(self):
+        tests_path = os.path.dirname(__file__)
+        deploy_file_path = os.path.join(tests_path, "files", "ce_template_and_yml", "in")
+        output_ref_path = os.path.join(tests_path, "files", "ce_template_and_yml", "out")
+        with TemporaryDirectory() as tmpdir:
+            parser.call(["deploy", "-s", deploy_file_path, "-t", tmpdir])
+            self.assertSameDirectories(tmpdir, output_ref_path)
+
     def testDeploySingleServerTemplateOnlyAndAuto(self):
         tests_path = os.path.dirname(__file__)
         deploy_file_path = os.path.join(tests_path, "files", "fake_single_server_template_only_with_auto", "in")
