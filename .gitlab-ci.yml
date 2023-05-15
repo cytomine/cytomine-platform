@@ -5,7 +5,7 @@ stages:
 variables:
   IMAGE_NAME: "postgis"
   POSTGIS_VERSION: "15-3.3-alpine"
-  IMAGE_VERSION: "${POSTGIS_VERSION}-1.2.0"
+  IMAGE_VERSION: "${POSTGIS_VERSION}-1.2.1"
   # Those other vars should be inherited from GitLab:
   # DOCKER_HUB_AUTH_CONFIG
 
