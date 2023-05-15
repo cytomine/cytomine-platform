@@ -35,7 +35,7 @@ RUN mkdir /docker-entrypoint-cytomine.d/
 COPY --from=cytomine/entrypoint-scripts:1.2.0 --chmod=774 /cytomine-entrypoint.sh /usr/local/bin/
 COPY --from=cytomine/entrypoint-scripts:1.2.0 --chmod=774 /envsubst-on-templates-and-move.sh /docker-entrypoint-cytomine.d/500-envsubst-on-templates-and-move.sh
 
-VOLUME ["/var/lib/postgresql"]
+VOLUME ["/var/lib/postgresql/data"]
 
 ENTRYPOINT ["cytomine-entrypoint.sh", "docker-entrypoint.sh"]
 CMD ["postgres", "-c", "config_file=/etc/postgres/postgres.conf"]
