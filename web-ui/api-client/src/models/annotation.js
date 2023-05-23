@@ -131,7 +131,7 @@ export default class Annotation extends Model {
    *
    * @returns {Object} The annotation profile projection
    */
-  async fetchProfileProjections(axis= null, cache= false) {
+  async fetchProfileProjections(axis=null, cache=false) {
     if(this.isNew()) {
       throw new Error('Cannot get profile for an annotation with no ID.');
     }

@@ -39,6 +39,7 @@ export {default as ProjectDefaultLayer} from './models/project-default-layer.js'
 export {default as ProjectRepresentative} from './models/project-representative.js';
 export {default as Property} from './models/property.js';
 export {default as Role} from './models/role.js';
+export {default as SampleHistogram} from './models/sample-histogram.js';
 export {default as SliceInstance} from './models/slice-instance.js';
 export {default as Software} from './models/software.js';
 export {default as SoftwareParameter} from './models/software-parameter.js';
@@ -91,6 +92,7 @@ export {default as ProjectDefaultLayerCollection} from './collections/project-de
 export {default as ProjectRepresentativeCollection} from './collections/project-representative-collection.js';
 export {default as PropertyCollection} from './collections/property-collection.js';
 export {default as RoleCollection} from './collections/role-collection.js';
+export {default as SampleHistogramCollection} from './collections/sample-histogram-collection.js';
 export {default as SliceInstanceCollection} from './collections/slice-instance-collection.js';
 export {default as SoftwareCollection} from './collections/software-collection.js';
 export {default as SoftwareParameterCollection} from './collections/software-parameter-collection.js';
