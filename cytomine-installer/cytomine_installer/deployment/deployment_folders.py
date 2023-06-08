@@ -175,10 +175,12 @@ class ServerFolder(Deployable):
                     service, f"./{target_config_relpath}:{self._configs_mount_point}"
                 )
 
-        shutil.copytree(
-            os.path.join(self._directory, self._configs_folder),
-            os.path.join(target_directory, self._configs_folder),
-        )
+        src_config_dir = os.path.join(self._directory, self._configs_folder)
+        if os.path.exists(src_config_dir):
+            shutil.copytree(
+                src_config_dir,
+                os.path.join(target_directory, self._configs_folder),
+            )
 
         # save override
         override_file.write_to(target_directory, DOCKER_COMPOSE_OVERRIDE_FILENAME)
