@@ -7,7 +7,7 @@ def write_dotenv(directory: str, envs: dict, filename: str = ".env"):
     """
     filepath = os.path.join(directory, filename)
     with open(filepath, "w", encoding="utf8") as file:
-        file.writelines([f"{key}=\"{value}\"{os.linesep}" for key, value in envs.items()])
+        file.writelines([f'{key}="{value}"{os.linesep}' for key, value in envs.items()])
     return filepath
 
 
