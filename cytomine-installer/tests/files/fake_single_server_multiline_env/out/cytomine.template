@@ -1,0 +1,13 @@
+global:
+  ns1:
+    constant:
+      GLOBAL_MULTILINE: |-
+        VALUE=1
+        VALUE2=
+
+services:
+  default:
+    service1:
+      global:
+        SERVICE1_MULTILINE: ns1.GLOBAL_MULTILINE
+    

@@ -169,6 +169,13 @@ class TestDeploy(TestDeploymentGeneric):
                 yml_content = yaml.load(file, Loader=yaml.Loader)
                 self.assertRegex(yml_content["global"]["ns1"]["auto"]["VAR1"], "random_uuid")
 
+    def testDeploySingleServerMultilineEnv(self):
+        tests_path = os.path.dirname(__file__)
+        deploy_file_path = os.path.join(tests_path, "files", "fake_single_server_multiline_env", "in")
+        output_ref_path = os.path.join(tests_path, "files", "fake_single_server_multiline_env", "out")
+        with TemporaryDirectory() as tmpdir:
+            parser.call(["deploy", "-s", deploy_file_path, "-t", tmpdir])
+            self.assertSameDirectories(tmpdir, output_ref_path)
 
     @unittest.skip("implement later")
     def testMultiServer(self):
