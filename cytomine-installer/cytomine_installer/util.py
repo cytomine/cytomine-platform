@@ -1,4 +1,5 @@
 import os
+import re
 
 
 def write_dotenv(directory: str, envs: dict, filename: str = ".env"):
@@ -6,8 +7,12 @@ def write_dotenv(directory: str, envs: dict, filename: str = ".env"):
     Returns filepath
     """
     filepath = os.path.join(directory, filename)
+    newline_pattern = re.compile(r"(?:\r\n|\n|\r)")
     with open(filepath, "w", encoding="utf8") as file:
-        file.writelines([f'{key}="{value}"{os.linesep}' for key, value in envs.items()])
+        for key, value in envs.items():
+            if newline_pattern.search(str(value)) is not None:
+                value = f'"{value}"'
+            file.write(f'{key}={value}{os.linesep}')
     return filepath
 
 
