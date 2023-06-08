@@ -177,6 +177,14 @@ class TestDeploy(TestDeploymentGeneric):
             parser.call(["deploy", "-s", deploy_file_path, "-t", tmpdir])
             self.assertSameDirectories(tmpdir, output_ref_path)
 
+    def testDeploySingleServerNoConfigNoTemplate(self):
+        tests_path = os.path.dirname(__file__)
+        deploy_file_path = os.path.join(tests_path, "files", "fake_single_server_no_config_no_template", "in")
+        output_ref_path = os.path.join(tests_path, "files", "fake_single_server_no_config_no_template", "out")
+        with TemporaryDirectory() as tmpdir:
+            parser.call(["deploy", "-s", deploy_file_path, "-t", tmpdir])
+            self.assertSameDirectories(tmpdir, output_ref_path)
+
     @unittest.skip("implement later")
     def testMultiServer(self):
         tests_path = os.path.dirname(__file__)
