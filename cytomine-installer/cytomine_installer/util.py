@@ -12,7 +12,7 @@ def write_dotenv(directory: str, envs: dict, filename: str = ".env"):
         for key, value in envs.items():
             if newline_pattern.search(str(value)) is not None:
                 value = f'"{value}"'
-            file.write(f'{key}={value}{os.linesep}')
+            file.write(f"{key}={value}{os.linesep}")
     return filepath
 
 
