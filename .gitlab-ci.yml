@@ -5,7 +5,7 @@ stages:
 variables:
   ENTRYPOINT_SCRIPTS_VERSION: '1.3.0'
   IMAGE_NAME: "cytomine/postgis"
-  IMAGE_VERSION: "${POSTGIS_VERSION}-${CI_COMMIT_TAG}"
+  IMAGE_VERSION: "${CI_COMMIT_TAG}"
   POSTGIS_VERSION: "15-3.3-alpine"
   # Those other vars should be inherited from GitLab:
   # DOCKER_HUB_AUTH_CONFIG
@@ -18,6 +18,7 @@ workflow:
     - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
       when: never
 
+    # TODO: reuse the tag regexp common job/rule
     # Publish it if it has ANY tag.
     - if: $CI_COMMIT_TAG != null
       variables:
