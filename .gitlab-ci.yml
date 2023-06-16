@@ -39,9 +39,10 @@ build-push-docker-image:
   rules:
     - if: $CI_COMMIT_TAG
   script:
-    - echo "Log in to Gitlab docker registry"
-    - mkdir -p ~/.docker
-    - echo ${DOCKER_AUTH_CONFIG} > ~/.docker/config.json
+
+    # Use credential helper (see https://docs.docker.com/engine/reference/commandline/login/#credentials-store)
+    - mkdir -p $HOME/.docker && echo $DOCKER_HUB_AUTH_CONFIG > $HOME/.docker/config.json
+    - echo "Registry credentials configured at $HOME/.docker/config.json"
 
     - echo "Build the docker image ${DOCKER_IMAGE_NAME}:${IMAGE_VERSION}"
     - docker build --build-arg NGINX_VERSION=${NGINX_VERSION} --build-arg IMAGE_REVISION=${CI_COMMIT_SHORT_SHA} -t ${DOCKER_IMAGE_NAME}:${IMAGE_VERSION} -t ${DOCKER_IMAGE_NAME}:latest -f Dockerfile .
