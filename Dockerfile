@@ -63,11 +63,13 @@ RUN CONFARGS=$(nginx -V 2>&1 | sed -n -e 's/^.*arguments: //p') \
     && make modules
 
 ## Stage: nginx
-ARG IMAGE_VERSION
 ARG NGINX_VERSION="1.22.1"
 FROM nginx:${NGINX_VERSION}-alpine as nginx-server
 
+ARG IMAGE_VERSION
 ARG IMAGE_REVISION
+ARG UPLOAD_MODULE_REPO="https://github.com/fdintino/nginx-upload-module"
+ARG UPLOAD_MODULE_COMMIT="643b4c1fa6993da6bc1f82e7121ca62a7696ee6b"
 
 LABEL org.opencontainers.image.authors='support@cytomine.com' \
       org.opencontainers.image.url='https://www.cytomine.org/' \
