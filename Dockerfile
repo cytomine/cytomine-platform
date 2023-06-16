@@ -13,10 +13,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-ARG NGINX_VERSION
+ARG NGINX_VERSION="1.22.1"
 
 
-## Stage 1: building nginx and modules builder
+## Stage: building nginx and modules builder
 FROM nginx:${NGINX_VERSION}-alpine as modules-builder
 ARG UPLOAD_MODULE_REPO="https://github.com/fdintino/nginx-upload-module"
 ARG UPLOAD_MODULE_COMMIT="643b4c1fa6993da6bc1f82e7121ca62a7696ee6b"
@@ -43,7 +43,7 @@ RUN  apk add --no-cache --virtual .build-deps \
 
 SHELL ["/bin/ash", "-eo", "pipefail", "-c"]
 
-RUN rm -rf /usr/src/nginx \ 
+RUN rm -rf /usr/src/nginx \
     && mkdir -p /usr/src \
     && wget http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz \
     && wget $UPLOAD_MODULE_REPO/archive/$UPLOAD_MODULE_COMMIT.tar.gz
@@ -62,27 +62,30 @@ RUN CONFARGS=$(nginx -V 2>&1 | sed -n -e 's/^.*arguments: //p') \
     sh -c "./configure --with-compat $CONFARGS --add-dynamic-module=/usr/src/nginx-upload-module" \
     && make modules
 
-## Stage 2: downloading provisioning scripts
-FROM alpine/git:2.36.3 as scripts-downloader
-ARG SCRIPTS_REPO_TAG="latest"
-ARG SCRIPTS_REPO_URL="https://github.com/cytomine/cytomine-docker-entrypoint-scripts.git"
-
-WORKDIR /root
-RUN mkdir scripts
-RUN git clone $SCRIPTS_REPO_URL /root/scripts \
-    && cd /root/scripts \
-    && git checkout tags/${SCRIPTS_REPO_TAG}
-
-## Stage 3: nginx
-ARG NGINX_VERSION
+## Stage: nginx
+ARG IMAGE_VERSION
+ARG NGINX_VERSION="1.22.1"
 FROM nginx:${NGINX_VERSION}-alpine as nginx-server
+
+ARG IMAGE_REVISION
+
+LABEL org.opencontainers.image.authors='support@cytomine.com' \
+      org.opencontainers.image.url='https://www.cytomine.org/' \
+      org.opencontainers.image.documentation='https://doc.cytomine.org/' \
+      org.opencontainers.image.source='https://github.com/cytomine/Cytomine-nginx/' \
+      org.opencontainers.image.vendor='Cytomine Corporation SA' \
+      org.opencontainers.image.version=${IMAGE_VERSION} \
+      org.opencontainers.image.revision=${IMAGE_REVISION}
+      org.opencontainers.image.deps.nginx.version=${NGINX_VERSION} \
+      org.opencontainers.image.deps.nginx.upload.module.repo=${UPLOAD_MODULE_REPO} \
+      org.opencontainers.image.deps.nginx.upload.module.commit=${UPLOAD_MODULE_COMMIT}
 
 COPY --from=modules-builder /usr/src/nginx/objs/*_module.so /etc/nginx/modules/
 
 # copying entrypoint scripts
 RUN mkdir /docker-entrypoint-cytomine.d/
-COPY --from=scripts-downloader --chmod=774 /root/scripts/cytomine-entrypoint.sh /usr/local/bin/
-COPY --from=scripts-downloader --chmod=774 /root/scripts/envsubst-on-templates-and-move.sh /docker-entrypoint-cytomine.d/500-envsubst-on-templates-and-move.sh
+COPY --from=cytomine/entrypoint-scripts:1.3.0 --chmod=774 /cytomine-entrypoint.sh /usr/local/bin/
+COPY --from=cytomine/entrypoint-scripts:1.3.0 --chmod=774 /envsubst-on-templates-and-move.sh /docker-entrypoint-cytomine.d/500-envsubst-on-templates-and-move.sh
 
 ENTRYPOINT ["cytomine-entrypoint.sh", "/docker-entrypoint.sh"]
 CMD ["nginx"]
