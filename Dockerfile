@@ -14,7 +14,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+ARG ENTRYPOINT_SCRIPTS_VERSION="1.3.0"
+ARG IMAGE_VERSION
+ARG IMAGE_REVISION
 ARG POSTGIS_VERSION="15-3.3-alpine"
+
+#######################################################################################
+## Stage: entrypoint script. Use a multi-stage because COPY --from cannot interpolate variables
+FROM cytomine/entrypoint-scripts:${ENTRYPOINT_SCRIPTS_VERSION} as entrypoint-scripts
 
 FROM postgis/postgis:${POSTGIS_VERSION}
 LABEL maintainer="Cytomine <dev@cytomine.com>"
@@ -32,8 +39,18 @@ COPY files/postgres.conf /etc/postgres/postgres.conf
 COPY files/postgres.default.conf /etc/postgres/00-default.conf
 
 RUN mkdir /docker-entrypoint-cytomine.d/
-COPY --from=cytomine/entrypoint-scripts:1.2.0 --chmod=774 /cytomine-entrypoint.sh /usr/local/bin/
-COPY --from=cytomine/entrypoint-scripts:1.2.0 --chmod=774 /envsubst-on-templates-and-move.sh /docker-entrypoint-cytomine.d/500-envsubst-on-templates-and-move.sh
+COPY --from=entrypoint-scripts --chmod=774 /cytomine-entrypoint.sh /usr/local/bin/
+COPY --from=entrypoint-scripts --chmod=774 /envsubst-on-templates-and-move.sh /docker-entrypoint-cytomine.d/500-envsubst-on-templates-and-move.sh
+
+LABEL org.opencontainers.image.authors='support@cytomine.com' \
+      org.opencontainers.image.url='https://www.cytomine.org/' \
+      org.opencontainers.image.documentation='https://doc.cytomine.org/' \
+      org.opencontainers.image.source='https://github.com/cytomine/Cytomine-postgis' \
+      org.opencontainers.image.vendor='Cytomine Corporation SA' \
+      org.opencontainers.image.version=${IMAGE_VERSION} \
+      org.opencontainers.image.revision=${IMAGE_REVISION} \
+      org.opencontainers.image.deps.postgis.version=${POSTGIS_VERSION} \
+      org.opencontainers.image.deps.node.entrypoint.scripts.version=${ENTRYPOINT_SCRIPTS_VERSION}
 
 VOLUME ["/var/lib/postgresql/data"]
 
