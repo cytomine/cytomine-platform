@@ -55,7 +55,7 @@ build-docker-image:
   script:
     - echo "The tag $CI_COMMIT_TAG has been pushed. Build & publish the image."
 
-    - echo "Build command is \n\t docker build -t ${IMAGE_NAME}:${IMAGE_VERSION} -t ${IMAGE_NAME}:latest -f Dockerfile ."
+    - echo "Build the docker image ${DOCKER_IMAGE_NAME}:${IMAGE_VERSION}"
     - | 
       docker build \
         --build-arg ENTRYPOINT_SCRIPTS_VERSION=${ENTRYPOINT_SCRIPTS_VERSION} \
@@ -74,4 +74,4 @@ build-docker-image:
     - echo "Pushing image to registry, tagged as ${IMAGE_NAME}:${IMAGE_VERSION} and ${IMAGE_NAME}:latest"
     - docker push ${IMAGE_NAME}:${IMAGE_VERSION}
     - docker push ${IMAGE_NAME}:latest
-    - echo "Successfully pushed docker image ${IMAGE_NAME}:${CM_VERSION} and ${IMAGE_NAME}:latest"
+    - echo "Successfully pushed docker image ${IMAGE_NAME}:${IMAGE_VERSION} and ${IMAGE_NAME}:latest"

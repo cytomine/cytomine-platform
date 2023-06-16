@@ -24,7 +24,10 @@ ARG POSTGIS_VERSION="15-3.3-alpine"
 FROM cytomine/entrypoint-scripts:${ENTRYPOINT_SCRIPTS_VERSION} as entrypoint-scripts
 
 FROM postgis/postgis:${POSTGIS_VERSION}
-LABEL maintainer="Cytomine <dev@cytomine.com>"
+ARG ENTRYPOINT_SCRIPTS_VERSION
+ARG IMAGE_VERSION
+ARG IMAGE_REVISION
+ARG POSTGIS_VERSION
 
 #set default user (and default DB name) to docker by default
 ENV POSTGRES_USER=docker
