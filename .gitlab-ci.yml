@@ -44,8 +44,9 @@ build-push-docker-image:
     - echo ${DOCKER_AUTH_CONFIG} > ~/.docker/config.json
 
     - echo "Build the docker image ${DOCKER_IMAGE_NAME}:${IMAGE_VERSION}"
-    - docker build --build-arg NGINX_VERSION=${NGINX_VERSION} --build-arg IMAGE_REVISION=${CI_COMMIT_SHORT_SHA} -t ${DOCKER_IMAGE_NAME}:${IMAGE_VERSION} -f Dockerfile .
+    - docker build --build-arg NGINX_VERSION=${NGINX_VERSION} --build-arg IMAGE_REVISION=${CI_COMMIT_SHORT_SHA} -t ${DOCKER_IMAGE_NAME}:${IMAGE_VERSION} -t ${DOCKER_IMAGE_NAME}:latest -f Dockerfile .
 
     - echo "Pushing docker image ${DOCKER_IMAGE_NAME}:${IMAGE_VERSION}"
-    - docker push ${DOCKER_IMAGE_NAME}:${CM_VERSION}
-    - echo "Successfully pushed docker image ${DOCKER_IMAGE_NAME}:${CM_VERSION}"
+    - docker push ${DOCKER_IMAGE_NAME}:${IMAGE_VERSION}
+    - docker push ${DOCKER_IMAGE_NAME}:latest
+    - echo "Successfully pushed docker image ${DOCKER_IMAGE_NAME}:${IMAGE_VERSION} and ${DOCKER_IMAGE_NAME}:latest"
