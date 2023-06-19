@@ -38,7 +38,7 @@ format-black:
 
 unittest:
   stage: test
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/python:${PYTHON_VERSION}-bullseye
+  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/python:${PYTHON_VERSION}-rc-slim-bullseye
   script:
     - python -m pip install -r requirements.txt
     - python -m unittest discover tests/
