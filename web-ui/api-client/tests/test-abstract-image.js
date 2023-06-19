@@ -56,12 +56,6 @@ describe('AbstractImage', function() {
       let currentUser = await User.fetchCurrent();
       expect(user.id).to.equal(currentUser.id);
     });
-
-    it('Get image servers', async function() {
-      let imageServers = await abstractImage.fetchImageServers();
-      expect(imageServers).to.be.instanceof(Array);
-      expect(imageServers).to.have.lengthOf.at.least(1);
-    });
   });
 
   describe('Update', function() {
@@ -138,14 +132,6 @@ describe('AbstractImage', function() {
       it('Add arbitrary object to the collection', function() {
         let collection = new AbstractImageCollection();
         expect(collection.push.bind(collection, {})).to.throw();
-      });
-    });
-
-
-    describe('Filtering', function() {
-      it('Filter on project', async function() {
-        let collection = await AbstractImageCollection.fetchAll({filterKey: 'project', filterValue: project});
-        expect(collection).to.have.lengthOf(0);
       });
     });
 

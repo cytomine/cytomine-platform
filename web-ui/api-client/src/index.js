@@ -17,8 +17,6 @@ export {default as AttachedFile} from './models/attached-file.js';
 export {default as CompanionFile} from './models/companion-file.js';
 export {default as Configuration} from './models/configuration.js';
 export {default as Description} from './models/description.js';
-export {default as Discipline} from './models/discipline.js';
-export {default as Group} from './models/group.js';
 export {default as ImageConsultation} from './models/image-consultation.js';
 export {default as ImageFilter} from './models/image-filter.js';
 export {default as ImageFilterProject} from './models/image-filter-project.js';
@@ -70,8 +68,6 @@ export {default as AnnotationTrackCollection} from './collections/annotation-tra
 export {default as AttachedFileCollection} from './collections/attached-file-collection.js';
 export {default as CompanionFileCollection} from './collections/companion-file-collection.js';
 export {default as ConfigurationCollection} from './collections/configuration-collection.js';
-export {default as DisciplineCollection} from './collections/discipline-collection.js';
-export {default as GroupCollection} from './collections/group-collection.js';
 export {default as ImageConsultationCollection} from './collections/image-consultation-collection.js';
 export {default as ImageFilterCollection} from './collections/image-filter-collection.js';
 export {default as ImageFilterProjectCollection} from './collections/image-filter-project-collection.js';

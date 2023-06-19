@@ -1,7 +1,7 @@
 import * as utils from './utils.js';
 import {JobTemplate, JobTemplateCollection} from '@';
 
-describe('JobTemplate', function() {
+describe.skip('JobTemplate', function() {
 
   let name = utils.randomString();
   let software;

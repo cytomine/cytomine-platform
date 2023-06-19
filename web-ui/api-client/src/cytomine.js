@@ -40,13 +40,86 @@ export default class Cytomine {
         return Promise.reject(error);
       });
 
+      let readToken = function() {
+        let switchedToken = sessionStorage.getItem('cytomine-switched-user-token');
+
+        if (switchedToken!=null) {
+          let validity = sessionStorage.getItem('cytomine-switched-user-validity');
+          let diffTime = sessionStorage.getItem('cytomine-switched-user-server-diff-time');
+          let serverDate = new Date(new Date().getTime() - diffTime);
+          if (serverDate > validity) {
+            // sessionStorage.removeItem('cytomine-switched-user-token');
+            // sessionStorage.removeItem('cytomine-switched-user-server-diff-time');
+            return localStorage.getItem('cytomine-authentication-token') || sessionStorage.getItem('cytomine-authentication-token');
+          }
+          else {
+            return sessionStorage.getItem('cytomine-switched-user-token');
+          }
+        }
+        else {
+          return localStorage.getItem('cytomine-authentication-token') || sessionStorage.getItem('cytomine-authentication-token');
+        }
+      };
+
+
+      const onRequestSuccess = config => {
+        const token = readToken();
+        if (token) {
+          if (!config.headers) {
+            config.headers = {};
+          }
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+      };
+      this.api.interceptors.request.use(onRequestSuccess);
+
+
       this.lastCommand = null;
 
       Cytomine._instance = this;
     }
 
+
+    let readToken = function() {
+      let switchedToken = sessionStorage.getItem('cytomine-switched-user-token');
+
+      if (switchedToken!=null) {
+        let validity = sessionStorage.getItem('cytomine-switched-user-validity');
+        let diffTime = sessionStorage.getItem('cytomine-switched-user-server-diff-time');
+        let serverDate = new Date(new Date().getTime() + diffTime);
+        if (serverDate > validity) {
+          // sessionStorage.removeItem('cytomine-switched-user-token');
+          // sessionStorage.removeItem('cytomine-switched-user-server-diff-time');
+          return localStorage.getItem('cytomine-authentication-token') || sessionStorage.getItem('cytomine-authentication-token');
+        }
+        else {
+          return sessionStorage.getItem('cytomine-switched-user-token');
+        }
+      }
+      else {
+        return localStorage.getItem('cytomine-authentication-token') || sessionStorage.getItem('cytomine-authentication-token');
+      }
+    };
+
+    const onRequestSuccess = config => {
+      const token = readToken();
+      if (token) {
+        if (!config.headers) {
+          config.headers = {};
+        }
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      return config;
+    };
+    axios.interceptors.request.use(onRequestSuccess);
+
+
     return Cytomine._instance;
   }
+
+
+
 
   /**
    * @returns {this} The singleton instance
@@ -79,7 +152,18 @@ export default class Cytomine {
    * @returns {{alive, authenticated, version, serverURL, serverID, user}} The data returned by the server
    */
   async ping(project) {
+
+    //
+    // const token = localStorage.getItem('cytomine-authentication-token') || sessionStorage.getItem('cytomine-authentication-token');
+    //
+    // let tokenValue = 'unknown';
+    // if (token) {
+    //   tokenValue = `Bearer ${token}`;
+    // }
+    // let {data} = await axios.post(`${this._host}/server/ping.json`, {project}, {headers: {'Authorization': `${tokenValue}`}});
+
     let {data} = await axios.post(`${this._host}/server/ping.json`, {project}, {withCredentials: true});
+
     return data;
   }
 
@@ -91,12 +175,20 @@ export default class Cytomine {
    * @param {boolean} [rememberMe=true]   Whether or not to remember the user
    */
   async login(username, password, rememberMe=true) {
-    let params = new URLSearchParams();
-    params.append('j_username', username);
-    params.append('j_password', password);
-    params.append('remember_me', rememberMe ? 'on' : 'off');
-    params.append('ajax', true);
-    await axios.post(`${this._host}/j_spring_security_check`, params, {withCredentials: true});
+    const params = { username: username, password: password, rememberMe: rememberMe };
+    let {data} = await axios.post(`${this._host}/api/authenticate`, params, {withCredentials: true});
+    const jwt = data['token'];
+
+    if (rememberMe) {
+      localStorage.setItem('cytomine-authentication-token', jwt);
+      sessionStorage.removeItem('cytomine-authentication-token');
+    }
+    else {
+      sessionStorage.setItem('cytomine-authentication-token', jwt);
+      localStorage.removeItem('cytomine-authentication-token');
+    }
+
+    return data;
   }
 
   /**
@@ -107,7 +199,13 @@ export default class Cytomine {
    */
   async loginWithToken(username, tokenKey) {
     let params = {username, tokenKey};
-    await axios.get(`${this._host}/login/loginWithToken`, {withCredentials: true, params});
+    let result = await axios.get(`${this._host}/login/loginWithToken`, {withCredentials: true, params});
+    const jwt = result.data['token'];
+
+    sessionStorage.setItem('cytomine-authentication-token', jwt);
+    localStorage.removeItem('cytomine-authentication-token');
+
+    return result.data;
   }
 
   /**
@@ -117,23 +215,32 @@ export default class Cytomine {
    */
   async switchUser(username) {
     let params = new URLSearchParams();
-    params.append('j_username', username);
-    params.append('ajax', true);
-    await axios.post(`${this._host}/j_spring_security_switch_user`, params, {withCredentials: true});
+    params.append('username', username);
+    let result = await axios.post(`${this._host}/api/login/impersonate`, params, {withCredentials: true});
+    sessionStorage.setItem('cytomine-switched-user-token', result.data['id_token']);
+    sessionStorage.setItem('cytomine-switched-user-validity', result.data['validity']);
+    sessionStorage.setItem('cytomine-switched-user-server-diff-time', result.data['created']-new Date().getTime());
+
   }
 
   /**
    * Stops impersonating another user
    */
-  async stopSwitchUser() {
-    await axios.get(`${this._host}/j_spring_security_exit_user`, {withCredentials: true});
+  stopSwitchUser() {
+    sessionStorage.removeItem('cytomine-switched-user-token');
+    sessionStorage.removeItem('cytomine-switched-user-validity');
+    sessionStorage.removeItem('cytomine-switched-user-created');
   }
 
   /**
    * Logout from Cytomine
    */
-  async logout() {
-    await axios.get(`${this._host}/logout`, {withCredentials: true});
+  logout() {
+    sessionStorage.removeItem('cytomine-authentication-token');
+    localStorage.removeItem('cytomine-authentication-token');
+    sessionStorage.removeItem('cytomine-switched-user-token');
+    sessionStorage.removeItem('cytomine-switched-user-validity');
+    sessionStorage.removeItem('cytomine-switched-user-created');
   }
 
   /**

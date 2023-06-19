@@ -11,7 +11,7 @@ export default class AbstractImageCollection extends Collection {
 
   /** @inheritdoc */
   static get allowedFilters() {
-    return [null, 'project'];
+    return [null];
   }
 
   /**
@@ -37,11 +37,6 @@ export default class AbstractImageCollection extends Collection {
   // HACK: remove (temporary hack due to lack of consistency in API endpoint)
   /** @inheritdoc */
   get uri() {
-    if(this._filter.key === 'project' && this._filter.value) {
-      return `project/${this._filter.value}/image.json`;
-    }
-    else {
-      return super.uri;
-    }
+    return super.uri;
   }
 }

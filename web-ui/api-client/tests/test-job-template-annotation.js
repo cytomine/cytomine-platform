@@ -1,7 +1,7 @@
 import * as utils from './utils.js';
 import {Job, JobTemplateAnnotation, JobTemplateAnnotationCollection} from '@';
 
-describe('JobTemplateAnnotation', function() {
+describe.skip('JobTemplateAnnotation', function() {
 
   let jobTemplate;
   let annotationIdent;

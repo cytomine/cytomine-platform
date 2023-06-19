@@ -260,7 +260,8 @@ describe('Project', function() {
       }
       projects = await Promise.all(projectPromises);
 
-      ({software} = await utils.getSoftwareProject({project: projects[0].id}));
+      // wait for software package
+      //({software} = await utils.getSoftwareProject({project: projects[0].id}));
     });
 
     after(async function() {
@@ -330,7 +331,7 @@ describe('Project', function() {
         expect(collection).to.have.lengthOf.at.least(nbProjects);
       });
 
-      it('Filter on software', async function() {
+      it.skip('Filter on software', async function() {
         let collection = new ProjectCollection();
         collection.setFilter('software', software);
         await collection.fetchAll();
