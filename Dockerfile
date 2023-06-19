@@ -53,7 +53,7 @@ LABEL org.opencontainers.image.authors='support@cytomine.com' \
       org.opencontainers.image.version=${IMAGE_VERSION} \
       org.opencontainers.image.revision=${IMAGE_REVISION} \
       org.opencontainers.image.deps.postgis.version=${POSTGIS_VERSION} \
-      org.opencontainers.image.deps.node.entrypoint.scripts.version=${ENTRYPOINT_SCRIPTS_VERSION}
+      org.opencontainers.image.deps.entrypoint.scripts.version=${ENTRYPOINT_SCRIPTS_VERSION}
 
 VOLUME ["/var/lib/postgresql/data"]
 
