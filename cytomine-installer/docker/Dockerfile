@@ -18,6 +18,9 @@ COPY requirements.txt /app/requirements.txt
 COPY cytomine_installer /app/cytomine_installer
 RUN pip install -e .
 
+ARG IMAGE_VERSION
+ARG IMAGE_REVISION
+ARG PYTHON_VERSION
 LABEL org.opencontainers.image.authors='support@cytomine.com' \
       org.opencontainers.image.url='https://www.cytomine.org/' \
       org.opencontainers.image.documentation='https://doc.cytomine.org/' \
