@@ -92,7 +92,7 @@ LABEL org.opencontainers.image.authors='support@cytomine.com' \
       org.opencontainers.image.deps.nginx.version=${NGINX_VERSION} \
       org.opencontainers.image.deps.nginx.upload.module.repo=${UPLOAD_MODULE_REPO} \
       org.opencontainers.image.deps.nginx.upload.module.commit=${UPLOAD_MODULE_COMMIT} \
-      org.opencontainers.image.deps.entrypoint.scripts.version=${ENTRYPOINT_SCRIPTS_VERSION} \
+      org.opencontainers.image.deps.entrypoint.scripts.version=${ENTRYPOINT_SCRIPTS_VERSION}
 
 COPY --from=modules-builder /usr/src/nginx/objs/*_module.so /etc/nginx/modules/
 
