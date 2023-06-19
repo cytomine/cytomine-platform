@@ -13,7 +13,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+ARG ENTRYPOINT_SCRIPTS_VERSION=1.3.0
+ARG IMAGE_VERSION
+ARG IMAGE_REVISION
 ARG NGINX_VERSION="1.22.1"
+ARG UPLOAD_MODULE_REPO="https://github.com/fdintino/nginx-upload-module"
+ARG UPLOAD_MODULE_COMMIT="643b4c1fa6993da6bc1f82e7121ca62a7696ee6b"
 
 
 ## Stage: building nginx and modules builder
@@ -62,12 +68,17 @@ RUN CONFARGS=$(nginx -V 2>&1 | sed -n -e 's/^.*arguments: //p') \
     sh -c "./configure --with-compat $CONFARGS --add-dynamic-module=/usr/src/nginx-upload-module" \
     && make modules
 
+#######################################################################################
+## Stage: entrypoint script. Use a multi-stage because COPY --from cannot interpolate variables
+FROM cytomine/entrypoint-scripts:${ENTRYPOINT_SCRIPTS_VERSION} as entrypoint-scripts
+
 ## Stage: nginx
-ARG NGINX_VERSION="1.22.1"
 FROM nginx:${NGINX_VERSION}-alpine as nginx-server
 
+ARG ENTRYPOINT_SCRIPTS_VERSION
 ARG IMAGE_VERSION
 ARG IMAGE_REVISION
+ARG NGINX_VERSION="1.22.1"
 ARG UPLOAD_MODULE_REPO="https://github.com/fdintino/nginx-upload-module"
 ARG UPLOAD_MODULE_COMMIT="643b4c1fa6993da6bc1f82e7121ca62a7696ee6b"
 
@@ -80,14 +91,15 @@ LABEL org.opencontainers.image.authors='support@cytomine.com' \
       org.opencontainers.image.revision=${IMAGE_REVISION} \
       org.opencontainers.image.deps.nginx.version=${NGINX_VERSION} \
       org.opencontainers.image.deps.nginx.upload.module.repo=${UPLOAD_MODULE_REPO} \
-      org.opencontainers.image.deps.nginx.upload.module.commit=${UPLOAD_MODULE_COMMIT}
+      org.opencontainers.image.deps.nginx.upload.module.commit=${UPLOAD_MODULE_COMMIT} \
+      org.opencontainers.image.deps.entrypoint.scripts.version=${ENTRYPOINT_SCRIPTS_VERSION} \
 
 COPY --from=modules-builder /usr/src/nginx/objs/*_module.so /etc/nginx/modules/
 
 # copying entrypoint scripts
 RUN mkdir /docker-entrypoint-cytomine.d/
-COPY --from=cytomine/entrypoint-scripts:1.3.0 --chmod=774 /cytomine-entrypoint.sh /usr/local/bin/
-COPY --from=cytomine/entrypoint-scripts:1.3.0 --chmod=774 /envsubst-on-templates-and-move.sh /docker-entrypoint-cytomine.d/500-envsubst-on-templates-and-move.sh
+COPY --from=entrypoint-scripts --chmod=774 /cytomine-entrypoint.sh /usr/local/bin/
+COPY --from=entrypoint-scripts --chmod=774 /envsubst-on-templates-and-move.sh /docker-entrypoint-cytomine.d/500-envsubst-on-templates-and-move.sh
 
 ENTRYPOINT ["cytomine-entrypoint.sh", "/docker-entrypoint.sh"]
 CMD ["nginx"]
