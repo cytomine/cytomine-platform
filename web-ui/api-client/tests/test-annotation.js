@@ -38,7 +38,7 @@ describe('Annotation', function() {
       let fetchedAnnotation = await Annotation.fetch(id);
       expect(fetchedAnnotation).to.be.an.instanceof(Annotation);
       //annotationTrack is returned at the creation and not at the fetching.
-      delete annotation["annotationTrack"]
+      delete annotation['annotationTrack'];
       expect(fetchedAnnotation).to.deep.equal(annotation);
     });
 

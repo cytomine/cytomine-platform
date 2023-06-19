@@ -39,7 +39,7 @@ export default class ImageInstance extends Model {
 
     this.thumb = null;
     this.preview = null;
-    this.macro = null;
+    this.macroURL = null;
 
     this.numberOfAnnotations = null;
     this.numberOfJobAnnotations = null;
@@ -58,17 +58,59 @@ export default class ImageInstance extends Model {
   }
 
   /**
-  * @returns {String} the preview URL of the image with a specified size
-  */
-  previewURL(size) {
-    return this.preview.replace(/maxSize=\d+/, 'maxSize='+size);
+   * Get the preview URL.
+   *
+   * @param maxSize the desired preview size along largest side
+   * @param format the desired preview format (jpg, png, webp)
+   * @param otherParameters optional other parameters to include in the preview URL
+   * @returns {String} the preview URL of the image with a specified size
+   */
+  previewURL(maxSize = 256, format = 'jpg', otherParameters = {}) {
+    if (this.preview === null) {
+      return null;
+    }
+    let url = this.preview.split('?')[0].split('.').slice(0,-1).join('.');
+    let parameters = {maxSize, ...otherParameters};
+    let query = new URLSearchParams(parameters).toString();
+    return `${url}.${format}?${query}`;
   }
 
   /**
-  * @returns {String} the thumb URL of the image with a specified size
-  */
-  thumbURL(size) {
-    return this.thumb.replace(/maxSize=\d+/, 'maxSize='+size);
+   * Get the thumbnail URL.
+   *
+   * @param maxSize the desired thumb size along largest side
+   * @param format the desired thumb format (jpg, png, webp)
+   * @param otherParameters optional other parameters to include in the thumb URL
+   * @returns {String} the thumb URL of the image with a specified size
+   */
+  thumbURL(maxSize = 256, format = 'jpg', otherParameters = {}) {
+    if (this.thumb === null) {
+      return null;
+    }
+    let url = this.thumb.split('?')[0].split('.').slice(0,-1).join('.');
+    let parameters = {maxSize, ...otherParameters};
+    let query = new URLSearchParams(parameters).toString();
+    return `${url}.${format}?${query}`;
+  }
+
+  /**
+   * Get the associated image URL.
+   *
+   * @param kind the associated type (macro, label)
+   * @param maxSize the desired associated image size along largest side
+   * @param format the desired associated image format (jpg, png, webp)
+   * @param otherParameters optional other parameters to include in the associated image URL
+   * @returns {String} the associated image URL of the image with a specified size
+   */
+  associatedImageURL(kind = 'macro', maxSize = 256, format = 'jpg', otherParameters = {}) {
+    if (this.macroURL === null) {
+      return null;
+    }
+    let url = this.macroURL.split('?')[0].split('.').slice(0,-1).join('.');
+    url = url.substring(0, url.lastIndexOf('/'));
+    let parameters = {maxSize, ...otherParameters};
+    let query = new URLSearchParams(parameters).toString();
+    return `${url}/${kind}.${format}?${query}`;
   }
 
   /**
@@ -249,4 +291,39 @@ export default class ImageInstance extends Model {
     return this._referenceSlice;
   }
 
+  async fetchHistogram({nBins} = {}) {
+    if (this.isNew()) {
+      throw new Error('Cannot get histogram for an image with no ID.');
+    }
+    let params = {nBins};
+    let {data} = await Cytomine.instance.api.get(`${this.callbackIdentifier}/${this.id}/histogram.json`, {params});
+    return data;
+  }
+
+  async fetchHistogramBounds() {
+    if (this.isNew()) {
+      throw new Error('Cannot get histogram bounds for an image with no ID.');
+    }
+
+    let {data} = await Cytomine.instance.api.get(`${this.callbackIdentifier}/${this.id}/histogram/bounds.json`);
+    return data;
+  }
+
+  async fetchChannelHistograms({nBins} = {}) {
+    if (this.isNew()) {
+      throw new Error('Cannot get channel histograms for an image with no ID.');
+    }
+    let params = {nBins};
+    let {data} = await Cytomine.instance.api.get(`${this.callbackIdentifier}/${this.id}/channelhistogram.json`, {params});
+    return data.collection;
+  }
+
+  async fetchChannelHistogramBounds() {
+    if (this.isNew()) {
+      throw new Error('Cannot get channel histogram bounds for an image with no ID.');
+    }
+
+    let {data} = await Cytomine.instance.api.get(`${this.callbackIdentifier}/${this.id}/channelhistogram/bounds.json`);
+    return data.collection;
+  }
 }

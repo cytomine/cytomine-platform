@@ -560,7 +560,8 @@ export default class Project extends Model {
       throw new Error('Cannot fetch annotated images statistics in a project with no ID.');
     }
 
-    let {data} = await Cytomine.instance.api.get(`project/${this.id}/stats/termslide.json`, {startDate, endDate});
+    let params = {startDate, endDate};
+    let {data} = await Cytomine.instance.api.get(`project/${this.id}/stats/termslide.json`, {params});
     return data.collection;
   }
 
@@ -576,7 +577,8 @@ export default class Project extends Model {
       throw new Error('Cannot fetch annotation creators statistics in a project with no ID.');
     }
 
-    let {data} = await Cytomine.instance.api.get(`project/${this.id}/stats/user.json`, {startDate, endDate});
+    let params = {startDate, endDate};
+    let {data} = await Cytomine.instance.api.get(`project/${this.id}/stats/user.json`, {params});
     return data.collection;
   }
 
@@ -592,7 +594,8 @@ export default class Project extends Model {
       throw new Error('Cannot fetch annotated images statistics in a project with no ID.');
     }
 
-    let {data} = await Cytomine.instance.api.get(`project/${this.id}/stats/userslide.json`, {startDate, endDate});
+    let params = {startDate, endDate};
+    let {data} = await Cytomine.instance.api.get(`project/${this.id}/stats/userslide.json`, {params});
     return data.collection;
   }
 }

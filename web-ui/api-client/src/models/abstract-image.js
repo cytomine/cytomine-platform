@@ -45,10 +45,59 @@ export default class AbstractImage extends Model {
   }
 
   /**
-  * @returns {String} the preview URL of the image with a specified size
-  */
-  previewURL(size) {
-    return this.preview.replace(/maxSize=\d+/, 'maxSize='+size);
+   * Get the preview URL.
+   *
+   * @param maxSize the desired preview size along largest side
+   * @param format the desired preview format (jpg, png, webp)
+   * @param otherParameters optional other parameters to include in the preview URL
+   * @returns {String} the preview URL of the image with a specified size
+   */
+  previewURL(maxSize = 256, format = 'jpg', otherParameters = {}) {
+    if (this.preview === null) {
+      return null;
+    }
+    let url = this.preview.split('?')[0].split('.').slice(0,-1).join('.');
+    let parameters = {maxSize, ...otherParameters};
+    let query = new URLSearchParams(parameters).toString();
+    return `${url}.${format}?${query}`;
+  }
+
+  /**
+   * Get the thumbnail URL.
+   *
+   * @param maxSize the desired thumb size along largest side
+   * @param format the desired thumb format (jpg, png, webp)
+   * @param otherParameters optional other parameters to include in the thumb URL
+   * @returns {String} the thumb URL of the image with a specified size
+   */
+  thumbURL(maxSize = 256, format = 'jpg', otherParameters = {}) {
+    if (this.thumb === null) {
+      return null;
+    }
+    let url = this.thumb.split('?')[0].split('.').slice(0,-1).join('.');
+    let parameters = {maxSize, ...otherParameters};
+    let query = new URLSearchParams(parameters).toString();
+    return `${url}.${format}?${query}`;
+  }
+
+  /**
+   * Get the associated image URL.
+   *
+   * @param kind the associated type (macro, label)
+   * @param maxSize the desired associated image size along largest side
+   * @param format the desired associated image format (jpg, png, webp)
+   * @param otherParameters optional other parameters to include in the associated image URL
+   * @returns {String} the associated image URL of the image with a specified size
+   */
+  associatedImageURL(kind = 'macro', maxSize = 256, format = 'jpg', otherParameters = {}) {
+    if (this.macroURL === null) {
+      return null;
+    }
+    let url = this.macroURL.split('?')[0].split('.').slice(0,-1).join('.');
+    url = url.substring(0, url.lastIndexOf('/'));
+    let parameters = {maxSize, ...otherParameters};
+    let query = new URLSearchParams(parameters).toString();
+    return `${url}/${kind}.${format}?${query}`;
   }
 
   /**
@@ -67,6 +116,52 @@ export default class AbstractImage extends Model {
     }
 
     return this._uploader;
+  }
+
+  /**
+   * Get the list of image servers (as URLs) associated with the abstract image
+   *
+   * @returns {Array<String>}
+   */
+  async fetchImageServers() {
+    if(this.isNew()) {
+      throw new Error('Cannot get image servers for an abstract image with no ID.');
+    }
+
+    if(!this._imageServers) {
+      let {data} = await Cytomine.instance.api.get(`${this.callbackIdentifier}/${this.id}/imageservers.json`);
+      this._imageServers = data.imageServersURLs;
+    }
+
+    return this._imageServers;
+  }
+
+
+  /**
+   * Fetch the histogram statistics for the abstract image
+   *
+   * @returns {Array<sample: Number, min: Number, max: Number>} The histogram statistics
+   */
+  async fetchHistogramStats() {
+    if (this.isNew()) {
+      throw new Error('Cannot get histogram statistics for an abstract image with no ID.');
+    }
+
+    if(!this._histogramStats) {
+      let {data} = await Cytomine.instance.api.get(`${this.callbackIdentifier}/${this.id}/histogram/stats.json`);
+      this._histogramStats = data.collection;
+    }
+
+    return this._histogramStats;
+  }
+
+  async extractHistogram() {
+    if (this.isNew()) {
+      throw new Error('Cannot extract histogram for an image with no ID.');
+    }
+
+    await Cytomine.instance.api.post(`${this.callbackIdentifier}/${this.id}/histogram/extract.json`);
+    return this;
   }
 
   /**

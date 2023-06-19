@@ -73,6 +73,24 @@ export default class Annotation extends Model {
   }
 
   /**
+   * Get the annotation crop URL.
+   *
+   * @param maxSize the desired crop size along largest side
+   * @param format the desired crop format (jpg, png, webp)
+   * @param otherParameters optional other parameters to include in the crop URL
+   * @returns {String} the crop URL of the annotation with a specified size
+   */
+  annotationCropURL(maxSize = 256, format = 'jpg', otherParameters = {}) {
+    if (this.cropURL === null) {
+      return null;
+    }
+    let url = this.cropURL.split('?')[0].split('.').slice(0,-1).join('.');
+    let parameters = {maxSize, ...otherParameters};
+    let query = new URLSearchParams(parameters).toString();
+    return `${url}.${format}?${query}`;
+  }
+
+  /**
    * @override
    * @static Fetch an annotation
    *
@@ -103,6 +121,32 @@ export default class Annotation extends Model {
     }
 
     return this._profile;
+  }
+
+  /**
+   * Get the projections of the annotation profile, if available.
+   *
+   * @param {null|string} axis The axis along which the projection is performed. If null, use highest order axis
+   * @param {boolean} cache True if the result must be cached in the annotation object.
+   *
+   * @returns {Object} The annotation profile projection
+   */
+  async fetchProfileProjections(axis=null, cache=false) {
+    if(this.isNew()) {
+      throw new Error('Cannot get profile for an annotation with no ID.');
+    }
+
+    if (this._profileProjections && cache) {
+      return this._profileProjections;
+    }
+    else {
+      let {data} = await Cytomine.instance.api.get(`${this.callbackIdentifier}/${this.id}/profile/projections.json`,
+        {params: {axis}});
+      if (cache) {
+        this._profileProjections = data;
+      }
+      return data;
+    }
   }
 
   /**
@@ -140,18 +184,6 @@ export default class Annotation extends Model {
     let reviewedAnnotation = new this.constructor(data['reviewedannotation']);
     Cytomine.instance.lastCommand = data.command;
     return reviewedAnnotation;
-  }
-
-  async repeat(slice, number) {
-    if(this.isNew()) {
-      throw new Error('Cannot repeat an annotation with no ID.');
-    }
-
-    let {data} = await Cytomine.instance.api.post(`userannotation/${this.id}/repeat.json`, {
-      slice,
-      repeat: number
-    });
-    return data;
   }
 
   /**
@@ -221,6 +253,18 @@ export default class Annotation extends Model {
     let {data} = await Cytomine.instance.api.post('annotationcorrection.json', params);
     Cytomine.instance.lastCommand = data.command;
     return new this(data.annotation || data.reviewedannotation);
+  }
+
+  async repeat(slice, number) {
+    if(this.isNew()) {
+      throw new Error('Cannot repeat an annotation with no ID.');
+    }
+
+    let {data} = await Cytomine.instance.api.post(`userannotation/${this.id}/repeat.json`, {
+      slice,
+      repeat: number
+    });
+    return data;
   }
 
   /** @inheritdoc */
