@@ -1,5 +1,5 @@
 stages:
-  - format
+  - prepare
   - test
   - publish
 
@@ -28,20 +28,20 @@ make-version-name:
     reports:
       dotenv: .env
 
+format-black:
+  stage: prepare
+  image:
+    name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/cytopia/black
+    entrypoint: ["/bin/ash", "-c"]
+  script:
+    - python3 -m black --check --diff cytomine_installer
+
 unittest:
   stage: test
   image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/python:${PYTHON_VERSION}-bullseye
   script:
     - python -m pip install -r requirements.txt
     - python -m unittest discover tests/
-
-format-black:
-  stage: format
-  image:
-    name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/cytopia/black
-    entrypoint: ["/bin/ash", "-c"]
-  script:
-    - python3 -m black --check --diff cytomine_installer
 
 docker-image:
   stage: publish
