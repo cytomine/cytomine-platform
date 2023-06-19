@@ -58,13 +58,13 @@ export default class ImageInstance extends Model {
   }
 
   /**
-   * Get the preview URL.
-   *
-   * @param maxSize the desired preview size along largest side
-   * @param format the desired preview format (jpg, png, webp)
-   * @param otherParameters optional other parameters to include in the preview URL
-   * @returns {String} the preview URL of the image with a specified size
-   */
+  * Get the preview URL.
+  *
+  * @param maxSize the desired preview size along largest side
+  * @param format the desired preview format (jpg, png, webp)
+  * @param otherParameters optional other parameters to include in the preview URL
+  * @returns {String} the preview URL of the image with a specified size
+  */
   previewURL(maxSize = 256, format = 'jpg', otherParameters = {}) {
     if (this.preview === null) {
       return null;
@@ -76,13 +76,13 @@ export default class ImageInstance extends Model {
   }
 
   /**
-   * Get the thumbnail URL.
-   *
-   * @param maxSize the desired thumb size along largest side
-   * @param format the desired thumb format (jpg, png, webp)
-   * @param otherParameters optional other parameters to include in the thumb URL
-   * @returns {String} the thumb URL of the image with a specified size
-   */
+  * Get the thumbnail URL.
+  *
+  * @param maxSize the desired thumb size along largest side
+  * @param format the desired thumb format (jpg, png, webp)
+  * @param otherParameters optional other parameters to include in the thumb URL
+  * @returns {String} the thumb URL of the image with a specified size
+  */
   thumbURL(maxSize = 256, format = 'jpg', otherParameters = {}) {
     if (this.thumb === null) {
       return null;
@@ -94,14 +94,14 @@ export default class ImageInstance extends Model {
   }
 
   /**
-   * Get the associated image URL.
-   *
-   * @param kind the associated type (macro, label)
-   * @param maxSize the desired associated image size along largest side
-   * @param format the desired associated image format (jpg, png, webp)
-   * @param otherParameters optional other parameters to include in the associated image URL
-   * @returns {String} the associated image URL of the image with a specified size
-   */
+  * Get the associated image URL.
+  *
+  * @param kind the associated type (macro, label)
+  * @param maxSize the desired associated image size along largest side
+  * @param format the desired associated image format (jpg, png, webp)
+  * @param otherParameters optional other parameters to include in the associated image URL
+  * @returns {String} the associated image URL of the image with a specified size
+  */
   associatedImageURL(kind = 'macro', maxSize = 256, format = 'jpg', otherParameters = {}) {
     if (this.macroURL === null) {
       return null;

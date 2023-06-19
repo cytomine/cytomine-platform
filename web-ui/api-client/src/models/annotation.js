@@ -40,7 +40,7 @@ export default class Annotation extends Model {
     this.term = null;
 
     this.imageURL = null;
-    this.cropURL = null;
+    this.url = null;
     this.smallCropURL = null;
   }
 
