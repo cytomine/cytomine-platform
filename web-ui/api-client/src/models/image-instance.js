@@ -107,7 +107,7 @@ export default class ImageInstance extends Model {
       return null;
     }
     let url = this.macroURL.split('?')[0].split('.').slice(0,-1).join('.');
-    url = url.substr(0, url.lastIndexOf('/'));
+    url = url.substring(0, url.lastIndexOf('/'));
     let parameters = {maxSize, ...otherParameters};
     let query = new URLSearchParams(parameters).toString();
     return `${url}/${kind}.${format}?${query}`;
@@ -291,4 +291,39 @@ export default class ImageInstance extends Model {
     return this._referenceSlice;
   }
 
+  async fetchHistogram({nBins} = {}) {
+    if (this.isNew()) {
+      throw new Error('Cannot get histogram for an image with no ID.');
+    }
+    let params = {nBins};
+    let {data} = await Cytomine.instance.api.get(`${this.callbackIdentifier}/${this.id}/histogram.json`, {params});
+    return data;
+  }
+
+  async fetchHistogramBounds() {
+    if (this.isNew()) {
+      throw new Error('Cannot get histogram bounds for an image with no ID.');
+    }
+
+    let {data} = await Cytomine.instance.api.get(`${this.callbackIdentifier}/${this.id}/histogram/bounds.json`);
+    return data;
+  }
+
+  async fetchChannelHistograms({nBins} = {}) {
+    if (this.isNew()) {
+      throw new Error('Cannot get channel histograms for an image with no ID.');
+    }
+    let params = {nBins};
+    let {data} = await Cytomine.instance.api.get(`${this.callbackIdentifier}/${this.id}/channelhistogram.json`, {params});
+    return data.collection;
+  }
+
+  async fetchChannelHistogramBounds() {
+    if (this.isNew()) {
+      throw new Error('Cannot get channel histogram bounds for an image with no ID.');
+    }
+
+    let {data} = await Cytomine.instance.api.get(`${this.callbackIdentifier}/${this.id}/channelhistogram/bounds.json`);
+    return data.collection;
+  }
 }

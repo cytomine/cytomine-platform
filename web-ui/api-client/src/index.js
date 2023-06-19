@@ -1,3 +1,7 @@
+// https://stackoverflow.com/a/54490329
+import 'core-js/stable';
+import 'regenerator-runtime/runtime';
+
 export {default as Cytomine} from './cytomine.js';
 
 export {default as AbstractImage} from './models/abstract-image.js';
@@ -5,19 +9,20 @@ export {default as AbstractSlice} from './models/abstract-slice.js';
 export {default as AlgoAnnotationTerm} from './models/algo-annotation-term.js';
 export {default as Annotation, AnnotationType} from './models/annotation.js';
 export {default as AnnotationComment} from './models/annotation-comment.js';
+export {default as AnnotationGroup} from './models/annotation-group.js';
+export {default as AnnotationLink} from './models/annotation-link.js';
 export {default as AnnotationTerm} from './models/annotation-term.js';
 export {default as AnnotationTrack} from './models/annotation-track.js';
 export {default as AttachedFile} from './models/attached-file.js';
 export {default as CompanionFile} from './models/companion-file.js';
 export {default as Configuration} from './models/configuration.js';
-export {default as ConsensusScore} from './models/consensus-score.js';
 export {default as Description} from './models/description.js';
-export {default as Generic} from './models/generic.js';
 export {default as ImageConsultation} from './models/image-consultation.js';
 export {default as ImageFilter} from './models/image-filter.js';
 export {default as ImageFilterProject} from './models/image-filter-project.js';
+export {default as ImageGroup} from './models/image-group.js';
+export {default as ImageGroupImageInstance} from './models/image-group-image-instance.js';
 export {default as ImageInstance} from './models/image-instance.js';
-export {default as ImageScore} from './models/image-score.js';
 export {default as ImageServer} from './models/image-server.js';
 export {default as Job, JobStatus} from './models/job.js';
 export {default as JobData} from './models/job-data.js';
@@ -32,10 +37,7 @@ export {default as ProjectDefaultLayer} from './models/project-default-layer.js'
 export {default as ProjectRepresentative} from './models/project-representative.js';
 export {default as Property} from './models/property.js';
 export {default as Role} from './models/role.js';
-export {default as Score} from './models/score.js';
-export {default as ScoreValue} from './models/score-value.js';
-export {default as ScoreProject} from './models/score-project.js';
-export {default as ScoringDescription} from './models/scoring-description.js';
+export {default as SampleHistogram} from './models/sample-histogram.js';
 export {default as SliceInstance} from './models/slice-instance.js';
 export {default as Software} from './models/software.js';
 export {default as SoftwareParameter} from './models/software-parameter.js';
@@ -59,19 +61,20 @@ export {default as AbstractSliceCollection} from './collections/abstract-slice-c
 export {default as AlgoAnnotationTermCollection} from './collections/algo-annotation-term-collection.js';
 export {default as AnnotationCollection} from './collections/annotation-collection.js';
 export {default as AnnotationCommentCollection} from './collections/annotation-comment-collection.js';
+export {default as AnnotationGroupCollection} from './collections/annotation-group-collection.js';
+export {default as AnnotationLinkCollection} from './collections/annotation-link-collection.js';
 export {default as AnnotationTermCollection} from './collections/annotation-term-collection.js';
 export {default as AnnotationTrackCollection} from './collections/annotation-track-collection.js';
 export {default as AttachedFileCollection} from './collections/attached-file-collection.js';
 export {default as CompanionFileCollection} from './collections/companion-file-collection.js';
 export {default as ConfigurationCollection} from './collections/configuration-collection.js';
-export {default as ConsensusScoreCollection} from './collections/consensus-score-collection.js';
-export {default as GenericCollection} from './collections/generic-collection.js';
 export {default as ImageConsultationCollection} from './collections/image-consultation-collection.js';
 export {default as ImageFilterCollection} from './collections/image-filter-collection.js';
 export {default as ImageFilterProjectCollection} from './collections/image-filter-project-collection.js';
+export {default as ImageGroupCollection} from './collections/image-group-collection.js';
+export {default as ImageGroupImageInstanceCollection} from './collections/image-group-image-instance-collection.js';
 export {default as ImageInstanceCollection} from './collections/image-instance-collection.js';
 export {default as ImageServerCollection} from './collections/image-server-collection.js';
-export {default as ImageScoreCollection} from './collections/image-score-collection.js';
 export {default as JobCollection} from './collections/job-collection.js';
 export {default as JobDataCollection} from './collections/job-data-collection.js';
 export {default as JobParameterCollection} from './collections/job-parameter-collection.js';
@@ -85,9 +88,7 @@ export {default as ProjectDefaultLayerCollection} from './collections/project-de
 export {default as ProjectRepresentativeCollection} from './collections/project-representative-collection.js';
 export {default as PropertyCollection} from './collections/property-collection.js';
 export {default as RoleCollection} from './collections/role-collection.js';
-export {default as ScoreCollection} from './collections/score-collection.js';
-export {default as ScoreValueCollection} from './collections/score-value-collection.js';
-export {default as ScoreProjectCollection} from './collections/score-project-collection.js';
+export {default as SampleHistogramCollection} from './collections/sample-histogram-collection.js';
 export {default as SliceInstanceCollection} from './collections/slice-instance-collection.js';
 export {default as SoftwareCollection} from './collections/software-collection.js';
 export {default as SoftwareParameterCollection} from './collections/software-parameter-collection.js';
