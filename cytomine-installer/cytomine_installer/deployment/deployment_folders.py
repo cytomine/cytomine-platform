@@ -4,6 +4,7 @@ import yaml
 import shutil
 
 from cytomine_installer.deployment.env_store import MergeEnvStorePolicy
+from cytomine_installer.deployment.installer_config import InstallerConfig
 from .deployment_files import (
     DOCKER_COMPOSE_FILENAME,
     ConfigFile,
@@ -216,6 +217,7 @@ class DeploymentFolder(Deployable):
         envs_folder="envs",
         ignored_dirs=None,
         configs_mount_point="/cm_configs",
+        installer_config: InstallerConfig = None,
     ) -> None:
         """
         Parameters
@@ -234,10 +236,16 @@ class DeploymentFolder(Deployable):
           Folders to ignore in the root directory
         configs_mount_point :
           Name of the configuration files mount path within the container
+        installer_config: InstallerConfig
+          Installer configuration, if not specified, default configuration is used
         """
         if ignored_dirs is None:
             ignored_dirs = set()
 
+        if installer_config is None:
+            installer_config = InstallerConfig()
+
+        self._installer_config = installer_config
         self._directory = directory
         self._ignore_dirs = set(ignored_dirs)
         self._configs_folder = configs_folder
@@ -332,12 +340,16 @@ class DeploymentFolder(Deployable):
         with open(dst_config_path, "w", encoding="utf8") as file:
             yaml.dump(self._merge_config.export_dict(), file)
 
-        # write template (if any in the base repository), copy file to avoid any change
-        if os.path.isfile(self._template_config.filepath):
-            dst_template_path = os.path.join(
-                target_directory, self._template_config.filename
-            )
-            shutil.copyfile(self._template_config.filepath, dst_template_path)
+        # write template and config (if any in the base repository), copy file to avoid any change
+        files_to_copy = [
+            (self._template_config.filepath, self._template_config.filename),
+            (self._installer_config.filepath, self._installer_config.filename),
+        ]
+
+        for source_filepath, target_filename in files_to_copy:
+            if os.path.isfile(source_filepath):
+                target_path = os.path.join(target_directory, target_filename)
+                shutil.copyfile(source_filepath, target_path)
 
         # write server folders
         for server_folder in self._server_folders.values():
@@ -366,6 +378,9 @@ class DeploymentFolder(Deployable):
 
         if os.path.isfile(self._template_config.filepath):
             files.append(self._template_config.filename)
+
+        if os.path.isfile(self._installer_config.filepath):
+            files.append(self._installer_config.filename)
 
         for server_folder in self._server_folders.values():
             files.extend(

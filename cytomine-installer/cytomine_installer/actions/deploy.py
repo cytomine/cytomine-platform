@@ -6,6 +6,7 @@ from tempfile import TemporaryDirectory
 import zipfile
 from datetime import datetime
 from argparse import ArgumentParser, Namespace
+from cytomine_installer.deployment.installer_config import InstallerConfig
 
 from cytomine_installer.util import delete_dir_content
 
@@ -79,6 +80,12 @@ class DeployAction(AbstractAction):
             action="store_true",
             help="to clear content of the target_directory before generating the deployment files (only used if a target directory different from the source directory is specified)",
         )
+        sub_parser.add_argument(
+            "--installer_config",
+            dest="installer_config",
+            default="installer_config.yml",
+            help="name of the installer yaml configuration file",
+        )
         sub_parser.set_defaults(do_zip=False, overwrite=False)
 
     def run(self, namespace):
@@ -93,6 +100,12 @@ class DeployAction(AbstractAction):
             namespace.target_directory = namespace.source_directory
         else:
             namespace.target_directory = os.path.normpath(namespace.target_directory)
+
+        installer_config = InstallerConfig(
+            filepath=os.path.join(
+                namespace.source_directory, namespace.installer_config
+            )
+        )
 
         if (
             namespace.source_directory != namespace.target_directory
@@ -119,6 +132,7 @@ class DeployAction(AbstractAction):
             configs_mount_point=namespace.configs_mount_point,
             working_config_filename=namespace.working_config_filename,
             template_config_filename=namespace.template_config_filename,
+            installer_config=installer_config,
         )
 
         with TemporaryDirectory() as tmpdir:
