@@ -1,5 +1,5 @@
+import Cytomine from '../cytomine.js';
 import Model from './model.js';
-import Cytomine from '@/cytomine';
 
 export default class TrustedSource extends Model {
   /** @inheritdoc */
