@@ -58,9 +58,13 @@ class FileSystemTestCase(TestCase):
         dotenv2 = parse_dotenv(path2)
         self.assertDictEqual(dotenv1, dotenv2)
 
-    def assertSameDirectories(self, gen_path, ref_path):
+    def assertSameDirectories(self, gen_path, ref_path, ignored: set=None):
+        if ignored is None:
+            ignored = set()
         ref_rel_files = list_relative_files(ref_path)
         for out_rel_file in ref_rel_files:
+            if out_rel_file in ignored:
+                continue
             ref_filepath = os.path.join(ref_path, out_rel_file)
             gen_filepath = os.path.join(gen_path, out_rel_file)
             self.assertIsFile(gen_filepath)

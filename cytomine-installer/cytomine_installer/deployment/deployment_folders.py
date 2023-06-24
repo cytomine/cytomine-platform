@@ -4,7 +4,7 @@ import yaml
 import shutil
 
 from cytomine_installer.deployment.env_store import MergeEnvStorePolicy
-from cytomine_installer.deployment.installer_config import InstallerConfig
+from cytomine_installer.deployment.installer_config import InstallerConfig, UpdatePolicy
 from .deployment_files import (
     DOCKER_COMPOSE_FILENAME,
     ConfigFile,
@@ -271,10 +271,19 @@ class DeploymentFolder(Deployable):
                 f"either {self._working_config.filepath} or {self._template_config.filepath} should exist, none found"
             )
 
+        # merge .template and .yml
+        merge_policy = MergeEnvStorePolicy.PRESERVE
+        if (
+            installer_config.update_allow_list is not None
+            and len(installer_config.update_allow_list) > 0
+        ):
+            merge_policy = MergeEnvStorePolicy.ALLOW_LIST
+
         self._merge_config = ConfigFile.merge(
             self._working_config,
             self._template_config,
-            merge_policy=MergeEnvStorePolicy.PRESERVE,
+            merge_policy=merge_policy,
+            update_allow_list=installer_config.update_allow_list,
         )
 
         self._server_folders = dict()

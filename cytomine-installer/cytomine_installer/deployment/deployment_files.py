@@ -4,6 +4,8 @@ import os
 import yaml
 from collections import defaultdict
 
+from cytomine_installer.deployment.util.trie import Trie
+
 from .errors import (
     MissingConfigFileError,
     NoDockerComposeYamlFileError,
@@ -105,12 +107,14 @@ class ConfigFile(DictExportable):
 
     def export_dict(self):
         target_dict = dict()
-        target_dict["global"] = self._global_envs.export_dict()
-        target_dict["services"] = dict()
+        target_dict[ConfigSectionEnum.GLOBAL.value] = self._global_envs.export_dict()
+        target_dict[ConfigSectionEnum.SERVICES.value] = dict()
         for server, env_store in self._servers_env_stores.items():
-            target_dict["services"][server] = env_store.export_dict()
-        if len(target_dict["services"]) == 0:
-            target_dict["services"] = None
+            target_dict[ConfigSectionEnum.SERVICES.value][
+                server
+            ] = env_store.export_dict()
+        if len(target_dict[ConfigSectionEnum.SERVICES.value]) == 0:
+            target_dict[ConfigSectionEnum.SERVICES.value] = None
         # https://stackoverflow.com/a/32303615
         # convert to plain dict
         return json.loads(json.dumps(target_dict))
@@ -120,12 +124,29 @@ class ConfigFile(DictExportable):
         config_file1,
         config_file2,
         merge_policy: MergeEnvStorePolicy = MergeEnvStorePolicy.PRESERVE,
+        update_allow_list: list = None,
     ):
+        """
+        config_file1: ConfigFile
+        config_file2: ConfigFile
+        merge_policy: MergeEnvStorePolicy
+        update_allow_list: list
+            A list containing the keys to update (supports wildcard)
+        """
+        if update_allow_list is None:
+            update_allow_list = list()
+
+        merge_trie = Trie()
+        for item_to_update in update_allow_list:
+            merge_trie.insert(item_to_update.split("."))
+
         new_config_file = ConfigFile()
         new_config_file._global_envs = EnvStore.merge(
             config_file1._global_envs,
             config_file2._global_envs,
             merge_policy=merge_policy,
+            merge_trie=merge_trie,
+            merge_prefix=[ConfigSectionEnum.GLOBAL.value],
         )
         # merge existing servers
         for server_name1, env_store1 in config_file1._servers_env_stores.items():
@@ -135,6 +156,8 @@ class ConfigFile(DictExportable):
                 env_store2,
                 merge_policy=merge_policy,
                 ref_store=new_config_file._global_envs,
+                merge_trie=merge_trie,
+                merge_prefix=[ConfigSectionEnum.SERVICES.value, server_name1],
             )
         # add new servers from config file 2
         new_servers = set(config_file2._servers_env_stores.keys()).difference(

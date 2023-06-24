@@ -27,6 +27,7 @@ class InstallerConfig(object):
     def _set_update_policy(self, update_config: dict):
         self.update_policy = update_config.get("policy", UpdatePolicy.UPDATE_NEW_ONLY)
 
+        self.update_allow_list = None
         if self.update_policy == UpdatePolicy.UPDATE_NEW_ONLY:
             self.update_allow_list = update_config.get("allow_list", [])
 

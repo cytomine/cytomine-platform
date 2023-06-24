@@ -4,6 +4,8 @@ from collections import defaultdict
 import json
 import logging
 
+from cytomine_installer.deployment.util.trie import Trie
+
 from .errors import KeyAlreadyExistsError, UnknownValueTypeError
 from .env_generator import EnvValueGeneratorFactory
 
@@ -15,7 +17,12 @@ class EnvValueTypeEnum(enum.Enum):
 
 
 class MergeEnvStorePolicy(enum.Enum):
-    PRESERVE = "preserve_target"  # merge by preserving variables inside the merge target envstore
+    # merge by preserving variables inside the merge target envstore
+    PRESERVE = "preserve_target"
+    # merge by overwriting variable inside the merge target envstore
+    OVERWRITE = "overwrite_target"
+    # merge by overwriting variable inside the merge target envstore if they are listed in an allow list
+    ALLOW_LIST = "overwrite_by_allow_list"
 
 
 class DictExportable(ABC):
@@ -62,11 +69,17 @@ class EnvStore(BaseEnvStore):
     def has_env(self, namespace: str, key: str):
         return namespace in self._store and key in self._store[namespace]
 
-    def _add_env(
-        self, ns: str, key: str, value, _type: EnvValueTypeEnum, other_store=None
+    def _set_env(
+        self,
+        ns: str,
+        key: str,
+        value,
+        _type: EnvValueTypeEnum,
+        other_store=None,
+        allow_update=False,
     ):
         """Register an envirom"""
-        if key in self._store[ns]:
+        if not allow_update and key in self._store[ns]:
             raise KeyAlreadyExistsError(ns, key)
 
         # generate correct store lambda based on value type
@@ -117,7 +130,7 @@ class EnvStore(BaseEnvStore):
 
         for value_type in EnvValueTypeEnum:
             for k, v in entries.get(value_type.value, {}).items():
-                self._add_env(ns, k, v, value_type, other_store=store)
+                self._set_env(ns, k, v, value_type, other_store=store)
 
     @property
     def namespaces(self):
@@ -134,6 +147,13 @@ class EnvStore(BaseEnvStore):
             self._resolved_value[ns][key] = self._store[ns][key]()
         return self._resolved_value[ns][key]
 
+    @classmethod
+    def _check_is_type_auto_and_frozen(cls, _type, value):
+        """Check if a field is auto-generate type and frozen"""
+        return _type == EnvValueTypeEnum.AUTOGENERATE and (
+            isinstance(value, str) or value.get("freeze", True)
+        )
+
     def export_dict(self):
         """
         Resolves the `auto` variables (that need to be frozen)
@@ -145,9 +165,7 @@ class EnvStore(BaseEnvStore):
                     self._initial_type[ns][key],
                     self._initial_value[ns][key],
                 )
-                if init_type == EnvValueTypeEnum.AUTOGENERATE and (
-                    isinstance(init_value, str) or init_value.get("freeze", True)
-                ):
+                if self._check_is_type_auto_and_frozen(init_type, init_value):
                     output_dict[ns][EnvValueTypeEnum.CONSTANT.value][
                         key
                     ] = self.get_env(ns, key)
@@ -169,13 +187,62 @@ class EnvStore(BaseEnvStore):
     def has_namespace(self, ns: str):
         return ns in self._store
 
+    def _merge_env(
+        self,
+        other_ns: str,
+        other_key: str,
+        other_initial_type: EnvValueTypeEnum,
+        other_initial_value,
+        merge_policy: MergeEnvStorePolicy,
+        ref_store,
+        merge_trie: Trie,
+        merge_prefix: list,
+    ):
+        """Merge logic for a single env entry"""
+        if ref_store is None and other_initial_type == EnvValueTypeEnum.GLOBAL:
+            raise ValueError(
+                f"'{EnvValueTypeEnum.GLOBAL.value}' is not supported in this section, namespace {other_ns}"
+            )
+
+        # skip overwrite if
+        store_has_env = self.has_env(other_ns, other_key)
+
+        if store_has_env and merge_policy == MergeEnvStorePolicy.PRESERVE:
+            return
+
+        if store_has_env and (
+            merge_policy == MergeEnvStorePolicy.ALLOW_LIST
+            and (
+                not merge_trie.has(merge_prefix + [other_ns, other_key])
+                or (
+                    self._check_is_type_auto_and_frozen(
+                        other_initial_type, other_initial_value
+                    )
+                    and self._initial_type[other_ns][other_key]
+                    == EnvValueTypeEnum.CONSTANT
+                )
+            )
+        ):
+            return
+
+        self._set_env(
+            other_ns,
+            other_key,
+            other_initial_value,
+            other_initial_type,
+            ref_store,
+            allow_update=merge_policy != MergeEnvStorePolicy.PRESERVE,
+        )
+
     def _merge_inplace(
         self,
-        env_store_to_merge,
+        to_merge,
         merge_policy: MergeEnvStorePolicy = MergeEnvStorePolicy.PRESERVE,
         ref_store=None,
+        merge_trie: Trie = None,
+        merge_prefix: list = None,
     ):
-        """Merge another env store inside a this  env store
+        """Merge another env store inside this env store
 
         Parameters
         ----------
@@ -185,31 +252,25 @@ class EnvStore(BaseEnvStore):
             Defines how merging is performed. With PRESERVE, keys of this env_store have precedence over keys of other_env_store
         ref_store: EnvStore
             The store in which to look for global variables
+        merge_trie: Trie
+            A set containing the keys that should be updated when policy is ALLOW_LIST, default is 'set()'
+        merge_prefix: list
+            The prefix list to which attach namespace and env name for checking if a value should be inserted when policy is ALLOW_LIST
         """
-        for other_ns, other_ns_entries in env_store_to_merge._store.items():
+        for other_ns, other_ns_entries in to_merge._store.items():
             for other_key, _ in other_ns_entries.items():
-                other_initial_type = env_store_to_merge._initial_type[other_ns][
-                    other_key
-                ]
-                other_initial_value = env_store_to_merge._initial_value[other_ns][
-                    other_key
-                ]
-                if ref_store is None and other_initial_type == EnvValueTypeEnum.GLOBAL:
-                    raise ValueError(
-                        f"'{EnvValueTypeEnum.GLOBAL.value}' is not supported in this section, namespace {other_ns}"
-                    )
-                if merge_policy == MergeEnvStorePolicy.PRESERVE:
-                    if self.has_env(other_ns, other_key):
-                        continue  # if exists in current env store, just ignore key
-                    self._add_env(
-                        other_ns,
-                        other_key,
-                        other_initial_value,
-                        other_initial_type,
-                        ref_store,
-                    )
-                else:
-                    raise ValueError(f"unknown merge policy '{merge_policy}'")
+                other_initial_type = to_merge._initial_type[other_ns][other_key]
+                other_initial_value = to_merge._initial_value[other_ns][other_key]
+                self._merge_env(
+                    other_ns,
+                    other_key,
+                    other_initial_type,
+                    other_initial_value,
+                    merge_policy,
+                    ref_store,
+                    merge_trie,
+                    merge_prefix,
+                )
 
     @staticmethod
     def merge(
@@ -217,6 +278,8 @@ class EnvStore(BaseEnvStore):
         env_store2,
         merge_policy: MergeEnvStorePolicy = MergeEnvStorePolicy.PRESERVE,
         ref_store=None,
+        merge_trie: Trie = None,
+        merge_prefix: list = None,
     ):
         """Merge two env stores inside a new env store.
 
@@ -228,6 +291,10 @@ class EnvStore(BaseEnvStore):
             Defines how merging is performed. With PRESERVE, keys of the env_store1 have precedence over keys of env_store2
         ref_store: EnvStore
             The store in which to look for global variables
+        merge_trie: Trie
+            A set containing the keys that should be updated when policy is ALLOW_LIST, default is 'set()'
+        merge_prefix: list
+            The prefix list to which attach namespace and env name for checking if a value should be inserted when policy is ALLOW_LIST
         Returns
         -------
         env_store: EnvStore
@@ -238,6 +305,10 @@ class EnvStore(BaseEnvStore):
             env_store1, merge_policy=merge_policy, ref_store=ref_store
         )
         new_env_store._merge_inplace(
-            env_store2, merge_policy=merge_policy, ref_store=ref_store
+            env_store2,
+            merge_policy=merge_policy,
+            ref_store=ref_store,
+            merge_trie=merge_trie,
+            merge_prefix=merge_prefix,
         )
         return new_env_store
