@@ -201,6 +201,14 @@ class TestDeploy(TestDeploymentGeneric):
             parser.call(["deploy", "-s", deploy_file_path, "-t", tmpdir])
             self.assertSameDirectories(tmpdir, output_ref_path, ignored={"cytomine.yml"})
     
+    def testDeploySingleServerWithBoolean(self):
+        tests_path = os.path.dirname(__file__)
+        deploy_file_path = os.path.join(tests_path, "files", "fake_single_server_with_boolean", "in")
+        output_ref_path = os.path.join(tests_path, "files", "fake_single_server_with_boolean", "out")
+        with TemporaryDirectory() as tmpdir:
+            parser.call(["deploy", "-s", deploy_file_path, "-t", tmpdir])
+            self.assertSameDirectories(tmpdir, output_ref_path, ignored={"cytomine.yml"})
+
     @unittest.skip("implement later")
     def testMultiServer(self):
         tests_path = os.path.dirname(__file__)

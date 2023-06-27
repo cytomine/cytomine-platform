@@ -1,0 +1,7 @@
+version: "3.3"
+services:
+  core:
+    env_file: envs/core.env
+    volumes:
+      - ./configs/core:/cm_configs
+    

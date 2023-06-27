@@ -1,0 +1,14 @@
+global:
+  ns1:
+    constant:
+      MYBOOL: false
+      MYBOOL2: true
+
+services:
+  default:
+    core:
+      constant:
+        MYBOOL3: false
+      global:
+        MYBOOL2_GLOB: ns1.MYBOOL2
+    

@@ -10,6 +10,8 @@ def write_dotenv(directory: str, envs: dict, filename: str = ".env"):
     newline_pattern = re.compile(r"(?:\r\n|\n|\r)")
     with open(filepath, "w", encoding="utf8") as file:
         for key, value in envs.items():
+            if isinstance(value, bool):
+                value = "true" if value else "false"
             if newline_pattern.search(str(value)) is not None:
                 value = f'"{value}"'
             file.write(f"{key}={value}{os.linesep}")
