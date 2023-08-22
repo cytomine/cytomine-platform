@@ -51,21 +51,21 @@ SHELL ["/bin/ash", "-eo", "pipefail", "-c"]
 
 RUN rm -rf /usr/src/nginx \
     && mkdir -p /usr/src \
-    && wget http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz \
-    && wget $UPLOAD_MODULE_REPO/archive/$UPLOAD_MODULE_COMMIT.tar.gz
+    && wget --quiet "http://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz" \
+    && wget --quiet "${UPLOAD_MODULE_REPO}/archive/${UPLOAD_MODULE_COMMIT}.tar.gz"
 
 # Download sources
-RUN tar -xzvf nginx-$NGINX_VERSION.tar.gz \
-    && mv nginx-$NGINX_VERSION /usr/src/nginx
+RUN tar -xzvf "nginx-${NGINX_VERSION}.tar.gz" \
+    && mv "nginx-${NGINX_VERSION}" /usr/src/nginx
 
-RUN tar -xzvf $UPLOAD_MODULE_COMMIT.tar.gz \
-    && mv nginx-upload-module-${UPLOAD_MODULE_COMMIT} /usr/src/nginx-upload-module
+RUN tar -xzvf "${UPLOAD_MODULE_COMMIT}.tar.gz" \
+    && mv "nginx-upload-module-${UPLOAD_MODULE_COMMIT}" /usr/src/nginx-upload-module
 
 WORKDIR /usr/src/nginx
 
 # https://gist.github.com/hermanbanken/96f0ff298c162a522ddbba44cad31081?permalink_comment_id=3221232#gistcomment-3221232
 RUN CONFARGS=$(nginx -V 2>&1 | sed -n -e 's/^.*arguments: //p') \
-    sh -c "./configure --with-compat $CONFARGS --add-dynamic-module=/usr/src/nginx-upload-module" \
+    sh -c "./configure --with-compat ${CONFARGS} --add-dynamic-module=/usr/src/nginx-upload-module" \
     && make modules
 
 #######################################################################################
@@ -74,6 +74,28 @@ FROM cytomine/entrypoint-scripts:${ENTRYPOINT_SCRIPTS_VERSION} as entrypoint-scr
 
 ## Stage: nginx
 FROM nginx:${NGINX_VERSION}-alpine as nginx-server
+
+ENV IMAGES_BIOFORMAT="not provided"
+ENV IMAGES_CORE="not provided"
+ENV IMAGES_MONGO="not provided"
+ENV IMAGES_NGINX="not provided"
+ENV IMAGES_PIMS="not provided"
+ENV IMAGES_PIMS_CACHE="not provided"
+ENV IMAGES_POSTGIS="not provided"
+ENV IMAGES_RABBITMQ="not provided"
+ENV IMAGES_WEB_UI="not provided"
+ENV INTERNAL_URLS_CORE=core:8080
+ENV INTERNAL_URLS_IMS=pims:5000
+ENV INTERNAL_URLS_IMS2=pims:5000
+ENV INTERNAL_URLS_IMS3=pims:5000
+ENV INTERNAL_URLS_WEB_UI=web_ui
+ENV UPLOAD_PATH=/tmp/uploaded
+ENV URLS_CORE=cytomine.local
+ENV URLS_IMAGE_SERVER=ims.cytomine.local
+ENV URLS_IMAGE_SERVER2=ims.cytomine.local
+ENV URLS_IMAGE_SERVER3=ims.cytomine.local
+ENV URLS_UPLOAD=upload.cytomine.local
+ENV VERSIONS_CYTOMINE_COMMERCIAL="not provided"
 
 ARG ENTRYPOINT_SCRIPTS_VERSION
 ARG IMAGE_VERSION
@@ -101,5 +123,8 @@ RUN mkdir /docker-entrypoint-cytomine.d/
 COPY --from=entrypoint-scripts --chmod=774 /cytomine-entrypoint.sh /usr/local/bin/
 COPY --from=entrypoint-scripts --chmod=774 /envsubst-on-templates-and-move.sh /docker-entrypoint-cytomine.d/500-envsubst-on-templates-and-move.sh
 
-ENTRYPOINT ["cytomine-entrypoint.sh", "/docker-entrypoint.sh"]
+COPY --chmod=774 nginx-entrypoint.sh /nginx-entrypoint.sh
+COPY --chown=1000:1000 cm_configs_default /cm_configs_default
+
+ENTRYPOINT ["/nginx-entrypoint.sh", "cytomine-entrypoint.sh", "/docker-entrypoint.sh"]
 CMD ["nginx"]

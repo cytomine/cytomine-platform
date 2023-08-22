@@ -1,0 +1,14 @@
+{
+  "VERSIONS_CYTOMINE_COMMERCIAL": "${VERSIONS_CYTOMINE_COMMERCIAL}",
+  "services": {
+      "BIOFORMAT": "${IMAGES_BIOFORMAT}",
+      "CORE": "${IMAGES_CORE}",
+      "MONGO": "${IMAGES_MONGO}",
+      "NGINX": "${IMAGES_NGINX}",
+      "PIMS_CACHE": "${IMAGES_PIMS_CACHE}",
+      "PIMS": "${IMAGES_PIMS}",
+      "POSTGIS": "${IMAGES_POSTGIS}",
+      "RABBITMQ": "${IMAGES_RABBITMQ}",
+      "WEB_UI": "${IMAGES_WEB_UI}"
+  }
+}
