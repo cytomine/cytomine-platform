@@ -10,6 +10,5 @@
       "POSTGIS": "${IMAGES_POSTGIS}",
       "RABBITMQ": "${IMAGES_RABBITMQ}",
       "WEB_UI": "${IMAGES_WEB_UI}"
-  },
-  "yup": "yo"
+  }
 }
