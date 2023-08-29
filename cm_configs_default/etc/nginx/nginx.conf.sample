@@ -52,6 +52,7 @@ http {
     # Default server. Useful when no server_name matched because Host is wrong but can be found in http_x_forwarded_host
     # The downside is that when there's no matching server block at all for an URL that finds its way here, there's an infinite loop.
     server {
+        client_max_body_size 0;
         listen          80 default_server;
         location / {
             proxy_pass http://127.0.0.1;
@@ -185,7 +186,7 @@ server {
             include /etc/nginx/cors_params;
             add_header 'Access-Control-Allow-Credentials' 'false';
             add_header 'Access-Control-Max-Age' '1728000';
-            set $tmpims1host ims-pooled;
+            set $tmpims1host $INTERNAL_URLS_IMS;
             proxy_pass http://$tmpims1host;
             proxy_read_timeout 600;
         }
