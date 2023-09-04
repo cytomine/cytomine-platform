@@ -27,8 +27,8 @@ FROM cytomine/entrypoint-scripts:${ENTRYPOINT_SCRIPTS_VERSION} as entrypoint-scr
 FROM mongo:${MONGO_VERSION}
 
 RUN mkdir /docker-entrypoint-cytomine.d/
-COPY --from=downloader --chmod=774 /root/scripts/cytomine-entrypoint.sh /usr/local/bin/
-COPY --from=downloader --chmod=774 /root/scripts/envsubst-on-templates-and-move.sh /docker-entrypoint-cytomine.d/500-envsubst-on-templates-and-move.sh
+COPY --from=entrypoint-scripts --chmod=774 /root/scripts/cytomine-entrypoint.sh /usr/local/bin/
+COPY --from=entrypoint-scripts --chmod=774 /root/scripts/envsubst-on-templates-and-move.sh /docker-entrypoint-cytomine.d/500-envsubst-on-templates-and-move.sh
 
 COPY --chmod=744 mongo-entrypoint.sh /mongo-entrypoint.sh
 
