@@ -14,29 +14,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ARG MONGO_VERSION
-ARG SCRIPTS_REPO_TAG
-ARG SCRIPTS_REPO_BRANCH
+ARG MONGO_VERSION=4.4.18-focal
+ARG ENTRYPOINT_SCRIPTS_VERSION=1.3.0
+ARG IMAGE_VERSION
+ARG IMAGE_REVISION
 
-## Stage 1: downloading provisioning scripts
-FROM alpine/git:2.36.3 as downloader
-ARG SCRIPTS_REPO_TAG
-ARG SCRIPTS_REPO_BRANCH
-
-WORKDIR /root
-RUN mkdir scripts
-RUN --mount=type=secret,id=scripts_repo_url \
-    git clone $(cat /run/secrets/scripts_repo_url) /root/scripts \
-    && cd /root/scripts \
-    && git checkout tags/${SCRIPTS_REPO_TAG} -b ${SCRIPTS_REPO_BRANCH}
+#######################################################################################
+## Stage 1: entrypoint script. Use a multi-stage because COPY --from cannot interpolate variables
+FROM cytomine/entrypoint-scripts:${ENTRYPOINT_SCRIPTS_VERSION} as entrypoint-scripts
 
 ## Stage 2: mongo image
-ARG MONGO_VERSION
 FROM mongo:${MONGO_VERSION}
 
 RUN mkdir /docker-entrypoint-cytomine.d/
 COPY --from=downloader --chmod=774 /root/scripts/cytomine-entrypoint.sh /usr/local/bin/
 COPY --from=downloader --chmod=774 /root/scripts/envsubst-on-templates-and-move.sh /docker-entrypoint-cytomine.d/500-envsubst-on-templates-and-move.sh
 
-ENTRYPOINT ["cytomine-entrypoint.sh", "docker-entrypoint.sh"]
+COPY --chmod=744 mongo-entrypoint.sh /mongo-entrypoint.sh
+
+ENTRYPOINT ["/mongo-entrypoint.sh", "cytomine-entrypoint.sh", "docker-entrypoint.sh"]
 CMD ["mongod"]
