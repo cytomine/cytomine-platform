@@ -14,9 +14,8 @@
 # limitations under the License.
 #
 
-load_module 'modules/ngx_http_upload_module.so';
 worker_processes  1;
-daemon off; 
+daemon off;
 
 events {
     worker_connections  1024;
@@ -52,6 +51,7 @@ http {
     # Default server. Useful when no server_name matched because Host is wrong but can be found in http_x_forwarded_host
     # The downside is that when there's no matching server block at all for an URL that finds its way here, there's an infinite loop.
     server {
+        client_max_body_size 0;
         listen          80 default_server;
         location / {
             proxy_pass http://127.0.0.1;
@@ -110,7 +110,7 @@ http {
             alias /opt/nginx/nginx-1.10.1/html/404.html;
         }
     }
-server {
+    server {
         client_max_body_size 0;
         listen       80;
         server_name  $URLS_IMAGE_SERVER $URLS_IMAGE_SERVER2 $URLS_IMAGE_SERVER3;
@@ -146,7 +146,6 @@ server {
             return 444;
         }
 
-
         # Upload form should be submitted to this location
         location /upload {
 
@@ -159,35 +158,13 @@ server {
             }
 
             proxy_read_timeout 600;
-            # Pass altered request body to this location
-            upload_pass   @test;
-            # Store files to this directory
-            # The directory is hashed, subdirectories 0 1 2 3 4 5 6 7 8 9 should exist
-            upload_store $UPLOAD_PATH;
 
-            # Allow uploaded files to be read only by user
-            upload_store_access user:rw group:rw all:rw;
-
-            # Set specified fields in request body
-            upload_set_form_field $upload_field_name.name "$upload_file_name";
-            upload_set_form_field $upload_field_name.content_type "$upload_content_type";
-            upload_set_form_field $upload_field_name.path "$upload_tmp_path";
-
-            # Inform backend about hash and size of a file
-            upload_aggregate_form_field "$upload_field_name.md5" "$upload_file_md5";
-            upload_aggregate_form_field "$upload_field_name.size" "$upload_file_size";
-            upload_pass_form_field "^submit$|^description$";
-
-            upload_pass_args on;
-        }
-        # Pass altered request body to a backend
-        location @test {
-            include /etc/nginx/cors_params;
             add_header 'Access-Control-Allow-Credentials' 'false';
+            add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
+            add_header 'Access-Control-Allow-Headers' 'Content-Type, Content-Range, Content-Disposition, Content-Description, date, dateFull, authorization,content-type-full';
             add_header 'Access-Control-Max-Age' '1728000';
-            set $tmpims1host ims-pooled;
-            proxy_pass http://$tmpims1host;
-            proxy_read_timeout 600;
+            add_header 'Access-Control-Allow-Origin' '*';
+            proxy_pass   http://$INTERNAL_URLS_IMS;
         }
         error_page   500 502 503 504  /50x.html;
         location = /50x.html {
