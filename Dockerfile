@@ -31,7 +31,7 @@ COPY --from=entrypoint-scripts --chmod=774 /cytomine-entrypoint.sh /usr/local/bi
 COPY --from=entrypoint-scripts --chmod=774 /envsubst-on-templates-and-move.sh /docker-entrypoint-cytomine.d/500-envsubst-on-templates-and-move.sh
 
 #mongo auto backup
-COPY cytomine_mongo_backup.sh /etc/cron.daily/cytomine_mongo_backup.sh
+COPY files/cytomine_mongo_backup.sh /etc/cron.daily/cytomine_mongo_backup.sh
 RUN chmod +x /etc/cron.daily/cytomine_mongo_backup.sh
 
 COPY --chmod=744 mongo-entrypoint.sh /mongo-entrypoint.sh
