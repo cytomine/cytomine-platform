@@ -41,6 +41,11 @@ RUN mkdir -p /etc/postgres/conf.d
 COPY files/postgres.conf /etc/postgres/postgres.conf
 COPY files/postgres.default.conf /etc/postgres/00-default.conf
 
+# daily backup configuration
+COPY files/cytomine_postgis_backup.sh /etc/poeriodic/daily/cytomine_postgis_backup.sh
+RUN chmod +x /etc/periodic/daily/cytomine_postgis_backup.sh
+
+
 RUN mkdir /docker-entrypoint-cytomine.d/
 COPY --from=entrypoint-scripts --chmod=774 /cytomine-entrypoint.sh /usr/local/bin/
 COPY --from=entrypoint-scripts --chmod=774 /envsubst-on-templates-and-move.sh /docker-entrypoint-cytomine.d/500-envsubst-on-templates-and-move.sh
@@ -56,6 +61,7 @@ LABEL org.opencontainers.image.authors='support@cytomine.com' \
       org.opencontainers.image.deps.entrypoint.scripts.version=${ENTRYPOINT_SCRIPTS_VERSION}
 
 VOLUME ["/var/lib/postgresql/data"]
+VOLUME ["/data/backups"]
 
 ENTRYPOINT ["cytomine-entrypoint.sh", "docker-entrypoint.sh"]
 CMD ["postgres", "-c", "config_file=/etc/postgres/postgres.conf"]
