@@ -8,21 +8,29 @@ DB_USER="$POSTGRES_USER"        # Database username
 
 
 # Backup directory and filename
-BACKUP_DIR="/tmp"  # Specify the backup directory
-BACKUP_FILENAME="cytomine_postgis_backup_$(date "+%A").sql"  # Use timestamp for unique backup filenames
+BACKUP_DIR="/backups"  # Specify the backup directory
+BACKUP_FILENAME="cytomine_postgis_backup_$(date "+%A")"  # Use day of the week for unique backup filenames
+
+mkdir -p $BACKUP_DIR
 
 # Full path to the backup file
-BACKUP_PATH="$BACKUP_DIR/$BACKUP_FILENAME"
+BACKUP_TARGET_PATH="$BACKUP_DIR/$BACKUP_FILENAME.tar.gz"
+BACKUP_TMP_PATH="/tmp/$BACKUP_FILENAME.sql"
 
 #logging operation
 echo "Backing up cytomine postgis database : $DB_NAME"
 
 # Create the backup
-pg_dump -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -f "$BACKUP_PATH"
+export LC_TIME=en_US.UTF-8 # to change the language of the date to English
+pg_dump -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -f "$BACKUP_TMP_PATH"
+tar -czvf $BACKUP_TARGET_PATH $BACKUP_TMP_PATH
+
+# Clean tmp file
+rm $BACKUP_TMP_PATH
 
 # Check the exit status of pg_dump
 if [ $? -eq 0 ]; then
-  echo "Backup completed successfully: $BACKUP_PATH"
+  echo "Backup completed successfully: $BACKUP_TARGET_PATH"
 else
   echo "Backup failed"
 fi
