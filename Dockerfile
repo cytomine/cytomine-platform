@@ -33,8 +33,9 @@ ARG POSTGIS_VERSION
 ENV POSTGRES_USER=docker
 
 # database init
-COPY files/initdb-cytomine-extensions.sh /docker-entrypoint-initdb.d/11_cytomine_extensions.sh
-COPY files/initdb-cytomine-users.sh /docker-entrypoint-initdb.d/12_cytomine_users.sh
+COPY files/initdb-cytomine-extensions.sql /docker-entrypoint-initdb.d/11_cytomine-extensions.sql
+COPY files/initdb-cytomine-user-postgres.sql /docker-entrypoint-initdb.d/12_cytomine_user_postgres.sql
+COPY files/initdb-cytomine-user-docker.sql /docker-entrypoint-initdb.d/13_cytomine_user_docker.sql
 
 # default configuration
 RUN mkdir -p /etc/postgres/conf.d
