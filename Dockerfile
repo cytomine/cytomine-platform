@@ -42,9 +42,8 @@ COPY files/postgres.conf /etc/postgres/postgres.conf
 COPY files/postgres.default.conf /etc/postgres/00-default.conf
 
 # daily backup configuration
-COPY files/cytomine_postgis_backup.sh /etc/poeriodic/daily/cytomine_postgis_backup.sh
+COPY files/cytomine_postgis_backup.sh /etc/periodic/daily/cytomine_postgis_backup.sh
 RUN chmod +x /etc/periodic/daily/cytomine_postgis_backup.sh
-
 
 RUN mkdir /docker-entrypoint-cytomine.d/
 COPY --from=entrypoint-scripts --chmod=774 /cytomine-entrypoint.sh /usr/local/bin/
