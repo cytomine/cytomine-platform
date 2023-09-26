@@ -118,7 +118,7 @@ async def show_resized_with_body(
     vary=['config', 'request', 'response'],
     supported_mimetypes=PROCESSING_MIMETYPES
 )
-def _show_resized(
+async def _show_resized(
     request: Request, response: Response,  # required for @cache  # noqa
     path: Path,
     height, width, length, zoom, level,
