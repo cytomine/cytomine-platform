@@ -17,7 +17,6 @@ from functools import cached_property
 
 import numpy as np
 from pyvips import Image as VIPSImage
-from skimage.filters import threshold_isodata, threshold_minimum, threshold_otsu, threshold_yen
 
 from pims.api.utils.models import Colorspace, FilterType
 from pims.filters import AbstractFilter
@@ -71,6 +70,7 @@ class OtsuThresholdFilter(AbstractGlobalThresholdFilter):
 
     @cached_property
     def threshold(self):
+        from skimage.filters import threshold_otsu
         return threshold_otsu(hist=clamp_histogram(self.histogram))
 
 
@@ -81,6 +81,7 @@ class IsodataThresholdFilter(AbstractGlobalThresholdFilter):
 
     @cached_property
     def threshold(self):
+        from skimage.filters import threshold_isodata
         return threshold_isodata(hist=clamp_histogram(self.histogram))
 
     @classmethod
@@ -101,6 +102,7 @@ class YenThresholdFilter(AbstractGlobalThresholdFilter):
 
     @cached_property
     def threshold(self):
+        from skimage.filters import threshold_yen
         return threshold_yen(hist=clamp_histogram(self.histogram))
 
     @classmethod
@@ -115,6 +117,7 @@ class MinimumThresholdFilter(AbstractGlobalThresholdFilter):
 
     @cached_property
     def threshold(self):
+        from skimage.filters import threshold_minimum
         return threshold_minimum(hist=clamp_histogram(self.histogram))
 
     @classmethod
