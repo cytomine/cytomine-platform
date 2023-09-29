@@ -8,7 +8,7 @@ DB_USER="$MONGO_INITDB_ROOT_USERNAME"  # Database username
 DB_PASS="$MONGO_INITDB_ROOT_PASSWORD"	 # Database password
 
 # Backup directory and filename
-BACKUP_DIR="/backups" 
+BACKUP_DIR="/data/db/backups" 
 BACKUP_FILENAME="cytomine_mongo_backup_$(date "+%A")" # Use day of the week for unique backup directories
 
 # Full path to the backup file

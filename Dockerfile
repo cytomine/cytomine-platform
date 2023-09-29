@@ -31,10 +31,16 @@ COPY --from=entrypoint-scripts --chmod=774 /cytomine-entrypoint.sh /usr/local/bi
 COPY --from=entrypoint-scripts --chmod=774 /envsubst-on-templates-and-move.sh /docker-entrypoint-cytomine.d/500-envsubst-on-templates-and-move.sh
 
 #mongo auto backup
-COPY files/cytomine_mongo_backup.sh /etc/cron.daily/cytomine_mongo_backup.sh
-RUN chmod +x /etc/cron.daily/cytomine_mongo_backup.sh
+COPY files/backup-cron-job /backup-cron-job
+COPY files/cytomine-mongo-backup.sh /usr/local/bin/backup
+RUN chmod +x /usr/local/bin/backup && \
+    chmod 0644 /backup-cron-job && \
+    chmod u+s /usr/bin/crontab && \
+    touch /var/lib/postgresql/data/backup/backup.log && \
+    chmod 777 /var/lib/postgresql/data/backup/backup.log && \
+    crontab /backup-cron-job
 
-COPY --chmod=744 mongo-entrypoint.sh /mongo-entrypoint.sh
+VOLUME ["/data/db"]
 
-ENTRYPOINT ["/mongo-entrypoint.sh", "cytomine-entrypoint.sh", "docker-entrypoint.sh"]
+ENTRYPOINT ["cytomine-entrypoint.sh", "docker-entrypoint.sh"]
 CMD ["mongod"]
