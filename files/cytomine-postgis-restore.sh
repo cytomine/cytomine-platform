@@ -4,7 +4,7 @@ source /tmp/cytomine.postgis.env
 echo -e "\n$(date) Start of restore script"
 
 # PostgreSQL database connection parameters
-DB_NAME="$POSTGRES_DB_NAME"    # Database name
+DB_NAME="$POSTGRES_DB"    # Database name
 DB_USER="$POSTGRES_USER"        # Database username
 
 
