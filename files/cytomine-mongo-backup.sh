@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Loading mongo related environment variables
-MONGO_ENV_FILE="/mongo.env"
+MONGO_ENV_FILE="/tmp/cytomine.mongo.env"
 if [ -f "$MONGO_ENV_FILE" ]; then
   source $MONGO_ENV_FILE
 else
