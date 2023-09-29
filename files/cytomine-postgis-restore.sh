@@ -1,12 +1,19 @@
 #!/bin/bash
 
-source /tmp/cytomine.postgis.env
 echo -e "\n$(date) Start of restore script"
+
+# Loading postgis related environment variables
+POSTGIS_ENV_FILE="/tmp/cytomine.postgis.env"
+if [ -f "$POSTGIS_ENV_FILE" ]; then
+  source $POSTGIS_ENV_FILE
+else
+  echo "$(date) Aborting backup restore: cannot find file $POSTGIS_ENV_FILE !"
+  exit 1
+fi
 
 # PostgreSQL database connection parameters
 DB_NAME="$POSTGRES_DB"    # Database name
 DB_USER="$POSTGRES_USER"        # Database username
-
 
 # Backup directory and filename
 RESTORE_DIR="/var/lib/postgresql/data/backup"   # Specify the backup directory to read the archive to restore from.

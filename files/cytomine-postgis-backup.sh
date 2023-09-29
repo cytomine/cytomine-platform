@@ -1,9 +1,18 @@
 #!/bin/bash
 
-source /tmp/cytomine.postgis.env
+echo -e "\n$(date) Start of backup script"
+
+# Loading postgis related environment variables
+POSTGIS_ENV_FILE="/tmp/cytomine.postgis.env"
+if [ -f "$POSTGIS_ENV_FILE" ]; then
+  source $POSTGIS_ENV_FILE
+else
+  echo "$(date) Aborting backup: cannot find file $POSTGIS_ENV_FILE !"
+  exit 1
+fi
+
 # PostgreSQL database connection parameters
 DB_USER="$POSTGRES_USER"        # Database username
-
 
 # Backup directory and filename
 BACKUP_DIR="/var/lib/postgresql/data/backup"  # Specify the backup directory
