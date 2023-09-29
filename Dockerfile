@@ -35,10 +35,12 @@ COPY --from=entrypoint-scripts --chmod=774 /cytomine-entrypoint.sh /usr/local/bi
 COPY --from=entrypoint-scripts --chmod=774 /envsubst-on-templates-and-move.sh /docker-entrypoint-cytomine.d/500-envsubst-on-templates-and-move.sh
 COPY --chmod=774 files/start-crond.sh /docker-entrypoint-cytomine.d/600-start-crond.sh
 
-#mongo auto backup
+# backup and restore scripts
 COPY files/backup-cron-job /backup-cron-job
 COPY files/cytomine-mongo-backup.sh /usr/local/bin/backup
-RUN chmod +x /usr/local/bin/backup && \
+COPY files/cytomine-mongo-restore.sh /usr/local/bin/restore
+
+RUN chmod +x /usr/local/bin/backup /usr/local/bin/restore && \
     chmod 0644 /backup-cron-job && \
     chmod u+s /usr/bin/crontab && \
     mkdir -p /data/db/backup && \
