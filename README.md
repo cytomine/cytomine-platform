@@ -26,11 +26,11 @@ It produces a compressed archive in a `backup` subdirectory of the exposed volum
 
 ## Restore
 To restore the database from a backup, follow those steps:
-1. In the volume folder `/var/lib/postgresql/data/backup` rename the backup archive you want to restore into `restore.tar.gz`:
+1. In the volume folder `/var/lib/postgresql/data/backup` (or in the equivalent folder on your host if you mounted the volume), rename the backup archive you want to restore into `restore.tar.gz`:
 ```
-/var/lib/postgresql/data/backup# mv cytomine_postgis_backup_Fri.tar.gz restore.tar.gz
+/var/lib/postgresql/data/backup# cp cytomine_postgis_backup_Fri.tar.gz restore.tar.gz
 ```
-2. Run the `restore` script:
+2. Run the `restore` script from the host:
 ```
-/var/lib/postgresql/data/backup# restore
+~# docker exec postgis restore
 ```
