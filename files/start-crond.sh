@@ -1,6 +1,6 @@
 #!/bin/sh
 
-mkdir -p /var/lib/postgresql/data/backup /tmp
+mkdir -p /tmp
 printenv > /tmp/cytomine.postgis.env
 
 /usr/sbin/crond -l 8
