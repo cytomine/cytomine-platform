@@ -26,9 +26,12 @@ FROM cytomine/entrypoint-scripts:${ENTRYPOINT_SCRIPTS_VERSION} as entrypoint-scr
 ## Stage 2: mongo image
 FROM mongo:${MONGO_VERSION}
 
+RUN apt update && apt install -y --no-install-recommends cron 
+
 RUN mkdir /docker-entrypoint-cytomine.d/
 COPY --from=entrypoint-scripts --chmod=774 /cytomine-entrypoint.sh /usr/local/bin/
 COPY --from=entrypoint-scripts --chmod=774 /envsubst-on-templates-and-move.sh /docker-entrypoint-cytomine.d/500-envsubst-on-templates-and-move.sh
+COPY --chmod=774 files/start-crond.sh docker-entrypoint-cytomine.d/600-start-crond.sh
 
 #mongo auto backup
 COPY files/backup-cron-job /backup-cron-job
@@ -36,8 +39,9 @@ COPY files/cytomine-mongo-backup.sh /usr/local/bin/backup
 RUN chmod +x /usr/local/bin/backup && \
     chmod 0644 /backup-cron-job && \
     chmod u+s /usr/bin/crontab && \
-    touch /var/lib/postgresql/data/backup/backup.log && \
-    chmod 777 /var/lib/postgresql/data/backup/backup.log && \
+    mkdir -p /data/db/backups && \
+    touch /data/db/backups/backup.log && \
+    chmod 777 /data/db/backups/backup.log && \
     crontab /backup-cron-job
 
 VOLUME ["/data/db"]

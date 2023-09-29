@@ -1,5 +1,14 @@
 #!/bin/bash
 
+# Loading mongo related environment variables
+MONGO_ENV_FILE="/mongo.env"
+if [ -f "$MONGO_ENV_FILE" ]; then
+  source $MONGO_ENV_FILE
+else
+  echo "$(date) cannot find file $MONGO_ENV_FILE, aborting backup !"
+  exit 1
+fi
+
 # PostgreSQL database connection parameters
 DB_HOST="localhost"  # Database host
 DB_PORT="$MONGO_DB_PORT"  # Database port (default is 27017)
@@ -18,21 +27,32 @@ mkdir -p $BACKUP_DIR
 # Create and clean temporary directory
 BACKUP_TMP_DIR="/tmp/backups"
 mkdir -p $BACKUP_TMP_DIR
-rm $BACKUP_TMP_DIR/* -r
+rm $BACKUP_TMP_DIR/* -rf
 
 #logging operation
-echo "Backing up cytomine mongo database : $DB_NAME"
+echo "$(date) Backing up cytomine mongo database : $DB_NAME"
 
 # Create the backup
 mongodump --host "$DB_HOST" --port "$DB_PORT" --username "$DB_USER" --password "$DB_PASS" --out "$BACKUP_TMP_DIR"
-tar -czvf $BACKUP_TARGET_PATH -C $BACKUP_TMP_DIR .
+# Check the exit status of mongodump
+if [ $? -ne 0 ]; then
+  echo -e "$(date) Could not extract Mongo dump. Aborting backup."
+  exit 1
+fi
+
+cd $BACKUP_TMP_PATH
+tar -czvf $BACKUP_TARGET_PATH -C $BACKUP_TMP_DIR . 2>&1
+# Check the exit status of tar
+if [ $? -eq 0 ]; then
+  echo "$(date) Backup completed successfully: $BACKUP_TARGET_PATH"
+else
+  echo "$(date) Backup failed"
+  # Clean tmp file
+  rm "$BACKUP_TMP_DIR/*" -rf
+  exit 2
+fi
 
 # Clean tmp files
-rm $BACKUP_TMP_DIR -r
+rm $BACKUP_TMP_DIR -rf
 
-# Check the exit status of mongodump
-if [ $? -eq 0 ]; then
-  echo "Backup completed successfully: $BACKUP_DIR"
-else
-  echo "Backing up cytomine mongo database failed"
-fi
+echo "$(date) Backup completed successfully: $BACKUP_DIR"
