@@ -45,8 +45,8 @@ COPY files/start-crond.sh /docker-entrypoint-cytomine.d/600-start-crond.sh
 
 # backup and restore scripts
 COPY files/backup-cron-job /backup-cron-job
-COPY files/cytomine_postgis_backup.sh /usr/local/bin/backup
-COPY files/cytomine_postgis_restore.sh /usr/local/bin/restore
+COPY files/cytomine-postgis-backup.sh /usr/local/bin/backup
+COPY files/cytomine-postgis-restore.sh /usr/local/bin/restore
 
 RUN chmod +x /usr/local/bin/backup /usr/local/bin/restore /docker-entrypoint-cytomine.d/600-start-crond.sh && \
     chmod 0644 /backup-cron-job && \
