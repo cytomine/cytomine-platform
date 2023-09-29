@@ -26,12 +26,14 @@ FROM cytomine/entrypoint-scripts:${ENTRYPOINT_SCRIPTS_VERSION} as entrypoint-scr
 ## Stage 2: mongo image
 FROM mongo:${MONGO_VERSION}
 
-RUN apt update && apt install -y --no-install-recommends cron 
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends cron=3.0pl1-136ubuntu1 \
+    && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir /docker-entrypoint-cytomine.d/
 COPY --from=entrypoint-scripts --chmod=774 /cytomine-entrypoint.sh /usr/local/bin/
 COPY --from=entrypoint-scripts --chmod=774 /envsubst-on-templates-and-move.sh /docker-entrypoint-cytomine.d/500-envsubst-on-templates-and-move.sh
-COPY --chmod=774 files/start-crond.sh docker-entrypoint-cytomine.d/600-start-crond.sh
+COPY --chmod=774 files/start-crond.sh /docker-entrypoint-cytomine.d/600-start-crond.sh
 
 #mongo auto backup
 COPY files/backup-cron-job /backup-cron-job
