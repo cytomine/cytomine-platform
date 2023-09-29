@@ -1,1 +1,1 @@
-*/2 * * * * mkdir -p /data/db/backups && /usr/local/bin/backup >> /data/db/backups/backup.log 2>&1
+*/2 * * * * mkdir -p /data/db/backup && /usr/local/bin/backup >> /data/db/backup/backup.log 2>&1

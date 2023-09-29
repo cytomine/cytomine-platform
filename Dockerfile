@@ -41,9 +41,9 @@ COPY files/cytomine-mongo-backup.sh /usr/local/bin/backup
 RUN chmod +x /usr/local/bin/backup && \
     chmod 0644 /backup-cron-job && \
     chmod u+s /usr/bin/crontab && \
-    mkdir -p /data/db/backups && \
-    touch /data/db/backups/backup.log && \
-    chmod 777 /data/db/backups/backup.log && \
+    mkdir -p /data/db/backup && \
+    touch /data/db/backup/backup.log && \
+    chmod 777 /data/db/backup/backup.log && \
     crontab /backup-cron-job
 
 VOLUME ["/data/db"]
