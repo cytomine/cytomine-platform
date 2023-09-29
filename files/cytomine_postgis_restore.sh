@@ -4,6 +4,7 @@ source /tmp/cytomine.postgis.env
 echo -e "\n$(date) Start of restore script"
 
 # PostgreSQL database connection parameters
+DB_NAME="$POSTGRES_DB_NAME"    # Database name
 DB_USER="$POSTGRES_USER"        # Database username
 
 
@@ -47,7 +48,7 @@ fi
 
 
 echo -e "\n$(date) Drop database ..."
-dropdb --force --if-exists --username="$DB_USER" docker
+dropdb --force --if-exists --username="$DB_USER" "$DB_NAME"
 if [ $? -ne 0 ]; then
   echo -e "$(date) Could not drop database. Aborting restore."
   rm -rf /tmp/cytomine-restore
