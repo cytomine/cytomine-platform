@@ -41,7 +41,7 @@ COPY files/initdb-cytomine-user-docker.sql /docker-entrypoint-initdb.d/13_cytomi
 # default configuration
 COPY files/postgres.conf /etc/postgres/postgres.conf
 COPY files/postgres.default.conf /etc/postgres/00-default.conf
-COPY files/start-crond.sh docker-entrypoint-cytomine.d/600-start-crond.sh
+COPY files/start-crond.sh /docker-entrypoint-cytomine.d/600-start-crond.sh
 
 # backup and restore scripts
 COPY files/backup-cron-job /backup-cron-job
