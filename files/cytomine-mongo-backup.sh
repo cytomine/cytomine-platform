@@ -1,11 +1,13 @@
 #!/bin/bash
 
+echo "\n$(data) Start of the backup script."
+
 # Loading mongo related environment variables
 MONGO_ENV_FILE="/tmp/cytomine.mongo.env"
 if [ -f "$MONGO_ENV_FILE" ]; then
   source $MONGO_ENV_FILE
 else
-  echo "$(date) cannot find file $MONGO_ENV_FILE, aborting backup !"
+  echo "$(date) Aborting backup: cannot find file $MONGO_ENV_FILE !"
   exit 1
 fi
 
