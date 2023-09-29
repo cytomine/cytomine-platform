@@ -1,5 +1,6 @@
 #!/bin/bash
 
+source /tmp/cytomine.postgis.env
 echo -e "\n$(date) Start of restore script"
 
 # PostgreSQL database connection parameters
@@ -28,7 +29,7 @@ if (( $(stat -c%s "$RESTORE_DIR/$RESTORE_FILENAME") < 1000 )); then
   exit 3
 fi
 
-echo -e "\n$(date) Extracting $RESTORE_DIR/$RESTORE_FILENAME to /tmp/db_to_restore.sql"
+echo -e "\n$(date) Extracting $RESTORE_DIR/$RESTORE_FILENAME to /tmp/db_to_restore.sql $DB_USER"
 cd $RESTORE_DIR
 mkdir -p /tmp/cytomine-restore
 tar xzf restore.tar.gz -C /tmp/cytomine-restore
@@ -37,7 +38,7 @@ if [ $? -ne 0 ]; then
   exit 4
 fi
 
-mv /tmp/cytomine-restore/*.sql /tmp/restore.sql
+mv /tmp/cytomine-restore/*.sql /tmp/cytomine-restore/restore.sql
 if [ $? -ne 0 ]; then
   echo -e "$(date) Could not find a SQL file dump. Aborting restore."
   rm -rf /tmp/cytomine-restore
@@ -46,7 +47,7 @@ fi
 
 
 echo -e "\n$(date) Drop database ..."
-dropdb --force --username="$DB_USER" docker
+dropdb --force --if-exists --username="$DB_USER" docker
 if [ $? -ne 0 ]; then
   echo -e "$(date) Could not drop database. Aborting restore."
   rm -rf /tmp/cytomine-restore
@@ -54,7 +55,7 @@ if [ $? -ne 0 ]; then
 fi
 
 echo -e "\n$(date) Import postgis databases ..."
-psql --username="$DB_USER" --dbname="postgres" --file=/tmp/cytomine-restore/*.sql
+psql --username="$DB_USER" --dbname="postgres" --file=/tmp/cytomine-restore/restore.sql
 # Check the exit status of pg_dupsqlmp
 if [ $? -ne 0 ]; then
   echo -e "$(date) Could not inject dump. Aborting restore."
@@ -62,6 +63,7 @@ if [ $? -ne 0 ]; then
   exit 6
 fi
 
+echo -e "$(date) The database was successfully restored".
 
 # Clean tmp file
 rm -rf /tmp/cytomine-restore

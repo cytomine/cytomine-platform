@@ -18,10 +18,19 @@ The image also supports environment variables supported by the base Postgres ima
 
 ## Backup
 This image provides a `backup` script. It will create an archive containing a full `pg_dump` of the database.  
-The `backup` script runs every 24h.
-It produces a compressed archive in a `backup` subdirectory of the exposed volume: `/var/lib/postgresql/data/backup`.  
-
-The backup can be invoked from the host running the container:
+The `backup` script runs every 24h. It can be further invoked from the host running the container:
 ```
 docker exec postgis backup
+```
+It produces a compressed archive in a `backup` subdirectory of the exposed volume: `/var/lib/postgresql/data/backup`.
+
+## Restore
+To restore the database from a backup, follow those steps:
+1. In the volume folder `/var/lib/postgresql/data/backup` rename the backup archive you want to restore into `restore.tar.gz`:
+```
+/var/lib/postgresql/data/backup# mv cytomine_postgis_backup_Fri.tar.gz restore.tar.gz
+```
+2. Run the `restore` script:
+```
+/var/lib/postgresql/data/backup# restore
 ```

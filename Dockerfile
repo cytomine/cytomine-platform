@@ -43,10 +43,12 @@ COPY files/postgres.conf /etc/postgres/postgres.conf
 COPY files/postgres.default.conf /etc/postgres/00-default.conf
 COPY files/start-crond.sh docker-entrypoint-cytomine.d/600-start-crond.sh
 
-# daily backup configuration
+# backup and restore scripts
 COPY files/backup-cron-job /backup-cron-job
 COPY files/cytomine_postgis_backup.sh /usr/local/bin/backup
-RUN chmod +x /usr/local/bin/backup /docker-entrypoint-cytomine.d/600-start-crond.sh && \
+COPY files/cytomine_postgis_restore.sh /usr/local/bin/restore
+
+RUN chmod +x /usr/local/bin/backup /usr/local/bin/restore /docker-entrypoint-cytomine.d/600-start-crond.sh && \
     chmod 0644 /backup-cron-job && \
     chmod u+s /usr/bin/crontab && \
     touch /var/lib/postgresql/data/backup/backup.log && \

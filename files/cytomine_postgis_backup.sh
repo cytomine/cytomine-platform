@@ -1,5 +1,6 @@
 #!/bin/bash
 
+source /tmp/cytomine.postgis.env
 # PostgreSQL database connection parameters
 DB_USER="$POSTGRES_USER"        # Database username
 
@@ -15,7 +16,7 @@ BACKUP_TARGET_PATH="$BACKUP_DIR/$BACKUP_FILENAME.tar.gz"
 BACKUP_TMP_PATH="/tmp"
 
 #logging operation
-echo -e "\n$(date) Backing up cytomine postgis databases ..."
+echo -e "\n$(date) Backing up cytomine postgis databases ... $DB_USER"
 
 # Create the backup
 export LC_TIME=en_US.UTF-8 # to change the language of the date to English
