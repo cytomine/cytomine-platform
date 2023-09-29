@@ -41,12 +41,12 @@ COPY files/initdb-cytomine-user-docker.sql /docker-entrypoint-initdb.d/13_cytomi
 # default configuration
 COPY files/postgres.conf /etc/postgres/postgres.conf
 COPY files/postgres.default.conf /etc/postgres/00-default.conf
-COPY files/cytomine-postgis-entrypoint.sh docker-entrypoint-cytomine.d/600-cytomine-postgis-entrypoint.sh
+COPY files/start-crond.sh docker-entrypoint-cytomine.d/600-start-crond.sh
 
 # daily backup configuration
 COPY files/backup-cron-job /backup-cron-job
 COPY files/cytomine_postgis_backup.sh /usr/local/bin/backup
-RUN chmod +x /usr/local/bin/backup /docker-entrypoint-cytomine.d/600-cytomine-postgis-entrypoint.sh && \
+RUN chmod +x /usr/local/bin/backup /docker-entrypoint-cytomine.d/600-start-crond.sh && \
     chmod 0644 /backup-cron-job && \
     chmod u+s /usr/bin/crontab && \
     touch /var/lib/postgresql/data/backup/backup.log && \

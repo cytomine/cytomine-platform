@@ -15,3 +15,13 @@ Currently registered Cytomine db scripts(s):
 This image works off-the-shelf but, if additional configuration is required, one can supply one or several postgres configuration files to override the default configuration. These file should follow the naming convention `DD-*.conf` (e.g. `50-additional.conf`) where `DD` is a two digits number between `01` and `99` defining the read order of the override configuration files. These files should be mounted in `/cm_configs/etc/postgres/conf.d/`.
 
 The image also supports environment variables supported by the base Postgres image (see [official documentation](https://registry.hub.docker.com/_/postgres)).
+
+## Backup
+This image provides a `backup` script. It will create an archive containing a full `pg_dump` of the database.  
+The `backup` script runs every 24h.
+It produces a compressed archive in a `backup` subdirectory of the exposed volume: `/var/lib/postgresql/data/backup`.  
+
+The backup can be invoked from the host running the container:
+```
+docker exec postgis backup
+```

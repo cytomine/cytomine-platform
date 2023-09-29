@@ -1,8 +1,6 @@
 #!/bin/bash
 
 # PostgreSQL database connection parameters
-DB_HOST="localhost"     # Database host
-DB_PORT="$POSTGRES_PORT"          # Database port (default is 5432)
 DB_USER="$POSTGRES_USER"        # Database username
 
 
@@ -21,7 +19,7 @@ echo -e "\n$(date) Backing up cytomine postgis databases ..."
 
 # Create the backup
 export LC_TIME=en_US.UTF-8 # to change the language of the date to English
-pg_dump -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -f "/$BACKUP_TMP_PATH/$BACKUP_FILENAME.sql"
+pg_dumpall --username="$DB_USER" --clean -f "/$BACKUP_TMP_PATH/$BACKUP_FILENAME.sql"
 # Check the exit status of pg_dump
 if [ $? -ne 0 ]; then
   echo -e "$(date) Could not extract SQL dump. Aborting backup."
