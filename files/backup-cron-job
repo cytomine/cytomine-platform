@@ -1,1 +1,1 @@
-*/2 * * * * mkdir -p /var/lib/postgresql/data/backup && /usr/local/bin/backup >> /var/lib/postgresql/data/backup/backup.log
+0 0 * * * mkdir -p /var/lib/postgresql/data/backup && /usr/local/bin/backup >> /var/lib/postgresql/data/backup/backup.log
