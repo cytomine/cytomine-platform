@@ -35,8 +35,6 @@ rm -rf "${BACKUP_TMP_DIR:?}/*"
 echo "$(date) Backing up cytomine mongo database : $DB_USER@$DB_HOST:$DB_PORT/$DB_NAME into $BACKUP_TMP_DIR "
 
 # Create the backup
-# mongodump --host localhost --port 27017 --username=mongoadmin --password=password --db=cytomine --authenticationDatabase cytomine --out="/tmp/backups/"
-# -> Auth failure
 mongodump --host "$DB_HOST" --port "$DB_PORT" --username "$DB_USER" --password "$DB_PASS" --out "$BACKUP_TMP_DIR"
 # Check the exit status of mongodump
 if [ $? -ne 0 ]; then
