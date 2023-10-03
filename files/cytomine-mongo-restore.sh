@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "\n$(data) Start of the backup script."
+echo "\n$(date) Start of the backup script."
 
 # Loading mongo related environment variables
 MONGO_ENV_FILE="/tmp/cytomine.mongo.env"
@@ -53,14 +53,15 @@ if [ $? -ne 0 ]; then
   exit 4
 fi
 
-if [ -d "$TMP_RESTORE_DIR/dump" ]; then
+if [ ! -d "$TMP_RESTORE_DIR/cytomine" ] || [ ! -d "$TMP_RESTORE_DIR/admin" ]; then
   echo -e "$(date) Could not find a Mongo dump. Aborting restore."
   rm -rf $TMP_RESTORE_DIR
   exit 5
 fi
 
+# Drop database if exists
 echo -e "\n$(date) Restore mongo backups ..."
-mongorestore $TMP_RESTORE_DIR
+mongorestore --host "$DB_HOST" --port "$DB_PORT" --username "$DB_USER" --password "$DB_PASS" --drop $TMP_RESTORE_DIR
 # Check the exit status of mongorestore
 if [ $? -ne 0 ]; then
   echo -e "$(date) Could not inject dump. Aborting restore."
