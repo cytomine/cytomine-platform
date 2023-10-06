@@ -33,20 +33,28 @@ ARG POSTGIS_VERSION
 ENV POSTGRES_USER=docker
 
 # database init
-COPY files/initdb-cytomine-extensions.sh /docker-entrypoint-initdb.d/11_cytomine_extensions.sh
-COPY files/initdb-cytomine-users.sh /docker-entrypoint-initdb.d/12_cytomine_users.sh
+RUN mkdir -p /etc/postgres/conf.d /docker-entrypoint-cytomine.d/ /docker-entrypoint-initdb.d/ /var/lib/postgresql/data/backup
+COPY files/initdb-cytomine-extensions.sql /docker-entrypoint-initdb.d/11_cytomine-extensions.sql
+COPY files/initdb-cytomine-user-postgres.sql /docker-entrypoint-initdb.d/12_cytomine_user_postgres.sql
+COPY files/initdb-cytomine-user-docker.sql /docker-entrypoint-initdb.d/13_cytomine_user_docker.sql
 
 # default configuration
-RUN mkdir -p /etc/postgres/conf.d
 COPY files/postgres.conf /etc/postgres/postgres.conf
 COPY files/postgres.default.conf /etc/postgres/00-default.conf
+COPY files/start-crond.sh /docker-entrypoint-cytomine.d/600-start-crond.sh
 
-# daily backup configuration
-COPY files/cytomine_postgis_backup.sh /etc/poeriodic/daily/cytomine_postgis_backup.sh
-RUN chmod +x /etc/periodic/daily/cytomine_postgis_backup.sh
+# backup and restore scripts
+COPY files/backup-cron-job /backup-cron-job
+COPY files/cytomine-postgis-backup.sh /usr/local/bin/backup
+COPY files/cytomine-postgis-restore.sh /usr/local/bin/restore
 
+RUN chmod +x /usr/local/bin/backup /usr/local/bin/restore /docker-entrypoint-cytomine.d/600-start-crond.sh && \
+    chmod 0644 /backup-cron-job && \
+    chmod u+s /usr/bin/crontab && \
+    touch /var/lib/postgresql/data/backup/backup.log && \
+    chmod 777 /var/lib/postgresql/data/backup/backup.log && \
+    crontab /backup-cron-job
 
-RUN mkdir /docker-entrypoint-cytomine.d/
 COPY --from=entrypoint-scripts --chmod=774 /cytomine-entrypoint.sh /usr/local/bin/
 COPY --from=entrypoint-scripts --chmod=774 /envsubst-on-templates-and-move.sh /docker-entrypoint-cytomine.d/500-envsubst-on-templates-and-move.sh
 
@@ -61,7 +69,6 @@ LABEL org.opencontainers.image.authors='support@cytomine.com' \
       org.opencontainers.image.deps.entrypoint.scripts.version=${ENTRYPOINT_SCRIPTS_VERSION}
 
 VOLUME ["/var/lib/postgresql/data"]
-VOLUME ["/data/backups"]
 
 ENTRYPOINT ["cytomine-entrypoint.sh", "docker-entrypoint.sh"]
 CMD ["postgres", "-c", "config_file=/etc/postgres/postgres.conf"]
