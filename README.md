@@ -14,20 +14,21 @@ This image works off-the-shelf but, if additional configuration is required, one
 
 The image also supports environment variables supported by the base Mongo image (see [official documentation](https://registry.hub.docker.com/_/mongo)).
 
-## Building the Docker image
-
-Simply run 
+# Backup
+This image provides a `backup` script. It will create an archive containing a full `mongodump` of the database.  
+The `backup` script runs every 24h. It can be further invoked from the host running the container:
 ```
-bash build.sh
+docker exec postgis backup
 ```
+It produces a compressed archive in a `backup` subdirectory of the exposed volume: `/data/db/backup`.
 
-This scripts supports the following environment variables (optionally located in a `.env` file) as inputs:
-
-* `MONGO_VERSION`: the Mongo version used in the image. It must be a [valid Docker tag for official `mongo` image](https://github.com/docker-library/docs/blob/master/mongo/README.md#supported-tags-and-respective-dockerfile-links).
-* `IMAGE_VERSION`: version of the custom image
-* `DOCKER_NAMESPACE` is the Docker namespace for the built image
-* `SCRIPTS_REPO_URL`: full url (http/https) of the git repository containing the initialization scripts (including git credentials if necessary).  
-* `SCRIPTS_REPO_TAG`: tag of the commit from which the scripts must be extracted 
-* `SCRIPTS_REPO_BRANCH`: branch from which the scripts must be extracted 
-
-It builds an image `NAMESPACE/mongo:MONGO_VERSION-IMAGE_VERSION`.
+## Restore
+To restore the database from a backup, follow those steps:
+1. In the volume folder `/data/db/backup` (or in the equivalent folder on your host if you mounted the volume), rename the backup archive you want to restore into `restore.tar.gz`:
+```
+/data/db/backup# cp cytomine_mongo_backup_Tue.tar.gz restore.tar.gz
+```
+2. Run the `restore` script from the host:
+```
+docker exec mongo restore
+```

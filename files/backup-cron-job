@@ -1,0 +1,1 @@
+0 0 * * * mkdir -p /data/db/backup && /usr/local/bin/backup >> /data/db/backup/backup.log 2>&1
