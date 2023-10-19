@@ -13,6 +13,7 @@
 #  * limitations under the License.
 import logging
 import os
+import shutil
 import traceback
 from typing import Optional
 import aiofiles
@@ -22,12 +23,12 @@ from cytomine.models import (
     Project, ProjectCollection, Storage, UploadedFile
 )
 from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, Query, UploadFile
-from starlette.requests import Request
+from starlette.requests import Request, ClientDisconnect
 from starlette.responses import FileResponse, JSONResponse
 from starlette.formparsers import MultiPartMessage, MultiPartParser, _user_safe_decode
 
 from pims.api.exceptions import (
-    AuthenticationException, BadRequestException, CytomineProblem,
+    AuthenticationException, BadRequestException, CytomineProblem, UploadCanceledException,
     check_representation_existence
 )
 from pims.api.utils.cytomine_auth import (
@@ -44,6 +45,7 @@ from pims.importer.listeners import CytomineListener
 from pims.tasks.queue import Task, send_task
 from pims.utils.iterables import ensure_list
 from pims.utils.strings import unique_name_generator
+from pims.files.archive import Archive, ArchiveError
 
 try:
     import multipart
@@ -77,16 +79,29 @@ async def import_direct_chunks(
 
     multipart_parser = MultiPartParser(request.headers, request.stream())
     filename = str(unique_name_generator())
-    pending_path = Path(WRITING_PATH,filename)
-
-    if not os.path.exists(pending_path.parent):
+    if not os.path.exists(WRITING_PATH):
         os.makedirs(WRITING_PATH)
 
-    upload_name = await write_file(multipart_parser, pending_path)
-    upload_size = request.headers['content-length']
+    pending_path = Path(WRITING_PATH,filename)
 
-    cytomine, cytomine_auth, root = connexion_to_core(request, core, cytomine, str(pending_path), upload_size, upload_name,  id_project, id_storage,
-                                                projects, storage, config, keys, values)
+    try:
+        upload_name = await write_file(multipart_parser, pending_path)
+        upload_size = request.headers['content-length']
+
+        cytomine, cytomine_auth, root = connexion_to_core(request, core, cytomine, str(pending_path), upload_size, upload_name,  id_project, id_storage,
+                                                    projects, storage, config, keys, values)
+    except Exception as e:
+        os.remove(pending_path)
+        return JSONResponse(
+            content=[{
+                "status": 500,
+                "error": str(e),
+                "files": [{
+                    "size": 0,
+                    "error": str(e)
+                }]
+            }], status_code=400
+        )
 
     if sync:
         try:
@@ -225,9 +240,33 @@ def export_upload(
         filename=exported_filename
     )
 
+@router.delete('/image/{filepath:path}', tags=['delete'])
+def delete(    
+    background: BackgroundTasks,
+    path: Path = Depends(imagepath_parameter),
+    ):
+    """
+    Delete the upload representation of an image.
+    """
+    if path.is_collection(): #trying to suppress an archive (.zip) as collection of image 
+        media_type = "application/zip"
+        pass
 
-def delete(filepath):
-    pass
+    original_path = path.get_original()
+    if original_path: #check if path does exist 
+        upload_file_path = original_path.get_upload().resolve()
+        media_type = original_path.media_type
+
+    if upload_file_path.is_extracted(): #DOES NOT WORK IF DELETE THE REAL FILE (and not the symlink)
+        pass  #trying to suppress a file coming from a collection of image leading to a dangling symlink in the collection folder
+
+    shutil.rmtree(upload_file_path.parent)
+
+    return FileResponse(
+        upload_file_path,
+        media_type=media_type,
+        filename=upload_file_path.name
+    )
 
 async def write_file(fastapi_parser: MultiPartParser, pending_path):
     '''
@@ -260,12 +299,16 @@ async def write_file(fastapi_parser: MultiPartParser, pending_path):
         }
     parser = multipart.MultipartParser(boundary,callbacks)
     async with aiofiles.open(pending_path, 'wb') as f:
-        async for chunk in fastapi_parser.stream:
-            # we assume that there is only one key-value in the body request (that is only one file to upload and no other parameter in the request such taht there is only one headers block)
-            if not headers_finised:#going through the one-only headers block of the body request and retrieve the filename 
-                original_filename, headers_finised = await process_chunks_headers(parser, fastapi_parser, chunk, f, original_filename=original_filename)
-            else: #enables more efficient upload by by-passing the mutlipart parser logic and just writing the data bytes directly
-                await f.write(chunk) 
+        try:
+            async for chunk in fastapi_parser.stream:
+                # we assume that there is only one key-value in the body request (that is only one file to upload and no other parameter in the request such taht there is only one headers block)
+                if not headers_finised:#going through the one-only headers block of the body request and retrieve the filename 
+                    original_filename, headers_finised = await process_chunks_headers(parser, fastapi_parser, chunk, f, original_filename=original_filename)
+                else: #enables more efficient upload by by-passing the mutlipart parser logic and just writing the data bytes directly
+                    await f.write(chunk) 
+        except ClientDisconnect:
+            raise UploadCanceledException()
+
 
     return original_filename
 
