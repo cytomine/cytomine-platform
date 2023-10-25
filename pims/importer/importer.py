@@ -55,6 +55,7 @@ FILE_ROOT_PATH = Path(get_settings().root)
 
 AUTO_DELETE_MULTI_FILE_FORMAT_ARCHIVE = get_settings().auto_delete_multi_file_format_archive
 AUTO_DELETE_COLLECTION_ARCHIVE = get_settings().auto_delete_collection_archive
+AUTO_DELETE_FAILED_UPLOAD = get_settings().auto_delete_failed_upload
 
 
 class FileErrorProblem(BadRequestException):
@@ -206,6 +207,8 @@ class FileImporter:
 
             if format is None:
                 self.notify(ImportEventType.ERROR_NO_FORMAT, self.upload_path)
+                if AUTO_DELETE_FAILED_UPLOAD and self.upload_path.exists():
+                    self.upload_path.delete_upload_root()
                 raise NoMatchingFormatProblem(self.upload_path)
             self.notify(
                 ImportEventType.END_FORMAT_DETECTION,
@@ -232,6 +235,8 @@ class FileImporter:
                         ImportEventType.ERROR_UNPACKING, self.upload_path,
                         exception=e
                     )
+                    if AUTO_DELETE_FAILED_UPLOAD and self.upload_path.exists():
+                        self.upload_path.delete_upload_root()
                     raise FileErrorProblem(self.upload_path)
 
                 # Now the archive is extracted, check if it's a multi-file format
@@ -291,12 +296,16 @@ class FileImporter:
                     ImportEventType.ERROR_INTEGRITY_CHECK, self.original_path,
                     integrity_errors=errors
                 )
+                if AUTO_DELETE_FAILED_UPLOAD and self.upload_path.exists():
+                    self.upload_path.delete_upload_root()
                 raise ImageParsingProblem(self.original)
             self.notify(ImportEventType.END_INTEGRITY_CHECK, self.original)
 
             if format.is_spatial():
                 self.deploy_spatial(format)
             else:
+                if AUTO_DELETE_FAILED_UPLOAD and self.upload_path.exists():
+                    self.upload_path.delete_upload_root()
                 raise NotImplementedError()
 
             self.deploy_histogram(self.original.get_spatial())
@@ -312,6 +321,8 @@ class FileImporter:
                 ImportEventType.FILE_ERROR,
                 self.upload_path, exeception=e
             )
+            if AUTO_DELETE_FAILED_UPLOAD and self.upload_path.exists():
+                self.upload_path.delete_upload_root()
             raise e
 
     def deploy_spatial(self, format: AbstractFormat) -> Image:

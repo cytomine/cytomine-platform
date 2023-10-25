@@ -255,12 +255,9 @@ def delete(
 
     # Deleting an archive will be refused as it is not an *image* but a collection
     # (checked in `Depends(imagepath_parameter)`)
-
     image = path.get_original()
     check_representation_existence(image)
-
-    upload_root = image.get_upload().resolve().upload_root()
-    shutil.rmtree(upload_root)
+    image.delete_upload_root()
 
     return Response(status_code=200)
 
