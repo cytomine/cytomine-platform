@@ -240,33 +240,9 @@ def export_upload(
         filename=exported_filename
     )
 
-@router.delete('/image/{filepath:path}', tags=['delete'])
-def delete(    
-    background: BackgroundTasks,
-    path: Path = Depends(imagepath_parameter),
-    ):
-    """
-    Delete the upload representation of an image.
-    """
-    if path.is_collection(): #trying to suppress an archive (.zip) as collection of image 
-        media_type = "application/zip"
-        pass
+def delete(filepath):
+    pass
 
-    original_path = path.get_original()
-    if original_path: #check if path does exist 
-        upload_file_path = original_path.get_upload().resolve()
-        media_type = original_path.media_type
-
-    if upload_file_path.is_extracted(): #DOES NOT WORK IF DELETE THE REAL FILE (and not the symlink)
-        pass  #trying to suppress a file coming from a collection of image leading to a dangling symlink in the collection folder
-
-    shutil.rmtree(upload_file_path.parent)
-
-    return FileResponse(
-        upload_file_path,
-        media_type=media_type,
-        filename=upload_file_path.name
-    )
 
 async def write_file(fastapi_parser: MultiPartParser, pending_path):
     '''
