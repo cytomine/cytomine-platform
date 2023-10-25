@@ -52,6 +52,7 @@ class ReadableSettings(BaseSettings):
     vips_cache_max_files: int = 500
 
     auto_delete_multi_file_format_archive: bool = True
+    auto_delete_collection_archive: bool = True
 
     class Config:
         extra = Extra.ignore

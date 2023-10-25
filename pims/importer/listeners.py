@@ -295,6 +295,9 @@ class CytomineListener(ImportListener):
         parent = self.get_uf(path)
         parent.status = UploadedFile.UNPACKED
         parent.update()
+        # If archive is a collection and archive deletion is asked after unpacking, PIMS cannot take the
+        # responsibility to delete directly the archive uploaded file. Cytomine clients are asynchronous, so they
+        # may not be informed that the archive uploaded file status has been set as "unpacked"
 
         if not is_collection:
             uf = parent if delete_zip else UploadedFile()
@@ -312,9 +315,6 @@ class CytomineListener(ImportListener):
             self.path_uf_mapping[str(unpacked_path)] = uf
             if delete_zip:
                 self.path_uf_mapping[str(path)] = uf
-        else:
-            pass
-            # TODO: delete zip when it's a collection
 
     def register_file(self, path: Path, parent_path: Path, *args, **kwargs):
         parent = self.get_uf(parent_path)

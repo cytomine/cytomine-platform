@@ -54,6 +54,7 @@ WRITING_PATH = Path(get_settings().writing_path)
 FILE_ROOT_PATH = Path(get_settings().root)
 
 AUTO_DELETE_MULTI_FILE_FORMAT_ARCHIVE = get_settings().auto_delete_multi_file_format_archive
+AUTO_DELETE_COLLECTION_ARCHIVE = get_settings().auto_delete_collection_archive
 
 
 class FileErrorProblem(BadRequestException):
@@ -182,7 +183,7 @@ class FileImporter:
             self.move(self.pending_file, self.upload_path, prefer_copy)
 
             # If the pending file comes from an archive
-            if not prefer_copy and self.pending_file.is_extracted():
+            if not AUTO_DELETE_COLLECTION_ARCHIVE and not prefer_copy and self.pending_file.is_extracted():
                 # Create symlink in processed to keep track of parent archive
                 self.mksymlink(self.pending_file, self.upload_path)
 
@@ -271,6 +272,11 @@ class FileImporter:
                         ImportEventType.END_UNPACKING, self.upload_path,
                         self.original_path, is_collection=True
                     )
+
+                    if AUTO_DELETE_COLLECTION_ARCHIVE:
+                        upload_root = self.original_path.upload_root()
+                        shutil.rmtree(upload_root)
+
                     return collection
             else:
                 self.mksymlink(self.original_path, self.upload_path)

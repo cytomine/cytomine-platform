@@ -23,8 +23,13 @@ from cytomine.models import (
     Project, ProjectCollection, Storage, UploadedFile
 )
 from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, Query, UploadFile
+<<<<<<< HEAD
 from starlette.requests import Request, ClientDisconnect
 from starlette.responses import FileResponse, JSONResponse
+=======
+from starlette.requests import Request
+from starlette.responses import FileResponse, JSONResponse, Response
+>>>>>>> master
 from starlette.formparsers import MultiPartMessage, MultiPartParser, _user_safe_decode
 
 from pims.api.exceptions import (
@@ -240,8 +245,26 @@ def export_upload(
         filename=exported_filename
     )
 
-def delete(filepath):
-    pass
+
+@router.delete('/image/{filepath:path}', tags=['delete'])
+def delete(    
+    path: Path = Depends(imagepath_parameter),
+):
+    """
+    Delete the all the representations of an image, including the related upload folder.
+    """
+
+    # Deleting an archive will be refused as it is not an *image* but a collection
+    # (checked in `Depends(imagepath_parameter)`)
+
+    image = path.get_original()
+    check_representation_existence(image)
+
+    upload_root = image.get_upload().resolve().upload_root()
+    shutil.rmtree(upload_root)
+
+    return Response(status_code=200)
+
 
 
 async def write_file(fastapi_parser: MultiPartParser, pending_path):
