@@ -85,6 +85,7 @@ async def import_direct_chunks(
         os.makedirs(WRITING_PATH)
 
     upload_name = await write_file(multipart_parser, pending_path)
+    upload_name = sanitize_filename(upload_name)
     upload_size = request.headers['content-length']
 
     cytomine, cytomine_auth, root = connexion_to_core(request, core, cytomine, str(pending_path), upload_size, upload_name,  id_project, id_storage,
@@ -367,7 +368,6 @@ def connexion_to_core(request: Request, core: str, cytomine: str, upload_path: s
             raise CytomineProblem(f"Keys {keys} and values {values} have varying size.")
         user_properties = zip(keys, values)
 
-        upload_name = sanitize_filename(upload_name)
         root = UploadedFile(
             upload_name, upload_path, upload_size, "", "",
             id_projects, id_storage, user.id, this.id, UploadedFile.UPLOADED
