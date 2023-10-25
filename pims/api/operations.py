@@ -16,6 +16,7 @@ import os
 import shutil
 import traceback
 from typing import Optional
+from distutils.util import strtobool
 import aiofiles
 
 from cytomine import Cytomine
@@ -23,13 +24,8 @@ from cytomine.models import (
     Project, ProjectCollection, Storage, UploadedFile
 )
 from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, Query, UploadFile
-<<<<<<< HEAD
-from starlette.requests import Request, ClientDisconnect
-from starlette.responses import FileResponse, JSONResponse
-=======
 from starlette.requests import Request
 from starlette.responses import FileResponse, JSONResponse, Response
->>>>>>> master
 from starlette.formparsers import MultiPartMessage, MultiPartParser, _user_safe_decode
 
 from pims.api.exceptions import (
@@ -96,6 +92,9 @@ async def import_direct_chunks(
         cytomine, cytomine_auth, root = connexion_to_core(request, core, cytomine, str(pending_path), upload_size, upload_name,  id_project, id_storage,
                                                     projects, storage, config, keys, values)
     except Exception as e:
+        debug = bool(strtobool(os.getenv('DEBUG', 'false')))
+        if debug:
+            traceback.print_exc()
         os.remove(pending_path)
         return JSONResponse(
             content=[{
