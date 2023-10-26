@@ -19,6 +19,25 @@ class TestUtil(TestCase):
 
         self.assertDictEqual(envs, parsed_envs)
 
+    def testWriteDotenvAlphabetical(self):
+        envs = {
+            "C _TEST": "value1", 
+            "P_TEST": "value2",  
+            "M_TEST": "value3", 
+            "A_TEST": "value4",
+            "AA_TEST": "value5"
+        }
+        sorted_envs = [(k, envs[k]) for k in sorted(envs.keys())]
+        with TemporaryDirectory() as tmpdir:
+            write_dotenv(tmpdir, envs)
+            with open(os.path.join(tmpdir, ".env"), "r", encoding="utf8") as file:
+                parsed_envs = [
+                    (line.split("=", 1)[0], line.strip().split("=", 1)[1])
+                    for line in file.readlines()
+                ]
+
+        self.assertListEqual(sorted_envs, parsed_envs)
+
     def testListRelativeFilesInvalidPath(self):
         with TemporaryDirectory() as tmpdir:
             self.assertEqual(len(list_relative_files(os.path.join(tmpdir, "aa"))), 0)

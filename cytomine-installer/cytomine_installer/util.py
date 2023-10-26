@@ -9,7 +9,7 @@ def write_dotenv(directory: str, envs: dict, filename: str = ".env"):
     filepath = os.path.join(directory, filename)
     newline_pattern = re.compile(r"(?:\r\n|\n|\r)")
     with open(filepath, "w", encoding="utf8") as file:
-        for key, value in envs.items():
+        for key, value in sorted(envs.items()):
             if isinstance(value, bool):
                 value = "true" if value else "false"
             if newline_pattern.search(str(value)) is not None:
