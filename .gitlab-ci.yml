@@ -81,7 +81,7 @@ run-pytest:
         -f docker/backend.dockerfile \
         .
 
-    - docker run ${DOCKER_IMAGE_NAME_FOR_TESTS} "pip install pytest && pytest ./tests --junit-xml=ci/test-reports/pytest_unit.xml"
+    - docker run ${DOCKER_IMAGE_NAME_FOR_TESTS} --entrypoint "pip install pytest && pytest ./tests --junit-xml=ci/test-reports/pytest_unit.xml"
     # - pytest ./tests --junit-xml=ci/test-reports/pytest_unit.xml
   artifacts:
     reports:
