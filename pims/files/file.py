@@ -26,6 +26,7 @@ from pims.formats.utils.factories import (
     SpectralReadableFormatFactory
 )
 from pims.utils.copy import SafelyCopiable
+from pims.api.exceptions import check_representation_existence
 
 if TYPE_CHECKING:
     from pims.files.image import Image
@@ -235,6 +236,15 @@ class Path(PlatformPath, _Path, SafelyCopiable):
             if parent.name.startswith(UPLOAD_DIR_PREFIX):
                 return Path(parent)
         raise FileNotFoundError(f"No upload root for {self}")
+
+    def delete_upload_root(self) -> None:
+        """
+        Delete the all the representations of an image, including the related upload folder.
+        """
+
+        upload_root = self.get_upload().resolve().upload_root()
+        shutil.rmtree(upload_root)
+        return None
 
     def processed_root(self) -> Path:
         processed = self.upload_root() / Path(PROCESSED_DIR)
