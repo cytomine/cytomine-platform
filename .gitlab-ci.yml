@@ -51,18 +51,8 @@ workflow:
         IS_OPEN_SOURCE_RELEASE_CANDIDATE: "false"
 
 # build docker image for test
-#build-docker-image-for-tests:
-#  stage: prepare
-
-run-pytest:
-  stage: test
-  #image:
-  #  name: $DOCKER_IMAGE_NAME_FOR_TESTS
-  #  entrypoint: [""]
-  #  pull_policy: never
-  #needs:
-  #  - job: build-docker-image-for-tests
-  #    artifacts: false
+build-docker-image-for-tests:
+  stage: prepare
   image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:latest
   script:
     - |
@@ -81,8 +71,18 @@ run-pytest:
         -f docker/backend.dockerfile \
         .
 
-    - docker run ${DOCKER_IMAGE_NAME_FOR_TESTS} --entrypoint "pip install pytest && pytest ./tests --junit-xml=ci/test-reports/pytest_unit.xml"
-    # - pytest ./tests --junit-xml=ci/test-reports/pytest_unit.xml
+run-pytest:
+  stage: test
+  image:
+    name: $DOCKER_IMAGE_NAME_FOR_TESTS
+    entrypoint: [""]
+    pull_policy: never
+  needs:
+    - job: build-docker-image-for-tests
+      artifacts: false
+  script:
+    - pip install pytest
+    - pytest ./tests --junit-xml=ci/test-reports/pytest_unit.xml
   artifacts:
     reports:
       junit: ci/test-reports/pytest_unit.xml
