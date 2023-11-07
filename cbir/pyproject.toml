@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "cytomine-cbir"
+version = "0.1.0"
+description = ""
+authors = ["Ba Thien Le <ba.le@uliege.be>"]
+license = "Apache 2.0"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+fastapi = "^0.104.1"
+uvicorn = {extras = ["standard"], version = "^0.24.0.post1"}
+
+[tool.poetry.group.dev.dependencies]
+black = "^23.10.1"
+codespell = "^2.2.6"
+coverage = "^7.3.2"
+isort = "^5.12.0"
+pylint = "^3.0.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
