@@ -55,7 +55,7 @@ build-docker-image-for-tests:
   stage: prepare
   image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:latest
   script:
-    - | 
+    - |
       docker build \
         --build-arg ENTRYPOINT_SCRIPTS_VERSION=${ENTRYPOINT_SCRIPTS_VERSION} \
         --build-arg GUNICORN_VERSION=${GUNICORN_VERSION} \
@@ -73,7 +73,7 @@ build-docker-image-for-tests:
 
 run-pytest:
   stage: test
-  image: 
+  image:
     name: $DOCKER_IMAGE_NAME_FOR_TESTS
     entrypoint: [""]
     pull_policy: never

@@ -83,7 +83,7 @@ async def show_mask(
     vary=['config', 'request', 'response'],
     supported_mimetypes=PROCESSING_MIMETYPES
 )
-def _show_mask(
+async def _show_mask(
     request: Request, response: Response,  # required for @cache  # noqa
     path: Path,
     annotations,

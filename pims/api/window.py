@@ -90,7 +90,7 @@ async def show_window_with_body(
     expire=cache_ttl,
     vary=['config', 'request', 'response']
 )
-def _show_window(
+async def _show_window(
     request: Request, response: Response,  # required for @cache  # noqa
     path: Path,
     region: Union[Region, dict],

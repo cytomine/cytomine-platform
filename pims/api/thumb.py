@@ -109,7 +109,7 @@ async def show_thumb_with_body(
 
 
 @cache_image_response(expire=cache_ttl, vary=['config', 'request', 'response'])
-def _show_thumb(
+async def _show_thumb(
     request: Request, response: Response,  # required for @cache  # noqa
     path: Path,
     height, width, length,
@@ -121,7 +121,7 @@ def _show_thumb(
     config: Settings,
     colormaps, c_reduction=ChannelReduction.ADD, z_reduction=None, t_reduction=None
 ):
-    in_image = path.get_spatial()
+    in_image = path.get_spatial(cache=True)
     check_representation_existence(in_image)
 
     out_format, mimetype = get_output_format(extension, headers.accept, VISUALISATION_MIMETYPES)
