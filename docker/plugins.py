@@ -95,10 +95,7 @@ def install_python_plugins(plugins, install_path):
         print(f"Install {plugin['name']}")
 
         path = os.path.join(install_path, plugin["name"])
-        if os.path.exists(os.path.join(path, "requirements.txt")):
-            command = f"pip install --no-cache-dir -r requirements.txt"
-        else:
-            command = f"pip install --no-cache-dir -e ."
+        command = f"pip install --no-cache-dir -e ."
         output = subprocess.run(command, shell=True, check=True, cwd=path)
         print(output.stdout)
         print(output.stderr)

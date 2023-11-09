@@ -53,6 +53,7 @@ class ReadableSettings(BaseSettings):
 
     auto_delete_multi_file_format_archive: bool = True
     auto_delete_collection_archive: bool = True
+    auto_delete_failed_upload: bool = True
 
     class Config:
         extra = Extra.ignore

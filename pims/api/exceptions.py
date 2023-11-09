@@ -30,7 +30,11 @@ class ProblemException(Exception):
         self.detail = detail
         self.ext = ext
 
-
+class UploadCanceledException(Exception):
+    def __init__(self, message="Upload was canceled"):
+        self.message = message
+        super().__init__(self.message)
+        
 class BadRequestException(ProblemException):
     def __init__(self, title="Bad Request", detail=None, **ext):
         super().__init__(400, title, detail, **ext)
