@@ -87,11 +87,16 @@ async def import_direct_chunks(
 
     try:
         upload_name = await write_file(multipart_parser, pending_path)
-        upload_name = sanitize_filename(upload_name)
         upload_size = request.headers['content-length']
 
-        cytomine, cytomine_auth, root = connexion_to_core(request, core, cytomine, str(pending_path), upload_size, upload_name,  id_project, id_storage,
-                                                    projects, storage, config, keys, values)
+        # Use non sanitized upload_name as UF originalFilename attribute
+        cytomine, cytomine_auth, root = connexion_to_core(
+            request, core, cytomine, str(pending_path), upload_size, upload_name,  id_project, id_storage,
+            projects, storage, config, keys, values
+        )
+
+        # Sanitized upload name is used for path on disk in the import procedure (part of UF filename attribute)
+        upload_name = sanitize_filename(upload_name)
     except Exception as e:
         debug = bool(strtobool(os.getenv('DEBUG', 'false')))
         if debug:
