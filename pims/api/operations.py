@@ -83,14 +83,20 @@ async def import_direct_chunks(
     if not os.path.exists(WRITING_PATH):
         os.makedirs(WRITING_PATH)
 
-    pending_path = Path(WRITING_PATH,filename)
+    pending_path = Path(WRITING_PATH, filename)
 
     try:
         upload_name = await write_file(multipart_parser, pending_path)
         upload_size = request.headers['content-length']
 
-        cytomine, cytomine_auth, root = connexion_to_core(request, core, cytomine, str(pending_path), upload_size, upload_name,  id_project, id_storage,
-                                                    projects, storage, config, keys, values)
+        # Use non sanitized upload_name as UF originalFilename attribute
+        cytomine, cytomine_auth, root = connexion_to_core(
+            request, core, cytomine, str(pending_path), upload_size, upload_name,  id_project, id_storage,
+            projects, storage, config, keys, values
+        )
+
+        # Sanitized upload name is used for path on disk in the import procedure (part of UF filename attribute)
+        upload_name = sanitize_filename(upload_name)
     except Exception as e:
         debug = bool(strtobool(os.getenv('DEBUG', 'false')))
         if debug:
@@ -297,10 +303,10 @@ async def write_file(fastapi_parser: MultiPartParser, pending_path):
         try:
             async for chunk in fastapi_parser.stream:
                 # we assume that there is only one key-value in the body request (that is only one file to upload and no other parameter in the request such taht there is only one headers block)
-                if not headers_finised:#going through the one-only headers block of the body request and retrieve the filename 
+                if not headers_finised:#going through the one-only headers block of the body request and retrieve the filename
                     original_filename, headers_finised = await process_chunks_headers(parser, fastapi_parser, chunk, f, original_filename=original_filename)
                 else: #enables more efficient upload by by-passing the mutlipart parser logic and just writing the data bytes directly
-                    await f.write(chunk) 
+                    await f.write(chunk)
         except ClientDisconnect:
             raise UploadCanceledException()
 
@@ -386,7 +392,6 @@ def connexion_to_core(request: Request, core: str, cytomine: str, upload_path: s
             raise CytomineProblem(f"Keys {keys} and values {values} have varying size.")
         user_properties = zip(keys, values)
 
-        upload_name = sanitize_filename(upload_name)
         root = UploadedFile(
             upload_name, upload_path, upload_size, "", "",
             id_projects, id_storage, user.id, this.id, UploadedFile.UPLOADED
