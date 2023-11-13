@@ -488,7 +488,8 @@ class FileImporter:
                 stop_recursion_cond=format_factory.match
         ):
             self.notify(
-                ImportEventType.REGISTER_FILE, child, self.upload_path
+                ImportEventType.REGISTER_FILE, child, self.upload_path,
+                delete_zip=AUTO_DELETE_COLLECTION_ARCHIVE
             )
             try:
                 if cytomine:

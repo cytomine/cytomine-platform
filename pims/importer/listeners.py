@@ -316,7 +316,7 @@ class CytomineListener(ImportListener):
             if delete_zip:
                 self.path_uf_mapping[str(path)] = uf
 
-    def register_file(self, path: Path, parent_path: Path, *args, **kwargs):
+    def register_file(self, path: Path, parent_path: Path, *args, delete_zip: bool = False, **kwargs):
         parent = self.get_uf(parent_path)
 
         uf = UploadedFile()
@@ -328,7 +328,7 @@ class CytomineListener(ImportListener):
         uf.ext = ""
         uf.storage = parent.storage
         uf.user = parent.user
-        uf.parent = parent.id
+        uf.parent = None if delete_zip else parent.id
         uf.imageServer = parent.imageServer
         uf.save()
         self.path_uf_mapping[str(path)] = uf
