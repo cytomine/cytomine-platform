@@ -14,10 +14,10 @@
 
 """Content Based Image Retrieval API"""
 
-from fastapi import FastAPI, APIRouter
+from fastapi import APIRouter, FastAPI
 
-from . import __version__
-
+from cbir import __version__
+from cbir.api import index
 
 router = APIRouter(prefix="/api")
 
@@ -32,11 +32,6 @@ def delete_image():
     """Delete an image from the database"""
 
 
-@router.post("/images/index")
-def index_image():
-    """Index the given image."""
-
-
 @router.post("/images/retrieve")
 def retrieve_image():
     "Retrieve the nearest images given a query image."
@@ -48,3 +43,4 @@ app = FastAPI(
     version=__version__,
 )
 app.include_router(router)
+app.include_router(router=index.router, prefix="/api")
