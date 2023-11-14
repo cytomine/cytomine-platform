@@ -50,6 +50,7 @@ async def index_image(image: UploadFile = File(...)):
         database_settings.filename,
         model,
         load=check_database(database_settings.filename),
+        device=model_settings.device,
     )
     database.add_dataset(
         database_settings.image_path,

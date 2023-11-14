@@ -26,6 +26,7 @@ pylint = "^3.0.2"
 [tool.poetry.group.test.dependencies]
 pytest = "^7.4.3"
 httpx = "^0.25.1"
+dvc = {extras = ["gdrive"], version = "^3.29.0"}
 
 [[tool.poetry.source]]
 name = "torch-gpu"

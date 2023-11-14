@@ -1,0 +1,44 @@
+name: Test
+
+on:
+  pull_request:
+    branches: 
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      redis:
+        image: redis:${{ vars.REDIS_VERSION }}
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Set up the repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python ${{ vars.PYTHON_VERSION }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ vars.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install poetry
+          python -m poetry install
+
+      - name: Set up DVC
+        uses: iterative/setup-dvc@v1
+
+      - name: Pull model for tests
+        run: dvc pull
+        env:
+          GDRIVE_CREDENTIALS_DATA: ${{ secrets.GDRIVE_CREDENTIALS_DATA }}
+  
+      - name: Run tests
+        run: python -m poetry run pytest
+        env:
+          WEIGHTS: ${{ vars.WEIGHTS_PATH }}
