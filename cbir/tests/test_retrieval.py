@@ -21,17 +21,33 @@ from fastapi.testclient import TestClient
 from cbir.app import app
 from cbir.config import DatabaseSetting
 
-client = TestClient(app)
-database_settings = DatabaseSetting.get_settings()
-
 
 def test_index_image():
     """Test image indexing."""
 
-    with open("tests/data/image.txt", "rb") as image:
+    database_settings = DatabaseSetting.get_settings()
+
+    with open("tests/data/image.png", "rb") as image:
         files = {"image": image.read()}
 
-    response = client.post("/api/images/index", files=files)
+    with TestClient(app) as client:
+        response = client.post("/api/images/index", files=files)
 
     assert response.status_code == 200
     assert os.path.isfile(database_settings.filename) is True
+
+
+def test_retrieve_image():
+    """Test image retrieval."""
+
+    with open("tests/data/image.png", "rb") as image:
+        files = {"image": image.read()}
+
+    with TestClient(app) as client:
+        response = client.post(
+            "/api/images/retrieve",
+            data={"nrt_neigh": 10},
+            files=files,
+        )
+
+    assert response.status_code == 200
