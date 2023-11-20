@@ -17,8 +17,11 @@
 import os
 
 
-def check_database(path):
+def check_database(path: str) -> bool:
     """Check if the database exists.
+
+    Args:
+        path (str): The path to the database file.
 
     Returns:
         bool: True if the database exists otherwise False.

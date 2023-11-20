@@ -17,8 +17,9 @@
 import os
 from io import BytesIO
 from pathlib import Path
+from typing import List, Tuple
 
-from fastapi import APIRouter, File, Form, Request, UploadFile
+from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
 from PIL import Image
 from torchvision import transforms
 
@@ -26,13 +27,16 @@ router = APIRouter()
 
 
 @router.post("/images/index")
-async def index_image(request: Request, image: UploadFile = File()):
+async def index_image(request: Request, image: UploadFile = File()) -> None:
     """Index the given image.
 
     Args:
         request (Request): The request.
         image (UploadedFile): The image to index.
     """
+
+    if image.filename is None:
+        raise HTTPException(status_code=404, detail="Image filename not found")
 
     database = request.app.state.database
     database_settings = request.app.state.database_settings
@@ -55,7 +59,7 @@ async def retrieve_image(
     request: Request,
     nrt_neigh: int = Form(),
     image: UploadFile = File(),
-):
+) -> Tuple[List[str], List[float]]:
     """Retrieve similar images from the database.
 
     Args:
@@ -64,8 +68,8 @@ async def retrieve_image(
         image (UploadedFile): The query image to retrieve similar images.
 
     Returns:
-        filenames (str): The filenames of the most similar images.
-        distances (float): The distance between the similar images and the query image.
+        filenames (list): The filenames of the most similar images.
+        distances (list): The distance between the similar images and the query image.
     """
 
     database = request.app.state.database

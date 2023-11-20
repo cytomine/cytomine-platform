@@ -14,6 +14,7 @@
 
 """Content Based Image Retrieval API"""
 
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 from cbir_tfe.db import Database
@@ -26,7 +27,7 @@ from cbir.config import DatabaseSetting, ModelSetting
 from cbir.utils import check_database
 
 
-def load_model(settings):
+def load_model(settings: ModelSetting) -> Model:
     """Load the weights of the model.
 
     Args:
@@ -44,12 +45,12 @@ def load_model(settings):
     )
 
 
-def init_database(model, settings):
+def init_database(model: Model, settings: DatabaseSetting) -> Database:
     """Initialise the database.
 
     Args:
+        model (Model): The deep learning model.
         settings (DatabaseSetting): The settings of the database.
-
 
     Returns:
         Database: The initialised database.
@@ -63,7 +64,7 @@ def init_database(model, settings):
 
 
 @asynccontextmanager
-async def lifespan(local_app: FastAPI):
+async def lifespan(local_app: FastAPI) -> AsyncGenerator[None, None]:
     """Lifespan of the app.
 
     Args:

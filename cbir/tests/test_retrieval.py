@@ -22,7 +22,7 @@ from cbir.app import app
 from cbir.config import DatabaseSetting
 
 
-def test_index_image():
+def test_index_image() -> None:
     """Test image indexing."""
 
     database_settings = DatabaseSetting.get_settings()
@@ -37,7 +37,7 @@ def test_index_image():
     assert os.path.isfile(database_settings.filename) is True
 
 
-def test_retrieve_image():
+def test_retrieve_image() -> None:
     """Test image retrieval."""
 
     with open("tests/data/image.png", "rb") as image:
@@ -46,7 +46,7 @@ def test_retrieve_image():
     with TestClient(app) as client:
         response = client.post(
             "/api/images/retrieve",
-            data={"nrt_neigh": 10},
+            data={"nrt_neigh": "10"},
             files=files,
         )
 
