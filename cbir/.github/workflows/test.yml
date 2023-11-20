@@ -39,6 +39,13 @@ jobs:
           GDRIVE_CREDENTIALS_DATA: ${{ secrets.GDRIVE_CREDENTIALS_DATA }}
   
       - name: Run tests
-        run: python -m poetry run pytest
+        run: python -m poetry run coverage run -m pytest
         env:
           WEIGHTS: ${{ vars.WEIGHTS_PATH }}
+
+      - name: Upload coverage report
+        run: |
+          echo '# Coverage report' >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          python -m poetry run coverage report -m >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
