@@ -385,7 +385,7 @@ transformers = "^4.35.0"
 [package.source]
 type = "git"
 url = "https://github.com/Cytomine-ULiege/cbir-tfe.git"
-reference = "main"
+reference = "master"
 resolved_reference = "f25ea9cbcafcdf040ee3f2a6e8786c5ad75508cf"
 
 [[package]]
@@ -5013,4 +5013,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "665ade846bd5d1da7ff0f469a965924910fa11c99e1693027205a4c801082068"
+content-hash = "1a467e91d141e8bbe2f79d972a5932126dc50d91184b0fd12b770eb621c7f28c"

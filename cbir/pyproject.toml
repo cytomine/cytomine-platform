@@ -16,7 +16,7 @@ packages = [{include = "cbir"}]
 python = "^3.9"
 fastapi = "^0.104.1"
 uvicorn = {extras = ["standard"], version = "^0.24.0.post1"}
-cbir-tfe = {git = "https://github.com/Cytomine-ULiege/cbir-tfe.git", rev = "main"}
+cbir-tfe = {git = "https://github.com/Cytomine-ULiege/cbir-tfe.git", rev = "master"}
 pydantic-settings = "^2.0.3"
 python-multipart = "^0.0.6"
 torchvision = {version = "^0.16.0+cu118", source = "torch-gpu"}
