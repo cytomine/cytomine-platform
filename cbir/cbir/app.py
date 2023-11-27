@@ -60,6 +60,9 @@ def init_database(model: Model, settings: DatabaseSetting) -> Database:
         model,
         load=check_database(settings.filename),
         device=model.device,
+        host=settings.host,
+        port=settings.port,
+        db=settings.db,
     )
 
 

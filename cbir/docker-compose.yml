@@ -1,6 +1,18 @@
 version: "3.9"
 
 services:
+  cbir:
+    container_name: cbir
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    environment:
+      - HOST=redis
+    volumes:
+      - ./weights:/weights/
+    depends_on:
+      - redis
+
   redis:
     container_name: redis
     image: redis:7.2.3-alpine3.18
@@ -8,7 +20,7 @@ services:
       - 6379:6379
     restart: unless-stopped
     volumes:
-      - redis-data:/root/redis
+      - redis-data:/data
 
 volumes:
   redis-data:

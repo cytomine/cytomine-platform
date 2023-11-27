@@ -28,13 +28,13 @@ class DatabaseSetting(BaseSettings):
     image_path: str = "/tmp/images/"
 
     @staticmethod
-    def get_settings() -> 'DatabaseSetting':
+    def get_settings() -> "DatabaseSetting":
         """Get the settings.
 
         Returns:
             DatabaseSetting: The database settings.
         """
-        return DatabaseSetting(_env_file="database.env", _env_file_encoding="utf-8")
+        return DatabaseSetting()
 
 
 class ModelSetting(BaseSettings):
@@ -48,10 +48,10 @@ class ModelSetting(BaseSettings):
     weights: str = f"/weights/{extractor}"
 
     @staticmethod
-    def get_settings() -> 'ModelSetting':
+    def get_settings() -> "ModelSetting":
         """Get the settings.
 
         Returns:
             ModelSetting: The model settings.
         """
-        return ModelSetting(_env_file=".env", _env_file_encoding="utf-8")
+        return ModelSetting()
