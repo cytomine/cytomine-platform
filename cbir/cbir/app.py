@@ -93,5 +93,10 @@ app = FastAPI(
     description="Cytomine Content Based Image Retrieval Server (CBIR) HTTP API.",
     version=__version__,
     lifespan=lifespan,
+    license_info={
+        "name": "Apache 2.0",
+        "identifier": "Apache-2.0",
+        "url": "https://www.apache.org/licenses/LICENSE-2.0.html",
+    },
 )
 app.include_router(router=image.router, prefix="/api")
