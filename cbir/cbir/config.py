@@ -29,11 +29,7 @@ class DatabaseSetting(BaseSettings):
 
     @staticmethod
     def get_settings() -> "DatabaseSetting":
-        """Get the settings.
-
-        Returns:
-            DatabaseSetting: The database settings.
-        """
+        """Get the settings."""
         return DatabaseSetting()
 
 
@@ -49,9 +45,5 @@ class ModelSetting(BaseSettings):
 
     @staticmethod
     def get_settings() -> "ModelSetting":
-        """Get the settings.
-
-        Returns:
-            ModelSetting: The model settings.
-        """
+        """Get the settings."""
         return ModelSetting()

@@ -28,12 +28,7 @@ router = APIRouter()
 
 @router.post("/images/index")
 async def index_image(request: Request, image: UploadFile = File()) -> None:
-    """Index the given image.
-
-    Args:
-        request (Request): The request.
-        image (UploadedFile): The image to index.
-    """
+    """Index the given image."""
 
     if image.filename is None:
         raise HTTPException(status_code=404, detail="Image filename not found")
@@ -60,17 +55,7 @@ async def retrieve_image(
     nrt_neigh: int = Form(),
     image: UploadFile = File(),
 ) -> Tuple[List[str], List[float]]:
-    """Retrieve similar images from the database.
-
-    Args:
-        request (Request): The request.
-        nrt_neigh (int): The number of nearest images to retrieve.
-        image (UploadedFile): The query image to retrieve similar images.
-
-    Returns:
-        filenames (list): The filenames of the most similar images.
-        distances (list): The distance between the similar images and the query image.
-    """
+    """Retrieve similar images from the database."""
 
     database = request.app.state.database
     model_settings = request.app.state.model_settings

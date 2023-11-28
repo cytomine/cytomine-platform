@@ -28,14 +28,7 @@ from cbir.utils import check_database
 
 
 def load_model(settings: ModelSetting) -> Model:
-    """Load the weights of the model.
-
-    Args:
-        settings (ModelSetting): The settings of the model.
-
-    Returns:
-        Model: The loaded model.
-    """
+    """Load the weights of the model."""
     return Model(
         model=settings.extractor,
         use_dr=settings.use_dr,
@@ -46,15 +39,7 @@ def load_model(settings: ModelSetting) -> Model:
 
 
 def init_database(model: Model, settings: DatabaseSetting) -> Database:
-    """Initialise the database.
-
-    Args:
-        model (Model): The deep learning model.
-        settings (DatabaseSetting): The settings of the database.
-
-    Returns:
-        Database: The initialised database.
-    """
+    """Initialise the database."""
     return Database(
         settings.filename,
         model,
@@ -68,11 +53,7 @@ def init_database(model: Model, settings: DatabaseSetting) -> Database:
 
 @asynccontextmanager
 async def lifespan(local_app: FastAPI) -> AsyncGenerator[None, None]:
-    """Lifespan of the app.
-
-    Args:
-        app (FastAPI): The FastAPI app.
-    """
+    """Lifespan of the app."""
 
     # Settings
     local_app.state.model_settings = ModelSetting.get_settings()
