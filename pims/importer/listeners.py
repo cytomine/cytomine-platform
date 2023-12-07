@@ -469,17 +469,6 @@ class CytomineListener(ImportListener):
                     )
         asc.save()
 
-        properties = PropertyCollection(ai)
-        for metadata in image.raw_metadata.values():
-            if metadata.value is not None and str(metadata.value) != '':
-                properties.append(
-                    Property(ai, metadata.namespaced_key, str(metadata.value))
-                )
-        try:
-            properties.save()
-        except CollectionPartialUploadException:
-            pass  # TODO: improve handling of this exception, but prevent to fail the import
-
         uf.status = UploadedFile.DEPLOYED
         uf.update()
 
