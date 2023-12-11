@@ -50,4 +50,8 @@ def test_retrieve_image() -> None:
             files=files,
         )
 
+    data = response.json()
+
+    assert "distances" in data
+    assert "filenames" in data
     assert response.status_code == 200

@@ -14,12 +14,20 @@
 
 """Image indexing and retrieval"""
 
+import json
 import os
 from io import BytesIO
 from pathlib import Path
-from typing import List, Tuple
 
-from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
+from fastapi import (
+    APIRouter,
+    File,
+    Form,
+    HTTPException,
+    Request,
+    Response,
+    UploadFile,
+)
 from PIL import Image
 from torchvision import transforms
 
@@ -54,7 +62,7 @@ async def retrieve_image(
     request: Request,
     nrt_neigh: int = Form(),
     image: UploadFile = File(),
-) -> Tuple[List[str], List[float]]:
+) -> Response:
     """Retrieve similar images from the database."""
 
     database = request.app.state.database
@@ -76,4 +84,6 @@ async def retrieve_image(
         nrt_neigh=nrt_neigh,
     )
 
-    return filenames, distances.tolist()
+    return Response(
+        content=json.dumps({"filenames": filenames, "distances": distances.tolist()}),
+    )
