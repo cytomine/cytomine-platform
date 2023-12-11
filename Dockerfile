@@ -38,7 +38,6 @@ ENV APPENGINE_PASSWORD=password
 # database init
 RUN mkdir -p /etc/postgres/conf.d /docker-entrypoint-cytomine.d/ /docker-entrypoint-initdb.d/
 COPY files/initdb-cytomine-extensions.sql /docker-entrypoint-initdb.d/11_cytomine-extensions.sql
-COPY files/initdb-cytomine-user-docker.sql /docker-entrypoint-initdb.d/13_cytomine_user_docker.sql
 COPY files/initdb-cytomine-user-appengine.sh /docker-entrypoint-initdb.d/14_cytomine_user_appengine.sh
 
 # default configuration
