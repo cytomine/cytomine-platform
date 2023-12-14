@@ -15,9 +15,7 @@
 """Image indexing and retrieval"""
 
 import json
-import os
 from io import BytesIO
-from pathlib import Path
 
 from fastapi import (
     APIRouter,
@@ -42,18 +40,21 @@ async def index_image(request: Request, image: UploadFile = File()) -> None:
         raise HTTPException(status_code=404, detail="Image filename not found")
 
     database = request.app.state.database
-    database_settings = request.app.state.database_settings
-    model_settings = request.app.state.model_settings
+    model = request.app.state.model
 
     content = await image.read()
-    image_path = Path(os.path.join(database_settings.image_path, image.filename))
-    image_path.parent.mkdir(parents=True, exist_ok=True)
-    image_path.write_bytes(content)
+    features_extraction = transforms.Compose(
+        [
+            transforms.Resize((224, 224)),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        ]
+    )
 
-    database.add_dataset(
-        database_settings.image_path,
-        model_settings.extractor,
-        model_settings.generalise,
+    database.index_image(
+        model,
+        features_extraction(Image.open(BytesIO(content))),
+        image.filename,
     )
 
 
@@ -66,7 +67,7 @@ async def retrieve_image(
     """Retrieve similar images from the database."""
 
     database = request.app.state.database
-    model_settings = request.app.state.model_settings
+    model = request.app.state.model
 
     content = await image.read()
     features_extraction = transforms.Compose(
@@ -76,11 +77,10 @@ async def retrieve_image(
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         ]
     )
-    features = features_extraction(Image.open(BytesIO(content)))
 
-    filenames, distances, _, _, _ = database.search(
-        features,
-        model_settings.extractor,
+    filenames, distances = database.search_similar_images(
+        model,
+        features_extraction(Image.open(BytesIO(content))),
         nrt_neigh=nrt_neigh,
     )
 

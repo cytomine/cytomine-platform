@@ -17,53 +17,43 @@
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
-from cbir_tfe.db import Database
-from cbir_tfe.models import Model
+import torch
 from fastapi import FastAPI
 
 from cbir import __version__
 from cbir.api import image
 from cbir.config import DatabaseSetting, ModelSetting
-from cbir.utils import check_database
+from cbir.models.model import Model
+from cbir.models.resnet import Resnet
+from cbir.retrieval.database import Database
 
 
 def load_model(settings: ModelSetting) -> Model:
     """Load the weights of the model."""
-    return Model(
-        model=settings.extractor,
-        use_dr=settings.use_dr,
-        num_features=settings.n_features,
-        name=settings.weights,
-        device=settings.device,
-    )
+
+    state = torch.load(settings.weights, map_location=settings.device)
+
+    model = Resnet(n_features=settings.n_features, device=settings.device)
+    model.load_state_dict(state)
+    model.to(settings.device)
+
+    return model
 
 
 def init_database(model: Model, settings: DatabaseSetting) -> Database:
     """Initialise the database."""
-    return Database(
-        settings.filename,
-        model,
-        load=check_database(settings.filename),
-        device=model.device,
-        host=settings.host,
-        port=settings.port,
-        db=settings.db,
-    )
+    return Database(settings, model.n_features, gpu=model.device.type == "cuda")
 
 
 @asynccontextmanager
 async def lifespan(local_app: FastAPI) -> AsyncGenerator[None, None]:
     """Lifespan of the app."""
 
-    # Settings
-    local_app.state.model_settings = ModelSetting.get_settings()
-    local_app.state.database_settings = DatabaseSetting.get_settings()
-
     # Initialisation
-    local_app.state.model = load_model(local_app.state.model_settings)
+    local_app.state.model = load_model(ModelSetting.get_settings())
     local_app.state.database = init_database(
         local_app.state.model,
-        local_app.state.database_settings,
+        DatabaseSetting.get_settings(),
     )
 
     yield

@@ -15,6 +15,7 @@
 """Environment parameters"""
 
 
+import torch
 from pydantic_settings import BaseSettings
 
 
@@ -25,7 +26,6 @@ class DatabaseSetting(BaseSettings):
     host: str = "localhost"
     port: int = 6379
     db: int = 0
-    image_path: str = "/tmp/images/"
 
     @staticmethod
     def get_settings() -> "DatabaseSetting":
@@ -36,11 +36,9 @@ class DatabaseSetting(BaseSettings):
 class ModelSetting(BaseSettings):
     """Model settings."""
 
-    device: str = "cpu"
+    device: torch.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     extractor: str = "resnet"
-    generalise: int = 0
     n_features: int = 128
-    use_dr: bool = False
     weights: str = f"/weights/{extractor}"
 
     @staticmethod

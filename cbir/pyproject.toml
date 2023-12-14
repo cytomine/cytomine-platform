@@ -19,13 +19,16 @@ packages = [{include = "cbir"}]
 
 [tool.poetry.dependencies]
 python = "^3.9"
+faiss-gpu = "^1.7.2"
 fastapi = "^0.104.1"
-uvicorn = {extras = ["standard"], version = "^0.24.0.post1"}
-cbir-tfe = {git = "https://github.com/Cytomine-ULiege/cbir-tfe.git", rev = "master"}
+numpy = "^1.26.2"
+pillow = "^10.1.0"
 pydantic-settings = "^2.0.3"
 python-multipart = "^0.0.6"
+redis = "3.5.3"
+torch = {version = "2.1.0+cu118", source = "torch-gpu"}
 torchvision = {version = "^0.16.0+cu118", source = "torch-gpu"}
-pillow = "^10.1.0"
+uvicorn = {extras = ["standard"], version = "^0.24.0.post1"}
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.10.1"

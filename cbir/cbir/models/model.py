@@ -12,11 +12,23 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-"""Utility functions"""
+"""Deep learning base model"""
 
-import os
+from abc import ABCMeta
+
+import torch
+from torch import nn
 
 
-def check_database(path: str) -> bool:
-    """Check if the database exists."""
-    return os.path.isfile(path)
+class Model(nn.Module, metaclass=ABCMeta):
+    """Base model"""
+
+    def __init__(
+        self,
+        n_features: int,
+        device: torch.device = torch.device("cpu"),
+    ) -> None:
+        super().__init__()
+
+        self.n_features = n_features
+        self.device = device
