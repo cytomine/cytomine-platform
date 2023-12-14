@@ -46,6 +46,7 @@ jobs:
 
       - name: Check type
         run: >-
+          python -m poetry run mypy --install-types
           python -m poetry run mypy
           --disallow-incomplete-defs
           --disallow-untyped-calls
