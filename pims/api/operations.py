@@ -17,6 +17,7 @@ import shutil
 import traceback
 from typing import Optional
 from distutils.util import strtobool
+import warnings
 import aiofiles
 
 from cytomine import Cytomine
@@ -60,6 +61,7 @@ router = APIRouter()
 cytomine_logger = logging.getLogger("pims.cytomine")
 
 WRITING_PATH = get_settings().writing_path
+INTERNAL_URL_CORE = get_settings().internal_url_core
 
 @router.post('/upload', tags=['Import'])
 async def import_direct_chunks(
@@ -84,14 +86,17 @@ async def import_direct_chunks(
         os.makedirs(WRITING_PATH)
 
     pending_path = Path(WRITING_PATH, filename)
+    if (core is not None and core != INTERNAL_URL_CORE) or (cytomine is not None and cytomine != INTERNAL_URL_CORE):
+        warnings.warn("This Cytomine version no longer support PIMS to be shared between multiple CORE such that \
+                      query parameters 'core' and 'cytomine' are ignored if instanciated")
 
     try:
         upload_name = await write_file(multipart_parser, pending_path)
         upload_size = request.headers['content-length']
 
         # Use non sanitized upload_name as UF originalFilename attribute
-        cytomine, cytomine_auth, root = connexion_to_core(
-            request, core, cytomine, str(pending_path), upload_size, upload_name,  id_project, id_storage,
+        cytomine_listener, cytomine_auth, root = connexion_to_core(
+            request, str(pending_path), upload_size, upload_name,  id_project, id_storage,
             projects, storage, config, keys, values
         )
 
@@ -117,10 +122,10 @@ async def import_direct_chunks(
         try:
             run_import(
                 pending_path, upload_name,
-                extra_listeners=[cytomine], prefer_copy=False
+                extra_listeners=[cytomine_listener], prefer_copy=False
             )
-            root = cytomine.initial_uf.fetch()
-            images = cytomine.images
+            root = cytomine_listener.initial_uf.fetch()
+            images = cytomine_listener.images
             return [{
                 "status": 200,
                 "name": upload_name,
@@ -146,7 +151,7 @@ async def import_direct_chunks(
     else:
         send_task(
             Task.IMPORT_WITH_CYTOMINE,
-            args=[cytomine_auth, pending_path, upload_name, cytomine, False],
+            args=[cytomine_auth, pending_path, upload_name, cytomine_listener, False],
             starlette_background=background
         )
 
@@ -340,12 +345,11 @@ async def process_chunks_headers(parser, fastapi_parser, chunk, file, header_fie
                 await file.write(message_bytes)
     return original_filename, headers_finished
 
-def connexion_to_core(request: Request, core: str, cytomine: str, upload_path: str, upload_size: str, upload_name: str,  id_project: str, id_storage: str, projects: str, storage: str, 
+def connexion_to_core(request: Request, upload_path: str, upload_size: str, upload_name: str,  id_project: str, id_storage: str, projects: str, storage: str, 
                       config: Settings,  keys: str, values: str):
     
-    core = cytomine if cytomine is not None else core
-    if not core:
-        raise BadRequestException(detail="core or cytomine parameter missing.")
+    if not INTERNAL_URL_CORE:
+        raise BadRequestException(detail="Internal URL core is missing.")
 
     id_storage = id_storage if id_storage is not None else storage
     if not id_storage:
@@ -361,7 +365,7 @@ def connexion_to_core(request: Request, core: str, cytomine: str, upload_path: s
         raise BadRequestException(detail="Invalid projects or idProject parameter.")
 
     public_key, signature = parse_authorization_header(request.headers)
-    cytomine_auth = (core, config.cytomine_public_key, config.cytomine_private_key)
+    cytomine_auth = (INTERNAL_URL_CORE, config.cytomine_public_key, config.cytomine_private_key)
     with Cytomine(*cytomine_auth, configure_logging=False) as c:
         if not c.current_user:
             raise AuthenticationException("PIMS authentication to Cytomine failed.")
@@ -397,9 +401,9 @@ def connexion_to_core(request: Request, core: str, cytomine: str, upload_path: s
             id_projects, id_storage, user.id, this.id, UploadedFile.UPLOADED
         )
 
-        cytomine = CytomineListener(
+        cytomine_listener = CytomineListener(
             cytomine_auth, root, projects=projects,
             user_properties=user_properties
         )
-    return cytomine, cytomine_auth, root
+    return cytomine_listener, cytomine_auth, root
 
