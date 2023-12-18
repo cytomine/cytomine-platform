@@ -33,7 +33,7 @@ from pims.api.exceptions import (
     check_representation_existence
 )
 from pims.api.utils.cytomine_auth import (
-    get_this_image_server, parse_authorization_header,
+    parse_authorization_header,
     parse_request_token, sign_token
 )
 from pims.api.utils.parameter import filepath_parameter, imagepath_parameter, sanitize_filename
@@ -366,7 +366,6 @@ def connexion_to_core(request: Request, core: str, cytomine: str, upload_path: s
         if not c.current_user:
             raise AuthenticationException("PIMS authentication to Cytomine failed.")
 
-        this = get_this_image_server(config.pims_url)
         cyto_keys = c.get(f"userkey/{public_key}/keys.json")
         private_key = cyto_keys["privateKey"]
 
@@ -394,7 +393,7 @@ def connexion_to_core(request: Request, core: str, cytomine: str, upload_path: s
 
         root = UploadedFile(
             upload_name, upload_path, upload_size, "", "",
-            id_projects, id_storage, user.id, this.id, UploadedFile.UPLOADED
+            id_projects, id_storage, user.id, status=UploadedFile.UPLOADED
         )
 
         cytomine = CytomineListener(
