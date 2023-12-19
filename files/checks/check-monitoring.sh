@@ -3,7 +3,7 @@ if [ -z "$MONITORING_USER" ] || [ -z "$MONITORING_PASSWORD" ] || [ -z "$MONITORI
    exit
 fi
 
-echo "Creating monitoring database '$MONITORING_DB'.";
+echo "Creating monitoring database '$MONITORING_DB' using user '$POSTGRES_USER'.";
 
 # DB
 psql -U "$POSTGRES_USER" -c "CREATE DATABASE $MONITORING_DB"
