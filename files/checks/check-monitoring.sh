@@ -3,10 +3,12 @@ if [ -z "$MONITORING_USER" ] || [ -z "$MONITORING_PASSWORD" ] || [ -z "$MONITORI
    exit
 fi
 
-echo "Creating monitoring database $MONITORING_DB";
+echo "Creating monitoring database '$MONITORING_DB'.";
 
-psql -U "$POSTGRES_USER" -c "CREATE DATABASE $MONITORING_DB;"
+# DB
+psql -U "$POSTGRES_USER" -c "CREATE DATABASE $MONITORING_DB"
 
+# Grants
 echo "Grant roles to $MONITORING_USER for monitoring database $MONITORING_DB";
 
 psql -U "$POSTGRES_USER" <<- EOSQL

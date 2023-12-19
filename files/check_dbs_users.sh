@@ -2,8 +2,6 @@
 
 echo $0 "Databases check."
 
-ls -al /checks
-
 wait_for_db() {
     until pg_isready -U docker; do
       >&2 echo "Postgres is unavailable - sleeping for 3 seconds."
