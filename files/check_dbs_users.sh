@@ -3,7 +3,7 @@
 echo $0 "Databases check."
 
 wait_for_db() {
-    until pg_isready -U docker; do
+    until pg_isready -U "$POSTGRES_USER"; do
       >&2 echo "Postgres is unavailable - sleeping for 3 seconds."
       sleep 3
     done
