@@ -3,10 +3,15 @@ if [ -z "$APPENGINE_USER" ] || [ -z "$APPENGINE_PASSWORD" ] || [ -z "$APPENGINE_
    exit
 fi
 
+echo "Creating monitoring database '$APPENGINE_DB'.";
 
-psql -c "CREATE DATABASE $APPENGINE_DB;"
+# DB
+psql -U "$POSTGRES_USER" -c "CREATE DATABASE $APPENGINE_DB"
 
-psql <<- EOSQL
+# Grants
+echo "Grant roles to $APPENGINE_USER for app engin database $APPENGINE_DB";
+
+psql -U "$POSTGRES_USER" <<- EOSQL
 DO
 \$do\$
 BEGIN

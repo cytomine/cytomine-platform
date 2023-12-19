@@ -9,6 +9,7 @@ wait_for_db() {
     done
 
     echo "Postgres is up - executing command"
+    sh /checks/check-appengine.sh
     sh /checks/check-monitoring.sh
 }
 
