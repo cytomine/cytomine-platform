@@ -52,7 +52,7 @@ def get_vips_field(
 
 
 class VipsParser(ExifToolParser, AbstractParser):
-    ALLOWED_MODES = ('L', 'RGB')
+    ALLOWED_MODES = ('L', 'RGB', 'CMYK')
 
     def parse_main_metadata(self) -> ImageMetadata:
         image = cached_vips_file(self.format)
@@ -121,7 +121,7 @@ class VipsReader(AbstractReader):
         )
 
         image = cached_vips_file(self.format)
-        if image.interpretation in ("grey16", "rgb16"):
+        if image.interpretation in ("grey16", "rgb16", "cmyk"):
             # Related to https://github.com/libvips/libvips/issues/1941 ?
             return VIPSImage.thumbnail(
                 filename, width, height=height,
