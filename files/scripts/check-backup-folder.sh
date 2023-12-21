@@ -8,10 +8,10 @@ touch $BACKUP_LOG_FILE
 chmod 777 $BACKUP_LOG_FILE
 
 if [ $? -ne 0 ]; then
-  echo "Could not touch backup log file '$BACKUP_LOG_FILE', please check mount folder premissions."
+  echo "$0" "Could not touch backup log file '$BACKUP_LOG_FILE', please check mount folder premissions."
   exit 1
 else
-  echo "Could touch backup log file '$BACKUP_LOG_FILE', proceeding..."
+  echo "$0" "Could touch backup log file '$BACKUP_LOG_FILE', proceeding..."
 fi
 
 # cleaning up

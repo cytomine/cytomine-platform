@@ -1,17 +1,17 @@
 if [ -z "$APPENGINE_USER" ] || [ -z "$APPENGINE_PASSWORD" ] || [ -z "$APPENGINE_DB" ]; then
-   echo "Skipping App Engine database pre-configuration because APPENGINE_* env variables are empty or undefined"
+   echo "$0" "Skipping App Engine database pre-configuration because APPENGINE_* env variables are empty or undefined"
    exit
 fi
 
-echo "Creating app engine database '$APPENGINE_DB' using user '$POSTGRES_USER'.";
+echo "$0" "Creating app engine database '$APPENGINE_DB' using user '$POSTGRES_USER'. An error is expected if it already exists.";
 
 # DB
-psql -U "$POSTGRES_USER" -c "CREATE DATABASE $APPENGINE_DB"
+psql -U "$POSTGRES_USER" -c "CREATE DATABASE $APPENGINE_DB" >/dev/null
 
 # Grants
-echo "Grant roles to $APPENGINE_USER for app engine database $APPENGINE_DB";
+echo "$0" "Grant roles to $APPENGINE_USER for app engine database $APPENGINE_DB. A notice is expected if they already exist.";
 
-psql -U "$POSTGRES_USER" <<- EOSQL
+psql -U "$POSTGRES_USER" >/dev/null <<- EOSQL
 DO
 \$do\$
 BEGIN

@@ -40,22 +40,22 @@ ENV MONITORING_PASSWORD=password
 
 # database init. Warning: those are only run if data volume is empty
 RUN mkdir -p /etc/postgres/conf.d /docker-entrypoint-cytomine.d/ /docker-entrypoint-initdb.d/ /checks/
-COPY files/initdb-cytomine-extensions.sql /docker-entrypoint-initdb.d/11_cytomine-extensions.sql
+COPY files/initdb/initdb-cytomine-extensions.sql /docker-entrypoint-initdb.d/11_cytomine-extensions.sql
 
 # default configuration
-COPY files/postgres.conf /etc/postgres/postgres.conf
-COPY files/postgres.default.conf /etc/postgres/00-default.conf
+COPY files/conf/postgres.conf /etc/postgres/postgres.conf
+COPY files/conf/postgres.default.conf /etc/postgres/00-default.conf
 
 # entry points. Triggered at every container starts
-COPY files/check-backup-folder.sh /docker-entrypoint-cytomine.d/550-check-backup-folder.sh
-COPY files/start-crond.sh /docker-entrypoint-cytomine.d/600-start-crond.sh
-COPY files/check_dbs_users.sh /docker-entrypoint-cytomine.d/700-check_dbs_users.sh
+COPY files/scripts/check-backup-folder.sh /docker-entrypoint-cytomine.d/550-check-backup-folder.sh
+COPY files/scripts/start-crond.sh /docker-entrypoint-cytomine.d/600-start-crond.sh
+COPY files/scripts/check_dbs_users.sh /docker-entrypoint-cytomine.d/700-check_dbs_users.sh
 COPY files/checks /checks
 
 # backup and restore scripts
-COPY files/backup-cron-job /backup-cron-job
-COPY files/cytomine-postgis-backup.sh /usr/local/bin/backup
-COPY files/cytomine-postgis-restore.sh /usr/local/bin/restore
+COPY files/scripts/backup-cron-job /backup-cron-job
+COPY files/scripts/cytomine-postgis-backup.sh /usr/local/bin/backup
+COPY files/scripts/cytomine-postgis-restore.sh /usr/local/bin/restore
 
 RUN chmod +x /usr/local/bin/backup /usr/local/bin/restore /docker-entrypoint-cytomine.d/*.sh /checks/*.sh && \
     chmod 0644 /backup-cron-job && \

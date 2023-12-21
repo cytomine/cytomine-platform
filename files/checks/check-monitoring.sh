@@ -1,17 +1,17 @@
 if [ -z "$MONITORING_USER" ] || [ -z "$MONITORING_PASSWORD" ] || [ -z "$MONITORING_DB" ]; then
-   echo "Skipping monitoring database pre-configuration because MONITORING_* env variables are empty or undefined"
+   echo "$0" "Skipping monitoring database pre-configuration because MONITORING_* env variables are empty or undefined"
    exit
 fi
 
-echo "Creating monitoring database '$MONITORING_DB' using user '$POSTGRES_USER'.";
+echo "$0" "Creating monitoring database '$MONITORING_DB' using user '$POSTGRES_USER'. An error is expected if it already exists.";
 
 # DB
-psql -U "$POSTGRES_USER" -c "CREATE DATABASE $MONITORING_DB"
+psql -U "$POSTGRES_USER" -c "CREATE DATABASE $MONITORING_DB" >/dev/null
 
 # Grants
-echo "Grant roles to $MONITORING_USER for monitoring database $MONITORING_DB";
+echo "$0" "Grant roles to $MONITORING_USER for monitoring database $MONITORING_DB. A notice is expected if they already exist.";
 
-psql -U "$POSTGRES_USER" <<- EOSQL
+psql -U "$POSTGRES_USER" >/dev/null <<- EOSQL
 DO
 \$do\$
 BEGIN
