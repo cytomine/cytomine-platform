@@ -30,13 +30,14 @@ ARG IMAGE_REVISION
 ARG POSTGIS_VERSION
 
 #set default user (and default DB name) to docker by default
-ENV POSTGRES_USER=docker
+ENV POSTGRES_USER=postgres
+ENV POSTGRES_DB=postgres
+ENV CYTOMINE_DB=docker
+ENV CYTOMINE_USER=docker
 ENV APPENGINE_DB=appengine
 ENV APPENGINE_USER=appengine
-ENV APPENGINE_PASSWORD=password
 ENV MONITORING_DB=monitoring
 ENV MONITORING_USER=monitoring
-ENV MONITORING_PASSWORD=password
 
 # database init. Warning: those are only run if data volume is empty
 RUN mkdir -p /etc/postgres/conf.d /docker-entrypoint-cytomine.d/ /docker-entrypoint-initdb.d/ /checks/
