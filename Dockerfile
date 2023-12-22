@@ -29,7 +29,7 @@ ARG IMAGE_VERSION
 ARG IMAGE_REVISION
 ARG POSTGIS_VERSION
 
-#set default user (and default DB name) to docker by default
+# set default superadmin user postgres + set defaults for component specific databass sdb and user
 ENV POSTGRES_USER=postgres
 ENV POSTGRES_DB=postgres
 ENV CYTOMINE_DB=docker
