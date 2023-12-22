@@ -10,8 +10,10 @@ wait_for_db() {
   done
 
   echo $0 "Postgres is up - executing command"
-  sh /checks/check-appengine.sh
-  sh /checks/check-monitoring.sh
+
+  sh /checks/check-user.sh "check-cytomine" "$CYTOMINE_USER" "$CYTOMINE_PASSWORD" "$CYTOMINE_DB"
+  sh /checks/check-user.sh "check-appengine" "$APPENGINE_USER" "$APPENGINE_PASSWORD" "$APPENGINE_DB"
+  sh /checks/check-user.sh "check-monitoring" "$MONITORING_USER" "$MONITORING_PASSWORD" "$MONITORING_DB"
 }
 
 # This will be executed in background as we need the database server to be ready.
