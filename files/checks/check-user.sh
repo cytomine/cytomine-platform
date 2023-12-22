@@ -4,6 +4,7 @@ CHECK_NAME="$1"
 USER="$2"
 PASSWORD="$3"
 DB="$4"
+ADD_DB_EXTENSIONS="$5"
 
 echo "Starting '${CHECK_NAME}'."
 
@@ -16,6 +17,24 @@ echo "$0" "Creating database '$DB' using user '$POSTGRES_USER'. An error is expe
 
 # DB
 psql -U "$POSTGRES_USER" -c "CREATE DATABASE $DB" >/dev/null
+
+if [ "$ADD_DB_EXTENSIONS" -ne "0" ]; then
+   echo "Loading PostGIS extensions into $DB"
+   # extracted from postgis initdb script
+   psql -U "$POSTGRES_USER" --dbname="$DB" <<-'EOSQL'
+            CREATE EXTENSION IF NOT EXISTS postgis;
+            CREATE EXTENSION IF NOT EXISTS postgis_topology;
+            -- Reconnect to update pg_setting.resetval
+            -- See https://github.com/postgis/docker-postgis/issues/288
+            \c
+            CREATE EXTENSION IF NOT EXISTS fuzzystrmatch;
+            CREATE EXTENSION IF NOT EXISTS postgis_tiger_geocoder;
+EOSQL
+   echo "Loading ltree into $DB"
+   psql -U "$POSTGRES_USER" --dbname="$DB" <<-'EOSQL'
+            CREATE EXTENSION IF NOT EXISTS ltree;
+EOSQL
+fi
 
 # Grants
 echo "$0" "Grant roles to '$USER' for database '$DB'. A notice is expected if they already exist.";
