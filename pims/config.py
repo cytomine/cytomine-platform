@@ -29,7 +29,6 @@ class ReadableSettings(BaseSettings):
     default_image_size_safety_mode: str = "SAFE_REJECT"
     default_annotation_origin: str = "LEFT_TOP"
     output_size_limit: int = 10000
-    pims_url: str = "http://localhost-ims"
     internal_url_core: str = "http://cytomine.local"
 
     cache_enabled: bool = True

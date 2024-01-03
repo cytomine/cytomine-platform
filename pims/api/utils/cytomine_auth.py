@@ -65,24 +65,3 @@ def sign_token(private_key, token):
             hashlib.sha1
         ).digest()
     ).decode('utf-8')
-
-
-class ImageServer(Model):
-    pass
-
-
-class ImageServerCollection(Collection):
-    def __init__(self, filters=None, max=0, offset=0, **parameters):
-        super(ImageServerCollection, self).__init__(ImageServer, filters, max, offset)
-        self._allowed_filters = [None]
-        self.set_parameters(parameters)
-
-
-def get_this_image_server(host):
-    servers = ImageServerCollection().fetch()
-    this = servers.find_by_attribute("url", host)
-
-    if this is None:
-        raise CytomineProblem("This image server is not found on Cytomine core.")
-
-    return this
