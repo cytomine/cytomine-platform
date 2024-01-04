@@ -9,6 +9,6 @@ COPY pyproject.toml poetry.lock README.md /app
 
 WORKDIR /app
 
-RUN pip install --no-cache-dir --upgrade .
+RUN pip install --no-cache-dir --upgrade --extra-index-url https://download.pytorch.org/whl/cu118 .
 
 CMD ["uvicorn", "cbir.app:app", "--host", "0.0.0.0", "--port", "6000"]
