@@ -34,7 +34,7 @@ def test_index_image() -> None:
         response = client.post("/api/images/index", files=files)
 
     assert response.status_code == 200
-    assert os.path.isfile(database_settings.filename) is True
+    assert os.path.isfile(database_settings.get_database_path()) is True
 
 
 def test_retrieve_image() -> None:
