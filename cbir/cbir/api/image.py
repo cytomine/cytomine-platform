@@ -85,5 +85,5 @@ async def retrieve_image(
     )
 
     return Response(
-        content=json.dumps({"filenames": filenames, "distances": distances.tolist()}),
+        content=json.dumps({"filenames": filenames, "distances": distances}),
     )

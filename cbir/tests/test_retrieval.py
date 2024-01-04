@@ -37,6 +37,30 @@ def test_index_image() -> None:
     assert os.path.isfile(database_settings.get_database_path()) is True
 
 
+def test_retrieve_one_image() -> None:
+    """Test image retrieval for one image."""
+
+    with open("tests/data/image.png", "rb") as image:
+        files = {"image": image.read()}
+
+    with TestClient(app) as client:
+        response = client.post(
+            "/api/images/retrieve",
+            data={"nrt_neigh": "1"},
+            files=files,
+        )
+
+    data = response.json()
+
+    assert response.status_code == 200
+    assert "distances" in data
+    assert "filenames" in data
+    assert isinstance(data["distances"], list)
+    assert isinstance(data["filenames"], list)
+    assert len(data["distances"]) == 1
+    assert len(data["filenames"]) == 1
+
+
 def test_retrieve_image() -> None:
     """Test image retrieval."""
 
@@ -52,6 +76,8 @@ def test_retrieve_image() -> None:
 
     data = response.json()
 
+    assert response.status_code == 200
     assert "distances" in data
     assert "filenames" in data
-    assert response.status_code == 200
+    assert isinstance(data["distances"], list)
+    assert isinstance(data["filenames"], list)

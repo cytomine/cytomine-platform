@@ -120,10 +120,14 @@ class Database:
             outputs = model(inputs).cpu().numpy()
 
         distances, labels = self.index.search(outputs, nrt_neigh)
-        distances, labels = distances.squeeze(), labels.squeeze()
+        distances, labels = distances.squeeze().tolist(), labels.squeeze().tolist()
+
+        if nrt_neigh == 1:
+            distances = [distances]
+            labels = [labels]
 
         # Return only valid results
-        stop = labels.tolist().index(-1) if -1 in labels else len(labels)
+        stop = labels.index(-1) if -1 in labels else len(labels)
         filenames = [self.redis.get(str(l)).decode("utf-8") for l in labels[:stop]]
 
         return filenames, distances[:stop]
