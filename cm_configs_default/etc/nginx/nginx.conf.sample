@@ -102,6 +102,29 @@ http {
             set $tmpcorehost "$INTERNAL_URLS_CORE";
             proxy_pass http://$tmpcorehost;
         }
+        location /upload {
+            if ($request_method = OPTIONS ) {
+              include /etc/nginx/cors_params;
+              add_header 'Access-Control-Allow-Credentials' 'false' always;
+              add_header Content-Length 0;
+              add_header Content-Type text/plain;
+              return 200;
+            }
+
+            proxy_read_timeout 600;
+            proxy_request_buffering off;
+
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $URLS_SCHEME;
+
+            add_header 'Access-Control-Allow-Credentials' 'false';
+            add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
+            add_header 'Access-Control-Allow-Headers' 'Content-Type, Content-Range, Content-Disposition, Content-Description, date, dateFull, authorization,content-type-full';
+            add_header 'Access-Control-Max-Age' '1728000';
+            add_header 'Access-Control-Allow-Origin' '*';
+            set $tmpimshost "$INTERNAL_URLS_IMS";
+            proxy_pass  http://$tmpimshost;
+        }
         location /www/ {
           alias /www/;
         }
@@ -137,51 +160,6 @@ http {
             proxy_set_header X-Forwarded-Proto $URLS_SCHEME;
             set $tmpims1host ims-pooled;
             proxy_pass http://$tmpims1host;
-        }
-    }
-    server {
-        client_max_body_size 0;
-        proxy_request_buffering off;
-        listen       80;
-        server_name  $URLS_UPLOAD;
-
-        location / {
-            include /etc/nginx/cors_params;
-
-            if ($request_method = OPTIONS ) {
-              add_header Content-Length 0;
-              add_header Content-Type text/plain;
-              return 200;
-            }
-            return 444;
-        }
-
-        # Upload form should be submitted to this location
-        location /upload {
-
-            if ($request_method = OPTIONS ) {
-              include /etc/nginx/cors_params;
-              add_header 'Access-Control-Allow-Credentials' 'false' always;
-              add_header Content-Length 0;
-              add_header Content-Type text/plain;
-              return 200;
-            }
-
-            proxy_read_timeout 600;
-
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $URLS_SCHEME;
-
-            add_header 'Access-Control-Allow-Credentials' 'false';
-            add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
-            add_header 'Access-Control-Allow-Headers' 'Content-Type, Content-Range, Content-Disposition, Content-Description, date, dateFull, authorization,content-type-full';
-            add_header 'Access-Control-Max-Age' '1728000';
-            add_header 'Access-Control-Allow-Origin' '*';
-            proxy_pass   http://$INTERNAL_URLS_IMS;
-        }
-        error_page   500 502 503 504  /50x.html;
-        location = /50x.html {
-            root   html;
         }
     }
 }
