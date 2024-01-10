@@ -63,6 +63,22 @@ http {
 
     server {
         client_max_body_size 0;
+        listen 80;
+        server_name $URLS_INTERNAL_PROXY;
+
+        # Internal communication with PIMS from other internal components
+        location ~ /(file|image|formats|filters|colormaps|disk-usage|storage|directory|info|docs|openapi.json) {
+            include /etc/nginx/cors_params;
+            proxy_set_header Host $host;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $URLS_SCHEME;
+            set $tmpims1host ims-pooled;
+            proxy_pass http://$tmpims1host;
+        }
+    }
+
+    server {
+        client_max_body_size 0;
         listen       80;
         server_name  $URLS_CORE;
 
@@ -139,27 +155,6 @@ http {
         location /cytomine-page-not-found {
             default_type "text/html";
             alias /opt/nginx/nginx-1.10.1/html/404.html;
-        }
-    }
-    server {
-        client_max_body_size 0;
-        listen       80;
-        server_name  $URLS_IMAGE_SERVER $URLS_IMAGE_SERVER2 $URLS_IMAGE_SERVER3;
-
-        location / {
-            if ($request_method = OPTIONS ) {
-              include /etc/nginx/cors_params;
-              add_header Content-Length 0;
-              add_header Content-Type text/plain;
-              return 200;
-            }
-
-            include /etc/nginx/cors_params;
-            proxy_set_header Host $host;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $URLS_SCHEME;
-            set $tmpims1host ims-pooled;
-            proxy_pass http://$tmpims1host;
         }
     }
 }
