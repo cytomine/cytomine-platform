@@ -73,7 +73,7 @@ http {
         listen       80;
         # Default server. This block will handle requests for all URLs execpt those used in above server blocks.
         # Retrocompatible with previous configs 'server_name $URLS_CORE $URLS_UPLOAD $URLS_IMAGE_SERVER $URLS_IMAGE_SERVER2 $URLS_IMAGE_SERVER3'
-        server_name   default_server;
+        server_name  $URLS_CORE default_server;
 
         location / {
 	        include /etc/nginx/cors_params;
