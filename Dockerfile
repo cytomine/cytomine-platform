@@ -46,6 +46,7 @@ ENV URLS_CORE=cytomine.local
 ENV URLS_IMAGE_SERVER=ims.cytomine.local
 ENV URLS_IMAGE_SERVER2=ims.cytomine.local
 ENV URLS_IMAGE_SERVER3=ims.cytomine.local
+ENV URLS_INTERNAL_PROXY=nginx
 ENV URLS_UPLOAD=upload.cytomine.local
 ENV VERSIONS_CYTOMINE_COMMERCIAL="not provided"
 
