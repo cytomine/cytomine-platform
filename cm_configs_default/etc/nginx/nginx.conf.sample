@@ -69,6 +69,24 @@ http {
     }
 
     server {
+            client_max_body_size 0;
+            listen 80;
+            # Used when micro-services try to reach eachothers.
+            server_name $INTERNAL_IMAGE_SERVER_URL $INTERNAL_URLS_IMS $INTERNAL_URLS_IMS2 $INTERNAL_URLS_IMS3;
+
+            # Internal communication with PIMS from other internal components
+            location / {
+                include /etc/nginx/cors_params;
+                proxy_set_header Host $host;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $URLS_SCHEME;
+                # Allow nginx to start without any pooled IMS. Else it may crash on start saying "[emerg] host not found in upstream"
+                set $tmpims1host ims-pooled;
+                proxy_pass http://$tmpims1host;
+            }
+        }
+
+    server {
         client_max_body_size 0;
         # Default server. This block will handle requests for all URLs execpt those used in above server blocks.
         # Retrocompatible with previous configs 'server_name $URLS_CORE $URLS_UPLOAD $URLS_IMAGE_SERVER $URLS_IMAGE_SERVER2 $URLS_IMAGE_SERVER3'
