@@ -42,28 +42,18 @@ http {
     error_log /var/log/nginx/error.log debug;
     access_log /var/log/nginx/access.log main;
 
+    # Pooled PIMS servers, load balanced.
+    # See http://nginx.org/en/docs/http/ngx_http_upstream_module.html
     upstream ims-pooled {
       server $INTERNAL_URLS_IMS;
       server $INTERNAL_URLS_IMS2;
       server $INTERNAL_URLS_IMS3;
     }
 
-    # Default server. Useful when no server_name matched because Host is wrong but can be found in http_x_forwarded_host
-    # The downside is that when there's no matching server block at all for an URL that finds its way here, there's an infinite loop.
-    server {
-        client_max_body_size 0;
-        listen          80 default_server;
-        location / {
-            proxy_pass http://127.0.0.1;
-            proxy_set_header Host $http_x_forwarded_host;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $URLS_SCHEME;
-        }
-    }
-
     server {
         client_max_body_size 0;
         listen 80;
+        # Used when micro-services try to reach eachothers.
         server_name $URLS_INTERNAL_PROXY;
 
         # Internal communication with PIMS from other internal components
@@ -72,6 +62,7 @@ http {
             proxy_set_header Host $host;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $URLS_SCHEME;
+            # Allow nginx to start without any pooled IMS. Else it may crash on start saying "[emerg] host not found in upstream"
             set $tmpims1host ims-pooled;
             proxy_pass http://$tmpims1host;
         }
@@ -80,7 +71,9 @@ http {
     server {
         client_max_body_size 0;
         listen       80;
-        server_name  $URLS_CORE;
+        # Default server. This block will handle requests for all URLs execpt those used in above server blocks.
+        # Retrocompatible with previous configs 'server_name $URLS_CORE $URLS_UPLOAD $URLS_IMAGE_SERVER $URLS_IMAGE_SERVER2 $URLS_IMAGE_SERVER3'
+        server_name   default_server;
 
         location / {
 	        include /etc/nginx/cors_params;
