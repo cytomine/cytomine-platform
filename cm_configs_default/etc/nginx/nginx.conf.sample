@@ -57,7 +57,7 @@ http {
         server_name $URLS_INTERNAL_PROXY;
 
         # Internal communication with PIMS from other internal components
-        location ~ /(file|image|formats|filters|colormaps|disk-usage|storage|directory|info|docs|openapi.json) {
+        location ~ /(file|image|thumb|formats|filters|resized|colormaps|disk-usage|storage|directory|histogram|associated|info|metadata|docs|openapi.json|export) {
             include /etc/nginx/cors_params;
             proxy_set_header Host $host;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
