@@ -17,11 +17,15 @@ DB_USER="$POSTGRES_USER"        # Database username
 # Backup directory and filename
 BACKUP_DIR="/var/lib/postgresql/data/backup"  # Specify the backup directory
 BACKUP_FILENAME="cytomine_postgis_backup_$(date "+%a")"  # Use day of the week for unique backup filenames
+CURR_MONTH_BACKUP_FILENAME="cytomine_postgis_backup_current_month"
+PREV_MONTH_BACKUP_FILENAME="cytomine_postgis_backup_previous_month"
 
 mkdir -p $BACKUP_DIR
 
 # Full path to the backup file
 BACKUP_TARGET_PATH="$BACKUP_DIR/$BACKUP_FILENAME.tar.gz"
+CURR_MONTH_BACKUP_TARGET_PATH="$BACKUP_DIR/$CURR_MONTH_BACKUP_FILENAME.tar.gz"
+PREV_MONTH_BACKUP_TARGET_PATH="$BACKUP_DIR/$PREV_MONTH_BACKUP_FILENAME.tar.gz"
 BACKUP_TMP_PATH="/tmp"
 
 #logging operation
@@ -50,4 +54,16 @@ fi
 
 # Clean tmp file
 rm "/$BACKUP_TMP_PATH/$BACKUP_FILENAME.sql"
+
+# If first of the month, update the current month backup with the daily backup. If not first of the month but current month backup does not exist (new instances), update the current month backup with the daily backup
+if [ $(date "+%d") -eq 01 ] || [ ! -f "$CURR_MONTH_BACKUP_TARGET_PATH" ]; then
+  # If the current month backup exists, move it to the previous month
+  if [ -f "$CURR_MONTH_BACKUP_TARGET_PATH" ]; then
+    cp "$CURR_MONTH_BACKUP_TARGET_PATH" "$PREV_MONTH_BACKUP_TARGET_PATH"
+  fi
+  # Update the current month backup with the daily backup
+  cp "$BACKUP_TARGET_PATH" "$CURR_MONTH_BACKUP_TARGET_PATH"
+fi
+
+
 exit 0
