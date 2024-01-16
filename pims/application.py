@@ -13,6 +13,8 @@
 #  * limitations under the License.
 
 import logging
+import sys
+
 from . import __api_version__, __version__
 logger = logging.getLogger("pims.app")
 logger.info("[green bold]PIMS initialization...")
@@ -89,9 +91,9 @@ async def startup():
             await startup_cache(__version__)
             logger.info(f"[green]Cache is ready!")
         except ConnectionError:
-            logger.error(
-                f"[red]Impossible to connect to cache database. "
-                f"Disabling cache!"
+            sys.exit(
+                f"Impossible to connect to cache \"{get_settings().cache_url}\" "
+                f"while cache is enabled by configuration."
             )
 
 
