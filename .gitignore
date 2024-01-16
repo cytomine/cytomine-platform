@@ -134,6 +134,7 @@ dev-config/
 
 # Continous integration & build
 ci/
-.vscode
+.vscode/*
+!.vscode/launch.json
 .idea
 *.iml
