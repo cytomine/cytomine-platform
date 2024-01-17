@@ -17,7 +17,10 @@ from typing import Any, List, Optional, Union
 
 import numpy as np
 import pyvips.enums
-from pyvips import Image as VIPSImage, Size as VIPSSize  # noqa
+from pyvips import (
+    Image as VIPSImage,
+    Interpretation as VIPSInterpretation, Size as VIPSSize  # noqa
+)
 from pyvips.error import Error as VIPSError
 
 from pims.api.exceptions import MetadataParsingProblem
@@ -232,6 +235,8 @@ class VipsSpatialConvertor(AbstractConvertor):
 
     def convert(self, dest_path):
         source = self.vips_source()
+        if source.interpretation == VIPSInterpretation.CMYK:
+            source = source.colourspace(VIPSInterpretation.SRGB)
 
         result = source.tiffsave(
             str(dest_path), pyramid=True, tile=True,
