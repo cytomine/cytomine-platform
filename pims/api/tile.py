@@ -240,6 +240,17 @@ def ti_query_parameter(
     return TileIndex(__root__=ti).dict()['__root__']
 
 
+def tx_query_parameter(
+    tx: int = PathParam(...)
+):
+    return TileX(__root__=tx).dict()['__root__']
+
+
+def ty_query_parameter(
+    ty: int = PathParam(...)
+):
+    return TileY(__root__=ty).dict()['__root__']
+
 @router.get(
     '/image/{filepath:path}/tile/zoom/{zoom:int}/ti/{ti:int}{extension:path}', tags=tile_tags
 )
@@ -269,7 +280,6 @@ async def show_tile_by_zoom(
         path, False, tile, **planes.dict(), **ops.dict(),
         extension=extension, headers=headers, config=config
     )
-
 
 @router.get(
     '/image/{filepath:path}/tile/level/{level:int}/ti/{ti:int}{extension:path}', tags=tile_tags
@@ -301,6 +311,38 @@ async def show_tile_by_level(
         extension=extension, headers=headers, config=config
     )
 
+
+@router.get(
+    '/image/{filepath:path}/normalized-tile/zoom/{zoom:int}/tx/{tx:int}/ty/{ty:int}{extension:path}',
+    tags=norm_tile_tags
+)
+async def show_normalized_tile_by_xyz(
+    request: Request, response: Response,
+    path: Path = Depends(imagepath_parameter),
+    zoom: int = Depends(zoom_query_parameter),
+        tx: int = Depends(tx_query_parameter),
+        ty: int = Depends(ty_query_parameter),
+    extension: OutputExtension = Depends(extension_path_parameter),
+    planes: PlaneSelectionQueryParams = Depends(),
+    ops: ImageOpsDisplayQueryParams = Depends(),
+    headers: ImageRequestHeaders = Depends(),
+    config: Settings = Depends(get_settings),
+):
+    """
+    Get a 8-bit normalized tile at a given zoom level and tile index, optimized for
+    visualisation, with given channels, focal planes and timepoints. If multiple channels are
+    given (slice or selection), they are merged. If multiple focal planes or timepoints are
+    given (slice or selection), a reduction function must be provided.
+
+    **By default**, all image channels are used and when the image is multidimensional, the
+    tile is extracted from the median focal plane at first timepoint.
+    """
+    tile = dict(zoom=zoom, tx=tx, ty=ty)
+    return await _show_tile(
+        request, response,
+        path, True, tile, **planes.dict(), **ops.dict(),
+        extension=extension, headers=headers, config=config
+    )
 
 @router.get(
     '/image/{filepath:path}/normalized-tile/zoom/{zoom:int}/ti/{ti:int}{extension:path}',
