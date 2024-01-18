@@ -25,7 +25,7 @@ from pims.fastapi_tweaks import apply_fastapi_tweaks
 apply_fastapi_tweaks()
 
 import time
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, APIRouter
 from pydantic import ValidationError
 from aioredis.exceptions import ConnectionError
 
@@ -136,13 +136,17 @@ async def log_requests(request: Request, call_next):
     return response
 
 
-@app.get("/docs", include_in_schema=False)
+documentation_router = APIRouter(prefix=get_settings().api_base_path)
+
+
+@documentation_router.get("/docs", include_in_schema=False)
 def docs(req: Request):
     root_path = req.scope.get("root_path", "").rstrip("/")
     openapi_url = root_path + app.openapi_url
     return get_redoc_html(openapi_url=openapi_url, title=app.title)
 
 
+app.include_router(documentation_router)
 app.include_router(metadata.router)
 app.include_router(tile.router)
 app.include_router(thumb.router)

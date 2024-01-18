@@ -40,7 +40,7 @@ from pims.formats.utils.structures.metadata import MetadataType
 from pims.processing.image_response import AssociatedResponse
 from pims.utils.dtypes import dtype_to_bits
 
-router = APIRouter()
+router = APIRouter(prefix=get_settings().api_base_path)
 api_tags = ['Metadata']
 cache_associated_ttl = get_settings().cache_ttl_thumb
 

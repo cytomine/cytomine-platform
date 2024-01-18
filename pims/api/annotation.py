@@ -41,7 +41,7 @@ from pims.processing.image_response import MaskResponse
 from pims.utils.color import WHITE
 from pims.utils.iterables import ensure_list
 
-router = APIRouter()
+router = APIRouter(prefix=get_settings().api_base_path)
 api_tags = ['Annotations']
 cache_ttl = get_settings().cache_ttl_window
 

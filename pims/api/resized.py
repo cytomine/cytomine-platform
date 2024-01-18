@@ -47,7 +47,7 @@ from pims.processing.colormaps import ALL_COLORMAPS
 from pims.processing.image_response import ResizedResponse
 from pims.utils.iterables import check_array_size_parameters, ensure_list
 
-router = APIRouter()
+router = APIRouter(prefix=get_settings().api_base_path)
 api_tags = ['Resized']
 cache_ttl = get_settings().cache_ttl_resized
 

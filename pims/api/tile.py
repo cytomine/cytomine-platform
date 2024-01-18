@@ -49,7 +49,7 @@ from pims.processing.colormaps import ALL_COLORMAPS
 from pims.processing.image_response import TileResponse, WindowResponse
 from pims.utils.iterables import check_array_size_parameters, ensure_list
 
-router = APIRouter()
+router = APIRouter(prefix=get_settings().api_base_path)
 tile_tags = ['Tiles']
 norm_tile_tags = ['Normalized tiles']
 cache_ttl = get_settings().cache_ttl_tile

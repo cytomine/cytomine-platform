@@ -25,7 +25,7 @@ from cytomine.models import (
     Project, ProjectCollection, Storage, UploadedFile
 )
 from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, Query, UploadFile
-from starlette.requests import Request
+from starlette.requests import Request, ClientDisconnect
 from starlette.responses import FileResponse, JSONResponse, Response
 from starlette.formparsers import MultiPartMessage, MultiPartParser, _user_safe_decode
 
@@ -56,27 +56,28 @@ except ModuleNotFoundError:  # pragma: nocover
     parse_options_header = None
     multipart = None
 
-router = APIRouter()
+router = APIRouter(prefix=get_settings().api_base_path)
 
 cytomine_logger = logging.getLogger("pims.cytomine")
 
 WRITING_PATH = get_settings().writing_path
 INTERNAL_URL_CORE = get_settings().internal_url_core
 
+
 @router.post('/upload', tags=['Import'])
 async def import_direct_chunks(
-    request: Request,
-    background: BackgroundTasks,
-    core: Optional[str] = None,
-    cytomine: Optional[str] = None,
-    storage: Optional[int] = None,
-    id_storage: Optional[int] = Query(None, alias='idStorage'),
-    projects: Optional[str] = None,
-    id_project: Optional[str] = Query(None, alias='idProject'),
-    sync: Optional[bool] = False,
-    keys: Optional[str] = None,
-    values: Optional[str] = None,
-    config: Settings = Depends(get_settings)
+        request: Request,
+        background: BackgroundTasks,
+        core: Optional[str] = None,
+        cytomine: Optional[str] = None,
+        storage: Optional[int] = None,
+        id_storage: Optional[int] = Query(None, alias='idStorage'),
+        projects: Optional[str] = None,
+        id_project: Optional[str] = Query(None, alias='idProject'),
+        sync: Optional[bool] = False,
+        keys: Optional[str] = None,
+        values: Optional[str] = None,
+        config: Settings = Depends(get_settings)
 ):
     ''' Upload file using the request inspired by UploadFile class from FastAPI along with improved efficiency '''
 
@@ -96,7 +97,7 @@ async def import_direct_chunks(
 
         # Use non sanitized upload_name as UF originalFilename attribute
         cytomine_listener, cytomine_auth, root = connexion_to_core(
-            request, str(pending_path), upload_size, upload_name,  id_project, id_storage,
+            request, str(pending_path), upload_size, upload_name, id_project, id_storage,
             projects, storage, config, keys, values
         )
 
@@ -129,7 +130,7 @@ async def import_direct_chunks(
             return [{
                 "status": 200,
                 "name": upload_name,
-                "size" : upload_size,
+                "size": upload_size,
                 "uploadedFile": serialize_cytomine_model(root),
                 "images": [{
                     "image": serialize_cytomine_model(image[0]),
@@ -159,7 +160,7 @@ async def import_direct_chunks(
             content=[{
                 "status": 200,
                 "name": upload_name,
-                "size" : upload_size,
+                "size": upload_size,
                 "uploadedFile": serialize_cytomine_model(root),
                 "images": []
             }], status_code=200
@@ -172,9 +173,9 @@ def import_(filepath, body):
 
 @router.get('/file/{filepath:path}/export', tags=['Export'])
 def export_file(
-    background: BackgroundTasks,
-    path: Path = Depends(filepath_parameter),
-    filename: Optional[str] = Query(None, description="Suggested filename for returned file")
+        background: BackgroundTasks,
+        path: Path = Depends(filepath_parameter),
+        filename: Optional[str] = Query(None, description="Suggested filename for returned file")
 ):
     """
     Export a file. All files with an identified PIMS role in the server base path can be exported.
@@ -215,9 +216,9 @@ def export_file(
 
 @router.get('/image/{filepath:path}/export', tags=['Export'])
 def export_upload(
-    background: BackgroundTasks,
-    path: Path = Depends(imagepath_parameter),
-    filename: Optional[str] = Query(None, description="Suggested filename for returned file")
+        background: BackgroundTasks,
+        path: Path = Depends(imagepath_parameter),
+        filename: Optional[str] = Query(None, description="Suggested filename for returned file")
 ):
     """
     Export the upload representation of an image.
@@ -257,8 +258,8 @@ def export_upload(
 
 
 @router.delete('/image/{filepath:path}', tags=['delete'])
-def delete(    
-    path: Path = Depends(imagepath_parameter),
+def delete(
+        path: Path = Depends(imagepath_parameter),
 ):
     """
     Delete the all the representations of an image, including the related upload folder.
@@ -271,7 +272,6 @@ def delete(
     image.delete_upload_root()
 
     return Response(status_code=200)
-
 
 
 async def write_file(fastapi_parser: MultiPartParser, pending_path):
@@ -297,34 +297,42 @@ async def write_file(fastapi_parser: MultiPartParser, pending_path):
     boundary = params[b"boundary"]
     headers_finised = False
     callbacks = {
-            "on_part_data": fastapi_parser.on_part_data,
-            "on_header_field": fastapi_parser.on_header_field,
-            "on_header_value": fastapi_parser.on_header_value,
-            "on_header_end": fastapi_parser.on_header_end,
-            "on_headers_finished": fastapi_parser.on_headers_finished,
-        }
-    parser = multipart.MultipartParser(boundary,callbacks)
+        "on_part_data": fastapi_parser.on_part_data,
+        "on_header_field": fastapi_parser.on_header_field,
+        "on_header_value": fastapi_parser.on_header_value,
+        "on_header_end": fastapi_parser.on_header_end,
+        "on_headers_finished": fastapi_parser.on_headers_finished,
+    }
+    parser = multipart.MultipartParser(boundary, callbacks)
     async with aiofiles.open(pending_path, 'wb') as f:
         try:
             async for chunk in fastapi_parser.stream:
-                # we assume that there is only one key-value in the body request (that is only one file to upload and no other parameter in the request such taht there is only one headers block)
-                if not headers_finised:#going through the one-only headers block of the body request and retrieve the filename
-                    original_filename, headers_finised = await process_chunks_headers(parser, fastapi_parser, chunk, f, original_filename=original_filename)
-                else: #enables more efficient upload by by-passing the mutlipart parser logic and just writing the data bytes directly
+                # we assume that there is only one key-value in the body request (that is only one file to upload and
+                # no other parameter in the request such taht there is only one headers block)
+                if not headers_finised:
+                    # going through the one-only headers block of the body request and retrieve the filename
+                    original_filename, headers_finised = await process_chunks_headers(
+                        parser, fastapi_parser, chunk, f, original_filename=original_filename
+                    )
+                else:
+                    # enables more efficient upload by by-passing the mutlipart parser logic and just writing the data bytes directly
                     await f.write(chunk)
         except ClientDisconnect:
             raise UploadCanceledException()
 
-
     return original_filename
 
-async def process_chunks_headers(parser, fastapi_parser, chunk, file, header_field: bytes =b"", header_value: bytes =b"", original_filename='no-name'):
-    ''' 
-    This function is inspired by parse(self) function from formparsers.py in fastapi>=0.65.1,<=0.68.2' used to upload a file:
-    
-    '''
 
-    parser.write(chunk) # when this line is run at each chunk, it is time-consuming for big files 
+async def process_chunks_headers(
+        parser, fastapi_parser, chunk, file, header_field: bytes = b"", header_value: bytes = b"",
+        original_filename='no-name'
+):
+    """
+    This function is inspired by parse(self) function from formparsers.py in fastapi>=0.65.1,<=0.68.2' used to upload a file:
+
+    """
+
+    parser.write(chunk)  # when this line is run at each chunk, it is time-consuming for big files
     messages = list(fastapi_parser.messages)
     fastapi_parser.messages.clear()
     for message_type, message_bytes in messages:
@@ -342,12 +350,13 @@ async def process_chunks_headers(parser, fastapi_parser, chunk, file, header_fie
             if b"filename" in options:
                 original_filename = _user_safe_decode(options[b"filename"], fastapi_parser._charset)
         elif message_type == MultiPartMessage.PART_DATA:
-                await file.write(message_bytes)
+            await file.write(message_bytes)
     return original_filename, headers_finished
 
-def connexion_to_core(request: Request, upload_path: str, upload_size: str, upload_name: str,  id_project: str, id_storage: str, projects: str, storage: str, 
-                      config: Settings,  keys: str, values: str):
-    
+
+def connexion_to_core(request: Request, upload_path: str, upload_size: str, upload_name: str, id_project: str,
+                      id_storage: str, projects: str, storage: str,
+                      config: Settings, keys: str, values: str):
     if not INTERNAL_URL_CORE:
         raise BadRequestException(detail="Internal URL core is missing.")
 
@@ -405,4 +414,3 @@ def connexion_to_core(request: Request, upload_path: str, upload_size: str, uplo
             user_properties=user_properties
         )
     return cytomine_listener, cytomine_auth, root
-

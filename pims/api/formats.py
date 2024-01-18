@@ -19,9 +19,10 @@ from pydantic import BaseModel, Field
 from pims.api.exceptions import FormatNotFoundProblem
 from pims.api.utils.models import CollectionSize, FormatId
 from pims.api.utils.response import FastJsonResponse, response_list
+from pims.config import get_settings
 from pims.formats import FORMATS
 
-router = APIRouter()
+router = APIRouter(prefix=get_settings().api_base_path)
 api_tags = ['Formats']
 
 
