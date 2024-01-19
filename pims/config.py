@@ -22,6 +22,8 @@ logger = logging.getLogger("pims.app")
 
 
 class ReadableSettings(BaseSettings):
+    api_base_path: str = ""  # if set, must start with /.
+
     root: str
     pending_path: str = "/tmp/uploaded"
     writing_path: str = "/data/pims/tmp"

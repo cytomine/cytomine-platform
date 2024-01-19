@@ -21,7 +21,7 @@ from pims.api.utils.parameter import filepath2path
 from pims.api.utils.response import FastJsonResponse
 from pims.config import Settings, get_settings
 
-router = APIRouter()
+router = APIRouter(prefix=get_settings().api_base_path)
 api_tags = ['Housekeeping']
 
 

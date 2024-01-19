@@ -25,10 +25,11 @@ from pims.api.utils.mimetype import (
 )
 from pims.api.utils.models import CollectionSize, ColormapId
 from pims.api.utils.response import FastJsonResponse, response_list
+from pims.config import get_settings
 from pims.processing.colormaps import COLORMAPS, ColormapType
 from pims.processing.image_response import ColormapRepresentationResponse
 
-router = APIRouter()
+router = APIRouter(prefix=get_settings().api_base_path)
 api_tags = ['Colormaps']
 
 
