@@ -58,6 +58,18 @@ async def index_image(request: Request, image: UploadFile = File()) -> None:
     )
 
 
+@router.delete("/images/remove")
+def remove_image(request: Request, filename: str) -> None:
+    """Remove an indexed image."""
+
+    database = request.app.state.database
+
+    if not database.contains(filename):
+        raise HTTPException(status_code=404, detail=f"{filename} not found")
+
+    database.remove(filename)
+
+
 @router.post("/images/retrieve")
 async def retrieve_image(
     request: Request,
