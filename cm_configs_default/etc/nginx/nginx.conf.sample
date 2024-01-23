@@ -44,88 +44,75 @@ http {
 
     # Pooled PIMS servers, load balanced.
     # See http://nginx.org/en/docs/http/ngx_http_upstream_module.html
-    upstream ims-pooled {
-      server $INTERNAL_URLS_IMS;
-      server $INTERNAL_URLS_IMS2;
-      server $INTERNAL_URLS_IMS3;
+    upstream internal-ims-pooled {
+        server $INTERNAL_URLS_IMS;
+        server $INTERNAL_URLS_IMS2;
+        server $INTERNAL_URLS_IMS3;
     }
 
+    upstream internal-ims-upload {
+        server $INTERNAL_URLS_IMS;
+    }
+
+    # Used when micro-services try to reach each others.
+    # ! This block server must never be reachable from a public URL.
     server {
         client_max_body_size 0;
         listen 80;
-        # Used when micro-services try to reach eachothers.
         server_name $URLS_INTERNAL_PROXY;
 
-        # Internal communication with PIMS from other internal components
-        location ~ /(file|image|thumb|formats|filters|resized|colormaps|disk-usage|storage|directory|histogram|associated|info|metadata|docs|openapi.json|export) {
-            include /etc/nginx/cors_params;
-            proxy_set_header Host $host;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $URLS_SCHEME;
-            # Allow nginx to start without any pooled IMS. Else it may crash on start saying "[emerg] host not found in upstream"
-            set $tmpims1host ims-pooled;
-            proxy_pass http://$tmpims1host;
+        include /etc/nginx/cors_params;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $URLS_SCHEME;
+
+        # Internal communication to PIMS from other internal micro-services.
+        # Base path convention: "/ims"
+        location /ims/upload {
+            proxy_read_timeout 600;
+            proxy_request_buffering off;
+
+            set $tmpimsuploadhost internal-ims-upload;
+            proxy_pass http://$tmpimsuploadhost;
+        }
+        location /ims {
+            set $tmpimspooledhost internal-ims-pooled;
+            proxy_pass http://$tmpimspooledhost;
+        }
+
+        # Internal communication to CORE from other internal micro-services.
+        # Base path convention: "/api" + special endpoints that should be moved under "/api" base path in the future.
+        location ~ /(api|ws|login|logout|saml|saml2|server|session|custom-ui|static) {
+            set $tmpcorehost "$INTERNAL_URLS_CORE";
+            proxy_pass http://$tmpcorehost;
         }
     }
 
-    server {
-            client_max_body_size 0;
-            listen 80;
-            # Used when micro-services try to reach eachothers.
-            server_name $INTERNAL_IMAGE_SERVER_URL $INTERNAL_URLS_IMS $INTERNAL_URLS_IMS2 $INTERNAL_URLS_IMS3;
 
-            # Internal communication with PIMS from other internal components
-            location / {
-                include /etc/nginx/cors_params;
-                proxy_set_header Host $host;
-                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-                proxy_set_header X-Forwarded-Proto $URLS_SCHEME;
-                # Allow nginx to start without any pooled IMS. Else it may crash on start saying "[emerg] host not found in upstream"
-                set $tmpims1host ims-pooled;
-                proxy_pass http://$tmpims1host;
-            }
-        }
-
+    # Default server. This block will handle requests for all URLs execpt those used in above server blocks.
     server {
         client_max_body_size 0;
-        # Default server. This block will handle requests for all URLs execpt those used in above server blocks.
         # Retrocompatible with previous configs 'server_name $URLS_CORE $URLS_UPLOAD $URLS_IMAGE_SERVER $URLS_IMAGE_SERVER2 $URLS_IMAGE_SERVER3'
         listen       80 default_server;
-        server_name  $URLS_CORE;
+
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $URLS_SCHEME;
 
         location / {
-	        include /etc/nginx/cors_params;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header Host $host;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $URLS_SCHEME;
+            include /etc/nginx/cors_params;
 
             # Allow nginx to start without web_ui. Else it may crash on start saying "[emerg] host not found in upstream "web_ui""
             set $tmpwebuivar "$INTERNAL_URLS_WEB_UI";
             proxy_pass http://$tmpwebuivar;
-
-            #proxy_http_version 1.1;
-            #proxy_set_header Upgrade $http_upgrade;
-            #proxy_set_header Connection "upgrade";
         }
-        location ~ /(api|monitoring|login|logout|saml|saml2|server|session|custom-ui|static|restApiDoc|js/jsondoc|css/jsondoc)  {
+        location ~ /(api|ws|login|logout|saml|saml2|server|session|custom-ui|static) {
             proxy_intercept_errors off;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header Host $host;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $URLS_SCHEME;
-            set $tmpcorehost "$INTERNAL_URLS_CORE";
-            proxy_pass http://$tmpcorehost;
-        }
-        location /ws {
-            proxy_http_version 1.1;
-            proxy_set_header Upgrade $http_upgrade;
-            proxy_set_header Connection "upgrade";
 
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header Host $host;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $URLS_SCHEME;
             set $tmpcorehost "$INTERNAL_URLS_CORE";
             proxy_pass http://$tmpcorehost;
         }
@@ -140,42 +127,22 @@ http {
 
             proxy_read_timeout 600;
             proxy_request_buffering off;
-
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $URLS_SCHEME;
+            proxy_intercept_errors off;
 
             add_header 'Access-Control-Allow-Credentials' 'false';
             add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
             add_header 'Access-Control-Allow-Headers' 'Content-Type, Content-Range, Content-Disposition, Content-Description, date, dateFull, authorization,content-type-full';
             add_header 'Access-Control-Max-Age' '1728000';
             add_header 'Access-Control-Allow-Origin' '*';
-            set $tmpimshost "$INTERNAL_URLS_IMS";
-            proxy_pass  http://$tmpimshost;
+
+            set $tmpimsuploadhost internal-ims-upload;
+            proxy_pass http://$tmpimsuploadhost/ims$request_uri;
         }
-
-        # TO REMOVE
-        # This block can be activated in the unlikely event this version of nginx has to route OLD requests issued by CORE using EXTERNAL URLS
-        # Use it in dev mode only as it may expose PIMS insecurely in production.
-        #location ~ /(file|image|thumb|formats|filters|resized|colormaps|disk-usage|storage|directory|histogram|associated|info|metadata|docs|openapi.json|export) {
-        #    include /etc/nginx/cors_params;
-        #    proxy_set_header Host $host;
-        #    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        #    proxy_set_header X-Forwarded-Proto $URLS_SCHEME;
-        #    # Allow nginx to start without any pooled IMS. Else it may crash on start saying "[emerg] host not found in upstream"
-        #    set $tmpims1host ims-pooled;
-        #    proxy_pass http://$tmpims1host;
-        #}
-
         location /www/ {
           alias /www/;
         }
 
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
-
         proxy_intercept_errors on;
-
         error_page 404 = /cytomine-page-not-found;
         location /cytomine-page-not-found {
             default_type "text/html";
