@@ -1,0 +1,41 @@
+name: Create release
+
+on:
+  push:
+    tags:
+      - "*.*.*"
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Prerelease check
+        run: |
+          if [[ ${{ github.ref_name }} =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
+            echo "prerelease=false" >> $GITHUB_ENV
+          else
+            echo "prerelease=true" >> $GITHUB_ENV
+          fi
+
+      - name: Create release
+        uses: actions/github-script@v6
+        env:
+          name: ${{ github.ref_name }}
+          prerelease: ${{ env.prerelease }}
+        with:
+          script: |
+            try {
+              const response = await github.rest.repos.createRelease({
+                generate_release_notes: true,
+                name: process.env.name,
+                owner: context.repo.owner,
+                prerelease: process.env.prerelease === "true",
+                repo: context.repo.repo,
+                tag_name: process.env.name,
+              });
+              
+              return response.data.id;
+            } catch (error) {
+              core.setFailed(error.message);
+            }
