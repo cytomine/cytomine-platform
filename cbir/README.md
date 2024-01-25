@@ -6,6 +6,33 @@ Content Based Image Retrieval Server
 
 Python 3.9+
 
+# Development
+
+## Setup Redis database
+
+```bash
+docker compose up -d
+```
+
+## Run the server using an virtual environment
+
+### Using Python venv
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install . --extra-index-url=https://download.pytorch.org/whl/cu118
+uvicorn cbir.app:app --reload
+```
+
+### Using Poetry
+
+```bash
+poetry shell
+poetry install
+uvicorn cbir.app:app --reload
+```
+
 # License
 
 Apache 2.0
