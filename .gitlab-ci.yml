@@ -106,8 +106,6 @@ tests-storage-registry:
 build-push-docker-image:
   stage: build
   image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:latest
-  when:
-    never
   variables:
     OPENJDK_VERSION: 17-slim-bullseye
     GRADLE_VERSION: 8.5.0-jdk17-alpine
