@@ -157,7 +157,6 @@ ENV PYTHONPATH="/app:$PYTHONPATH"
 RUN mkdir /docker-entrypoint-cytomine.d/
 COPY --from=entrypoint-scripts --chmod=774 /cytomine-entrypoint.sh /usr/local/bin/
 COPY --from=entrypoint-scripts --chmod=774 /envsubst-on-templates-and-move.sh /docker-entrypoint-cytomine.d/500-envsubst-on-templates-and-move.sh
-COPY --from=entrypoint-scripts --chmod=774 /configure-etc-hosts-reverse-proxy.sh /docker-entrypoint-cytomine.d/750-configure-etc-hosts-reverse-proxy.sh
 
 ARG ENTRYPOINT_SCRIPTS_VERSION=1.3.0
 ARG GUNICORN_VERSION=20.1.0
