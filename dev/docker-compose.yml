@@ -1,0 +1,36 @@
+services:
+
+  postgres:
+    image: cytomine/postgis:1.4.0-dev.2
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    profiles:
+      - db
+      - default
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_USER: docker
+      POSTGRES_DB: docker
+      APPENGINE_DB: appengine
+      APPENGINE_PASSWORD: password
+      APPENGINE_USER: appengine
+    ports:
+      - 5432:5432
+
+  registry:
+    image: registry:latest
+    ports:
+      - 5000:5000
+    profiles:
+      - registry
+      - default
+    environment:
+      REGISTRY_STORAGE_DELETE_ENABLED: true
+      REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY: /data
+    volumes:
+      - registry_data:/data
+
+
+volumes:
+  postgres_data:
+  registry_data:

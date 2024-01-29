@@ -1,0 +1,165 @@
+Feature: [URS00003-TASK] Provision a task run
+
+  Background:
+    Given App Engine is up and running
+    And File storage service is up and running
+
+  Scenario Outline: successful creation of a task run
+
+  See "src/main/resources/spec/api/openapi_spec_v0.1.0.yml" file, in particular the paths:
+  - '/tasks/{task_id}/runs'
+  - '/tasks/{namespace}/{version}/runs'
+
+    Given a task has been successfully uploaded
+    And this task has "<task_namespace>" and "<task_version>"
+    And this task has at least one input parameter
+    When user calls the endpoint "<endpoint>" with HTTP method POST
+    Then a task run is created on the App Engine
+    And this task run is attributed an id in UUID format
+    And this task run is attributed the state "CREATED"
+    And a storage for the task run is created in the file service under name "task-run-"+UUID
+    And the App Engine returns a '200 OK' HTTP response with the updated task run information as JSON payload
+
+    Examples:
+      | task_namespace                                 | task_version | endpoint                     |
+      | com.cytomine.app-engine.tasks.toy.add_integers | 0.1.0        | /task/namespace/version/runs |
+      | com.cytomine.app-engine.tasks.toy.add_integers | 0.1.0        | /task/id/runs                |
+
+
+  Scenario Outline: successful provisioning of a task run with one input parameter using provisioning endpoint
+
+  See "src/main/resources/spec/api/openapi_spec_v0.1.0.yml" file, in particular the paths:
+  - '/task-runs/{run_id}/input-provisions/{param_name}'
+
+    Given a task has been successfully uploaded
+    And this task has "<task_namespace>" and "<task_version>"
+    And this task has only one input parameter "<param_name>" of type "<param_type>"
+    And this parameter has no validation rules
+    And a task run has been created for this task
+    And this task run is attributed an id in UUID format
+    And this task run has not been provisioned yet and is therefore in state "<task_run_initial_state>"
+    When a user calls the provisioning endpoint with JSON "<payload>" to provision parameter "<param_name>" with <param_value>
+    Then the value "<param_value>" is saved and associated parameter "<param_name>" in the database
+    And a input file named "<param_name>" is created in the task run storage "task-run-"+UUID with content "<param_file_content>"
+    And the task run states changes to "<task_run_new_state>" because the task is now completely provisioned
+    And the App Engine returns a '200 OK' HTTP response with the updated task run information as JSON payload
+
+    Examples:
+      | task_namespace                                     | task_version | param_name | param_type | payload                                       | param_value | task_run_initial_state | task_run_new_state | param_file_content |
+      | com.cytomine.app-engine.tasks.toy.identity_integer | 0.1.0        | my_input   | integer    | {\"param_name\": \"my_input\", \"value\": 18} | 18          | CREATED                | PROVISIONED        | 18                 |
+
+  Scenario Outline: successful partial provisioning of a task run with two input parameters
+
+  See "src/main/resources/spec/api/openapi_spec_v0.1.0.yml" file, in particular the paths:
+  - '/task-runs/{run_id}/input-provisions'
+
+    Given a task has been successfully uploaded
+    And this task has "<task_namespace>" and "<task_version>"
+    And this task has two input parameters
+    And the first parameter is "<param1_name>" of type "<param1_type>" without a validation rule
+    And the second parameter is "<param2_name>" of type "<param2_type>" without a validation rule
+    And no validation rules are defined for these parameters
+    And a task run has been created for this task
+    And this task run is attributed an id in UUID format
+    And this task run has not been provisioned yet and is therefore in state "<task_run_initial_state>"
+    When a user calls the endpoint with JSON "<payload>"
+    Then the value "<param1_value>" is saved and associated with parameter "<param1_name>" in the database
+    And a input file named "<param1_name>" is created in the task run storage "task-run-"+UUID with content "<param_file_content>"
+    And the task run state remains as "<task_run_initial_state>" since not all parameters are provisioned yet
+    And the App Engine returns a '200 OK' HTTP response with the updated task run information as JSON payload
+
+    Examples:
+      | task_namespace                                    | task_version | param1_name | param1_type | param1_value | param2_name | param2_type | payload                                    | task_run_initial_state | param_file_content |
+      | com.cytomine.app-engine.tasks.toy.add_two_numbers | 0.1.0        | num1        | integer     | 5            | num2        | integer     | [{\"param_name\": \"num1\", \"value\": 5}] | CREATED                | 5                  |
+
+  Scenario Outline: successful batch provisioning of a task run two parameters one of which one has a validation rule
+
+  See "src/main/resources/spec/api/openapi_spec_v0.1.0.yml" file, in particular the paths:
+  - '/task-runs/{run_id}/input-provisions'
+
+    Given a task has been successfully uploaded
+    And this task has "<task_namespace>" and "<task_version>"
+    And this task has two input parameters
+    And the first parameter is "<param1_name>" of type "<param1_type>" with a validation rule "<param1_validation_rule>"
+    And the second parameter is "<param2_name>" of type "<param2_type>" without a validation rule
+    And a task run has been created for this task
+    And this task run is attributed an id in UUID format
+    And this task run has not been provisioned yet and is therefore in state "<task_run_initial_state>"
+    When a user calls the endpoint with JSON "<payload>"
+    Then the value "<param1_value>" is saved and associated with parameter "<param1_name>" in the database
+    And a input file named "<param1_name>" is created in the task run storage "task-run-"+UUID with content "<param1_file_content>"
+    And the value "<param2_value>" is saved and associated with parameter "<param2_name>" in the database
+    And a input file named "<param2_name>" is created in the task run storage "task-run-"+UUID with content "<param2_file_content>"
+    And the task run states changes to "<task_run_new_state>" because the task is now completely provisioned
+    And the App Engine returns a '200 OK' HTTP response with the updated task run information as JSON payload
+
+    Examples:
+      | task_namespace                                    | task_version | param1_name | param1_type | param1_value | param1_validation_rule | param2_name | param2_type | param2_value | payload                                                                                | task_run_initial_state | task_run_new_state | param1_file_content | param2_file_content |
+      | com.cytomine.app-engine.tasks.toy.add_two_numbers | 0.1.0        | num1        | integer     | 25           | lt: 53                 | num2        | integer     | 30           | [{\"param_name\": \"num1\", \"value\": 25}, {\"param_name\": \"num2\", \"value\": 30}] | CREATED                | PROVISIONED        | 25                  | 30                  |
+
+  Scenario Outline: failed batch provisioning of a task run with invalid parameter value
+
+  See "src/main/resources/spec/api/openapi_spec_v0.1.0.yml" file, in particular the paths:
+  - '/task-runs/{run_id}/input-provisions'
+
+    Given a task has been successfully uploaded
+    And this task has "<task_namespace>" and "<task_version>"
+    And this task has two input parameters
+    And the first parameter is "<param1_name>" of type "<param1_type>" with a validation rule "<param1_validation_rule>"
+    And the second parameter is "<param2_name>" of type "<param2_type>" without a validation rule
+    And a task run has been created for this task
+    And this task run is attributed an id in UUID format
+    And this task run has not been provisioned yet and is therefore in state "<task_run_initial_state>"
+    When a user calls the endpoint with JSON "<payload>"
+    Then the App Engine returns an "400" bad request error response with "<error_payload>"
+    And the task run state remains as "<task_run_initial_state>" since not all parameters are provisioned yet
+    And the App Engine does not record "<param1_value>" nor "<param2_value>" in file storage or database
+
+    Examples:
+      | task_namespace                                    | task_version | param1_name | param1_type  | param1_validation_rule | param2_name | param2_type  | payload                                                                                | task_run_initial_state | error_payload                                                                                                                                                                                                          | param1_value | param2_value|
+      | com.cytomine.app-engine.tasks.toy.add_two_numbers | 0.1.0        | num1        | integer      | lt: 53                 | num2        | integer      | [{\"param_name\": \"num1\", \"value\": 75}, {\"param_name\": \"num2\", \"value\": 30}] | CREATED                | {\"error_code\": \"APPE-internal-batch-request-error\", \"message\": \"Error(s) occurred during a handling of a batch request.\", \"details\": {\"errors\": [{\"error_code\": \"APPE-internal-request-validation-error\", \"message\": \"value must be less than defined constraint\", \"details\": { \"param_name\": \"num1\"}}]}} | 75           | 30          |
+
+  Scenario Outline: failed single parameter provisioning with unknown parameter name
+
+  See "src/main/resources/spec/api/openapi_spec_v0.1.0.yml" file, in particular the paths:
+  - '/task-runs/{run_id}/input-provisions/{parameter}'
+
+    Given a task has been successfully uploaded
+    And this task has "<task_namespace>" and "<task_version>"
+    And a task run has been created for this task
+    And this task run is attributed an id in UUID format
+    And this task run has not been provisioned yet and is therefore in state "<task_run_initial_state>"
+    But this task has no parameter named "<unknown_param_name>"
+    When a user calls the provisioning endpoint with JSON "<payload>" to provision parameter "<unknown_param_name>" with <unknown_param_value>
+    Then the App Engine returns an "404" not found error response with "<error_payload>"
+    And the task run state remains as "<task_run_initial_state>" since not all parameters are provisioned yet
+
+    Examples:
+      | task_namespace                                    | task_version | unknown_param_value  | unknown_param_name | payload                                 | task_run_initial_state | error_payload                                                                                                           |
+      | com.cytomine.app-engine.tasks.toy.add_two_numbers | 0.1.0        | 5                    | n_unknown          | {\"value\": 5, \"param_name\": \"n_unknown\"} | CREATED                | {\"error_code\": \"APPE-internal-parameter-not-found\", \"message\": \"parameter not found\", \"details\": {\"param_name\": \"n_unknown\"}} |
+
+  Scenario Outline: successful re-provisioning of a parameter for a task run
+
+  See "src/main/resources/spec/api/openapi_spec_v0.1.0.yml" file, in particular the paths:
+  - '/task-runs/{run_id}/input-provisions'
+
+    Given a task has been successfully uploaded
+    And this task has "<task_namespace>" and "<task_version>"
+    And this task has at least one input parameter "<param_name>" of type "<param_type>"
+    And no validation rules are defined for this parameter
+    And a task run has been created and provisioned with parameter "<param_name>" value "<initial_param_value>" for this task
+    And this task run is attributed an id in UUID format
+    And this task run is in state "<task_run_state>"
+    And the file named "<param_name>" in the task run storage "task-run-"+UUID has content "<param_file_initial_content>"
+    When a user calls the provisioning endpoint with JSON "<payload>" to provision parameter "<param_name>" with <new_param_value>
+    Then the value of parameter "<param_name>" is updated to "<new_param_value>" in the database
+    And the input file named "<param_name>" is updated in the task run storage "task-run-"+UUID with content "<param_file_new_content>"
+    And the task run state remains unchanged and set to "<task_run_state>"
+    And the App Engine returns a '200 OK' HTTP response with the updated task run information as JSON payload
+
+    Examples:
+      | task_namespace                                    | task_version | param_name | param_type | initial_param_value | new_param_value | payload                                   | task_run_state | param_file_initial_content | param_file_new_content |
+      | com.cytomine.app-engine.tasks.toy.add_two_numbers | 0.1.0        | num1       | integer    | 5                   | 10              | {\"param_name\": \"num1\", \"value\": 10} | CREATED        | 5                          | 10                     |
+      | com.cytomine.app-engine.tasks.toy.add_two_numbers | 0.1.0        | num2       | integer    | 20                  | 30              | {\"param_name\": \"num2\", \"value\": 30} | PROVISIONED    | 20                         | 30                     |
+
+  # TODO failed re-provisioning of a task of which the state is not one of {'CREATED', 'PROVISIONED'}

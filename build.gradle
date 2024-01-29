@@ -1,0 +1,190 @@
+import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
+
+buildscript {
+    repositories {
+        mavenLocal()
+        mavenCentral()
+    }
+    dependencies {
+        classpath "org.openapitools:openapi-generator-gradle-plugin:7.0.1"
+    }
+}
+
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.1.3'
+    id 'io.spring.dependency-management' version '1.1.3'
+    id "org.openapi.generator" version "7.0.1"
+    id 'jacoco'
+    id 'maven-publish'
+    id 'org.liquibase.gradle' version '2.2.0'
+}
+
+apply plugin: "org.openapi.generator"
+
+publishing {
+    repositories {
+        mavenLocal()
+    }
+    publications {
+        maven(MavenPublication) {
+            from(components.java)
+        }
+    }
+}
+
+bootJar {
+    archiveFileName = 'cytomine-app-engine.jar'
+}
+
+group = 'be.cytomine'
+version = 'ce-0.0.0-SNAPSHOT' // do not modify this, it will be replace during build (ci)
+
+java {
+    sourceCompatibility = '17'
+}
+
+configurations {
+    liquibaseRuntime.extendsFrom runtimeClasspath
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+
+}
+
+ext {
+    mapstructVersion = "1.5.5.Final"
+    lombokVersion = "1.18.28"
+    lombokMapstructBindingVersion = "0.2.0"
+}
+
+springBoot {
+    mainClass = "be.cytomine.appengine.AppEngineApplication"
+}
+
+dependencies {
+    implementation "org.mapstruct:mapstruct:${mapstructVersion}", "org.projectlombok:lombok:${lombokVersion}"
+    annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}", "org.projectlombok:lombok:${lombokVersion}", "org.projectlombok:lombok-mapstruct-binding:${lombokMapstructBindingVersion}"
+
+
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'jakarta.persistence:jakarta.persistence-api:3.1.0'
+    implementation 'com.fasterxml.jackson.core:jackson-core:2.16.0'
+    // TODO : fix CVE-2022-41854, Score 6.5 medium vulnerability -> risk of denial of service
+    // TODO : fix CVE-2022-1471, Score 9.8 high vulnerability -> remote code execution
+    implementation group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-yaml', version: '2.16.0'
+    implementation 'org.hibernate:hibernate-core:6.3.0.Final'
+    implementation 'io.hypersistence:hypersistence-utils-hibernate-60:3.5.2'
+    implementation 'org.liquibase:liquibase-core:4.25.0'
+    runtimeOnly 'org.postgresql:postgresql'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+    compileOnly("org.springframework.boot:spring-boot-devtools")
+
+    implementation group: 'com.networknt', name: 'json-schema-validator', version: '1.0.87'
+    implementation group: 'org.apache.commons', name: 'commons-compress', version: '1.24.0'
+    implementation group: 'org.apache.tika', name: 'tika-core', version: '2.9.1'
+
+    // Cucumber dependencies
+    testImplementation 'org.assertj:assertj-core:3.4.1'
+    testImplementation 'io.cucumber:cucumber-java:6.10.4'
+    testImplementation 'io.cucumber:cucumber-junit:6.10.4'
+    implementation group: 'io.cucumber', name: 'cucumber-spring', version: '6.10.4'
+    testImplementation 'org.junit.vintage:junit-vintage-engine:5.7.2'
+
+    // OpenAPI generated client from Maven local repository for testing
+    implementation group: 'be.cytomine.appengine', name: 'appengine-client', version: '0.1.0'
+    // registry client
+    implementation 'com.cytomine:registry-client:2.0.0'
+    // liquibase
+    liquibaseRuntime 'info.picocli:picocli:4.7.5'
+
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+// Jacoco coverage report is always generated after tests run
+test.finalizedBy jacocoTestReport
+
+jacocoTestReport {
+}
+
+// Cucumber as a test implementation
+configurations {
+    cucumberRuntime {
+        extendsFrom testImplementation
+    }
+}
+
+// run cucumber to verify features
+tasks.register('cucumber') {
+    group "verification"
+    dependsOn assemble, testClasses
+    doLast {
+        javaexec {
+            main = "io.cucumber.core.cli.Main"
+            classpath = configurations.cucumberRuntime + sourceSets.main.output + sourceSets.test.output
+            args = ['--plugin', 'pretty', '--glue', 'be.cytomine.appengine', 'src/test/resources']
+        }
+    }
+}
+// OpenAPI generator Settings
+// generate Java client compatible with the AppEngine API
+tasks.register('generateOpenAPIAppEngineClient', GenerateTask) {
+    generatorName = "java"
+    inputSpec = "$rootDir/src/test/resources/spec/api/openapi_spec.v0.1.0.yml".toString()
+    outputDir = "$buildDir/api-client-generated".toString()
+    apiPackage = "be.cytomine.appengine.openapi.api"
+    invokerPackage = "be.cytomine.appengine.openapi.invoker"
+    modelPackage = "be.cytomine.appengine.openapi.model"
+    groupId = 'be.cytomine.appengine'
+    id = 'appengine-client'
+    version = "0.1.0"
+    skipValidateSpec = true
+    logToStderr = true
+    cleanupOutput = true
+    library = "jersey3"
+}
+
+// task to publish the App Engine Client to the local Maven repository in ~/.m2/repository
+tasks.register('publishOpenAPIAppEngineClientToMavenLocal', Exec) {
+    dependsOn generateOpenAPIAppEngineClient
+    workingDir = './build/api-client-generated'
+    commandLine 'gradle', 'publishToMavenLocal'
+}
+
+// validate the OpenAPI specs
+openApiValidate {
+    inputSpec = "$rootDir/src/test/resources/spec/api/openapi_spec.v0.1.0.yml".toString()
+}
+// start the compilation after the client is generated
+tasks.compileJava.dependsOn publishOpenAPIAppEngineClientToMavenLocal
+
+// liquibase activities
+liquibase {
+    activities {
+        main {
+            changelogFile 'src/test/resources/master-changelog.yml'
+            url 'jdbc:postgresql://localhost:5432/appengine'
+            username 'appengine'
+            password 'password'
+            referenceUrl 'jdbc:postgresql://localhost:5432/appengine'
+            referenceUsername 'appengine'
+            referencePassword 'password'
+        }
+    }
+}
+
+

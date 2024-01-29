@@ -1,0 +1,55 @@
+server:
+  tomcat:
+         basedir: /tmp/appengine
+spring:
+  servlet:
+    multipart:
+      max-file-size: 15GB
+      max-request-size: 15GB
+      location: /tmp/appengine/uploads
+  datasource:
+    password: ${DB_PASSWORD:password}
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:appengine}
+    username: ${DB_USERNAME:appengine}
+  hibernate:
+    ddl-auto: drop-create
+    show-sql: true
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        jdbc:
+          time_zone: UTC
+    generate-ddl: true
+  liquibase:
+    enabled: true
+    change-log: classpath:master-changelog.yml
+  security:
+    basic:
+      enabled: false
+    ignored: /api/v1/**
+  management:
+    security:
+      enabled: false
+  jackson:
+    serialization:
+      fail-on-empty-beans: false
+storage:
+  impl: ${STORAGE_IMPL:default} # possible values [default]
+registry:
+  impl: ${REGISTRY_IMPL:docker} # possible values [docker,default]
+scheduler:
+  impl: default # possible values [default]
+registry-client:
+  authenticated: false
+  user: user #ignored
+  password: password #ignored
+  host: ${REGISTRY_HOST:registry}
+  port: ${REGISTRY_PORT:5000}
+  scheme: ${REGISTRY_SCHEME:http}
+logging:
+  level:
+    root: ERROR
+    be.cytomine.appengine: INFO
+app-engine:
+  version: ce-0.0.0 # do not modify this, it will be replaced during build (ci)
