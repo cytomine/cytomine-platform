@@ -68,9 +68,11 @@ if [ $(date "+%d") -eq 01 ] || [ ! -f "$CURR_MONTH_BACKUP_TARGET_PATH" ]; then
   # If the current month backup exists, move it to the previous month
   if [ -f "$CURR_MONTH_BACKUP_TARGET_PATH" ]; then
     cp "$CURR_MONTH_BACKUP_TARGET_PATH" "$PREV_MONTH_BACKUP_TARGET_PATH"
+    echo "$(date) Archived old monthly backup '$CURR_MONTH_BACKUP_TARGET_PATH' as '$PREV_MONTH_BACKUP_TARGET_PATH'"
   fi
   # Update the current month backup with the daily backup
   cp "$BACKUP_TARGET_PATH" "$CURR_MONTH_BACKUP_TARGET_PATH"
+  echo "$(date) Archived new monthly backup as '$CURR_MONTH_BACKUP_TARGET_PATH'"
 fi
 
 echo "$(date) Backup completed successfully: $BACKUP_DIR"
