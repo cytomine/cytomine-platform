@@ -32,10 +32,8 @@ ARG POSTGIS_VERSION
 # set default superadmin user postgres + set defaults for component specific databass sdb and user
 ENV CYTOMINE_DB=docker
 ENV CYTOMINE_USER=docker
-ENV CYTOMINE_PASSWORD=docker
 ENV APPENGINE_DB=appengine
 ENV APPENGINE_USER=appengine
-ENV APPENGINE_PASSWORD=appengine
 
 # database init. Warning: those are only run if data volume is empty
 RUN mkdir -p /etc/postgres/conf.d /docker-entrypoint-cytomine.d/ /docker-entrypoint-initdb.d/ /checks/
