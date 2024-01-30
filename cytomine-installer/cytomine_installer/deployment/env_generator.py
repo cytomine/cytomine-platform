@@ -155,7 +155,7 @@ class SecretGenerator(EnvValueGenerator):
     def __init__(self) -> None:
         super().__init__()
         self._base_alphabet = (
-                string.ascii_letters + string.digits + self.ALLOWED_PUNCTUATION
+            string.ascii_letters + string.digits + self.ALLOWED_PUNCTUATION
         )
 
     def _resolve(self, field):
