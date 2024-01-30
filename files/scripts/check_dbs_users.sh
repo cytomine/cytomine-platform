@@ -11,7 +11,7 @@ wait_for_db() {
 
   echo $0 "Postgres is up - executing command"
 
-  sh /checks/check-user.sh "check-cytomine" "$CYTOMINE_USER" "$CYTOMINE_PASSWORD" "$CYTOMINE_DB" "1"
+  sh /checks/check-user.sh "check-cytomine" "$POSTGRES_USER" "$POSTGRES_PASSWORD" "$POSTGRES_DB" "1"
   sh /checks/check-user.sh "check-appengine" "$APPENGINE_USER" "$APPENGINE_PASSWORD" "$APPENGINE_DB" "0"
 }
 

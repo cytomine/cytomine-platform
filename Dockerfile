@@ -30,8 +30,6 @@ ARG IMAGE_REVISION
 ARG POSTGIS_VERSION
 
 # set default superadmin user postgres + set defaults for component specific databass sdb and user
-ENV CYTOMINE_DB=docker
-ENV CYTOMINE_USER=docker
 ENV APPENGINE_DB=appengine
 ENV APPENGINE_USER=appengine
 
