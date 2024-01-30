@@ -149,10 +149,11 @@ class SecretGenerator(EnvValueGenerator):
     FIELD_LENGTH = "length"
     FIELD_WHITELIST = "whitelist"
     FIELD_BLACKLIST = "blacklist"
+    EXCEPT_PUNCTUATION = "!#%()*+, -.=?^_"
 
     def __init__(self) -> None:
         super().__init__()
-        self._base_alphabet = string.ascii_letters + string.digits + string.punctuation
+        self._base_alphabet = string.ascii_letters + string.digits + self.EXCEPT_PUNCTUATION
 
     def _resolve(self, field):
         length = field.get(self.FIELD_LENGTH, 0)
