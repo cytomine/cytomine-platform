@@ -1,6 +1,6 @@
 server:
   tomcat:
-         basedir: /tmp/appengine
+    basedir: /tmp/appengine
 spring:
   servlet:
     multipart:
@@ -27,7 +27,7 @@ spring:
   security:
     basic:
       enabled: false
-    ignored: /api/v1/**
+    ignored: ${API_PREFIX:/api/}\*\*
   management:
     security:
       enabled: false
@@ -53,3 +53,5 @@ logging:
     be.cytomine.appengine: INFO
 app-engine:
   version: ce-0.0.0 # do not modify this, it will be replaced during build (ci)
+  api_version: v1
+  api_prefix: ${API_PREFIX:/api/}

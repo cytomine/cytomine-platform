@@ -70,6 +70,15 @@ public class ReadTaskStepDefinitions {
     @Autowired
     FileStorageHandler fileStorageHandler;
 
+    @Value("${app-engine.api_prefix}")
+    private String apiPrefix;
+
+    @Value("${app-engine.api_version}")
+    private String apiVersion;
+
+    private String buildAppEngineUrl() {
+        return "http://localhost:" + port + apiPrefix + apiVersion;
+    }
 
     @Given("a set of valid tasks has been successfully uploaded")
     public void a_set_of_valid_tasks_has_been_successfully_uploaded() {
@@ -200,7 +209,7 @@ public class ReadTaskStepDefinitions {
     public void user_calls_the_endpoint_excluding_version_prefix_e_g_with_http_method(String uri, String string2, String method) throws ApiException {
         // use rest app engine client to list tasks
         ApiClient defaultClient = Configuration.getDefaultApiClient();
-        defaultClient.setBasePath("http://localhost:" + port + "/api/v1");
+        defaultClient.setBasePath(buildAppEngineUrl());
         appEngineApi = new DefaultApi(defaultClient);
         tasks = appEngineApi.tasksGet();
 
@@ -468,7 +477,7 @@ public class ReadTaskStepDefinitions {
     public void user_calls_the_endpoint_with_namespace_and_version_http_method_get(String uri, String namespace, String version) throws ApiException {
         // call the correct endpoint based on URI
         ApiClient defaultClient = Configuration.getDefaultApiClient();
-        defaultClient.setBasePath("http://localhost:" + port + "/api/v1");
+        defaultClient.setBasePath(buildAppEngineUrl());
         appEngineApi = new DefaultApi(defaultClient);
         description = appEngineApi.tasksNamespaceVersionGet(namespace, version);
 
@@ -478,7 +487,7 @@ public class ReadTaskStepDefinitions {
     public void user_calls_the_endpoint_with_uuid_http_method_get(String uri, String uuid) throws ApiException {
         // call the correct endpoint based on URI
         ApiClient defaultClient = Configuration.getDefaultApiClient();
-        defaultClient.setBasePath("http://localhost:" + port + "/api/v1");
+        defaultClient.setBasePath(buildAppEngineUrl());
         appEngineApi = new DefaultApi(defaultClient);
         description = appEngineApi.tasksIdGet(UUID.fromString(uuid));
 
@@ -501,7 +510,7 @@ public class ReadTaskStepDefinitions {
     public void user_calls_the_endpoint_with_and_http_method_get(String endpoint, String namespace, String version) throws ApiException {
         // call the correct endpoint based on URI
         ApiClient defaultClient = Configuration.getDefaultApiClient();
-        defaultClient.setBasePath("http://localhost:" + port + "/api/v1");
+        defaultClient.setBasePath(buildAppEngineUrl());
         appEngineApi = new DefaultApi(defaultClient);
         inputParameters = appEngineApi.tasksNamespaceVersionInputsGet(namespace, version);
     }
@@ -512,7 +521,7 @@ public class ReadTaskStepDefinitions {
     public void user_calls_the_outputs_endpoint_with_and_http_method_get(String endpoint, String namespace, String version) throws ApiException {
         // call the correct endpoint based on URI
         ApiClient defaultClient = Configuration.getDefaultApiClient();
-        defaultClient.setBasePath("http://localhost:" + port + "/api/v1");
+        defaultClient.setBasePath(buildAppEngineUrl());
         appEngineApi = new DefaultApi(defaultClient);
         outputParameters = appEngineApi.tasksNamespaceVersionOutputsGet(namespace, version);
     }
@@ -521,7 +530,7 @@ public class ReadTaskStepDefinitions {
     public void user_calls_the_endpoint_with_http_method_get(String endpoint, String uuid) throws ApiException {
         // call the correct endpoint based on URI
         ApiClient defaultClient = Configuration.getDefaultApiClient();
-        defaultClient.setBasePath("http://localhost:" + port + "/api/v1");
+        defaultClient.setBasePath(buildAppEngineUrl());
         appEngineApi = new DefaultApi(defaultClient);
         inputParameters = appEngineApi.tasksIdInputsGet(UUID.fromString(uuid));
     }
@@ -530,7 +539,7 @@ public class ReadTaskStepDefinitions {
     public void user_calls_the_outputs_endpoint_with_http_method_get(String endpoint, String uuid) throws ApiException {
         // call the correct endpoint based on URI
         ApiClient defaultClient = Configuration.getDefaultApiClient();
-        defaultClient.setBasePath("http://localhost:" + port + "/api/v1");
+        defaultClient.setBasePath(buildAppEngineUrl());
         appEngineApi = new DefaultApi(defaultClient);
         outputParameters = appEngineApi.tasksIdOutputsGet(UUID.fromString(uuid));
     }
@@ -542,7 +551,7 @@ public class ReadTaskStepDefinitions {
         // download the descriptor.yml
         // call the correct endpoint based on URI
         ApiClient defaultClient = Configuration.getDefaultApiClient();
-        defaultClient.setBasePath("http://localhost:" + port + "/api/v1");
+        defaultClient.setBasePath(buildAppEngineUrl());
         appEngineApi = new DefaultApi(defaultClient);
         descriptorYml = appEngineApi.tasksNamespaceVersionDescriptorYmlGet(namespace, version);
     }
@@ -572,7 +581,7 @@ public class ReadTaskStepDefinitions {
         // download the descriptor.yml
         // call the correct endpoint based on URI
         ApiClient defaultClient = Configuration.getDefaultApiClient();
-        defaultClient.setBasePath("http://localhost:" + port + "/api/v1");
+        defaultClient.setBasePath(buildAppEngineUrl());
         appEngineApi = new DefaultApi(defaultClient);
         descriptorYml = appEngineApi.tasksIdDescriptorYmlGet(UUID.fromString(uuid));
     }
@@ -625,7 +634,7 @@ public class ReadTaskStepDefinitions {
     public void user_calls_the_fetch_endpoint_excluding_version_prefix_e_g_with_http_method(String endpoint, String method) {
         // call the correct endpoint based on URI
         ApiClient defaultClient = Configuration.getDefaultApiClient();
-        defaultClient.setBasePath("http://localhost:" + port + "/api/v1");
+        defaultClient.setBasePath(buildAppEngineUrl());
         appEngineApi = new DefaultApi(defaultClient);
         // namespace and version
         try {

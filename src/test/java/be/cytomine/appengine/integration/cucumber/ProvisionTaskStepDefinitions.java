@@ -26,12 +26,12 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import org.junit.jupiter.api.Assertions;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootContextLoader;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.ContextConfiguration;
 
-import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
@@ -61,6 +61,16 @@ public class ProvisionTaskStepDefinitions {
 
     ApiException exception;
     private Input inputOne;
+
+    @Value("${app-engine.api_prefix}")
+    private String apiPrefix;
+
+    @Value("${app-engine.api_version}")
+    private String apiVersion;
+
+    private String buildAppEngineUrl() {
+        return "http://localhost:" + port + apiPrefix + apiVersion;
+    }
 
     @Given("a task has been successfully uploaded")
     public void a_task_has_been_successfully_uploaded() {
@@ -139,7 +149,7 @@ public class ProvisionTaskStepDefinitions {
     @When("user calls the endpoint {string} with HTTP method POST")
     public void user_calls_the_endpoint_excluding_version_prefix_e_g_with_http_method_post(String endpoint) {
         ApiClient defaultClient = Configuration.getDefaultApiClient();
-        defaultClient.setBasePath("http://localhost:" + port + "/api/v1");
+        defaultClient.setBasePath(buildAppEngineUrl());
         appEngineApi = new DefaultApi(defaultClient);
         try {
             if (endpoint.equalsIgnoreCase("/task/namespace/version/runs")) {
@@ -248,7 +258,7 @@ public class ProvisionTaskStepDefinitions {
     @When("a user calls the provisioning endpoint with JSON {string} to provision parameter {string} with {int}")
     public void a_user_calls_the_batch_provisioning_endpoint_put_task_runs_input_provisions_with_json_to_provision_parameter_my_input_with(String payload, String parameterName, int value) {
         ApiClient defaultClient = Configuration.getDefaultApiClient();
-        defaultClient.setBasePath("http://localhost:" + port + "/api/v1");
+        defaultClient.setBasePath(buildAppEngineUrl());
         appEngineApi = new DefaultApi(defaultClient);
         TaskRunInputProvisionInputBody body = new TaskRunInputProvisionInputBody();
         body.setParamName(parameterName);
@@ -333,7 +343,7 @@ public class ProvisionTaskStepDefinitions {
         ObjectMapper mapper = new ObjectMapper();
         JsonNode payload = mapper.readTree(jsonPayload);
         ApiClient defaultClient = Configuration.getDefaultApiClient();
-        defaultClient.setBasePath("http://localhost:" + port + "/api/v1");
+        defaultClient.setBasePath(buildAppEngineUrl());
         appEngineApi = new DefaultApi(defaultClient);
         List<TaskRunInputProvisionInputBody> provisionList = new ArrayList<>();
         if (payload.isArray()) {

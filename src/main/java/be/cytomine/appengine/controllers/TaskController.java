@@ -20,7 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.*;
 
 @RestController
-@RequestMapping(path = "/api/v1/")
+@RequestMapping(path = "${app-engine.api_prefix}${app-engine.api_version}/")
 public class TaskController {
 
     Logger logger = LoggerFactory.getLogger(TaskController.class);

@@ -17,7 +17,7 @@ import java.io.IOException;
 import java.util.List;
 
 @RestController
-@RequestMapping(path = "/api/v1/")
+@RequestMapping(path = "${app-engine.api_prefix}${app-engine.api_version}/")
 public class TaskRunController {
 
     Logger logger = LoggerFactory.getLogger(TaskRunController.class);
