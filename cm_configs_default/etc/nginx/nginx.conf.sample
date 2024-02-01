@@ -75,9 +75,16 @@ http {
             set $tmpimsuploadhost internal-ims-upload;
             proxy_pass http://$tmpimsuploadhost;
         }
+
         location /ims {
             set $tmpimspooledhost internal-ims-pooled;
             proxy_pass http://$tmpimspooledhost;
+        }
+
+        # Internal communication to App Engine from other internal micro-services
+        location /app-engine {
+            set $tmpappenginehost "$INTERNAL_URLS_APPENGINE";
+            proxy_pass http://$tmpappenginehost;
         }
 
         # Internal communication to CORE from other internal micro-services.
