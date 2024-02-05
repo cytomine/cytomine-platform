@@ -17,7 +17,7 @@
 ARG ENTRYPOINT_SCRIPTS_VERSION=1.3.0
 ARG IMAGE_VERSION
 ARG IMAGE_REVISION
-ARG NGINX_VERSION="1.22.1"
+ARG NGINX_VERSION="1.24"
 
 #######################################################################################
 ## Stage: entrypoint script. Use a multi-stage because COPY --from cannot interpolate variables
@@ -26,20 +26,20 @@ FROM cytomine/entrypoint-scripts:${ENTRYPOINT_SCRIPTS_VERSION} as entrypoint-scr
 ## Stage: nginx
 FROM nginx:${NGINX_VERSION}-alpine as nginx-server
 
-ENV IMAGES_BIOFORMAT="not provided"
 ENV IMAGES_CORE="not provided"
 ENV IMAGES_MONGO="not provided"
 ENV IMAGES_NGINX="not provided"
 ENV IMAGES_PIMS="not provided"
 ENV IMAGES_PIMS_CACHE="not provided"
 ENV IMAGES_POSTGIS="not provided"
-ENV IMAGES_RABBITMQ="not provided"
+ENV IMAGES_PROXY="not provided"
 ENV IMAGES_WEB_UI="not provided"
 ENV INTERNAL_URLS_CORE=core:8080
 ENV INTERNAL_URLS_IMS=pims:5000
 ENV INTERNAL_URLS_IMS2=pims:5000
 ENV INTERNAL_URLS_IMS3=pims:5000
 ENV INTERNAL_URLS_WEB_UI=web_ui
+ENV INTERNAL_URLS_APPENGINE=appengine
 ENV RESOLVER="127.0.0.11"
 ENV URLS_INTERNAL_PROXY=nginx
 ENV URLS_SCHEME=http
@@ -48,7 +48,7 @@ ENV VERSIONS_CYTOMINE_COMMERCIAL="not provided"
 ARG ENTRYPOINT_SCRIPTS_VERSION
 ARG IMAGE_VERSION
 ARG IMAGE_REVISION
-ARG NGINX_VERSION="1.22.1"
+ARG NGINX_VERSION
 
 LABEL org.opencontainers.image.authors='support@cytomine.com' \
       org.opencontainers.image.url='https://www.cytomine.org/' \
