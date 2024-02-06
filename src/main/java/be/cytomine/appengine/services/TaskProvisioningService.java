@@ -20,7 +20,6 @@ import be.cytomine.appengine.states.TaskRunState;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,11 +27,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayOutputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -190,15 +187,7 @@ public class TaskProvisioningService {
                 inputFound = true;
                 // determine input type
                 if (input.getType() instanceof IntegerType type) {
-                    // then validate the value with the constraints from type
-                    if (type.getConstraints().contains("gt") && provision.getValue() < type.getGt())
-                        throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_GT_VALIDATION_ERROR);
-                    if (type.getConstraints().contains("geq") && provision.getValue() <= type.getGeq())
-                        throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_GEQ_VALIDATION_ERROR);
-                    if (type.getConstraints().contains("lt") && provision.getValue() > type.getLt())
-                        throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_LT_VALIDATION_ERROR);
-                    if (type.getConstraints().contains("leq") && provision.getValue() >= type.getLeq())
-                        throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_LEQ_VALIDATION_ERROR);
+                    type.validate(provision.getValue());
                 }
             }
         }
@@ -321,43 +310,71 @@ public class TaskProvisioningService {
             throw new ProvisioningException(error);
         }
         Set<Output> runTaskOutputs = run.getTask().getOutputs();
-        List<TaskRunOutput> outputList = new ArrayList<>();
+        new ArrayList<>();
         logger.info("Posting Outputs Archive : unzipping...");
         try {
-            processOutputFiles(outputs, runTaskOutputs, run, runOptional, outputList);
+            List<TaskRunOutput> outputList = processOutputFiles(outputs, runTaskOutputs, run, runOptional);
+            run.setState(TaskRunState.FINISHED);
+            runRepository.saveAndFlush(run);
+            logger.info("Posting Outputs Archive : updated Run state to FINISHED");
+        return outputList;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        run.setState(TaskRunState.FINISHED);
-        runRepository.saveAndFlush(run);
-        logger.info("Posting Outputs Archive : updated Run state to FINISHED");
-        return outputList;
     }
 
-    private void processOutputFiles(MultipartFile outputs, Set<Output> runTaskOutputs, Run run, Optional<Run> runOptional, List<TaskRunOutput> outputList) throws IOException, ProvisioningException {
+    private List<TaskRunOutput> processOutputFiles(MultipartFile outputs, Set<Output> runTaskOutputs, Run run, Optional<Run> runOptional) throws IOException, ProvisioningException {
         // read files from the archive
         try (ZipArchiveInputStream multiPartFileZipInputStream = new ZipArchiveInputStream(outputs.getInputStream())) {
+            logger.info("Posting Outputs Archive : unzipped");
+            List<Output> remainingOutputs = new ArrayList<>(runTaskOutputs);
+            List<TaskRunOutput> taskRunOutputs = new ArrayList<>();
+
             ZipEntry ze;
             while ((ze = multiPartFileZipInputStream.getNextZipEntry()) != null) {
-                processOutputFile(runTaskOutputs, run, runOptional, outputList, ze, multiPartFileZipInputStream);
-            }
-            logger.info("Posting Outputs Archive : unzipped");
-        }
-    }
+                // look for output matching file name
+                Output currentOutput = null;
+                for (int i = 0; i < remainingOutputs.size(); i++) {
+                    currentOutput = remainingOutputs.get(i);
+                    if (currentOutput.getName().equals(ze.getName())) {
+                        remainingOutputs.remove(i);
+                        break;
+                    }
+                }
 
-    private void processOutputFile(Set<Output> runTaskOutputs, Run run, Optional<Run> runOptional, List<TaskRunOutput> outputList, ZipEntry ze, ZipArchiveInputStream multiPartFileZipInputStream) throws ProvisioningException, IOException {
-        String name = ze.getName();
-        name = validateOutput(runTaskOutputs, run, name);
-        if (name == null) return;
-        byte[] output = multiPartFileZipInputStream.readNBytes((int) ze.getSize());
-        int outputValue;
-        if (output != null) {
-            outputValue = Integer.parseInt(new String(output, getStorageCharset(charset)));
-            saveOutput(runOptional, name, outputValue);
-            storeOutputInFileStorage(run, runOptional, outputValue, name);
-            TaskRunOutput taskRunOutput = new TaskRunOutput("integer", outputValue, runOptional.get().getId(), name);
-            outputList.add(taskRunOutput);
+                // there's a file that do not match any output parameter
+                if (currentOutput == null) {
+                    AppEngineError error = ErrorBuilder.build(ErrorCode.INTERNAL_UNKNOWN_OUTPUT);
+                    logger.info("Posting Outputs Archive : output invalid (unknown output)");
+                    run.setState(TaskRunState.FAILED);
+                    runRepository.saveAndFlush(run);
+                    logger.info("Posting Outputs Archive : updated Run state to FAILED");
+                    throw new ProvisioningException(error);
+                }
+
+                // read file
+                // TODO make this more generic to support multiple types
+                String outputName = currentOutput.getName();
+                byte[] rawOutput = multiPartFileZipInputStream.readNBytes((int) ze.getSize());
+                String output = new String(rawOutput, getStorageCharset(charset));
+                Integer outputValue = Integer.parseInt(output.trim());
+                saveOutput(runOptional, outputName, outputValue);
+                storeOutputInFileStorage(run, runOptional, outputValue, outputName);
+                TaskRunOutput taskRunOutput = new TaskRunOutput("integer", outputValue, run.getId(), outputName);
+                taskRunOutputs.add(taskRunOutput);
+            }
+
+            if (remainingOutputs.size() > 0) {
+                AppEngineError error = ErrorBuilder.build(ErrorCode.INTERNAL_MISSING_OUTPUTS);
+                logger.info("Posting Outputs Archive : output invalid (missing outputs)");
+                run.setState(TaskRunState.FAILED);
+                runRepository.saveAndFlush(run);
+                logger.info("Posting Outputs Archive : updated Run state to FAILED");
+                throw new ProvisioningException(error);
+            }
+
             logger.info("Posting Outputs Archive : posted");
+            return taskRunOutputs;
         }
     }
 
@@ -390,34 +407,6 @@ public class TaskProvisioningService {
             integerResultRepository.saveAndFlush(result);
         }
         logger.info("Posting Outputs Archive : saved...");
-    }
-
-    @Nullable
-    private String validateOutput(Set<Output> runTaskOutputs, Run run, String name) throws ProvisioningException {
-        if (name.endsWith("/")) {
-            return null;
-        } else {
-            name = name.substring(name.lastIndexOf('/') + 1); // get the name of the file without the path
-            logger.info("Posting Outputs Archive : validating output...");
-            boolean outputFound = false;
-            for (Output runOutput : runTaskOutputs) {
-                if (runOutput.getName().equalsIgnoreCase(name)) {
-                    outputFound = true;
-                    break;
-                }
-
-            }
-            if (!outputFound) {
-                AppEngineError error = ErrorBuilder.build(ErrorCode.INTERNAL_INVALID_OUTPUT);
-                logger.info("Posting Outputs Archive : output invalid");
-                run.setState(TaskRunState.FAILED);
-                runRepository.saveAndFlush(run);
-                logger.info("Posting Outputs Archive : updated Run state to FAILED");
-                throw new ProvisioningException(error);
-            }
-            logger.info("Posting Outputs Archive : output valid");
-        }
-        return name;
     }
 
     private static boolean notInOneOfSchedulerManagedStates(Run run) {

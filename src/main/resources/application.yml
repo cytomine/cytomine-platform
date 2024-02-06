@@ -1,6 +1,7 @@
 server:
   tomcat:
     basedir: /tmp/appengine
+  port: ${PORT:8080}
 spring:
   servlet:
     multipart:

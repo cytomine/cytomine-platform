@@ -19,7 +19,7 @@ inputs:
     display_name: A
     type:
       id: integer
-      le: 2
+      lt: 2
     description: First operand
   b:
     display_name: B

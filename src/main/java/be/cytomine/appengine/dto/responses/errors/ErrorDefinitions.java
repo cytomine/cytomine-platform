@@ -25,6 +25,8 @@ public class ErrorDefinitions {
         codes.put(ErrorCode.INTERNAL_INVALID_TASK_RUN_STATE, new MessageCode("APPE-internal-task-run-state-error", "run is in invalid state"));
         codes.put(ErrorCode.INTERNAL_NOT_PROVISIONED, new MessageCode("APPE-internal-task-run-state-error", "not provisioned"));
         codes.put(ErrorCode.INTERNAL_INVALID_OUTPUT, new MessageCode("APPE-internal-task_run-invalid-output-archive", "invalid outputs in archive"));
+        codes.put(ErrorCode.INTERNAL_MISSING_OUTPUTS, new MessageCode("APPE-internal-task-run-missing-outputs", "some outputs are missing in the archive"));
+        codes.put(ErrorCode.INTERNAL_UNKNOWN_OUTPUT, new MessageCode("APPE-internal-task-run-unknown-output", "unexpected output, did not match an actual task output"));
         codes.put(ErrorCode.UKNOWN_STATE, new MessageCode("APPE-internal-task-run-state-error", "unknown state in transition request"));
         codes.put(ErrorCode.STORAGE_STORING_INPUT_FAILED, new MessageCode("APPE-storage-storing-input-failed", " failed to store input file in storage service"));
         codes.put(ErrorCode.STORAGE_CREATING_STORAGE_FAILED, new MessageCode("APPE-storage-storage-creation-error", "creating storage failed in storage service"));

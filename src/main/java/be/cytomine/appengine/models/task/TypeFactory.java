@@ -1,9 +1,10 @@
 package be.cytomine.appengine.models.task;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
+import be.cytomine.appengine.dto.inputs.task.types.integer.IntegerTypeConstraint;
+
+import org.jetbrains.annotations.NotNull;
 
 public class TypeFactory {
 
@@ -29,22 +30,15 @@ public class TypeFactory {
     @NotNull
     private static IntegerType createIntegerType(JsonNode typeNode, String typeId) {
         IntegerType type = new IntegerType();
-        type.setConstraints(new ArrayList<String>());
-        if (typeNode.get("lt") != null){
-            type.setLt(typeNode.get("lt").asInt());
-            type.getConstraints().add("lt");
-        }
-        if (typeNode.get("gt") != null){
-            type.setGt(typeNode.get("gt").asInt());
-            type.getConstraints().add("gt");}
-        if (typeNode.get("let") != null){
-            type.setLt(typeNode.get("leq").asInt());
-            type.getConstraints().add("leq");
-        }
-        if (typeNode.get("get") != null){
-            type.setLt(typeNode.get("geq").asInt());
-            type.getConstraints().add("geq");}
         type.setId(typeId);
+
+        for (IntegerTypeConstraint constraint : IntegerTypeConstraint.values()) {
+            String constraintStringKey = constraint.getStringKey();
+            if (typeNode.has(constraintStringKey)) {
+                type.setConstraint(constraint, typeNode.get(constraintStringKey).asInt());
+            }
+        }
+
         return type;
     }
 }

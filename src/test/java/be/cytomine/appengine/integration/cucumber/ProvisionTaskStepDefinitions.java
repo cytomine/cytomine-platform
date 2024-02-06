@@ -2,6 +2,7 @@ package be.cytomine.appengine.integration.cucumber;
 
 import be.cytomine.appengine.AppEngineApplication;
 import be.cytomine.appengine.dto.handlers.filestorage.Storage;
+import be.cytomine.appengine.dto.inputs.task.types.integer.IntegerTypeConstraint;
 import be.cytomine.appengine.dto.misc.TaskIdentifiers;
 import be.cytomine.appengine.exceptions.FileStorageException;
 import be.cytomine.appengine.handlers.FileData;
@@ -391,14 +392,10 @@ public class ProvisionTaskStepDefinitions {
         num1.setDescription("First number in sum operation");
         IntegerType inputType1_1 = new IntegerType();
         inputType1_1.setId(type);
-        List<String> constraints = new ArrayList<>();
-        constraints.add("lt");
         String[] ruleSet = validationRule.split(":");
-        if (ruleSet[0].equalsIgnoreCase("lt")) {
+        if (ruleSet[0].equalsIgnoreCase(IntegerTypeConstraint.LOWER_THAN.getStringKey())) {
             inputType1_1.setLt(Integer.parseInt(ruleSet[1].trim()));
-            constraints.add(ruleSet[1].trim());
         }
-        inputType1_1.setConstraints(constraints);
         num1.setType(inputType1_1);
 
 
