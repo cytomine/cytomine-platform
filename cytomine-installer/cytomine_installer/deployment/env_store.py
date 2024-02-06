@@ -6,7 +6,7 @@ import logging
 
 from cytomine_installer.deployment.util.trie import Trie
 
-from .errors import KeyAlreadyExistsError, UnknownValueTypeError
+from .errors import InvalidGlobalValue, KeyAlreadyExistsError, UnknownValueTypeError
 from .env_generator import EnvValueGeneratorFactory
 
 
@@ -86,7 +86,10 @@ class EnvStore(BaseEnvStore):
         if _type == EnvValueTypeEnum.CONSTANT:
             self._store[ns][key] = lambda: value
         elif _type == EnvValueTypeEnum.GLOBAL:
-            other_ns, other_key = value.split(".")
+            try:
+                other_ns, other_key = value.split(".")
+            except ValueError:
+                raise InvalidGlobalValue(ns, key, value)
             self._store[ns][key] = lambda: other_store.get_env(other_ns, other_key)
         elif _type == EnvValueTypeEnum.AUTOGENERATE:
             gen_factory = EnvValueGeneratorFactory()
