@@ -3,7 +3,6 @@ stages:
   - test
   - build
   - publish
-  - clean
 
 # variable to register in project:
 # - DOCKERHUB_URL: url of dockerhub (e.g. docker.io)
@@ -142,20 +141,3 @@ publish-python-package:
         export TWINE_PASSWORD=$CI_JOB_TOKEN
       fi
     - twine upload dist/cytomine-pims-*.tar.gz --repository-url $TARGET_PYTHON_REPO
-
-# cleaning temporary docker images
-clean-docker-images:
-  stage: clean
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:latest
-  rules:
-    - when: always
-  needs:
-    - job: publish-docker-image
-      artifacts: false
-      optional: true
-    - job: run-pytest
-      artifacts: false
-  script:
-    # '|| true' so that job proceeds even if an image does not exist
-    - docker rmi $DOCKER_IMAGE_NAME_TMP_BUILD || true
-    - docker rmi $DOCKER_IMAGE_NAME_FOR_TESTS || true
