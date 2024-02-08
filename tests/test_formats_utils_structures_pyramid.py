@@ -11,9 +11,12 @@
 #  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  * See the License for the specific language governing permissions and
 #  * limitations under the License.
-from pims.formats.utils.structures.pyramid import Pyramid, PyramidTier
+from collections import defaultdict
+from pims.formats.utils.structures.pyramid import Pyramid, PyramidTier, normalized_pyramid
 from pims.processing.region import Region
+from unittest import TestCase
 
+from pims.api.utils.output_parameter import safeguard_output_dimensions
 
 def test_pyramid_tier():
     tier = PyramidTier(1000, 2000, 256, Pyramid())
@@ -62,3 +65,41 @@ def test_pyramid_tier_indexes():
 
     assert tier.get_ti_tile(0) == Region(0, 0, 256, 256)
     assert tier.get_ti_tile(31) == Region(1792, 768, 1000 - 768, 2000 - 1792)
+
+class TestTierSelection(TestCase):
+  def test_most_appropriate_tier_selection(self):
+
+    ## Create pyramid based on image VSI `089-03 S1.vsi`
+    results = {
+      0: {"level": 0, "chosen_tier_level": 0, "factor": 1.0, "chosen_tier_factor": 1.0},
+      1: {"level": 1, "chosen_tier_level": 1, "factor": 1.999986309621598, "chosen_tier_factor": 1.999986309621598},
+      2: {"level": 2, "chosen_tier_level": 2, "factor": 3.9999470470657252, "chosen_tier_factor": 3.99999819207462},
+      3: {"level": 3, "chosen_tier_level": 3, "factor": 7.999572778283946, "chosen_tier_factor": 8.000215439200636},
+      4: {"level": 4, "chosen_tier_level": 4, "factor": 15.997860468473235, "chosen_tier_factor": 16.00043087840127},
+      5: {"level": 5, "chosen_tier_level": 5, "factor": 31.994084756943614, "chosen_tier_factor": 32.004367597550605},
+      6: {"level": 6, "chosen_tier_level": 6, "factor": 63.967618786687154, "chosen_tier_factor": 64.00873519510121},
+      7: {"level": 7, "chosen_tier_level": 7, "factor": 127.99418419858422, "chosen_tier_factor": 127.99418419858422},
+      8: {"level": 8, "chosen_tier_level": 8, "factor": 255.6188345900474, "chosen_tier_factor": 256.35910229952833},
+      9: {"level": 9, "chosen_tier_level": 9, "factor": 509.76668415224106, "chosen_tier_factor": 512.7182045990567},
+      10: {"level": 10, "chosen_tier_level": 10, "factor": 1015.618102949682, "chosen_tier_factor": 1027.3776041666665},
+    }
+
+    p = normalized_pyramid(156418, 73043)
+    for reference_tier_index in range(0,p.n_levels):
+      tile_region =  p.get_tier_at(
+        reference_tier_index, 'LEVEL'
+      ).get_ti_tile(0) # Retrive first tile_region for each tier
+
+      req_size = tile_region.width, tile_region.height
+      out_size = safeguard_output_dimensions('SAFE_REJECT', 10000, *req_size)
+
+      width_scale = tile_region.true_width / out_size[0]
+      height_scale = tile_region.true_height / out_size[1]
+      factor = (width_scale + height_scale) / 2.0
+      chosen_tier = p.most_appropriate_tier_for_downsample_factor(factor)
+
+      self.assertAlmostEqual(reference_tier_index, results[reference_tier_index]["level"])
+      self.assertAlmostEqual(chosen_tier.level, results[reference_tier_index]["chosen_tier_level"])
+      self.assertAlmostEqual(factor, results[reference_tier_index]["factor"])
+      self.assertAlmostEqual(chosen_tier.average_factor, results[reference_tier_index]["chosen_tier_factor"])
+
