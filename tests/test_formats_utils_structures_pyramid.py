@@ -68,8 +68,6 @@ def test_pyramid_tier_indexes():
 
 class TestTierSelection(TestCase):
   def test_most_appropriate_tier_selection(self):
-
-    ## Create pyramid based on image VSI `089-03 S1.vsi`
     results = {
       0: {"level": 0, "chosen_tier_level": 0, "factor": 1.0, "chosen_tier_factor": 1.0},
       1: {"level": 1, "chosen_tier_level": 1, "factor": 1.999986309621598, "chosen_tier_factor": 1.999986309621598},
@@ -84,22 +82,25 @@ class TestTierSelection(TestCase):
       10: {"level": 10, "chosen_tier_level": 10, "factor": 1015.618102949682, "chosen_tier_factor": 1027.3776041666665},
     }
 
-    p = normalized_pyramid(156418, 73043)
-    for reference_tier_index in range(0,p.n_levels):
-      tile_region =  p.get_tier_at(
-        reference_tier_index, 'LEVEL'
-      ).get_ti_tile(0) # Retrive first tile_region for each tier
+    ## Create VSI pyramid based on image VSI `089-03 S1.vsi`
+    nb_of_levels = 11
+    vsi_pyramid = Pyramid()
+    width, height = 156418, 73043
+    vsi_pyramid.insert_tier(width, height, self._ets.tile_size)
+    for level in range(1, nb_of_levels):
+        # Stick to the way the vsi_pyramid tier are created in PIMS to avoid any difference between level calculation
+        width, height = round(width / 2), round(height / 2)
+        vsi_pyramid.insert_tier(width, height, self._ets.tile_size)
 
-      req_size = tile_region.width, tile_region.height
-      out_size = safeguard_output_dimensions('SAFE_REJECT', 10000, *req_size)
+    ## Create normalized pyramid based on image VSI `089-03 S1.vsi`
+    normalized_vsi_pyramid = normalized_pyramid(156418, 73043)
+    for reference_tier_index in range(0,normalized_vsi_pyramid.n_levels):
 
-      width_scale = tile_region.true_width / out_size[0]
-      height_scale = tile_region.true_height / out_size[1]
-      factor = (width_scale + height_scale) / 2.0
-      chosen_tier = p.most_appropriate_tier_for_downsample_factor(factor)
+      normalized_factor = normalized_vsi_pyramid.get_tier_at_level(reference_tier_index).average_factor
+      chosen_tier = vsi_pyramid.most_appropriate_tier_for_downsample_factor(normalized_factor)
 
       self.assertAlmostEqual(reference_tier_index, results[reference_tier_index]["level"])
       self.assertAlmostEqual(chosen_tier.level, results[reference_tier_index]["chosen_tier_level"])
-      self.assertAlmostEqual(factor, results[reference_tier_index]["factor"])
+      self.assertAlmostEqual(normalized_factor, results[reference_tier_index]["factor"])
       self.assertAlmostEqual(chosen_tier.average_factor, results[reference_tier_index]["chosen_tier_factor"])
 
