@@ -18,7 +18,7 @@ from pydantic import BaseModel, Field
 from pims import __api_version__, __version__
 from pims.config import ReadableSettings, get_settings
 
-router = APIRouter()
+router = APIRouter(prefix=get_settings().api_base_path)
 
 
 class ServerInfo(BaseModel):
