@@ -105,6 +105,7 @@ class TestTierSelection(TestCase):
       self.assertAlmostEqual(normalized_factor, results[reference_tier_index]["factor"])
       self.assertAlmostEqual(chosen_tier.average_factor, results[reference_tier_index]["chosen_tier_factor"])
 
+
   def test_even_dim(self):
     results = {
       0: {"level": 0, "chosen_tier_level": 0, "factor": 1.0, "chosen_tier_factor": 1.0},
