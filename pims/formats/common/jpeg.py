@@ -112,7 +112,9 @@ class JPEGFormat(AbstractFormat):
     @cached_property
     def need_conversion(self):
         imd = self.main_imd
-        return imd.width > 1024 or imd.height > 1024
+        # JPEG can only have 1 (L), 3 (RGB) or 4 (CMYK) channels.
+        # We do not support CMYK as is (subtractive colorspace) so it has to be converted
+        return imd.width > 1024 or imd.height > 1024 or imd.n_channels == 4
 
     @property
     def media_type(self):

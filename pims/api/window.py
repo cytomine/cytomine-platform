@@ -53,7 +53,7 @@ from pims.processing.region import Region
 from pims.utils.color import RED, WHITE
 from pims.utils.iterables import check_array_size_parameters, ensure_list
 
-router = APIRouter()
+router = APIRouter(prefix=get_settings().api_base_path)
 api_tags = ['Windows']
 cache_ttl = get_settings().cache_ttl_window
 

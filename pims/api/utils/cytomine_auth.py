@@ -19,6 +19,11 @@ from cytomine.models import Collection, Model
 from starlette.requests import Request
 
 from pims.api.exceptions import AuthenticationException, CytomineProblem
+from pims.config import get_settings
+
+
+def lreplace(string, old, new):
+    return new + string[len(old):] if string.startswith(old) else string
 
 
 def parse_authorization_header(raw_headers):
@@ -50,9 +55,11 @@ def parse_request_token(request: Request):
     query_string = request.url.query
     query_string = "?" + query_string if query_string is not None else ""
 
+    client_url_path = lreplace(request.url.path, get_settings().api_base_path, "")
+
     message = "{}\n{}\n{}\n{}\n{}{}".format(
         request.method, md5, content_type,
-        date, request.url.path, query_string
+        date, client_url_path, query_string
     )
     return message
 
