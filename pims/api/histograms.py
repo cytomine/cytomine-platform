@@ -27,11 +27,12 @@ from pims.api.utils.input_parameter import (
 from pims.api.utils.models import CollectionSize, HistogramType
 from pims.api.utils.parameter import imagepath_parameter
 from pims.api.utils.response import FastJsonResponse, response_list
+from pims.config import get_settings
 from pims.files.file import HISTOGRAM_STEM, Path
 from pims.processing.histograms.utils import argmax_nonzero, argmin_nonzero, build_histogram_file
 from pims.utils.iterables import ensure_list
 
-router = APIRouter()
+router = APIRouter(prefix=get_settings().api_base_path)
 api_tags = ['Histograms']
 
 

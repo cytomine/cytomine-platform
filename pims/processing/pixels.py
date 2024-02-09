@@ -353,7 +353,7 @@ class ImagePixels:
                 pixels = VipsImagePixels(pixels)
             elif type(pixels) is np.ndarray:
                 pixels = NumpyImagePixels(pixels)
-            elif type(pixels) is PILImage:
+            elif isinstance(pixels, PILImage):
                 pixels = NumpyImagePixels(pil_to_numpy(pixels))
             else:
                 raise ValueError(f"{type(pixels)} is invalid")

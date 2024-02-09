@@ -22,6 +22,8 @@ logger = logging.getLogger("pims.app")
 
 
 class ReadableSettings(BaseSettings):
+    api_base_path: str = ""  # if set, must start with /.
+
     root: str
     pending_path: str = "/tmp/uploaded"
     writing_path: str = "/data/pims/tmp"
@@ -29,6 +31,7 @@ class ReadableSettings(BaseSettings):
     default_image_size_safety_mode: str = "SAFE_REJECT"
     default_annotation_origin: str = "LEFT_TOP"
     output_size_limit: int = 10000
+    internal_url_core: str = "http://cytomine.local"
 
     cache_enabled: bool = True
     cache_url: str = "redis://pims-cache:6379"
