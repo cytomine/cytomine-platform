@@ -20,10 +20,8 @@ default:
     paths:
       - .npm/
 
-
 # TODO tests require a full cytomine instance to run, skip for now
 # Jenkins tests used to run against a full cytomine but with with fixed versions of components so it was not ideal
-
 
 build-js-package:
   image: node:14.16.1
