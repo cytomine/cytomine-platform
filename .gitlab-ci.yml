@@ -1,27 +1,19 @@
-# Secrets should never be versioned.
-include:
-- template: Security/Secret-Detection.gitlab-ci.yml
-# - template: Security/Dependency-Scanning.gitlab-ci.yml
-
 stages:
 - prepare
 - test
 - build
+
 
 variables:
   # docker images for test services
   TESTS_IMAGE_REGISTRY: 'registry:2.8.3'
   TESTS_IMAGE_POSTGIS: 'cytomine/postgis:1.4.0-dev.2'
 
+
 default:
   tags:
     - docker
 
-workflow:
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-      when: never
-    - when: always
 
 lint-dockerfiles:
   stage: prepare
@@ -38,6 +30,7 @@ lint-dockerfiles:
     # If the Dockerfile has not been changed, this job can be skipped
     - when: never
       allow_failure: true
+
 
 make-version-name:
   stage: prepare
@@ -56,6 +49,7 @@ make-version-name:
   artifacts:
     reports:
       dotenv: .env
+
 
 tests-storage-registry:
   stage: test
@@ -96,12 +90,6 @@ tests-storage-registry:
     paths:
       - build/reports/tests/cucumber/*.html
 
-# gemnasium-dependency_scanning:
-#   variables:
-#     CI_DEBUG_TRACE: "true"
-#   tags:
-#     - saas-linux-large-amd64
-#     - docker
 
 build-push-docker-image:
   stage: build
