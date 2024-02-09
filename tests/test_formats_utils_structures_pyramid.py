@@ -121,7 +121,6 @@ class TestTierSelection(TestCase):
       10: {"level": 10, "chosen_tier_level": 10, "factor": 1018.4133986928105, "chosen_tier_factor": 1025.5577648899935},
     }
 
-
     ## Create VSI pyramid based on image VSI `009-01 S1.vsi` 156416x73044 (even dimensions)
     nb_of_levels = 11
     tile_size = 512
