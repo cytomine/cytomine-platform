@@ -75,8 +75,8 @@ class ImageJTiffParser(TifffileParser):
     def parse_main_metadata(self) -> ImageMetadata:
         baseline = self.baseline_series
 
-        axes = baseline._axes_expanded  # noqa
-        shape = baseline._shape_expanded  # noqa
+        axes = baseline.get_axes(squeeze=False)  # noqa
+        shape = baseline.get_shape(squeeze=False)   # noqa
 
         imd = ImageMetadata()
         imd.width = shape[axes.index('X')]

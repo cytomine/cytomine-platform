@@ -68,7 +68,7 @@ class OmeXml(_OmeXml):
             metadata['Channels'].append(channel)
 
         dtype = imd.pixel_type
-        return super().addimage(dtype, shape, storedshape, axes, **metadata)
+        return super().addimage(dtype=dtype, shape=shape, storedshape=storedshape, axes=axes, **metadata)
 
 
 omexml_type = {
