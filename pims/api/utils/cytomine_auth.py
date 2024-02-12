@@ -19,6 +19,11 @@ from cytomine.models import Collection, Model
 from starlette.requests import Request
 
 from pims.api.exceptions import AuthenticationException, CytomineProblem
+from pims.config import get_settings
+
+
+def lreplace(string, old, new):
+    return new + string[len(old):] if string.startswith(old) else string
 
 
 def parse_authorization_header(raw_headers):
@@ -50,9 +55,11 @@ def parse_request_token(request: Request):
     query_string = request.url.query
     query_string = "?" + query_string if query_string is not None else ""
 
+    client_url_path = lreplace(request.url.path, get_settings().api_base_path, "")
+
     message = "{}\n{}\n{}\n{}\n{}{}".format(
         request.method, md5, content_type,
-        date, request.url.path, query_string
+        date, client_url_path, query_string
     )
     return message
 
@@ -65,24 +72,3 @@ def sign_token(private_key, token):
             hashlib.sha1
         ).digest()
     ).decode('utf-8')
-
-
-class ImageServer(Model):
-    pass
-
-
-class ImageServerCollection(Collection):
-    def __init__(self, filters=None, max=0, offset=0, **parameters):
-        super(ImageServerCollection, self).__init__(ImageServer, filters, max, offset)
-        self._allowed_filters = [None]
-        self.set_parameters(parameters)
-
-
-def get_this_image_server(host):
-    servers = ImageServerCollection().fetch()
-    this = servers.find_by_attribute("url", host)
-
-    if this is None:
-        raise CytomineProblem("This image server is not found on Cytomine core.")
-
-    return this

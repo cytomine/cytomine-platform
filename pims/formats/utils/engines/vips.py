@@ -17,7 +17,10 @@ from typing import Any, List, Optional, Union
 
 import numpy as np
 import pyvips.enums
-from pyvips import Image as VIPSImage, Size as VIPSSize  # noqa
+from pyvips import (
+    Image as VIPSImage,
+    Interpretation as VIPSInterpretation, Size as VIPSSize  # noqa
+)
 from pyvips.error import Error as VIPSError
 
 from pims.api.exceptions import MetadataParsingProblem
@@ -52,7 +55,7 @@ def get_vips_field(
 
 
 class VipsParser(ExifToolParser, AbstractParser):
-    ALLOWED_MODES = ('L', 'RGB')
+    ALLOWED_MODES = ('L', 'RGB', 'CMYK')
 
     def parse_main_metadata(self) -> ImageMetadata:
         image = cached_vips_file(self.format)
@@ -121,7 +124,7 @@ class VipsReader(AbstractReader):
         )
 
         image = cached_vips_file(self.format)
-        if image.interpretation in ("grey16", "rgb16"):
+        if image.interpretation in ("grey16", "rgb16", "cmyk"):
             # Related to https://github.com/libvips/libvips/issues/1941 ?
             return VIPSImage.thumbnail(
                 filename, width, height=height,
@@ -232,6 +235,8 @@ class VipsSpatialConvertor(AbstractConvertor):
 
     def convert(self, dest_path):
         source = self.vips_source()
+        if source.interpretation == VIPSInterpretation.CMYK:
+            source = source.colourspace(VIPSInterpretation.SRGB)
 
         result = source.tiffsave(
             str(dest_path), pyramid=True, tile=True,

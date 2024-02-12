@@ -209,7 +209,7 @@ class AbstractFormat(ABC, SimpleDataCache):
 
     @property
     def media_type(self) -> str:
-        return "image"
+        return "application/octet-stream"
 
     # Conversion
 
