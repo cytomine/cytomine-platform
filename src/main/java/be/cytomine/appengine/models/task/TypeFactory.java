@@ -3,8 +3,7 @@ package be.cytomine.appengine.models.task;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import be.cytomine.appengine.dto.inputs.task.types.integer.IntegerTypeConstraint;
-
-import org.jetbrains.annotations.NotNull;
+import jakarta.validation.constraints.NotNull;
 
 public class TypeFactory {
 
