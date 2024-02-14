@@ -34,6 +34,8 @@ spring:
       fail-on-empty-beans: false
 storage:
   impl: ${STORAGE_IMPL:default} # possible values [default]
+  input:
+    charset: UTF_8 # possible values [UTF_8,US_ASCII,ISO_8859_1,UTF_16LE,UTF_16BE,UTF_16] and UTF_8 is default
 registry:
   impl: ${REGISTRY_IMPL:docker} # possible values [docker.default]
   schema: ${REGISTRY_HTTP_SCHEME:http}

@@ -1,7 +1,11 @@
 package be.cytomine.appengine.integration.cucumber;
 
 import be.cytomine.appengine.AppEngineApplication;
+import be.cytomine.appengine.dto.handlers.filestorage.Storage;
 import be.cytomine.appengine.dto.misc.TaskIdentifiers;
+import be.cytomine.appengine.exceptions.FileStorageException;
+import be.cytomine.appengine.handlers.FileData;
+import be.cytomine.appengine.handlers.FileStorageHandler;
 import be.cytomine.appengine.models.task.*;
 import be.cytomine.appengine.openapi.api.DefaultApi;
 import be.cytomine.appengine.openapi.invoker.ApiClient;
