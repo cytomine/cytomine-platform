@@ -18,7 +18,7 @@ FROM cytomine/entrypoint-scripts:${ENTRYPOINT_SCRIPTS_VERSION} as entrypoint-scr
 
 #######################################################################################
 ## Stage: Pims
-FROM ubuntu:${UBUNTU_VERSION}
+FROM ubuntu:${UBUNTU_VERSION} as base-pims
 
 ENV LANG C.UTF-8
 ENV DEBIAN_FRONTEND noninteractive
@@ -197,6 +197,21 @@ ENV PYTHONPATH="/app:$PYTHONPATH"
 
 ENV PORT=5000
 EXPOSE ${PORT}
+
+#######################################################################################
+## Stage: Pims (dev server)
+FROM base-pims AS dev-server
+
+RUN apt-get -y update && \
+     apt-get -y install --no-install-recommends --no-install-suggests openssh-server
+
+ENTRYPOINT ["cytomine-entrypoint.sh"]
+
+#######################################################################################
+## Stage: Pims (dev server)
+FROM base-pims AS prod-server
+
+RUN echo "Building production..."
 
 ENTRYPOINT ["cytomine-entrypoint.sh"]
 CMD ["/start.sh"]
