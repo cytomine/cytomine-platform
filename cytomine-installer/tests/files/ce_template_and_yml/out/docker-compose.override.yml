@@ -4,25 +4,26 @@ services:
   core:
     env_file: envs/core.env
     volumes:
-    - ./configs/core:/cm_configs
+    - ./configs/core/app/application.yml.sample:/cm_configs/app/application.yml.sample
+    - ./configs/core/app/logback.xml:/cm_configs/app/logback.xml
   etc_hosts_rewriter:
     env_file: envs/etc_hosts_rewriter.env
     volumes:
-    - ./configs/etc_hosts_rewriter:/cm_configs
+    - ./configs/etc_hosts_rewriter/rewrite.sh:/cm_configs/rewrite.sh
   mongo:
     env_file: envs/mongo.env
   nginx:
     env_file: envs/nginx.env
     volumes:
-    - ./configs/nginx:/cm_configs
+    - ./configs/nginx/etc/nginx/nginx.conf.sample:/cm_configs/etc/nginx/nginx.conf.sample
   pims:
     env_file: envs/pims.env
     volumes:
-    - ./configs/pims:/cm_configs
+    - ./configs/pims/app/logging.yml:/cm_configs/app/logging.yml
   postgis:
     env_file: envs/postgis.env
   web_ui:
     env_file: envs/web_ui.env
     volumes:
-    - ./configs/web_ui:/cm_configs
+    - ./configs/web_ui/app/configuration.json.sample:/cm_configs/app/configuration.json.sample
 version: '3.9'
