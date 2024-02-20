@@ -2,8 +2,8 @@ version: "3.3"
 services:
   core:
     volumes:
-      - ./configs/core:/cm_configs
-    
+      - ./configs/core/etc/cytomine/cytomine-app.yml:/cm_configs/etc/cytomine/cytomine-app.yml
+
   ims:
     volumes:
-      - ./configs/ims:/cm_configs
+      - ./configs/ims/usr/local/cytom/ims.conf:/cm_configs/usr/local/cytom/ims.conf

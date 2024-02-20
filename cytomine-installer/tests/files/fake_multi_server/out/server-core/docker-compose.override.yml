@@ -3,7 +3,7 @@ services:
   core:
     env_file: envs/core.env
     volumes:
-      - ./configs/core:/cm_configs
+      - ./configs/core/etc/cytomine/cytomine-app.yml:/cm_configs/etc/cytomine/cytomine-app.yml
 
   postgres:
     env_file: envs/postgres.env

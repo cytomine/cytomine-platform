@@ -171,10 +171,15 @@ class ServerFolder(Deployable):
                 self._directory, self._configs_folder, service
             )
             if os.path.exists(src_service_configs_path):
-                target_config_relpath = os.path.join(self._configs_folder, service)
-                override_file.add_service_volume(
-                    service, f"./{target_config_relpath}:{self._configs_mount_point}"
-                )
+                config_files = list_relative_files(src_service_configs_path)
+                for config_file in config_files:
+                    source_file = os.path.join(
+                        self._configs_folder, service, config_file
+                    )
+                    target_file = os.path.join(self._configs_mount_point, config_file)
+                    override_file.add_service_volume(
+                        service, f"./{source_file}:{target_file}"
+                    )
 
         src_config_dir = os.path.join(self._directory, self._configs_folder)
         if os.path.exists(src_config_dir):
