@@ -52,10 +52,6 @@ public class FileSystemStorageHandler implements FileStorageHandler {
         String filename = file.getFileName();
         String storageId = storage.getIdStorage();
 
-        if (!storageId.equals(file.getStorageId())) {
-            throw new FileStorageException("Storage id does not match file storage id");
-        }
-
         try {
             Path filePath = Paths.get(basePath, storageId, filename);
             Files.write(filePath, file.getFileData());
