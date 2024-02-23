@@ -6,9 +6,9 @@ import be.cytomine.appengine.handlers.RegistryHandler;
 import be.cytomine.appengine.handlers.SchedulerHandler;
 import be.cytomine.appengine.handlers.scheduler.impl.DefaultScheduler;
 import be.cytomine.appengine.handlers.storage.impl.DefaultStorageHandler;
+import be.cytomine.appengine.handlers.storage.impl.FileSystemStorageHandler;
 import be.cytomine.appengine.handlers.registry.impl.DefaultRegistryHandler;
 import be.cytomine.appengine.handlers.registry.impl.DockerRegistryHandler;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -41,6 +41,9 @@ public class ImplementationConfig {
     @Bean
     @Primary
     public FileStorageHandler loadStorageImpl() throws Exception {
+        if (storageImplementationSelector.equalsIgnoreCase("filesystem")) {
+            return new FileSystemStorageHandler();
+        }
         return new DefaultStorageHandler();
     }
 
