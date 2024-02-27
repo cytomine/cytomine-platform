@@ -227,6 +227,22 @@
               }
             }
           ]
+        },
+        "string": {
+          "oneOf": [
+            {
+              "const": "string"
+            },
+            {
+              "type": "object",
+              "required": ["id"],
+              "properties": {
+                "id": {"const": "string"},
+                "min-length": {"type": "string", "default": 0},
+                "max-length": {"type": "string"}
+              }
+            }
+          ]
         }
       },
       "typed_parameter": {
@@ -265,20 +281,34 @@
             "default": {"type": "number"}
           },
           "unevaluatedProperties": false
+        },
+        "string": {
+          "type": "object",
+          "allOf": [
+            {"$ref": "#/$defs/io/base_parameter"}
+          ],
+          "required": ["type"],
+          "properties": {
+            "type": {"$ref": "#/$defs/io/type_specs/string"},
+            "default": {"type": "string"}
+          },
+          "unevaluatedProperties": false
         }
       },
       "input_parameter": {
         "oneOf": [
           {"$ref": "#/$defs/io/typed_parameter/integer"},
           {"$ref": "#/$defs/io/typed_parameter/boolean"},
-          {"$ref": "#/$defs/io/typed_parameter/number"}
+          {"$ref": "#/$defs/io/typed_parameter/number"},
+          {"$ref": "#/$defs/io/typed_parameter/string"}
         ]
       },
       "output_parameter": {
         "oneOf": [
           {"$ref": "#/$defs/io/typed_parameter/integer"},
           {"$ref": "#/$defs/io/typed_parameter/boolean"},
-          {"$ref": "#/$defs/io/typed_parameter/number"}
+          {"$ref": "#/$defs/io/typed_parameter/number"},
+          {"$ref": "#/$defs/io/typed_parameter/string"}
         ]
       }
     }
