@@ -10,7 +10,7 @@
     "inputs",
     "outputs"
   ],
-  "type": "objERRORect",
+  "type": "object",
   "properties": {
     "$schema": {},
     "name": {
