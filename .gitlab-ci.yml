@@ -51,6 +51,36 @@ make-version-name:
       dotenv: .env
 
 
+validate-descriptor-schema:
+  stage: test
+  tags:
+    - docker
+  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/node:16-alpine3.18
+  variables:
+    SCHEMA_PATH: ./src/main/resources/schemas/tasks/task.v0.json
+  script:
+    - apk update && apk add jq
+    # Install dependencies
+    - npm install -g ajv-cli@5.0.0 ajv-formats@2.1.1 ajv-formats-draft2019@1.6.1
+    # Extract the $schema value from schema.json
+    - BASE_SCHEMA_URL=$(jq -r '.["$schema"]' ${SCHEMA_PATH})
+    # Infer spec based on the extracted URL
+    - |
+      case "$BASE_SCHEMA_URL" in
+        *draft-07*) SPEC="draft7";;
+        *2019-09*) SPEC="draft2019";;
+        *2020-12*) SPEC="draft2020";;
+        *)
+          echo "Unknown schema specification for URL: '$BASE_SCHEMA_URL'"
+          echo "Aborting..."
+          exit 1
+        ;;
+      esac
+    # Run the ajv validate command with the determined spec
+    - echo "Running validator with JSON Schema specification '${SPEC}'"
+    - ajv compile -s ${SCHEMA_PATH} -c ajv-formats -c ajv-formats-draft2019 --spec=${SPEC} --strict=false --all-errors
+
+
 tests-storage-registry:
   stage: test
   image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/gradle:8.4-jdk17-alpine
