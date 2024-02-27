@@ -207,6 +207,26 @@
               }
             }
           ]
+        },
+        "number": {
+          "oneOf": [
+            {
+              "const": "number"
+            },
+            {
+              "type": "object",
+              "required": ["id"],
+              "properties": {
+                "id": {"const": "number"},
+                "gt": {"type": "number"},
+                "lt": {"type": "number"},
+                "geq": {"type": "number"},
+                "leq": {"type": "number"},
+                "infinity_allowed": {"type": "boolean", "default": false},
+                "nan_allowed": {"type": "boolean", "default": false}
+              }
+            }
+          ]
         }
       },
       "typed_parameter": {
@@ -233,18 +253,32 @@
             "default": {"type": "boolean"}
           },
           "unevaluatedProperties": false
+        },
+        "number": {
+          "type": "object",
+          "allOf": [
+            {"$ref": "#/$defs/io/base_parameter"}
+          ],
+          "required": ["type"],
+          "properties": {
+            "type": {"$ref": "#/$defs/io/type_specs/number"},
+            "default": {"type": "number"}
+          },
+          "unevaluatedProperties": false
         }
       },
       "input_parameter": {
         "oneOf": [
           {"$ref": "#/$defs/io/typed_parameter/integer"},
-          {"$ref": "#/$defs/io/typed_parameter/boolean"}
+          {"$ref": "#/$defs/io/typed_parameter/boolean"},
+          {"$ref": "#/$defs/io/typed_parameter/number"}
         ]
       },
       "output_parameter": {
         "oneOf": [
           {"$ref": "#/$defs/io/typed_parameter/integer"},
-          {"$ref": "#/$defs/io/typed_parameter/boolean"}
+          {"$ref": "#/$defs/io/typed_parameter/boolean"},
+          {"$ref": "#/$defs/io/typed_parameter/number"}
         ]
       }
     }
