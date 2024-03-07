@@ -5,7 +5,6 @@ import be.cytomine.appengine.handlers.FileStorageHandler;
 import be.cytomine.appengine.handlers.RegistryHandler;
 import be.cytomine.appengine.handlers.SchedulerHandler;
 import be.cytomine.appengine.handlers.scheduler.impl.DefaultScheduler;
-import be.cytomine.appengine.handlers.storage.impl.DefaultStorageHandler;
 import be.cytomine.appengine.handlers.storage.impl.FileSystemStorageHandler;
 import be.cytomine.appengine.handlers.registry.impl.DefaultRegistryHandler;
 import be.cytomine.appengine.handlers.registry.impl.DockerRegistryHandler;
@@ -41,10 +40,7 @@ public class ImplementationConfig {
     @Bean
     @Primary
     public FileStorageHandler loadStorageImpl() throws Exception {
-        if (storageImplementationSelector.equalsIgnoreCase("filesystem")) {
-            return new FileSystemStorageHandler();
-        }
-        return new DefaultStorageHandler();
+        return new FileSystemStorageHandler();
     }
 
     @Bean
