@@ -21,13 +21,13 @@ default:
 include:
   #### Download
   # add integers
-  - component: gitlab.cytom.in/cm/cicd/component-nextcloud/download-file@1.1.0
+  - component: gitlab.cytom.in/cm/rnd/cicd/component-nextcloud/download-file@1.1.0
     inputs:
       source-filepath: $APPENGINE_TASKS_PATH/${ADD_INTEGER_TASK_NAME}
       job-name: download-task-add-integer
       target-directory: ./src/test/resources/artifacts
   # identity integers
-  - component: gitlab.cytom.in/cm/cicd/component-nextcloud/download-file@1.1.0
+  - component: gitlab.cytom.in/cm/rnd/cicd/component-nextcloud/download-file@1.1.0
     inputs:
       source-filepath: $APPENGINE_TASKS_PATH/${ID_INTEGER_TASK_NAME}
       job-name: download-task-identity-integer
