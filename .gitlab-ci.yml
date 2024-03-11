@@ -150,7 +150,6 @@ tests-storage-registry:
     - job: download-task-identity-integer
       artifacts: true
   script:
-    - ls ${TEST_ARTIFACT_PATH}
     - gradle :test --no-daemon
   artifacts:
     when: always
