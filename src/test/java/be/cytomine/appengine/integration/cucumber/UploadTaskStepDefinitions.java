@@ -51,13 +51,6 @@ public class UploadTaskStepDefinitions {
     @Autowired
     TaskRepository taskRepository;
 
-    @Value("${storage.accesskey}")
-    private String accessKey;
-    @Value("${storage.secretkey}")
-    private String accessSecretKey;
-    @Value("${storage.url}")
-    private String storageUrl;
-
     ResponseEntity<String> result;
 
     String taskNameSpace;
