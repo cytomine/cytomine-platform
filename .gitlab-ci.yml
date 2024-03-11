@@ -8,11 +8,43 @@ variables:
   # docker images for test services
   TESTS_IMAGE_REGISTRY: 'registry:2.8.3'
   TESTS_IMAGE_POSTGIS: 'cytomine/postgis:1.4.0-dev.2'
+  APPENGINE_TASKS_PATH: GitLab/Artifacts/AppEngine/Tasks
+  ADD_INTEGER_TASK_NAME: com.cytomine.dummy.arithmetic.integer.addition-1.0.0.zip
+  ID_INTEGER_TASK_NAME: com.cytomine.dummy.identity.integer-1.0.0.zip
 
 
 default:
   tags:
     - docker
+
+
+include:
+  #### Download
+  # add integers
+  - component: gitlab.cytom.in/cm/cicd/component-nextcloud/download-file@1.1.0
+    inputs:
+      source-filepath: $APPENGINE_TASKS_PATH/${ADD_INTEGER_TASK_NAME}
+      job-name: download-task-add-integer
+      target-directory: ./src/test/resources/artifacts
+  # identity integers
+  - component: gitlab.cytom.in/cm/cicd/component-nextcloud/download-file@1.1.0
+    inputs:
+      source-filepath: $APPENGINE_TASKS_PATH/${ID_INTEGER_TASK_NAME}
+      job-name: download-task-identity-integer
+      target-directory: ./src/test/resources/artifacts
+
+
+# save downloaded files as artifact
+download-task-add-integer:
+  artifacts:
+    paths:
+      - ${ADD_INTEGER_TASK_NAME}
+
+# save downloaded files as artifact
+download-task-identity-integer:
+  artifacts:
+    paths:
+      - ${ID_INTEGER_TASK_NAME}
 
 
 lint-dockerfiles:
@@ -110,7 +142,13 @@ tests-storage-registry:
     DB_NAME: appengine
     DB_USERNAME: appengine
     DB_PASSWORD: password
+  needs:
+    - job: download-task-add-integer
+      artifacts: true
+    - job: download-task-identity-integer
+      artifacts: true
   script:
+    - ls ./src/test/resources/artifacts
     - gradle :test --no-daemon
   artifacts:
     when: always
