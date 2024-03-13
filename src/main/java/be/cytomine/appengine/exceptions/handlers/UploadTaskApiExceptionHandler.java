@@ -77,14 +77,14 @@ public class UploadTaskApiExceptionHandler {
         return new ResponseEntity<AppEngineError>(error, HttpStatus.PAYLOAD_TOO_LARGE);
     }
 
-    @ExceptionHandler({IllegalArgumentException.class})
-    public final ResponseEntity<AppEngineError> handleMalformattedBundle(Exception e) {
-        String message = "Bundle is not formatted correctly";
-        logger.info("Bundle/Archive processing failure [" + message + "]");
+    // @ExceptionHandler({IllegalArgumentException.class})
+    // public final ResponseEntity<AppEngineError> handleMalformattedBundle(Exception e) {
+    //     String message = "Bundle is not formatted correctly";
+    //     logger.info("Bundle/Archive processing failure [" + message + "]");
 
-        AppEngineError error = ErrorBuilder.build(ErrorCode.INTERNAL_INVALID_BUNDLE_FORMAT);
-        return new ResponseEntity<AppEngineError>(error, HttpStatus.BAD_REQUEST);
-    }
+    //     AppEngineError error = ErrorBuilder.build(ErrorCode.INTERNAL_INVALID_BUNDLE_FORMAT);
+    //     return new ResponseEntity<AppEngineError>(error, HttpStatus.BAD_REQUEST);
+    // }
 
     @ExceptionHandler({NullPointerException.class})
     public final ResponseEntity<AppEngineError> handleNullpointerException(Exception e) {

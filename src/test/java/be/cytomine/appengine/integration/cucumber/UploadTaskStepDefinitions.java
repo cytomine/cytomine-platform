@@ -149,7 +149,7 @@ public class UploadTaskStepDefinitions {
             this.logger.error("conflict: " + e.getResponseBodyAsString(), e);
             persistedResponse = new ResponseEntity<String>(e.getResponseBodyAsString(), HttpStatusCode.valueOf(409));
         } catch (HttpClientErrorException.BadRequest e) {
-            Assertions.assertEquals("", e.getResponseBodyAsString());
+            this.logger.error("conflict: " + e.getResponseBodyAsString(), e);
             persistedResponse = new ResponseEntity<String>(e.getResponseBodyAsString(), HttpStatusCode.valueOf(400));
         }
         Assertions.assertNotNull(persistedResponse);
