@@ -51,7 +51,7 @@ public class UploadTaskStepDefinitions {
     @Autowired
     TaskRepository taskRepository;
 
-    ResponseEntity<String> result;
+    ResponseEntity<String> persistedResult;
 
     String taskNameSpace;
     String taskVersion;
@@ -140,24 +140,24 @@ public class UploadTaskStepDefinitions {
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
         body.add("task", archive);
-        HttpEntity<MultiValueMap<String, Object>> request =
-                new HttpEntity<>(body, headers);
+        HttpEntity<MultiValueMap<String, Object>> request = new HttpEntity<>(body, headers);
         try {
-            result = new RestTemplate().postForEntity(buildAppEngineUrl() + "/tasks", request, String.class);
+            persistedResult = new RestTemplate().postForEntity(buildAppEngineUrl() + "/tasks", request, String.class);
         } catch (HttpClientErrorException.Conflict e) {
-
-            result = new ResponseEntity<String>(e.getResponseBodyAsString(), HttpStatusCode.valueOf(409));
+            System.out.println(e.getResponseBodyAsString());
+            persistedResult = new ResponseEntity<String>(e.getResponseBodyAsString(), HttpStatusCode.valueOf(409));
         } catch (HttpClientErrorException.BadRequest e) {
-
-            result = new ResponseEntity<String>(e.getResponseBodyAsString(), HttpStatusCode.valueOf(400));
+            System.out.println(e.getResponseBodyAsString());
+            persistedResult = new ResponseEntity<String>(e.getResponseBodyAsString(), HttpStatusCode.valueOf(400));
         }
     }
 
     @Then("App Engine unzip the zip archive")
     public void app_engine_unzip_the_zip_archive() throws JsonProcessingException {
         // failure to unzip result in 400 http code
-        Assertions.assertFalse(result.getStatusCode().isSameCodeAs(HttpStatusCode.valueOf(400)));
-        JsonNode jsonPayLoad = new ObjectMapper().readTree(result.getBody());
+        System.out.println(persistedResult.getStatusCode());
+        Assertions.assertFalse(persistedResult.getStatusCode().isSameCodeAs(HttpStatusCode.valueOf(400)));
+        JsonNode jsonPayLoad = new ObjectMapper().readTree(persistedResult.getBody());
         // doesn't reply with parsing failure
         Assertions.assertFalse(jsonPayLoad.get("message").textValue().startsWith("Bundle/Archive processing failure"));
     }
@@ -165,8 +165,8 @@ public class UploadTaskStepDefinitions {
     @Then("App Engine successfully validates the task descriptor against the descriptor schema")
     public void app_engine_successfully_validates_the_task_descriptor_against_the_descriptor_schema() throws JsonProcessingException {
         // failure to unzip result in 400 http code
-        Assertions.assertFalse(result.getStatusCode().is4xxClientError());
-        JsonNode jsonPayLoad = new ObjectMapper().readTree(result.getBody());
+        Assertions.assertFalse(persistedResult.getStatusCode().is4xxClientError());
+        JsonNode jsonPayLoad = new ObjectMapper().readTree(persistedResult.getBody());
         // doesn't reply with parsing failure
         Assertions.assertFalse(jsonPayLoad.get("message").textValue().equalsIgnoreCase("invalid descriptor.yml"));
     }
@@ -174,8 +174,8 @@ public class UploadTaskStepDefinitions {
     @Then("App Engine successfully validates the docker image by checking that the tar file contains a {string} file")
     public void app_engine_successfully_validates_the_docker_image_by_checking_that_the_tar_file_contains_a_file(String string) throws JsonProcessingException {
         // failure to unzip result in 400 http code
-        Assertions.assertFalse(result.getStatusCode().is4xxClientError());
-        JsonNode jsonPayLoad = new ObjectMapper().readTree(result.getBody());
+        Assertions.assertFalse(persistedResult.getStatusCode().is4xxClientError());
+        JsonNode jsonPayLoad = new ObjectMapper().readTree(persistedResult.getBody());
         // doesn't reply with parsing failure
         Assertions.assertFalse(jsonPayLoad.get("message").textValue().equalsIgnoreCase("invalid image"));
     }
@@ -224,7 +224,7 @@ public class UploadTaskStepDefinitions {
 
     @Then("App Engine returns an HTTP {string} OK response")
     public void app_engine_returns_an_http_response(String responseCode) {
-        Assertions.assertTrue(result.getStatusCode().isSameCodeAs(HttpStatusCode.valueOf(Integer.parseInt(responseCode))));
+        Assertions.assertTrue(persistedResult.getStatusCode().isSameCodeAs(HttpStatusCode.valueOf(Integer.parseInt(responseCode))));
 
     }
 
@@ -349,10 +349,10 @@ public class UploadTaskStepDefinitions {
     @Then("App Engine returns an HTTP {string} conflict error because this version of the task exists already")
     public void app_engine_returns_an_http_conflict_error_because_this_version_of_the_task_exists_already(String conflictCode) throws JsonProcessingException {
         // failure to unzip result in 400 http code
-        Assertions.assertFalse(result.getStatusCode().is2xxSuccessful());
-        JsonNode jsonPayLoad = new ObjectMapper().readTree(result.getBody());
+        Assertions.assertFalse(persistedResult.getStatusCode().is2xxSuccessful());
+        JsonNode jsonPayLoad = new ObjectMapper().readTree(persistedResult.getBody());
         // doesn't reply with parsing failure
-        Assertions.assertTrue(result.getStatusCode().isSameCodeAs(HttpStatusCode.valueOf(Integer.parseInt(conflictCode))));
+        Assertions.assertTrue(persistedResult.getStatusCode().isSameCodeAs(HttpStatusCode.valueOf(Integer.parseInt(conflictCode))));
         Assertions.assertTrue(jsonPayLoad.get("message").textValue().startsWith("Task already exists."));
     }
 
@@ -425,12 +425,12 @@ public class UploadTaskStepDefinitions {
 
     @Then("App Engine returns an HTTP {string} bad request error because the descriptor is incorrectly structured")
     public void app_engine_returns_an_http_bad_request_error_because_the_descriptor_is_incorrectly_structured(String responseCode) {
-        Assertions.assertTrue(result.getStatusCode().isSameCodeAs(HttpStatusCode.valueOf(400)));
+        Assertions.assertTrue(persistedResult.getStatusCode().isSameCodeAs(HttpStatusCode.valueOf(400)));
     }
 
     @Then("App Engine fails to validate the {string} descriptor against the descriptor schema")
     public void app_engine_fails_to_validate_the_task_descriptor_against_the_descriptor_schema(String task) throws JsonProcessingException {
-        JsonNode jsonPayLoad = new ObjectMapper().readTree(result.getBody());
+        JsonNode jsonPayLoad = new ObjectMapper().readTree(persistedResult.getBody());
         if (task.equalsIgnoreCase("Task 1")) {
             Assertions.assertTrue(jsonPayLoad.get("message").textValue().equalsIgnoreCase("schema validation failed for descriptor.yml"));
         }
