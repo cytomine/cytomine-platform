@@ -77,7 +77,7 @@ public class FileSystemStorageHandler implements FileStorageHandler {
         String filename = file.getFileName();
 
         try {
-            Path filePath = Paths.get(basePath, filename);
+            Path filePath = Paths.get(basePath, file.getStorageId(), filename);
             Files.deleteIfExists(filePath);
         } catch (IOException e) {
             throw new FileStorageException("Failed to delete file " + filename);
@@ -89,7 +89,7 @@ public class FileSystemStorageHandler implements FileStorageHandler {
         String filename = emptyFile.getFileName();
 
         try {
-            Path filePath = Paths.get(basePath, filename);
+            Path filePath = Paths.get(basePath, emptyFile.getStorageId(), filename);
             byte[] data = Files.readAllBytes(filePath);
             emptyFile.setFileData(data);
 
