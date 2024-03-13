@@ -39,9 +39,9 @@ storage:
     charset: UTF_8 # possible values [UTF_8,US_ASCII,ISO_8859_1,UTF_16LE,UTF_16BE,UTF_16] and UTF_8 is default
 registry:
   impl: ${REGISTRY_IMPL:docker} # possible values [docker.default]
-  schema: ${REGISTRY_HTTP_SCHEME:http}
+  scheme: ${REGISTRY_HTTP_SCHEME:http}
   host: ${REGISTRY_URL:registry}:${REGISTRY_PORT:5000}
-  url: ${registry.schema:http}://${registry.host:5000}
+  url: ${registry.scheme:http}://${registry.host}
 scheduler:
   impl: ${REGISTRY_IMPL:default} # possible values [default]
 registry-client:
