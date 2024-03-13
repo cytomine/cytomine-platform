@@ -40,8 +40,7 @@ Feature: [URS00001-TASK] Upload a task
 
     When user calls POST on "/api/v1/tasks" endpoint with the zip archive as a multipart file parameter
 
-    Then App Engine unzip the zip archive
-    And App Engine reads "<task namespace>" and "<task version>" from the task descriptor
+    Then App Engine reads "<task namespace>" and "<task version>" from the task descriptor
     And App Engine returns an HTTP "409" conflict error because this version of the task exists already
     And App Engine cleans up any temporary file created during the process (e.g. uploaded zip file, etc)
     But App Engine does not create or overwrite the task and related data in the File storage, registry and database services

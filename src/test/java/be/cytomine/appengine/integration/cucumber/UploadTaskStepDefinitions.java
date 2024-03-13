@@ -3,6 +3,8 @@ package be.cytomine.appengine.integration.cucumber;
 import be.cytomine.appengine.AppEngineApplication;
 import be.cytomine.appengine.dto.handlers.filestorage.Storage;
 import be.cytomine.appengine.dto.misc.TaskIdentifiers;
+import be.cytomine.appengine.dto.responses.errors.ErrorCode;
+import be.cytomine.appengine.dto.responses.errors.ErrorDefinitions;
 import be.cytomine.appengine.exceptions.FileStorageException;
 import be.cytomine.appengine.handlers.FileData;
 import be.cytomine.appengine.handlers.FileStorageHandler;
@@ -144,10 +146,8 @@ public class UploadTaskStepDefinitions {
         try {
             persistedResult = new RestTemplate().postForEntity(buildAppEngineUrl() + "/tasks", request, String.class);
         } catch (HttpClientErrorException.Conflict e) {
-            System.out.println(e.getResponseBodyAsString());
             persistedResult = new ResponseEntity<String>(e.getResponseBodyAsString(), HttpStatusCode.valueOf(409));
         } catch (HttpClientErrorException.BadRequest e) {
-            System.out.println(e.getResponseBodyAsString());
             persistedResult = new ResponseEntity<String>(e.getResponseBodyAsString(), HttpStatusCode.valueOf(400));
         }
     }
@@ -155,11 +155,10 @@ public class UploadTaskStepDefinitions {
     @Then("App Engine unzip the zip archive")
     public void app_engine_unzip_the_zip_archive() throws JsonProcessingException {
         // failure to unzip result in 400 http code
-        System.out.println(persistedResult.getStatusCode());
-        Assertions.assertFalse(persistedResult.getStatusCode().isSameCodeAs(HttpStatusCode.valueOf(400)));
+        Assertions.assertNotEquals(persistedResult.getStatusCode(), HttpStatusCode.valueOf(400));
         JsonNode jsonPayLoad = new ObjectMapper().readTree(persistedResult.getBody());
         // doesn't reply with parsing failure
-        Assertions.assertFalse(jsonPayLoad.get("message").textValue().startsWith("Bundle/Archive processing failure"));
+        Assertions.assertFalse(jsonPayLoad.has("error_code"));
     }
 
     @Then("App Engine successfully validates the task descriptor against the descriptor schema")
@@ -168,7 +167,7 @@ public class UploadTaskStepDefinitions {
         Assertions.assertFalse(persistedResult.getStatusCode().is4xxClientError());
         JsonNode jsonPayLoad = new ObjectMapper().readTree(persistedResult.getBody());
         // doesn't reply with parsing failure
-        Assertions.assertFalse(jsonPayLoad.get("message").textValue().equalsIgnoreCase("invalid descriptor.yml"));
+        Assertions.assertFalse(jsonPayLoad.has("error_code"));
     }
 
     @Then("App Engine successfully validates the docker image by checking that the tar file contains a {string} file")
@@ -177,7 +176,7 @@ public class UploadTaskStepDefinitions {
         Assertions.assertFalse(persistedResult.getStatusCode().is4xxClientError());
         JsonNode jsonPayLoad = new ObjectMapper().readTree(persistedResult.getBody());
         // doesn't reply with parsing failure
-        Assertions.assertFalse(jsonPayLoad.get("message").textValue().equalsIgnoreCase("invalid image"));
+        Assertions.assertFalse(jsonPayLoad.has("error_code"));
     }
 
     @Then("App Engine creates a unique {string} for referencing the {string}")
@@ -348,12 +347,11 @@ public class UploadTaskStepDefinitions {
 
     @Then("App Engine returns an HTTP {string} conflict error because this version of the task exists already")
     public void app_engine_returns_an_http_conflict_error_because_this_version_of_the_task_exists_already(String conflictCode) throws JsonProcessingException {
-        // failure to unzip result in 400 http code
-        Assertions.assertFalse(persistedResult.getStatusCode().is2xxSuccessful());
+        // failure
+        Assertions.assertEquals(persistedResult.getStatusCode(), HttpStatusCode.valueOf(Integer.parseInt(conflictCode)));
         JsonNode jsonPayLoad = new ObjectMapper().readTree(persistedResult.getBody());
         // doesn't reply with parsing failure
-        Assertions.assertTrue(persistedResult.getStatusCode().isSameCodeAs(HttpStatusCode.valueOf(Integer.parseInt(conflictCode))));
-        Assertions.assertTrue(jsonPayLoad.get("message").textValue().startsWith("Task already exists."));
+        Assertions.assertEquals(jsonPayLoad.get("error_code").textValue(), ErrorDefinitions.fromCode(ErrorCode.INTERNAL_TASK_EXISTS).code);
     }
 
     @Then("App Engine does not create or overwrite the task and related data in the File storage, registry and database services")
