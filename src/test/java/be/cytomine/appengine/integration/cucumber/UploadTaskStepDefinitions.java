@@ -67,6 +67,15 @@ public class UploadTaskStepDefinitions {
     @Autowired
     FileStorageHandler fileStorageHandler;
 
+    @Value("${app-engine.api_prefix}")
+    private String apiPrefix;
+
+    @Value("${app-engine.api_version}")
+    private String apiVersion;
+
+    private String buildAppEngineUrl() {
+        return "http://localhost:" + port + apiPrefix + apiVersion;
+    }
 
     @Given("App Engine is up and running")
     public void app_engine_is_up_and_running() {
@@ -134,7 +143,7 @@ public class UploadTaskStepDefinitions {
         HttpEntity<MultiValueMap<String, Object>> request =
                 new HttpEntity<>(body, headers);
         try {
-            result = new RestTemplate().postForEntity("http://localhost:" + port + url, request, String.class);
+            result = new RestTemplate().postForEntity(buildAppEngineUrl() + "/tasks", request, String.class);
         } catch (HttpClientErrorException.Conflict e) {
 
             result = new ResponseEntity<String>(e.getResponseBodyAsString(), HttpStatusCode.valueOf(409));
