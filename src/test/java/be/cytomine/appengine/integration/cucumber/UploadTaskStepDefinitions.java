@@ -146,8 +146,10 @@ public class UploadTaskStepDefinitions {
         try {
             persistedResult = new RestTemplate().postForEntity(buildAppEngineUrl() + "/tasks", request, String.class);
         } catch (HttpClientErrorException.Conflict e) {
+            this.logger.error("conflict: " + e.getResponseBodyAsString(), e);
             persistedResult = new ResponseEntity<String>(e.getResponseBodyAsString(), HttpStatusCode.valueOf(409));
         } catch (HttpClientErrorException.BadRequest e) {
+            this.logger.error("bad request: " + e.getResponseBodyAsString(), e);
             persistedResult = new ResponseEntity<String>(e.getResponseBodyAsString(), HttpStatusCode.valueOf(400));
         }
     }
