@@ -92,7 +92,6 @@ public class FileSystemStorageHandler implements FileStorageHandler {
             Path filePath = Paths.get(basePath, emptyFile.getStorageId(), filename);
             byte[] data = Files.readAllBytes(filePath);
             emptyFile.setFileData(data);
-
             return emptyFile;
         } catch (IOException e) {
             throw new FileStorageException("Failed to read file " + filename);
