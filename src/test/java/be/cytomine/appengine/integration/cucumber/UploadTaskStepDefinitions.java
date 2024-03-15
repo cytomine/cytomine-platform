@@ -369,7 +369,7 @@ public class UploadTaskStepDefinitions {
 
     @Then("App Engine fails to validate the task descriptor for task {string} against the descriptor schema")
     public void app_engine_fails_to_validate_the_task_descriptor_against_the_descriptor_schema(String taskName) throws JsonProcessingException {
-        JsonNode jsonPayLoad = new ObjectMapper().readTree(result.getBody());
+        JsonNode jsonPayLoad = new ObjectMapper().readTree(persistedResponse.getBody());
         ErrorCode code;
         switch (taskName) {
             case "task1":
