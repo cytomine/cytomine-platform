@@ -89,7 +89,7 @@ public class ProvisionTaskStepDefinitions {
     public void this_task_has_and(String namespace, String version) {
         persistedTask.setNamespace(namespace);
         persistedTask.setVersion(version);
-        taskRepository.save(persistedTask);
+        persistedTask = taskRepository.save(persistedTask);
     }
 
     @Given("this task has at least one input parameter")
@@ -151,6 +151,7 @@ public class ProvisionTaskStepDefinitions {
     @Given("this task has only one input parameter {string} of type {string}")
     public void this_task_has_only_one_input_parameter_of_type(String paramName, String type) {
         persistedTask.getInputs().removeIf(input -> !(((IntegerType)input.getType()).getId().equals(type) && input.getName().equals(paramName)));
+        persistedTask = taskRepository.saveAndFlush(persistedTask);
         Assertions.assertEquals(persistedTask.getInputs().size(), 1);
         persistedTask = taskRepository.saveAndFlush(persistedTask);
     }

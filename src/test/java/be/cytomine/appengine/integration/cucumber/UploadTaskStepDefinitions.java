@@ -300,7 +300,7 @@ public class UploadTaskStepDefinitions {
     public void app_engine_does_not_create_or_overwrite_the_task_and_related_data_in_the_file_storage_registry_and_database_services() throws FileStorageException, IOException {
         // check app engine doesn't override data in database
         Task uploaded = taskRepository.findByNamespaceAndVersion(taskNameSpace, taskVersion);
-        Assertions.assertTrue(uploaded.getNameShort().equalsIgnoreCase("must_not_have_changed"));
+        Assertions.assertEquals(uploaded.getNameShort(), persistedTask.getNameShort());
 
         // and storage service
         String object = "descriptor.yml";

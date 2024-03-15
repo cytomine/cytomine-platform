@@ -45,8 +45,8 @@ Feature: [URS00003-TASK] Provision a task run
     And the App Engine returns a '200 OK' HTTP response with the updated task run information as JSON payload
 
     Examples:
-      | task_namespace                      | task_version | param_name | param_type | payload                                    | param_value | task_run_initial_state | task_run_new_state | param_file_content |
-      | com.cytomine.dummy.identity.integer | 1.0.0        | input      | integer    | {\"param_name\": \"input\", \"value\": 18} | 18          | CREATED                | PROVISIONED        | 18                 |
+      | task_namespace                                 | task_version | param_name | param_type | payload                                | param_value | task_run_initial_state | task_run_new_state | param_file_content |
+      | com.cytomine.dummy.arithmetic.integer.addition | 1.0.0        | a          | integer    | {\"param_name\": \"a\", \"value\": 18} | 18          | CREATED                | PROVISIONED        | 18                 |
 
   Scenario Outline: successful partial provisioning of a task run with two input parameters
 
@@ -116,8 +116,8 @@ Feature: [URS00003-TASK] Provision a task run
     And the App Engine does not record "<param1_value>" nor "<param2_value>" in file storage or database
 
     Examples:
-      | task_namespace                                 | task_version | param1_name | param1_type  | param1_validation_rule | param2_name | param2_type  | payload                                                                                | task_run_initial_state | error_payload                                                                                                                                                                                                          | param1_value | param2_value|
-      | com.cytomine.dummy.arithmetic.integer.addition | 1.0.0        | a           | integer      | lt: 53                 | num2        | integer      | [{\"param_name\": \"a\", \"value\": 75}, {\"param_name\": \"num2\", \"value\": 30}] | CREATED                | {\"error_code\": \"APPE-internal-batch-request-error\", \"message\": \"Error(s) occurred during a handling of a batch request.\", \"details\": {\"errors\": [{\"error_code\": \"APPE-internal-request-validation-error\", \"message\": \"value must be less than defined constraint\", \"details\": { \"param_name\": \"a\"}}]}} | 75           | 30          |
+      | task_namespace                                 | task_version | param1_name | param1_type  | param1_validation_rule | param2_name | param2_type  | payload                                                                          | task_run_initial_state | error_payload                                                                                                                                                                                                                                                                                                                    | param1_value | param2_value|
+      | com.cytomine.dummy.arithmetic.integer.addition | 1.0.0        | a           | integer      | lt: 53                 | b           | integer      | [{\"param_name\": \"a\", \"value\": 75}, {\"param_name\": \"b\", \"value\": 30}] | CREATED                | {\"error_code\": \"APPE-internal-batch-request-error\", \"message\": \"Error(s) occurred during a handling of a batch request.\", \"details\": {\"errors\": [{\"error_code\": \"APPE-internal-request-validation-error\", \"message\": \"value must be less than defined constraint\", \"details\": { \"param_name\": \"a\"}}]}} | 75           | 30          |
 
   Scenario Outline: failed single parameter provisioning with unknown parameter name
 
