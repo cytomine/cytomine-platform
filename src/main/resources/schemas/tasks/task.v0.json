@@ -1,8 +1,8 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema",
+  "$schema": "https://json-schema.org/draft/2019-09/schema",
   "required": [
-    "$schema", 
-    "name", 
+    "$schema",
+    "name",
     "namespace",
     "version",
     "authors",
@@ -33,7 +33,7 @@
     },
     "authors": {
       "type": "array",
-      "minLength": 1,
+      "minItems": 1,
       "items": {
         "$ref": "#/$defs/contact"
       }
@@ -67,34 +67,37 @@
         },
         "resources": {
           "type": "object",
-          "ram": {
-            "$ref": "#/$defs/types/memory",
-            "default": "1GiB"
-          },
-          "vram": {
-            "$ref": "#/$defs/types/memory",
-            "default": "8GiB"
-          },
-          "gpu": {
-            "type": "integer",
-            "default": 0
-          },
-          "cores": {
-            "type": "integer",
-            "default": 1
-          },
-          "threads": {
-            "type": "integer",
-            "default": 1
-          },
-          "internet": {
-            "type": "boolean",
-            "default": false
+          "properties": {
+            "ram": {
+              "$ref": "#/$defs/types/memory",
+              "default": "1GiB"
+            },
+            "vram": {
+              "$ref": "#/$defs/types/memory",
+              "default": "8GiB"
+            },
+            "gpu": {
+              "type": "integer",
+              "default": 0
+            },
+            "cores": {
+              "type": "integer",
+              "default": 1
+            },
+            "threads": {
+              "type": "integer",
+              "default": 1
+            },
+            "internet": {
+              "type": "boolean",
+              "default": false
+            }
           }
         }
       }
     },
     "inputs": {
+      "type": "object",
       "patternProperties": {
         "^[a-zA-Z0-9_]+$": {
           "$ref": "#/$defs/io/input_parameter"
@@ -103,6 +106,7 @@
       "additionalProperties": false
     },
     "outputs": {
+      "type": "object",
       "patternProperties": {
         "^[a-zA-Z0-9_]+$": {
           "$ref": "#/$defs/io/output_parameter"
@@ -113,7 +117,7 @@
   },
   "$defs": {
     "types": {
-      "semver":  {
+      "semver": {
         "type": "string",
         "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$"
       },
@@ -124,6 +128,12 @@
       "memory": {
         "type": "string",
         "pattern": "^(?:0|[1-9]\\d*)(?:\\.\\d+)?\\s*(?:(?:[KMGTPEZY]i?)?B|(?:[kmgtpezy]i?)?b)?$"
+      },
+      "enum_item": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256,
+        "pattern": "^[^\\r\\n]+$"
       }
     },
     "contact": {
@@ -189,10 +199,75 @@
               }
             }
           ]
+        },
+        "boolean": {
+          "oneOf": [
+            {
+              "const": "boolean"
+            },
+            {
+              "type": "object",
+              "required": ["id"],
+              "properties": {
+                "id": {"const": "boolean"}
+              }
+            }
+          ]
+        },
+        "number": {
+          "oneOf": [
+            {
+              "const": "number"
+            },
+            {
+              "type": "object",
+              "required": ["id"],
+              "properties": {
+                "id": {"const": "number"},
+                "gt": {"type": "number"},
+                "lt": {"type": "number"},
+                "geq": {"type": "number"},
+                "leq": {"type": "number"},
+                "infinity_allowed": {"type": "boolean", "default": false},
+                "nan_allowed": {"type": "boolean", "default": false}
+              }
+            }
+          ]
+        },
+        "string": {
+          "oneOf": [
+            {
+              "const": "string"
+            },
+            {
+              "type": "object",
+              "required": ["id"],
+              "properties": {
+                "id": {"const": "string"},
+                "min-length": {"type": "string", "default": 0},
+                "max-length": {"type": "string"}
+              }
+            }
+          ]
+        },
+        "enumeration": {
+          "type": "object",
+          "required": ["id", "values"],
+          "properties": {
+            "id": {"const": "enumeration"},
+            "values": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "#/$defs/types/enum_item"
+              }
+            }
+          }
         }
       },
       "typed_parameter": {
         "integer": {
+          "type": "object",
           "allOf": [
             {"$ref": "#/$defs/io/base_parameter"}
           ],
@@ -202,16 +277,72 @@
             "default": {"type": "integer"}
           },
           "unevaluatedProperties": false
+        },
+        "boolean": {
+          "type": "object",
+          "allOf": [
+            {"$ref": "#/$defs/io/base_parameter"}
+          ],
+          "required": ["type"],
+          "properties": {
+            "type": {"$ref": "#/$defs/io/type_specs/boolean"},
+            "default": {"type": "boolean"}
+          },
+          "unevaluatedProperties": false
+        },
+        "number": {
+          "type": "object",
+          "allOf": [
+            {"$ref": "#/$defs/io/base_parameter"}
+          ],
+          "required": ["type"],
+          "properties": {
+            "type": {"$ref": "#/$defs/io/type_specs/number"},
+            "default": {"type": "number"}
+          },
+          "unevaluatedProperties": false
+        },
+        "string": {
+          "type": "object",
+          "allOf": [
+            {"$ref": "#/$defs/io/base_parameter"}
+          ],
+          "required": ["type"],
+          "properties": {
+            "type": {"$ref": "#/$defs/io/type_specs/string"},
+            "default": {"type": "string"}
+          },
+          "unevaluatedProperties": false
+        },
+        "enumeration": {
+          "type": "object",
+          "allOf": [
+            {"$ref": "#/$defs/io/base_parameter"}
+          ],
+          "required": ["type"],
+          "properties": {
+            "type": {"$ref": "#/$defs/io/type_specs/enumeration"},
+            "default": {"$ref": "#/$defs/types/enum_item"}
+          },
+          "unevaluatedProperties": false
         }
       },
       "input_parameter": {
         "oneOf": [
-          {"$ref": "#/$defs/io/typed_parameter/integer"}
+          {"$ref": "#/$defs/io/typed_parameter/integer"},
+          {"$ref": "#/$defs/io/typed_parameter/boolean"},
+          {"$ref": "#/$defs/io/typed_parameter/number"},
+          {"$ref": "#/$defs/io/typed_parameter/string"},
+          {"$ref": "#/$defs/io/typed_parameter/enumeration"}
         ]
       },
       "output_parameter": {
         "oneOf": [
-          {"$ref": "#/$defs/io/typed_parameter/integer"}
+          {"$ref": "#/$defs/io/typed_parameter/integer"},
+          {"$ref": "#/$defs/io/typed_parameter/boolean"},
+          {"$ref": "#/$defs/io/typed_parameter/number"},
+          {"$ref": "#/$defs/io/typed_parameter/string"},
+          {"$ref": "#/$defs/io/typed_parameter/enumeration"}
         ]
       }
     }
