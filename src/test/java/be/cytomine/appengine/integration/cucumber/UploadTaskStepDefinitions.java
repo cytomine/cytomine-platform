@@ -2,7 +2,6 @@ package be.cytomine.appengine.integration.cucumber;
 
 import be.cytomine.appengine.AppEngineApplication;
 import be.cytomine.appengine.dto.handlers.filestorage.Storage;
-import be.cytomine.appengine.dto.misc.TaskIdentifiers;
 import be.cytomine.appengine.dto.responses.errors.ErrorCode;
 import be.cytomine.appengine.dto.responses.errors.ErrorDefinitions;
 import be.cytomine.appengine.exceptions.FileStorageException;
@@ -11,6 +10,8 @@ import be.cytomine.appengine.handlers.FileStorageHandler;
 import be.cytomine.appengine.handlers.RegistryHandler;
 import be.cytomine.appengine.models.task.*;
 import be.cytomine.appengine.repositories.TaskRepository;
+import be.cytomine.appengine.utils.TestTaskBuilder;
+
 import com.cytomine.registry.client.RegistryClient;
 import com.cytomine.registry.client.http.resp.CatalogResp;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -57,6 +58,7 @@ public class UploadTaskStepDefinitions {
 
     String taskNameSpace;
     String taskVersion;
+    Task persistedTask;
     private ClassPathResource archive;
     private Task uploaded;
 
@@ -96,29 +98,28 @@ public class UploadTaskStepDefinitions {
     @Given("Registry service is up and running")
     public void registry_service_is_up_and_running() throws IOException {
         try {
-            RegistryClient.delete("registry:5000/com/cytomine/app-engine/tasks/toy/add-integers@sha256:d53ef00848a227ce64ce71cd7cceb7184fd1f116e0202289b26a576cf87dc4cb");
+            RegistryClient.delete("registry:5000/img@sha256:d53ef00848a227ce64ce71cd7cceb7184fd1f116e0202289b26a576cf87dc4cb");
         } catch (Exception e) {
         }
     }
 
-    @Given("a {string} uniquely identified by an {string} and a {string}")
-    public void a_uniquely_identified_by_an_and_a(String taskName, String taskNamSpace, String taskVersion) {
+    @Given("a task uniquely identified by an {string} and a {string}")
+    public void a_task_uniquely_identified_by_an_and_a(String taskNamSpace, String taskVersion) {
         this.taskNameSpace = taskNamSpace;
         this.taskVersion = taskVersion;
     }
 
-    @Given("this {string} identified by an {string} and a {string} is not yet known to the App Engine")
-    public void this_identified_by_an_and_a_is_not_yet_known_to_the_app_engine(String taskName, String taskNameSpace, String taskVersion) {
+    @Given("this task identified by an {string} and a {string} is not yet known to the App Engine")
+    public void this_task_identified_by_an_and_a_is_not_yet_known_to_the_app_engine(String taskNameSpace, String taskVersion) {
         Task task = taskRepository.findByNamespaceAndVersion(taskNameSpace, taskVersion);
         Assertions.assertNull(task);
     }
 
-    @Given("this {string} is represented by a zip archive containing a task descriptor file and a docker image")
-    public void this_is_represented_by_a_zip_archive_containing_a_task_descriptor_file_and_a_docker_image(String string) {
+    @Given("this task is represented by a zip archive containing a task descriptor file and a docker image")
+    public void this_task_is_represented_by_a_zip_archive_containing_a_task_descriptor_file_and_a_docker_image() {
         // make sure valid test archive is in classpath
-        archive = new ClassPathResource("/artifacts/test_custom_image_location_task.zip");
+        archive = new ClassPathResource("/artifacts/com.cytomine.dummy.arithmetic.integer.addition-1.0.0.zip");
         Assertions.assertNotNull(archive);
-
     }
 
     @Given("the task descriptor is a YAML file stored in the zip archive named {string} structured following an agreed descriptor schema")
@@ -136,8 +137,8 @@ public class UploadTaskStepDefinitions {
         // docker image location is defined in field configuration.image.file in descriptor.yml already in artifacts
     }
 
-    @When("user calls POST on {string} endpoint with the zip archive as a multipart file parameter")
-    public void user_calls_post_on_endpoint_with_the_zip_archive_as_a_multipart_file_parameter(String url) {
+    @When("user calls POST on endpoint with the zip archive as a multipart file parameter")
+    public void user_calls_post_on_endpoint_with_the_zip_archive_as_a_multipart_file_parameter() {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
@@ -182,15 +183,15 @@ public class UploadTaskStepDefinitions {
         Assertions.assertFalse(jsonPayLoad.has("error_code"));
     }
 
-    @Then("App Engine creates a unique {string} for referencing the {string}")
-    public void app_engine_creates_a_unique_for_referencing_the(String string, String string2) {
+    @Then("App Engine creates a unique {string} for referencing the task")
+    public void app_engine_creates_a_unique_for_referencing_the(String string) {
 
         Task uploaded = taskRepository.findByNamespaceAndVersion(taskNameSpace, taskVersion);
         Assertions.assertEquals(UUID.fromString(uploaded.getIdentifier().toString()), uploaded.getIdentifier());
     }
 
-    @Then("App Engine creates a task storage \\(e.g. a bucket reserved for the {string}) in the File Storage service with a unique {string} as follows {string}")
-    public void app_engine_creates_a_task_storage_e_g_a_bucket_reserved_for_the_in_the_file_storage_service_with_a_unique_as_follows(String string, String string2, String string3) throws FileStorageException {
+    @Then("App Engine creates a task storage \\(e.g. a bucket reserved for the task) in the File Storage service with a unique {string} as follows {string}")
+    public void app_engine_creates_a_task_storage_e_g_a_bucket_reserved_for_the_in_the_file_storage_service_with_a_unique_as_follows(String string, String string2) throws FileStorageException {
         // retrieve from file storage
         String bucketName = uploaded.getStorageReference();
         boolean found = fileStorageHandler.checkStorageExists(bucketName);
@@ -200,7 +201,6 @@ public class UploadTaskStepDefinitions {
     @Then("App Engine stores the task descriptor in the task storage {string} of the File Storage service")
     public void app_engine_stores_the_task_descriptor_in_the_task_storage_of_the_file_storage_service(String string) throws FileStorageException {
         // retrieve from file storage
-
         String bucket = uploaded.getStorageReference();
         String object = "descriptor.yml";
         FileData descriptorFileData = new FileData(object, bucket);
@@ -242,79 +242,18 @@ public class UploadTaskStepDefinitions {
 
     }
 
-    Task taskOne;
-
     @Given("this task is already registered by the App Engine")
     public void this_task_is_already_registered_by_the_app_engine() {
         // store task in database
-        UUID taskLocalIdentifierForTaskOne = UUID.randomUUID();
-        String storageIdentifierForTaskOne = "task-" + taskLocalIdentifierForTaskOne + "-def";
-        String imageRegistryCompliantNameForTaskOne = "com/cytomine/app-engine/tasks/toy/add-integers:0.1.0";
-        TaskIdentifiers taskIdentifiersForTaskOne = new TaskIdentifiers(taskLocalIdentifierForTaskOne, storageIdentifierForTaskOne, imageRegistryCompliantNameForTaskOne);
-
-        taskOne = new Task();
-        taskOne.setIdentifier(taskIdentifiersForTaskOne.getLocalTaskIdentifier());
-        taskOne.setStorageReference(taskIdentifiersForTaskOne.getStorageIdentifier());
-        taskOne.setName("calculator_addintegers");
-        taskOne.setNameShort("must_not_have_changed");
-        taskOne.setDescriptorFile("com.cytomine.app-engine.tasks.toy.add-integers");
-        taskOne.setNamespace(this.taskNameSpace);
-        taskOne.setVersion(this.taskVersion);
-        taskOne.setDescription("app to add two numbers");
-        // add authors
-        Set<Author> authors = new HashSet<>();
-        Author a = new Author();
-        a.setFirstName("Moh");
-        a.setLastName("Altahir");
-        a.setOrganization("cytomine");
-        a.setEmail("siddig@cytomine.com");
-        a.setContact(true);
-        authors.add(a);
-        taskOne.setAuthors(authors);
-        // add inputs
-
-        Set<Input> inputs = new HashSet<>();
-        Input num1 = new Input();
-        num1.setName("num1");
-        num1.setDisplayName("First Number");
-        num1.setDescription("First number in sum operation");
-        IntegerType inputType1_1 = new IntegerType();
-        inputType1_1.setId("integer");
-        num1.setType(inputType1_1);
-
-        Input num2 = new Input();
-        num2.setName("num2");
-        num2.setDisplayName("Second Number");
-        num2.setDescription("Second number in sum operation");
-        IntegerType inputType1_2 = new IntegerType();
-        inputType1_2.setId("integer");
-        num2.setType(inputType1_2);
-
-        inputs.add(num1);
-        inputs.add(num2);
-        taskOne.setInputs(inputs);
-        // add outputs for task one
-        Set<Output> outputs = new HashSet<>();
-        Output output = new Output();
-        output.setName("sum");
-        output.setDisplayName("Sum");
-        output.setDescription("sum of two integers");
-        IntegerType outputType = new IntegerType();
-        outputType.setId("integer");
-        output.setType(outputType);
-        outputs.add(output);
-        taskOne.setOutputs(outputs);
-
-        taskOne = taskRepository.save(taskOne);
-        Assertions.assertNotNull(taskOne);
-
-        // add it to the storage service
+        persistedTask = TestTaskBuilder.buildHardcodedAddInteger();
+        taskRepository.save(persistedTask);
+        Assertions.assertNotNull(persistedTask);
 
         // create bucket
         try {
-            boolean bucketExists = fileStorageHandler.checkStorageExists(taskOne.getStorageReference());
+            boolean bucketExists = fileStorageHandler.checkStorageExists(persistedTask.getStorageReference());
             if (!bucketExists) {
-                Storage storage = new Storage(taskOne.getStorageReference());
+                Storage storage = new Storage(persistedTask.getStorageReference());
                 fileStorageHandler.createStorage(storage);
 
             }
@@ -327,7 +266,7 @@ public class UploadTaskStepDefinitions {
             File file = descriptor.getFile();
             FileInputStream fileInputStream = new FileInputStream(file);
 
-            Storage storage = new Storage(taskOne.getStorageReference());
+            Storage storage = new Storage(persistedTask.getStorageReference());
             byte[] fileByteArray = new byte[(int) file.length()];
             fileByteArray = fileInputStream.readAllBytes();
             FileData fileData = new FileData(fileByteArray, "descriptor.yml");
@@ -365,7 +304,7 @@ public class UploadTaskStepDefinitions {
 
         // and storage service
         String object = "descriptor.yml";
-        FileData fileData = new FileData(object, taskOne.getStorageReference());
+        FileData fileData = new FileData(object, persistedTask.getStorageReference());
         fileData = fileStorageHandler.readFile(fileData);
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         JsonNode descriptor = mapper.readTree(fileData.getFileData());
@@ -384,25 +323,24 @@ public class UploadTaskStepDefinitions {
     }
 
     // invalid task bundle tests
-    @Given("this task is represented by a zip archive containing a task descriptor file {string} and a docker image at {string}")
-    public void this_task_is_represented_by_a_zip_archive_containing_a_task_with_version_descriptor_file_and_a_docker_image_at(String version, String path) {
+    @Given("this task {string} is represented by a zip archive containing a task descriptor file {string} and a docker image at {string}")
+    public void this_task_is_represented_by_a_zip_archive_containing_a_task_with_version_descriptor_file_and_a_docker_image_at(String taskName, String version, String path) {
         // prepare bundles that represent all failure modes based on path and version
-        if (path.equalsIgnoreCase("image.tar") && version.equalsIgnoreCase("")) {
-            archive = new ClassPathResource("/artifacts/no_version.zip");
-            Assertions.assertNotNull(archive);
-        }
-        if (path.equalsIgnoreCase("image.tar") && version.equalsIgnoreCase("0.1.0")) {
-            archive = new ClassPathResource("/artifacts/unexpected_path.zip");
-            Assertions.assertNotNull(archive);
-        }
+        switch (taskName) {
+            case "task1":
+                archive = new ClassPathResource("/artifacts/no_version.zip");
+                break;
 
-        if (path.equalsIgnoreCase("myimage.tar") && version.equalsIgnoreCase("0.1.0")) {
-            archive = new ClassPathResource("/artifacts/wrong_name.zip");
-            Assertions.assertNotNull(archive);
+            case "task2":
+                archive = new ClassPathResource("/artifacts/unexpected_path.zip");
+                break;
+
+            case "task3":
+                archive = new ClassPathResource("/artifacts/wrong_name.zip");
+                break;
         }
+        Assertions.assertNotNull(archive);
     }
-
-    String expectedImagePath;
 
     @Given("the {string} can be retrieved from {string} in the descriptor file or is {string} if the field is missing")
     public void the_can_be_retrieved_from_in_the_descriptor_file_or_is_if_the_field_is_missing(String expectedPath, String config, String image) {
@@ -429,19 +367,22 @@ public class UploadTaskStepDefinitions {
         Assertions.assertTrue(persistedResponse.getStatusCode().isSameCodeAs(HttpStatusCode.valueOf(400)));
     }
 
-    @Then("App Engine fails to validate the {string} descriptor against the descriptor schema")
-    public void app_engine_fails_to_validate_the_task_descriptor_against_the_descriptor_schema(String task) throws JsonProcessingException {
-        JsonNode jsonPayLoad = new ObjectMapper().readTree(persistedResponse.getBody());
-        if (task.equalsIgnoreCase("Task 1")) {
-            Assertions.assertTrue(jsonPayLoad.get("message").textValue().equalsIgnoreCase("schema validation failed for descriptor.yml"));
-        }
-        if (task.equalsIgnoreCase("Task 2")) {
-            Assertions.assertTrue(jsonPayLoad.get("message").textValue().equalsIgnoreCase("image not found in configured place in descriptor and not in the root directory"));
+    @Then("App Engine fails to validate the task descriptor for task {string} against the descriptor schema")
+    public void app_engine_fails_to_validate_the_task_descriptor_against_the_descriptor_schema(String taskName) throws JsonProcessingException {
+        JsonNode jsonPayLoad = new ObjectMapper().readTree(result.getBody());
+        ErrorCode code;
+        switch (taskName) {
+            case "task1":
+                code = ErrorCode.INTERNAL_SCHEMA_VALIDATION_ERROR;
+                break;
+            case "task2":
+            case "task3":
+                code = ErrorCode.INTERNAL_DOCKER_IMAGE_TAR_NOT_FOUND;
+                break;
+            default:
+                throw new RuntimeException("invalid test task");
         }
 
-        if (task.equalsIgnoreCase("Task 3")) {
-            Assertions.assertTrue(jsonPayLoad.get("message").textValue().equalsIgnoreCase("image not found in configured place in descriptor and not in the root directory"));
-        }
-
+        Assertions.assertTrue(jsonPayLoad.get("error_code").textValue().equals(ErrorDefinitions.fromCode(code).code));
     }
 }

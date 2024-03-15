@@ -20,6 +20,8 @@ import be.cytomine.appengine.repositories.IntegerProvisionRepository;
 import be.cytomine.appengine.repositories.RunRepository;
 import be.cytomine.appengine.repositories.TaskRepository;
 import be.cytomine.appengine.states.TaskRunState;
+import be.cytomine.appengine.utils.TestTaskBuilder;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -32,6 +34,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootContextLoader;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.util.Assert;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -56,7 +62,7 @@ public class ProvisionTaskStepDefinitions {
 
     @Autowired
     FileStorageHandler fileStorageHandler;
-    Task task;
+    Task persistedTask;
     TaskRun taskRun;
     Run run;
 
@@ -76,75 +82,19 @@ public class ProvisionTaskStepDefinitions {
     @Given("a task has been successfully uploaded")
     public void a_task_has_been_successfully_uploaded() {
         taskRepository.deleteAll();
-        UUID taskLocalIdentifierForTaskOne = UUID.randomUUID();
-        String storageIdentifierForTaskOne = "task-" + taskLocalIdentifierForTaskOne + "-def";
-        String imageRegistryCompliantNameForTaskOne = "com/cytomine/app-engine/tasks/toy/add-integers:0.1.0";
-        TaskIdentifiers taskIdentifiersForTaskOne = new TaskIdentifiers(taskLocalIdentifierForTaskOne, storageIdentifierForTaskOne, imageRegistryCompliantNameForTaskOne);
-
-        task = new Task();
-        task.setIdentifier(taskIdentifiersForTaskOne.getLocalTaskIdentifier());
-        task.setStorageReference(taskIdentifiersForTaskOne.getStorageIdentifier());
-        task.setName("calculator_addintegers");
-        task.setNameShort("add_int");
-        task.setDescriptorFile("com.cytomine.app-engine.tasks.toy.add-integers");
-        task.setDescription("app to add two numbers");
-        // add authors
-        Set<Author> authors = new HashSet<>();
-        Author a = new Author();
-        a.setFirstName("Moh");
-        a.setLastName("Altahir");
-        a.setOrganization("cytomine");
-        a.setEmail("siddig@cytomine.com");
-        a.setContact(true);
-        authors.add(a);
-        task.setAuthors(authors);
-        // add inputs
-
-        Set<Input> inputs = new HashSet<>();
-        Input num1 = new Input();
-        num1.setName("num1");
-        num1.setDisplayName("First Number");
-        num1.setDescription("First number in sum operation");
-        IntegerType inputType1_1 = new IntegerType();
-        inputType1_1.setId("integer");
-        num1.setType(inputType1_1);
-
-        Input num2 = new Input();
-        num2.setName("num2");
-        num2.setDisplayName("Second Number");
-        num2.setDescription("Second number in sum operation");
-        IntegerType inputType1_2 = new IntegerType();
-        inputType1_2.setId("integer");
-        num2.setType(inputType1_2);
-
-        inputs.add(num1);
-        inputs.add(num2);
-        task.setInputs(inputs);
-        // add outputs for task one
-        Set<Output> outputs = new HashSet<>();
-        Output output = new Output();
-        output.setName("sum");
-        output.setDisplayName("Sum");
-        output.setDescription("sum of two integers");
-        IntegerType outputType = new IntegerType();
-        outputType.setId("integer");
-        output.setType(outputType);
-        outputs.add(output);
-        task.setOutputs(outputs);
-
-
+        persistedTask = TestTaskBuilder.buildHardcodedAddInteger();
     }
 
     @Given("this task has {string} and {string}")
     public void this_task_has_and(String namespace, String version) {
-        task.setNamespace(namespace);
-        task.setVersion(version);
-        taskRepository.save(task);
+        persistedTask.setNamespace(namespace);
+        persistedTask.setVersion(version);
+        taskRepository.save(persistedTask);
     }
 
     @Given("this task has at least one input parameter")
     public void this_task_has_at_least_one_input_parameter() {
-        Assertions.assertFalse(task.getInputs().isEmpty());
+        Assertions.assertFalse(persistedTask.getInputs().isEmpty());
     }
 
     @When("user calls the endpoint {string} with HTTP method POST")
@@ -154,10 +104,10 @@ public class ProvisionTaskStepDefinitions {
         appEngineApi = new DefaultApi(defaultClient);
         try {
             if (endpoint.equalsIgnoreCase("/task/namespace/version/runs")) {
-                taskRun = appEngineApi.tasksNamespaceVersionRunsPost(task.getNamespace(), task.getVersion());
+                taskRun = appEngineApi.tasksNamespaceVersionRunsPost(persistedTask.getNamespace(), persistedTask.getVersion());
             }
             if (endpoint.equalsIgnoreCase("/task/id/runs")) {
-                taskRun = appEngineApi.tasksTaskIdRunsPost(task.getIdentifier());
+                taskRun = appEngineApi.tasksTaskIdRunsPost(persistedTask.getIdentifier());
             }
         } catch (ApiException e) {
             e.printStackTrace();
@@ -200,20 +150,9 @@ public class ProvisionTaskStepDefinitions {
 
     @Given("this task has only one input parameter {string} of type {string}")
     public void this_task_has_only_one_input_parameter_of_type(String paramName, String type) {
-        task.getInputs().clear();
-
-        Input inputOne = new Input();
-        inputOne.setName(paramName);
-        inputOne.setDisplayName("First Number");
-        inputOne.setDescription("First number in sum operation");
-        IntegerType inputType1 = new IntegerType();
-        inputType1.setId(type);
-        inputOne.setType(inputType1);
-        task.getInputs().add(inputOne);
-
-
-        task = taskRepository.saveAndFlush(task);
-
+        persistedTask.getInputs().removeIf(input -> !(((IntegerType)input.getType()).getId().equals(type) && input.getName().equals(paramName)));
+        Assertions.assertEquals(persistedTask.getInputs().size(), 1);
+        persistedTask = taskRepository.saveAndFlush(persistedTask);
     }
 
     @Given("this parameter has no validation rules")
@@ -224,7 +163,7 @@ public class ProvisionTaskStepDefinitions {
 
     @Given("a task run has been created for this task")
     public void a_task_run_has_been_created_for_this_task() throws FileStorageException {
-        run = new Run(UUID.randomUUID(), TaskRunState.CREATED, task);
+        run = new Run(UUID.randomUUID(), TaskRunState.CREATED, persistedTask);
         run = taskRunRepository.saveAndFlush(run);
         Storage runStorage = new Storage("task-run-inputs-" + run.getId().toString());
         fileStorageHandler.createStorage(runStorage);
@@ -234,13 +173,13 @@ public class ProvisionTaskStepDefinitions {
 
     @Given("a task run has been created and provisioned with parameter {string} value {string} for this task")
     public void a_task_run_has_been_created_for_this_task(String parameterName, String initialValue) throws FileStorageException {
-        run = new Run(UUID.randomUUID(), TaskRunState.CREATED, task);
+        run = new Run(UUID.randomUUID(), TaskRunState.CREATED, persistedTask);
 
         IntegerProvision provision = new IntegerProvision(parameterName, Integer.parseInt(initialValue), run.getId());
         run.getProvisions().add(provision);
-        if (parameterName.equals("num2")) {
-            IntegerProvision provisionNum1 = new IntegerProvision("num1", 10, run.getId());
-            run.getProvisions().add(provisionNum1);
+        if (parameterName.equals("b")) {
+            IntegerProvision provisionInputA = new IntegerProvision("a", 10, run.getId());
+            run.getProvisions().add(provisionInputA);
             run.setState(TaskRunState.PROVISIONED);
         }
         run = taskRunRepository.save(run);
@@ -305,33 +244,14 @@ public class ProvisionTaskStepDefinitions {
 
     @Given("the first parameter is {string} of type {string} without a validation rule")
     public void the_first_parameter_is_of_type_without_a_validation_rule(String parameterName, String type) {
-        Set<Input> inputs = task.getInputs();
-        Input num1 = new Input();
-        num1.setName(parameterName);
-        num1.setDisplayName("First Number");
-        num1.setDescription("First number in sum operation");
-        IntegerType inputType1_1 = new IntegerType();
-        inputType1_1.setId(type);
-        num1.setType(inputType1_1);
-
-
-        inputs.add(num1);
-        task.setInputs(inputs);
+        Assertions.assertTrue(persistedTask.getInputs().stream()
+          .anyMatch(input -> ((IntegerType)input.getType()).getId().equals(type) && input.getName().equals(parameterName)));
     }
 
     @Given("the second parameter is {string} of type {string} without a validation rule")
     public void the_second_parameter_is_of_type_without_a_validation_rule(String parameterName, String type) {
-        Set<Input> inputs = task.getInputs();
-        Input num2 = new Input();
-        num2.setName(parameterName);
-        num2.setDisplayName("Second Number");
-        num2.setDescription("Second number in sum operation");
-        IntegerType inputType1_2 = new IntegerType();
-        inputType1_2.setId(type);
-        num2.setType(inputType1_2);
-
-        inputs.add(num2);
-        task.setInputs(inputs);
+        Assertions.assertTrue(persistedTask.getInputs().stream()
+          .anyMatch(input -> ((IntegerType)input.getType()).getId().equals(type) && input.getName().equals(parameterName)));
     }
 
     @Given("no validation rules are defined for these parameters")
@@ -383,25 +303,20 @@ public class ProvisionTaskStepDefinitions {
 
     @Given("the first parameter is {string} of type {string} with a validation rule {string}")
     public void the_first_parameter_is_of_type_with_a_validation_rule(String parameterName, String type, String validationRule) {
-        Set<Input> inputs = task.getInputs();
-        inputs.removeIf(input -> input.getName().equalsIgnoreCase(parameterName));
+        Optional<Input> parameterOptional = persistedTask.getInputs().stream().filter(input -> ((IntegerType)input.getType()).getId().equals(type) && input.getName().equals(parameterName)).findFirst();
 
-        Input num1 = new Input();
-        num1.setName(parameterName);
-        num1.setDisplayName("First Number");
-        num1.setDescription("First number in sum operation");
-        IntegerType inputType1_1 = new IntegerType();
-        inputType1_1.setId(type);
+        Assertions.assertTrue(parameterOptional.isPresent());
+
+        // adding constraint to the existing unconstrainted parameter
+        Input parameter = parameterOptional.get();
         String[] ruleSet = validationRule.split(":");
-        if (ruleSet[0].equalsIgnoreCase(IntegerTypeConstraint.LOWER_THAN.getStringKey())) {
-            inputType1_1.setLt(Integer.parseInt(ruleSet[1].trim()));
+        switch (ruleSet[0].trim()) {
+            case "lt":
+                ((IntegerType)parameter.getType()).setLt(Integer.parseInt(ruleSet[1].trim()));
+                break;
+            default:
+                break;
         }
-        num1.setType(inputType1_1);
-
-
-        inputs.add(num1);
-        task.setInputs(inputs);
-
     }
 
     @Then("the value {string} is saved and associated with parameter {string} after passing the validation rule {string}")
@@ -438,7 +353,7 @@ public class ProvisionTaskStepDefinitions {
 
     @Given("this task has no parameter named {string}")
     public void this_task_has_no_parameter_named(String parameterName) {
-        Set<Input> inputs = task.getInputs();
+        Set<Input> inputs = persistedTask.getInputs();
         inputs.removeIf(input -> input.getName().equalsIgnoreCase(parameterName));
     }
 
@@ -473,30 +388,11 @@ public class ProvisionTaskStepDefinitions {
 
     @Given("this task has at least one input parameter {string} of type {string}")
     public void this_task_has_at_least_one_input_parameter_of_type(String paramName, String type) {
-        task.getInputs().clear();
-
-        inputOne = new Input();
-        inputOne.setName(paramName);
-        inputOne.setDisplayName("First Number");
-        inputOne.setDescription("First number in sum operation");
-        IntegerType inputType1 = new IntegerType();
-        inputType1.setId(type);
-        inputOne.setType(inputType1);
-        task.getInputs().add(inputOne);
-
-        Input inputTwo = new Input();
-        inputTwo.setName("num2");
-        inputTwo.setDisplayName("Second Number");
-        inputTwo.setDescription("Second number in sum operation");
-        IntegerType inputType2 = new IntegerType();
-        inputType2.setId(type);
-        inputTwo.setType(inputType2);
-        task.getInputs().add(inputTwo);
-
-        task = taskRepository.saveAndFlush(task);
-
+        // Check if the set contains an object matching the conditions
+        // Will raise an error if the persisted task is not valid with the test
+        Assertions.assertTrue(persistedTask.getInputs().stream()
+                .anyMatch(input -> ((IntegerType)input.getType()).getId().equals(type) && input.getName().equals(paramName)));
     }
-
 
     @Then("the task run state remains unchanged and set to {string}")
     public void the_task_run_state_remains_unchanged_and_set_to(String state) {

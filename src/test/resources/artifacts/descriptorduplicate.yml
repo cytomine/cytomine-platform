@@ -1,7 +1,7 @@
-name: calculator_addintegers
+name: Integers addition
 name_short: must_not_have_changed
 version: 0.1.0
-namespace: com.cytomine.app-engine.tasks.toy.add-integers
+namespace: com.cytomine.dummy.arithmetic.integer.addition
 $schema: https://cytomine.com/schema-store/tasks/task.v0.json
 authors:
   - first_name: Romain
@@ -14,11 +14,11 @@ configuration:
   input_folder: /inputs
   output_folder: /outputs
   image:
-        file: /image.tar 
+        file: /image.tar
 
 inputs:
   a:
-    display_name: A 
+    display_name: A
     type: integer
     description: First operand
   b:
