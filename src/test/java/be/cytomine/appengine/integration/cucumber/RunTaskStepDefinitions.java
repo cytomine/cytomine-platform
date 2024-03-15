@@ -59,14 +59,6 @@ public class RunTaskStepDefinitions {
     @Autowired
     DefaultApi appEngineAPI;
 
-
-    @Value("${storage.accesskey}")
-    private String accessKey;
-    @Value("${storage.secretkey}")
-    private String accessSecretKey;
-    @Value("${storage.url}")
-    private String url;
-
     @Autowired
     private DefaultApi appEngineApi;
 

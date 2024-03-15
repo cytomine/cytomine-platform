@@ -34,8 +34,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ContextConfiguration;
 
 import java.io.*;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -54,15 +52,6 @@ public class ReadTaskStepDefinitions {
 
     @Autowired
     DefaultApi appEngineAPI;
-
-    @Value("${storage.accesskey}")
-    private String accessKey;
-
-    @Value("${storage.secretkey}")
-    private String accessSecretKey;
-
-    @Value("${storage.url}")
-    private String url;
 
     ResponseEntity<String> result;
     private ClassPathResource descriptor;

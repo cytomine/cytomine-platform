@@ -111,7 +111,7 @@ tests-storage-registry:
     DB_USERNAME: appengine
     DB_PASSWORD: password
   script:
-    - gradle :test --no-daemon
+    - gradle :test --no-daemon -w
   artifacts:
     when: always
     reports:
