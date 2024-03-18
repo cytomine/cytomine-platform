@@ -118,6 +118,7 @@ public class TaskService {
         Task task = new Task();
         task.setIdentifier(taskIdentifiers.getLocalTaskIdentifier());
         task.setStorageReference(taskIdentifiers.getStorageIdentifier());
+        task.setImageName(taskIdentifiers.getImageRegistryCompliantName());
         task.setName(uploadTaskArchive.getDescriptorFileAsJson().get("name").textValue());
         task.setNameShort(uploadTaskArchive.getDescriptorFileAsJson().get("name_short").textValue());
         task.setDescriptorFile(uploadTaskArchive.getDescriptorFileAsJson().get("namespace").textValue());

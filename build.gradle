@@ -86,6 +86,7 @@ dependencies {
     implementation 'org.hibernate:hibernate-core:6.3.0.Final'
     implementation 'io.hypersistence:hypersistence-utils-hibernate-60:3.5.2'
     implementation 'org.liquibase:liquibase-core:4.25.0'
+    implementation 'io.fabric8:kubernetes-client:6.10.0'
     runtimeOnly 'org.postgresql:postgresql'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
