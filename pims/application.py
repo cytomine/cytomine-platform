@@ -88,6 +88,7 @@ async def startup():
         logger.warning(f"[orange3]Cache is disabled by configuration.")
     else:
         try:
+            logger.info(f"[orange3] Try to reach cache ... ")
             await startup_cache(__version__)
             logger.info(f"[green]Cache is ready!")
         except ConnectionError:
