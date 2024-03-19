@@ -27,7 +27,7 @@ apply_fastapi_tweaks()
 import time
 from fastapi import FastAPI, Request, APIRouter
 from pydantic import ValidationError
-from aioredis.exceptions import ConnectionError
+from aioredis.exceptions import ConnectionError, TimeoutError
 
 from pims.utils.background_task import add_background_task
 from pims.cache import startup_cache
@@ -95,7 +95,10 @@ async def startup():
                 f"Impossible to connect to cache \"{get_settings().cache_url}\" "
                 f"while cache is enabled by configuration."
             )
-
+        except TimeoutError as e:
+            sys.exit(
+                f"Timeout while connecting to cache \"{get_settings().cache_url}\": {str(e)}."
+            )
 
 def _log(request_, response_, duration_):
     args = dict(request_.query_params)

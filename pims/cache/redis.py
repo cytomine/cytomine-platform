@@ -112,7 +112,7 @@ class PickleCodec(Codec):
 
 class RedisBackend:
     def __init__(self, redis_url: str):
-        self.redis = aioredis.from_url(redis_url)
+        self.redis = aioredis.from_url(redis_url, socket_connect_timeout=10)
 
     async def get_with_ttl(self, key: str) -> Tuple[int, str]:
         async with self.redis.pipeline(transaction=True) as pipe:
