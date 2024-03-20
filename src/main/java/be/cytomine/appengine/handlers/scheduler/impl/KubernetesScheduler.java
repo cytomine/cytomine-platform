@@ -23,8 +23,8 @@ public class KubernetesScheduler implements SchedulerHandler {
     @Autowired
     private KubernetesClient kubernetesClient;
 
-    @Value("${storage.base-path}")
-    private String basePath;
+    @Value("${storage.host-path}")
+    private String hostPath;
 
     @Override
     public Schedule schedule(Schedule schedule) throws SchedulingException {
@@ -33,11 +33,11 @@ public class KubernetesScheduler implements SchedulerHandler {
         Run run = schedule.getRun();
         Task task = run.getTask();
 
-        String inputPath = basePath + "/task-run-inputs-" + run.getId();
-        String outputPath = basePath + "/task-run-outputs-" + run.getId();
+        String inputPath = hostPath + "/task-run-inputs-" + run.getId();
+        String outputPath = hostPath + "/task-run-outputs-" + run.getId();
 
         String jobName = task.getName().replaceAll("[^a-zA-Z0-9]", "") + "-" + run.getId();
-        String imageName = "registry:5000/" + task.getImageName();
+        String imageName = "localhost:5051/" + task.getImageName();
 
         logger.info("Schedule: create Task Job");
         Job job = new JobBuilder()
