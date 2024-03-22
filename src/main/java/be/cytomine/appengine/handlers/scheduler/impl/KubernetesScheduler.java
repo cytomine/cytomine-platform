@@ -1,5 +1,7 @@
 package be.cytomine.appengine.handlers.scheduler.impl;
 
+import java.util.Collections;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,11 +12,13 @@ import be.cytomine.appengine.exceptions.SchedulingException;
 import be.cytomine.appengine.handlers.SchedulerHandler;
 import be.cytomine.appengine.models.task.Run;
 import be.cytomine.appengine.models.task.Task;
+import be.cytomine.appengine.utils.JobWatcher;
 import io.fabric8.kubernetes.api.model.HostPathVolumeSourceBuilder;
 import io.fabric8.kubernetes.api.model.VolumeBuilder;
 import io.fabric8.kubernetes.api.model.batch.v1.Job;
 import io.fabric8.kubernetes.api.model.batch.v1.JobBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import jakarta.annotation.PostConstruct;
 
 public class KubernetesScheduler implements SchedulerHandler {
 
@@ -22,6 +26,9 @@ public class KubernetesScheduler implements SchedulerHandler {
 
     @Autowired
     private KubernetesClient kubernetesClient;
+
+    @Autowired
+    private JobWatcher jobWatcher;
 
     @Value("${storage.host-path}")
     private String hostPath;
@@ -44,6 +51,7 @@ public class KubernetesScheduler implements SchedulerHandler {
                 .withApiVersion("batch/v1")
                 .withNewMetadata()
                 .withName(jobName)
+                .withLabels(Collections.singletonMap("runId", run.getId().toString()))
                 .endMetadata()
                 .withNewSpec()
                 .withNewTemplate()
@@ -96,7 +104,14 @@ public class KubernetesScheduler implements SchedulerHandler {
     }
 
     @Override
+    @PostConstruct
     public void monitor() throws SchedulingException {
-
+        logger.info("Monitor: add watcher to the cluster");
+        kubernetesClient
+                .batch()
+                .v1()
+                .jobs()
+                .inNamespace("default")
+                .watch(jobWatcher);
     }
 }
