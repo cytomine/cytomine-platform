@@ -10,6 +10,20 @@ variables:
   TESTS_IMAGE_POSTGIS: 'cytomine/postgis:1.4.0-dev.2'
 
 
+include:
+  - component: gitlab.cytom.in/cm/rnd/cicd/component-nextcloud/download-file@1.1.0
+    inputs:
+      source-filepath: GitLab/Artifacts/AppEngine/Tasks/com.cytomine.dummy.arithmetic.integer.addition-1.0.0.zip
+      target-directory: ./src/test/resources/artifacts
+      job-name: download-integer-addition
+
+
+download-integer-addition:
+  artifacts:
+    paths:
+      - ./src/test/resources/artifacts/com.cytomine.dummy.arithmetic.integer.addition-1.0.0.zip
+
+
 default:
   tags:
     - docker
@@ -84,6 +98,9 @@ validate-descriptor-schema:
 tests-storage-registry:
   stage: test
   image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/gradle:8.4-jdk17-alpine
+  needs:
+    - job: download-integer-addition
+      artifacts: true
   services:
     - alias: postgres
       name: $TESTS_IMAGE_POSTGIS
