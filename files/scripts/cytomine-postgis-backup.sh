@@ -26,7 +26,7 @@ mkdir -p $BACKUP_DIR
 BACKUP_TARGET_PATH="$BACKUP_DIR/$BACKUP_FILENAME.tar.gz"
 CURR_MONTH_BACKUP_TARGET_PATH="$BACKUP_DIR/$CURR_MONTH_BACKUP_FILENAME.tar.gz"
 PREV_MONTH_BACKUP_TARGET_PATH="$BACKUP_DIR/$PREV_MONTH_BACKUP_FILENAME.tar.gz"
-BACKUP_TMP_PATH="/tmp"
+BACKUP_TMP_PATH="/var/lib/postgresql/data/backup/tmp"
 
 #logging operation
 echo -e "\n$(date) Backing up cytomine postgis databases ... $DB_USER"

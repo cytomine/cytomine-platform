@@ -37,19 +37,20 @@ if (( $(stat -c%s "$RESTORE_DIR/$RESTORE_FILENAME") < 1000 )); then
   exit 3
 fi
 
-echo -e "\n$(date) Extracting $RESTORE_DIR/$RESTORE_FILENAME to /tmp/db_to_restore.sql $DB_USER"
-cd $RESTORE_DIR
-mkdir -p /tmp/cytomine-restore
-tar xzf restore.tar.gz -C /tmp/cytomine-restore
+TMP_RESTORE_DIR="/var/lib/postgresql/data/backup/tmp-restore"
+echo -e "\n$(date) Extracting $RESTORE_DIR/$RESTORE_FILENAME to $TMP_RESTORE_DIR/db_to_restore.sql $DB_USER"
+cd $RESTORE_DIR || exit 7
+mkdir -p $TMP_RESTORE_DIR || exit 8
+tar xzf restore.tar.gz -C $TMP_RESTORE_DIR
 if [ $? -ne 0 ]; then
   echo -e "$(date) Could not extract SQL dump from $RESTORE_DIR/$RESTORE_FILENAME. Aborting restore."
   exit 4
 fi
 
-mv /tmp/cytomine-restore/*.sql /tmp/cytomine-restore/restore.sql
+mv $TMP_RESTORE_DIR/*.sql $TMP_RESTORE_DIR/restore.sql
 if [ $? -ne 0 ]; then
-  echo -e "$(date) Could not find a SQL file dump. Aborting restore."
-  rm -rf /tmp/cytomine-restore
+  echo -e "$(date) Could not find a SQL file dump in $TMP_RESTORE_DIR. Aborting restore."
+  rm -rf $TMP_RESTORE_DIR
   exit 5
 fi
 
@@ -58,21 +59,21 @@ echo -e "\n$(date) Drop database ..."
 dropdb --force --if-exists --username="$DB_USER" "$DB_NAME"
 if [ $? -ne 0 ]; then
   echo -e "$(date) Could not drop database. Aborting restore."
-  rm -rf /tmp/cytomine-restore
+  rm -rf $TMP_RESTORE_DIR
   exit 6
 fi
 
-echo -e "\n$(date) Import postgis databases ..."
-psql --username="$DB_USER" --dbname="postgres" --file=/tmp/cytomine-restore/restore.sql
+echo -e "\n$(date) Import postgis databases from $TMP_RESTORE_DIR/restore.sql ..."
+psql --username="$DB_USER" --dbname="postgres" --file=$TMP_RESTORE_DIR/restore.sql
 # Check the exit status of pg_dupsqlmp
 if [ $? -ne 0 ]; then
   echo -e "$(date) Could not inject dump. Aborting restore."
-  rm -rf /tmp/cytomine-restore
+  rm -rf $TMP_RESTORE_DIR
   exit 6
 fi
 
 echo -e "$(date) The database was successfully restored".
 
 # Clean tmp file
-rm -rf /tmp/cytomine-restore
+rm -rf $TMP_RESTORE_DIR
 exit 0
