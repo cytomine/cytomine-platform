@@ -100,7 +100,6 @@ public class KubernetesScheduler implements SchedulerHandler {
 
     @Override
     public void alive() throws SchedulingException {
-
     }
 
     @Override

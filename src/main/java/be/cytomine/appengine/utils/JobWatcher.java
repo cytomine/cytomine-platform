@@ -28,15 +28,10 @@ public class JobWatcher implements Watcher<Job> {
     }
 
     private TaskRunState processJobStatus(Job job) {
-        logger.info("Cluster event: process job status: " + job.getMetadata().getName());
+        logger.info("Cluster event: process job status " + job.getMetadata().getName());
 
         JobStatus status = job.getStatus();
-        if (status == null || status.getConditions() == null) {
-            return TaskRunState.RUNNING;
-        }
-
         for (JobCondition condition : status.getConditions()) {
-            logger.info("JOBCONDITION: " + condition.getType() + " " + condition);
             switch (condition.getType()) {
                 case "Complete":
                     return TaskRunState.FINISHED;
@@ -46,12 +41,12 @@ public class JobWatcher implements Watcher<Job> {
             }
         }
 
-        return TaskRunState.PENDING;
+        return TaskRunState.RUNNING;
     }
 
     @Override
     public void eventReceived(Action action, Job job) {
-        logger.info("Cluster event: job " + job.getMetadata().getName() + " " + action);
+        logger.info("Cluster event: job " + job.getMetadata().getName());
 
         String runId = job.getMetadata().getLabels().get("runId");
         Optional<Run> runOptional = runRepository.findById(UUID.fromString(runId));
@@ -60,10 +55,6 @@ public class JobWatcher implements Watcher<Job> {
         }
 
         Run run = runOptional.get();
-        if (!run.getState().equals(TaskRunState.QUEUING)) {
-            return;
-        }
-
         switch (action.name()) {
             case "ADDED":
                 run.setState(TaskRunState.QUEUED);
