@@ -147,7 +147,7 @@ class ServerFolder(Deployable):
         write_dotenv(target_directory, global_envs)
 
         # docker-compose.override.yml
-        override_file = EditableDockerCompose(version=self._docker_compose_file.version)
+        override_file = EditableDockerCompose(version=None)  # version key is deprecated
 
         # envs/{SERVICE}.env files
         if self._envs.has_server(self._server_name):

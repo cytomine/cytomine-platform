@@ -212,7 +212,8 @@ class EditableDockerCompose:
     def __init__(self, version="3.9") -> None:
         self._compose = dict()
         self._compose["services"] = {}
-        self._compose["version"] = version
+        if version is not None:
+            self._compose["version"] = version
 
     def _get_service_dict(self, service):
         if service not in self._compose["services"]:
