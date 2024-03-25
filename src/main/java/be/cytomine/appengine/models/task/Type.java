@@ -22,5 +22,4 @@ public class Type extends BaseEntity{
 
     @ElementCollection
     private List<String> constraints; // used to track which constraints are defined for this type object
-
 }

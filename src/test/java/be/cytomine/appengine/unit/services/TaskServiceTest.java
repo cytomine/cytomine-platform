@@ -67,10 +67,10 @@ public class TaskServiceTest {
         UploadTaskArchive uploadTaskArchive = new UploadTaskArchive();
         uploadTaskArchive.setDockerImage(new byte[]{});
         uploadTaskArchive.setDescriptorFile(new byte[]{});
-        String descriptorYml = "name: calculator_addintegers\n" +
+        String descriptorYml = "name: Integers addition\n" +
                 "name_short: add_int\n" +
                 "version: 0.1.0\n" +
-                "namespace: com.cytomine.app-engine.tasks.toy.add-integers\n" +
+                "namespace: com.cytomine.dummy.arithmetic.integer.addition\n" +
                 "$schema: https://cytomine.com/schema-store/tasks/task.v0.json\n" +
                 "authors:\n" +
                 "  - first_name: Romain\n" +
