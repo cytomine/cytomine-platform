@@ -1,5 +1,5 @@
 stages:
-  - lint
+  - test
   - build
 
 variables:
@@ -32,7 +32,7 @@ default:
 
 
 lint-dockerfiles:
-  stage: lint
+  stage: test
   image: hadolint/hadolint:latest-alpine
   # Uncomment to silent some warnings if needed
   #variables:
