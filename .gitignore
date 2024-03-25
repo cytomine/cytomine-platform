@@ -48,6 +48,7 @@ jars/
 _misc/
 
 # example tasks heavy file
+com.cytomine.dummy*
 dev/example_tasks/*/*zip
 dev/example_tasks/*/*tar
 dev/example_tasks/*/test/outputs/*

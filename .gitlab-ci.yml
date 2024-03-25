@@ -14,6 +14,20 @@ variables:
   TEST_ARTIFACT_PATH: ./src/test/resources/artifacts
 
 
+include:
+  - component: gitlab.cytom.in/cm/rnd/cicd/component-nextcloud/download-file@1.1.0
+    inputs:
+      source-filepath: GitLab/Artifacts/AppEngine/Tasks/com.cytomine.dummy.arithmetic.integer.addition-1.0.0.zip
+      target-directory: ./src/test/resources/artifacts
+      job-name: download-integer-addition
+
+
+download-integer-addition:
+  artifacts:
+    paths:
+      - ./src/test/resources/artifacts/com.cytomine.dummy.arithmetic.integer.addition-1.0.0.zip
+
+
 default:
   tags:
     - docker
@@ -118,6 +132,9 @@ validate-descriptor-schema:
 tests-storage-registry:
   stage: test
   image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/gradle:8.4-jdk17-alpine
+  needs:
+    - job: download-integer-addition
+      artifacts: true
   services:
     - alias: postgres
       name: $TESTS_IMAGE_POSTGIS
@@ -139,6 +156,9 @@ tests-storage-registry:
     # registry
     REGISTRY_STORAGE_DELETE_ENABLED: 'true'
     REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY: '/data'
+    REGISTRY_HOST: registry
+    REGISTRY_PORT: 5000
+    REGISTRY_SCHEME: http
     # app engine config
     DB_HOST: postgres
     DB_NAME: appengine

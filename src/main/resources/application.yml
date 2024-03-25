@@ -36,11 +36,15 @@ spring:
     serialization:
       fail-on-empty-beans: false
 storage:
-  impl: ${STORAGE_IMPL:default} # possible values [default]
+  base-path: ${STORAGE_BASE_PATH:/data}
+  impl: ${STORAGE_IMPL:filesystem} # possible values [filesystem]
   input:
     charset: UTF_8 # possible values [UTF_8,US_ASCII,ISO_8859_1,UTF_16LE,UTF_16BE,UTF_16] and UTF_8 is default
 registry:
-  impl: ${REGISTRY_IMPL:docker} # possible values [docker,default]
+  impl: ${REGISTRY_IMPL:docker} # possible values [docker.default]
+  scheme: ${REGISTRY_HTTP_SCHEME:http}
+  host: ${REGISTRY_URL:registry}:${REGISTRY_PORT:5000}
+  url: ${registry.scheme:http}://${registry.host}
 scheduler:
   impl: default # possible values [default]
 registry-client:

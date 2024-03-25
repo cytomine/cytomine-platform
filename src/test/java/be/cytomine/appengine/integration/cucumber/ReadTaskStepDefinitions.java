@@ -2,7 +2,6 @@ package be.cytomine.appengine.integration.cucumber;
 
 import be.cytomine.appengine.AppEngineApplication;
 import be.cytomine.appengine.dto.handlers.filestorage.Storage;
-import be.cytomine.appengine.dto.misc.TaskIdentifiers;
 import be.cytomine.appengine.exceptions.FileStorageException;
 import be.cytomine.appengine.handlers.FileData;
 import be.cytomine.appengine.handlers.FileStorageHandler;
@@ -16,6 +15,8 @@ import be.cytomine.appengine.openapi.model.OutputParameter;
 import be.cytomine.appengine.openapi.model.TaskDescription;
 import be.cytomine.appengine.repositories.TaskRepository;
 import be.cytomine.appengine.services.TaskService;
+import be.cytomine.appengine.utils.TestTaskBuilder;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -34,11 +35,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ContextConfiguration;
 
 import java.io.*;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 @ContextConfiguration(classes = AppEngineApplication.class, loader = SpringBootContextLoader.class)
@@ -54,15 +52,6 @@ public class ReadTaskStepDefinitions {
 
     @Autowired
     DefaultApi appEngineAPI;
-
-    @Value("${storage.accesskey}")
-    private String accessKey;
-
-    @Value("${storage.secretkey}")
-    private String accessSecretKey;
-
-    @Value("${storage.url}")
-    private String url;
 
     ResponseEntity<String> result;
     private ClassPathResource descriptor;
@@ -88,125 +77,8 @@ public class ReadTaskStepDefinitions {
     public void a_set_of_valid_tasks_has_been_successfully_uploaded() {
         // generate identifiers for two tasks
         // generate identifiers
-        UUID taskLocalIdentifierForTaskOne = UUID.randomUUID();
-        String storageIdentifierForTaskOne = "task-" + taskLocalIdentifierForTaskOne + "-def";
-        String imageRegistryCompliantNameForTaskOne = "com/cytomine/app-engine/tasks/toy/add-integers:0.1.0";
-        TaskIdentifiers taskIdentifiersForTaskOne = new TaskIdentifiers(taskLocalIdentifierForTaskOne, storageIdentifierForTaskOne, imageRegistryCompliantNameForTaskOne);
-
-        UUID taskLocalIdentifierForTaskTwo = UUID.randomUUID();
-        String storageIdentifierForTaskTwo = "task-" + taskLocalIdentifierForTaskTwo + "-def";
-        String imageRegistryCompliantNameForTaskTwo = "com/cytomine/app-engine/tasks/toy/add-integers:0.1.1";
-        TaskIdentifiers taskIdentifiersForTaskTwo = new TaskIdentifiers(taskLocalIdentifierForTaskTwo, storageIdentifierForTaskTwo, imageRegistryCompliantNameForTaskTwo);
-        // store two tasks in the database
-        taskRepository.deleteAll();
-        Task taskOne = new Task();
-        taskOne.setIdentifier(taskIdentifiersForTaskOne.getLocalTaskIdentifier());
-        taskOne.setStorageReference(taskIdentifiersForTaskOne.getStorageIdentifier());
-        taskOne.setName("calculator_addintegers");
-        taskOne.setNameShort("add_int");
-        taskOne.setDescriptorFile("com.cytomine.app-engine.tasks.toy.add-integers");
-        taskOne.setNamespace("com.cytomine.app-engine.tasks.toy.add-integers");
-        taskOne.setVersion("0.1.0");
-        taskOne.setDescription("app to add two numbers");
-        // add authors
-        Set<Author> authors = new HashSet<>();
-        Author a = new Author();
-        a.setFirstName("Siddig");
-        a.setLastName("Hamed");
-        a.setOrganization("cytomine");
-        a.setEmail("siddig@cytomine.com");
-        a.setContact(true);
-        authors.add(a);
-        taskOne.setAuthors(authors);
-        // add inputs
-
-        Set<Input> inputs = new HashSet<>();
-        Input num1 = new Input();
-        num1.setName("num1");
-        num1.setDisplayName("First Number");
-        num1.setDescription("First number in sum operation");
-        IntegerType inputType1_1 = new IntegerType();
-        inputType1_1.setId("integer");
-        num1.setType(inputType1_1);
-
-        Input num2 = new Input();
-        num2.setName("num2");
-        num2.setDisplayName("Second Number");
-        num2.setDescription("Second number in sum operation");
-        IntegerType inputType1_2 = new IntegerType();
-        inputType1_2.setId("integer");
-        num2.setType(inputType1_2);
-
-        inputs.add(num1);
-        inputs.add(num2);
-        taskOne.setInputs(inputs);
-        // add outputs for task one
-        Set<Output> outputs = new HashSet<>();
-        Output output = new Output();
-        output.setName("sum");
-        output.setDisplayName("Sum");
-        output.setDescription("sum of two integers");
-        IntegerType outputType = new IntegerType();
-        outputType.setId("integer");
-        output.setType(outputType);
-        outputs.add(output);
-        taskOne.setOutputs(outputs);
-        // task two
-        Task taskTwo = new Task();
-        taskTwo.setIdentifier(taskIdentifiersForTaskTwo.getLocalTaskIdentifier());
-        taskTwo.setStorageReference(taskIdentifiersForTaskTwo.getStorageIdentifier());
-        taskTwo.setName("calculator_addintegers");
-        taskTwo.setNameShort("add_int");
-        taskTwo.setDescriptorFile("com.cytomine.app-engine.tasks.toy.add-integers");
-        taskTwo.setNamespace("com.cytomine.app-engine.tasks.toy.add-integers");
-        taskTwo.setVersion("0.1.1");
-        taskTwo.setDescription("app to add two numbers");
-        // add authors
-        Set<Author> authors2 = new HashSet<>();
-        Author a2 = new Author();
-        a2.setFirstName("John");
-        a2.setLastName("Doe");
-        a2.setOrganization("cytomine");
-        a2.setEmail("siddig@cytomine.com");
-        a2.setContact(true);
-        authors2.add(a2);
-        taskTwo.setAuthors(authors2);
-        // add inputs
-        Set<Input> inputs2 = new HashSet<>();
-        Input num1_2 = new Input();
-        num1_2.setName("num1_2");
-        num1_2.setDisplayName("First Number");
-        num1_2.setDescription("First number in sum operation");
-        IntegerType inputType2_1 = new IntegerType();
-
-        inputType2_1.setId("integer");
-        num1_2.setType(inputType2_1);
-
-        Input num2_2 = new Input();
-        num2_2.setName("num2_2");
-        num2_2.setDisplayName("Second Number");
-        num2_2.setDescription("Second number in sum operation");
-        IntegerType inputType2_2 = new IntegerType();
-        inputType2_2.setId("integer");
-        num2_2.setType(inputType2_2);
-
-        inputs2.add(num1_2);
-        inputs2.add(num2_2);
-        taskTwo.setInputs(inputs2);
-        // add outputs for task one
-        Set<Output> outputs_2 = new HashSet<>();
-        Output output_2 = new Output();
-        output_2.setName("sum");
-        output_2.setDisplayName("Sum");
-        output_2.setDescription("sum of two integers");
-        IntegerType outputType_2 = new IntegerType();
-        outputType_2.setId("integer");
-        output_2.setType(outputType_2);
-        outputs_2.add(output_2);
-        taskTwo.setOutputs(outputs_2);
-
-        taskRepository.save(taskOne);
-        taskRepository.save(taskTwo);
+        taskRepository.save(TestTaskBuilder.buildHardcodedAddInteger());
+        taskRepository.save(TestTaskBuilder.buildHardcodedSubtractInteger());
     }
 
     @When("user calls the endpoint {string} \\(excluding version prefix, e.g. {string}) with HTTP method {string}")
@@ -216,7 +88,6 @@ public class ReadTaskStepDefinitions {
         defaultClient.setBasePath(buildAppEngineUrl());
         appEngineApi = new DefaultApi(defaultClient);
         tasks = appEngineApi.tasksGet();
-
     }
 
     @Then("App Engine retrieves relevant data from the database")
@@ -239,202 +110,29 @@ public class ReadTaskStepDefinitions {
         }
     }
 
-    Task taskOne;
-
-    @Given("a valid {string} has a {string}, a {string} has been successfully uploaded")
-    public void a_valid_has_a_a_has_been_successfully_uploaded(String task, String namespace, String version) {
+    @Given("a valid task has a {string}, a {string} has been successfully uploaded")
+    public void a_valid_has_a_a_has_been_successfully_uploaded(String namespace, String version) {
         taskRepository.deleteAll();
-        UUID taskLocalIdentifierForTaskOne = UUID.randomUUID();
-        String storageIdentifierForTaskOne = "task-" + taskLocalIdentifierForTaskOne + "-def";
-        String imageRegistryCompliantNameForTaskOne = "com/cytomine/app-engine/tasks/toy/add-integers:0.1.0";
-        TaskIdentifiers taskIdentifiersForTaskOne = new TaskIdentifiers(taskLocalIdentifierForTaskOne, storageIdentifierForTaskOne, imageRegistryCompliantNameForTaskOne);
-
-        taskOne = new Task();
-        taskOne.setIdentifier(taskIdentifiersForTaskOne.getLocalTaskIdentifier());
-        taskOne.setStorageReference(taskIdentifiersForTaskOne.getStorageIdentifier());
-        taskOne.setName("calculator_addintegers");
-        taskOne.setNameShort("add_int");
-        taskOne.setDescriptorFile("com.cytomine.app-engine.tasks.toy.add-integers");
-        taskOne.setNamespace(namespace);
-        taskOne.setVersion(version);
-        taskOne.setDescription("app to add two numbers");
-        // add authors
-        Set<Author> authors = new HashSet<>();
-        Author a = new Author();
-        a.setFirstName("Siddig");
-        a.setLastName("Hamed");
-        a.setOrganization("cytomine");
-        a.setEmail("siddig@cytomine.com");
-        a.setContact(true);
-        authors.add(a);
-        taskOne.setAuthors(authors);
-        // add inputs
-
-        Set<Input> inputs = new HashSet<>();
-        Input num1 = new Input();
-        num1.setName("num1");
-        num1.setDisplayName("First Number");
-        num1.setDescription("First number in sum operation");
-        IntegerType inputType1_1 = new IntegerType();
-        inputType1_1.setId("integer");
-        num1.setType(inputType1_1);
-
-        Input num2 = new Input();
-        num2.setName("num2");
-        num2.setDisplayName("Second Number");
-        num2.setDescription("Second number in sum operation");
-        IntegerType inputType1_2 = new IntegerType();
-        inputType1_2.setId("integer");
-        num2.setType(inputType1_2);
-
-        inputs.add(num1);
-        inputs.add(num2);
-        taskOne.setInputs(inputs);
-        // add outputs for task one
-        Set<Output> outputs = new HashSet<>();
-        Output output = new Output();
-        output.setName("sum");
-        output.setDisplayName("Sum");
-        output.setDescription("sum of two integers");
-        IntegerType outputType = new IntegerType();
-        outputType.setId("integer");
-        output.setType(outputType);
-        outputs.add(output);
-        taskOne.setOutputs(outputs);
-
-        taskRepository.save(taskOne);
-
+        Task task = TestTaskBuilder.buildHardcodedAddInteger();
+        task.setNamespace(namespace);
+        task.setVersion(version);
+        taskRepository.save(task);
     }
 
-
-    @Given("a valid {string} has a {string} has been successfully uploaded")
-    public void a_valid_has_a_has_been_successfully_uploaded(String task, String uuid) {
+    @Given("a valid task has a {string} has been successfully uploaded")
+    public void a_valid_has_a_has_been_successfully_uploaded(String uuid) {
         taskRepository.deleteAll();
-        UUID taskLocalIdentifierForTaskOne = UUID.fromString(uuid);
-        String storageIdentifierForTaskOne = "task-" + taskLocalIdentifierForTaskOne + "-def";
-        String imageRegistryCompliantNameForTaskOne = "com/cytomine/app-engine/tasks/toy/add-integers:0.1.0";
-        TaskIdentifiers taskIdentifiersForTaskOne = new TaskIdentifiers(taskLocalIdentifierForTaskOne, storageIdentifierForTaskOne, imageRegistryCompliantNameForTaskOne);
-
-        taskOne = new Task();
-        taskOne.setIdentifier(taskIdentifiersForTaskOne.getLocalTaskIdentifier());
-        taskOne.setStorageReference(taskIdentifiersForTaskOne.getStorageIdentifier());
-        taskOne.setName("calculator_addintegers");
-        taskOne.setNameShort("add_int");
-        taskOne.setDescriptorFile("com.cytomine.app-engine.tasks.toy.add-integers");
-        taskOne.setNamespace("com.cytomine.app-engine.tasks.toy.add-integers");
-        taskOne.setVersion("0.1.0");
-        taskOne.setDescription("app to add two numbers");
-        // add authors
-        Set<Author> authors = new HashSet<>();
-        Author a = new Author();
-        a.setFirstName("Moh");
-        a.setLastName("Altahir");
-        a.setOrganization("cytomine");
-        a.setEmail("siddig@cytomine.com");
-        a.setContact(true);
-        authors.add(a);
-        taskOne.setAuthors(authors);
-        // add inputs
-
-        Set<Input> inputs = new HashSet<>();
-        Input num1 = new Input();
-        num1.setName("num1");
-        num1.setDisplayName("First Number");
-        num1.setDescription("First number in sum operation");
-        IntegerType inputType1_1 = new IntegerType();
-        inputType1_1.setId("integer");
-        num1.setType(inputType1_1);
-
-        Input num2 = new Input();
-        num2.setName("num2");
-        num2.setDisplayName("Second Number");
-        num2.setDescription("Second number in sum operation");
-        IntegerType inputType1_2 = new IntegerType();
-        inputType1_2.setId("integer");
-        num2.setType(inputType1_2);
-
-        inputs.add(num1);
-        inputs.add(num2);
-        taskOne.setInputs(inputs);
-        // add outputs for task one
-        Set<Output> outputs = new HashSet<>();
-        Output output = new Output();
-        output.setName("sum");
-        output.setDisplayName("Sum");
-        output.setDescription("sum of two integers");
-        IntegerType outputType = new IntegerType();
-        outputType.setId("integer");
-        output.setType(outputType);
-        outputs.add(output);
-        taskOne.setOutputs(outputs);
-
-        taskRepository.save(taskOne);
-
+        Task task = TestTaskBuilder.buildHardcodedAddInteger(UUID.fromString(uuid));
+        taskRepository.save(task);
     }
 
-    @Given("a valid {string} has a {string}, a {string} and {string} has been successfully uploaded")
-    public void a_valid_task_with_namespace_and_version_and_uuid_successfully_uploaded(String task, String namespace, String version, String uuid) {
+    @Given("a valid task has a {string}, a {string} and {string} has been successfully uploaded")
+    public void a_valid_task_with_namespace_and_version_and_uuid_successfully_uploaded(String namespace, String version, String uuid) {
         taskRepository.deleteAll();
-        UUID taskLocalIdentifierForTaskOne = UUID.fromString(uuid);
-        String storageIdentifierForTaskOne = "task-" + taskLocalIdentifierForTaskOne + "-def";
-        String imageRegistryCompliantNameForTaskOne = "com/cytomine/app-engine/tasks/toy/add-integers:0.1.0";
-        TaskIdentifiers taskIdentifiersForTaskOne = new TaskIdentifiers(taskLocalIdentifierForTaskOne, storageIdentifierForTaskOne, imageRegistryCompliantNameForTaskOne);
-
-        taskOne = new Task();
-        taskOne.setIdentifier(taskIdentifiersForTaskOne.getLocalTaskIdentifier());
-        taskOne.setStorageReference(taskIdentifiersForTaskOne.getStorageIdentifier());
-        taskOne.setName("calculator_addintegers");
-        taskOne.setNameShort("add_int");
-        taskOne.setDescriptorFile("com.cytomine.app-engine.tasks.toy.add-integers");
-        taskOne.setNamespace(namespace);
-        taskOne.setVersion(version);
-        taskOne.setDescription("app to add two numbers");
-        // add authors
-        Set<Author> authors = new HashSet<>();
-        Author a = new Author();
-        a.setFirstName("Moh");
-        a.setLastName("Altahir");
-        a.setOrganization("cytomine");
-        a.setEmail("siddig@cytomine.com");
-        a.setContact(true);
-        authors.add(a);
-        taskOne.setAuthors(authors);
-        // add inputs
-
-        Set<Input> inputs = new HashSet<>();
-        Input num1 = new Input();
-        num1.setName("num1");
-        num1.setDisplayName("First Number");
-        num1.setDescription("First number in sum operation");
-        IntegerType inputType1_1 = new IntegerType();
-        inputType1_1.setId("integer");
-        num1.setType(inputType1_1);
-
-        Input num2 = new Input();
-        num2.setName("num2");
-        num2.setDisplayName("Second Number");
-        num2.setDescription("Second number in sum operation");
-        IntegerType inputType1_2 = new IntegerType();
-        inputType1_2.setId("integer");
-        num2.setType(inputType1_2);
-
-        inputs.add(num1);
-        inputs.add(num2);
-        taskOne.setInputs(inputs);
-        // add outputs for task one
-        Set<Output> outputs = new HashSet<>();
-        Output output = new Output();
-        output.setName("sum");
-        output.setDisplayName("Sum");
-        output.setDescription("sum of two integers");
-        IntegerType outputType = new IntegerType();
-        outputType.setId("integer");
-        output.setType(outputType);
-        outputs.add(output);
-        taskOne.setOutputs(outputs);
-
-        taskRepository.save(taskOne);
-
+        Task task = TestTaskBuilder.buildHardcodedAddInteger(UUID.fromString(uuid));
+        task.setNamespace(namespace);
+        task.setVersion(version);
+        taskRepository.save(task);
     }
 
     @Then("App Engine retrieves task with {string}, a {string}  from the database")
