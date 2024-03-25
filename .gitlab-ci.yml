@@ -10,43 +10,27 @@ variables:
   TESTS_IMAGE_POSTGIS: 'cytomine/postgis:1.4.0-dev.2'
   APPENGINE_TASKS_PATH: GitLab/Artifacts/AppEngine/Tasks
   ADD_INTEGER_TASK_NAME: com.cytomine.dummy.arithmetic.integer.addition-1.0.0.zip
-  ID_INTEGER_TASK_NAME: com.cytomine.dummy.identity.integer-1.0.0.zip
   TEST_ARTIFACT_PATH: ./src/test/resources/artifacts
 
 
 include:
+  # download tasks
   - component: gitlab.cytom.in/cm/rnd/cicd/component-nextcloud/download-file@1.1.0
     inputs:
-      source-filepath: GitLab/Artifacts/AppEngine/Tasks/com.cytomine.dummy.arithmetic.integer.addition-1.0.0.zip
-      target-directory: ./src/test/resources/artifacts
-      job-name: download-integer-addition
+      source-filepath: ${APPENGINE_TASKS_PATH}/${ADD_INTEGER_TASK_NAME}
+      target-directory: ${TEST_ARTIFACT_PATH}
+      job-name: download-task-integer-addition
 
 
 download-integer-addition:
   artifacts:
     paths:
-      - ./src/test/resources/artifacts/com.cytomine.dummy.arithmetic.integer.addition-1.0.0.zip
+      - ${TEST_ARTIFACT_PATH}/${ADD_INTEGER_TASK_NAME}
 
 
 default:
   tags:
     - docker
-
-
-include:
-  #### Download
-  # add integers
-  - component: gitlab.cytom.in/cm/rnd/cicd/component-nextcloud/download-file@1.1.0
-    inputs:
-      source-filepath: $APPENGINE_TASKS_PATH/${ADD_INTEGER_TASK_NAME}
-      job-name: download-task-add-integer
-      target-directory: ${TEST_ARTIFACT_PATH}
-  # identity integers
-  - component: gitlab.cytom.in/cm/rnd/cicd/component-nextcloud/download-file@1.1.0
-    inputs:
-      source-filepath: $APPENGINE_TASKS_PATH/${ID_INTEGER_TASK_NAME}
-      job-name: download-task-identity-integer
-      target-directory: ${TEST_ARTIFACT_PATH}
 
 
 # save downloaded files as artifact
@@ -133,7 +117,7 @@ tests-storage-registry:
   stage: test
   image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/gradle:8.4-jdk17-alpine
   needs:
-    - job: download-integer-addition
+    - job: download-task-integer-addition
       artifacts: true
   services:
     - alias: postgres
