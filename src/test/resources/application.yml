@@ -48,9 +48,9 @@ registry-client:
   authenticated: false
   user: user #ignored
   password: password #ignored
-  host: registry #${REGISTRY_HOST:registry}
-  port: 5000 #${REGISTRY_PORT:5000}
-  scheme: http #${REGISTRY_SCHEME:http}
+  host: ${REGISTRY_HOST:registry}
+  port: ${REGISTRY_PORT:5000}
+  scheme: ${REGISTRY_SCHEME:http}
 logging:
   level:
     root: ERROR

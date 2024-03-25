@@ -122,6 +122,9 @@ tests-storage-registry:
     # registry
     REGISTRY_STORAGE_DELETE_ENABLED: 'true'
     REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY: '/data'
+    REGISTRY_HOST: registry
+    REGISTRY_PORT: 5000
+    REGISTRY_SCHEME: http
     # app engine config
     DB_HOST: postgres
     DB_NAME: appengine
