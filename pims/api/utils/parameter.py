@@ -11,6 +11,8 @@
 #  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  * See the License for the specific language governing permissions and
 #  * limitations under the License.
+import urllib.parse
+
 from fastapi.params import Depends, Path as PathParam
 from pathvalidate import sanitize_filename as _sanitize_filename
 
@@ -64,8 +66,11 @@ def filepath_parameter(
 ):
     path = filepath2path(filepath, config)
     if not path.exists():
-        from pims.api.exceptions import FilepathNotFoundProblem
-        raise FilepathNotFoundProblem(path)
+        filepath = urllib.parse.unquote(urllib.parse.unquote(filepath))
+        path = filepath2path(filepath, config)
+        if not path.exists():
+            from pims.api.exceptions import FilepathNotFoundProblem
+            raise FilepathNotFoundProblem(path)
     return path
 
 
@@ -78,8 +83,11 @@ def imagepath_parameter(
 ):
     path = filepath2path(filepath, config)
     if not path.exists():
-        from pims.api.exceptions import FilepathNotFoundProblem
-        raise FilepathNotFoundProblem(path)
+        filepath = urllib.parse.unquote(urllib.parse.unquote(filepath))
+        path = filepath2path(filepath, config)
+        if not path.exists():
+            from pims.api.exceptions import FilepathNotFoundProblem
+            raise FilepathNotFoundProblem(path)
     if not path.is_single():
         from pims.api.exceptions import NoAppropriateRepresentationProblem
         raise NoAppropriateRepresentationProblem(path)
