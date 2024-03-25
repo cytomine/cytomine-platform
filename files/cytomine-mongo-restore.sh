@@ -41,9 +41,9 @@ if (( $(stat -c%s "$RESTORE_DIR/$RESTORE_FILENAME") < 1000 )); then
 fi
 
 # Prepare a temporary restore directory
-TMP_RESTORE_DIR="/tmp/restore"
-rm -rf $TMP_RESTORE_DIR
-mkdir -p $TMP_RESTORE_DIR
+TMP_RESTORE_DIR="/data/db/backup/tmp/restore"
+rm -rf $TMP_RESTORE_DIR || exit 7
+mkdir -p $TMP_RESTORE_DIR || exit 8
 
 echo -e "\n$(date) Extracting $RESTORE_DIR/$RESTORE_FILENAME to $TMP_RESTORE_DIR"
 cd $RESTORE_DIR
