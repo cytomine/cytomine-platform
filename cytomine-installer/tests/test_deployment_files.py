@@ -29,7 +29,7 @@ class TestDockerComposeFile(TestCase):
             "pims",
         }
         self.assertSetEqual(services, set(docker_compose_file.services))
-        self.assertEqual(docker_compose_file.version, "3.4")
+        self.assertIsNone(docker_compose_file.version)
 
 
 class TestConfigFile(TestCase):
@@ -98,7 +98,7 @@ class TestConfigFile(TestCase):
         config_file2 = ConfigFile(ce_path, filename=ce_filename2)
         merge_config_file = ConfigFile(ce_path, filename=ce_filename3)
         config_file3 = ConfigFile.merge(config_file1, config_file2)
-        
+
         export3 = config_file3.export_dict()
         self.assertDictEqual(export3, merge_config_file.export_dict())
 

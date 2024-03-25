@@ -1,4 +1,3 @@
-version: "3.3"
 services:
   ims:
     image: cytomine/ims:v1.2

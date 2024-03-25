@@ -1,4 +1,3 @@
-version: "3.3"
 services:
   core:
     env_file: envs/core.env

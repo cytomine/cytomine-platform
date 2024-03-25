@@ -26,4 +26,3 @@ services:
     env_file: envs/web_ui.env
     volumes:
     - ./configs/web_ui/app/configuration.json.sample:/cm_configs/app/configuration.json.sample
-version: '3.9'

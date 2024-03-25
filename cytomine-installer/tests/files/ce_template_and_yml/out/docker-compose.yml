@@ -1,4 +1,3 @@
-version: "3.9"
 services:
 
   mongo:
@@ -6,7 +5,7 @@ services:
     container_name: mongo
     restart: unless-stopped
     volumes:
-      - mongo_data:/data/db 
+      - mongo_data:/data/db
 
   postgis:
     image: $IMAGES_POSTGIS
@@ -34,13 +33,13 @@ services:
     restart: unless-stopped
     volumes:
       - images_data:$CONTAINER_PATHS_IMAGES
-  
+
   pims-cache:
     image: $IMAGES_PIMS_CACHE
     container_name: pims-cache
     restart: unless-stopped
 
-  pims: 
+  pims:
     image: $IMAGES_PIMS
     container_name: pims
     restart: unless-stopped
@@ -56,7 +55,7 @@ services:
         # limits or reservations ?
         reservations:
           memory: 4G
-    
+
   core:
     image: $IMAGES_CORE
     container_name: core
@@ -86,7 +85,7 @@ services:
       - 80:80
     volumes:
       - download_data:$CONTAINER_PATHS_UPLOADED
-  
+
   # to map nginx ip with urls to host's /etc/hosts
   etc_hosts_rewriter:
     image: alpine:latest
