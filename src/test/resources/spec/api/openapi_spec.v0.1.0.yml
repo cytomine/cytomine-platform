@@ -1,7 +1,7 @@
 openapi: 3.0.0
 info:
   title: App Engine API
-  version: 0.1.0
+  version: 0.2.0
   description: App Engine API provides a set of requests to interact with tasks and apps.
 
 servers:
@@ -172,7 +172,7 @@ paths:
       summary: Download task descriptor in YAML format
       parameters: *task-ns-version-only-parameters
       responses: *get-task-descriptor-responses
-  
+
   /tasks/{namespace}/{version}/runs:
     post:
       summary: creates a Task run
@@ -418,11 +418,12 @@ paths:
           multipart/form-data:
             schema:
               type: object
+              required:
+                - outputs
               properties:
                 outputs:
                   type: string
                   format: binary
-                  required: true
       responses:
         '404':
           description: Not found
@@ -544,6 +545,7 @@ components:
       type: string
       enum:
         - integer
+        - boolean
 
     base_parameter:
       type: object
@@ -553,6 +555,7 @@ components:
         - optional
         - id
         - name
+        - type
       properties:
         id:
           type: string
@@ -570,53 +573,61 @@ components:
           description: Whether or not the parameter is optional
           type: boolean
 
-    type_spec_integer:
-      type: object
-      properties:
-        gt:
-          type: "integer"
-          description: 'input constraint to enforce: input > $gt'
-        lt:
-          type: "integer"
-          description: 'input constraint to enforce: input < $lt'
-        geq:
-          type: "integer"
-          description: 'input constraint to enforce: input >= $geq'
-        leq:
-          type: "integer"
-          description: 'input constraint to enforce: input <= $leq'
-
-    type_spec:
-      allOf:
-        - oneOf:
-            - $ref: "#/components/schemas/type_spec_integer"
-        - type: object
-          required:
-            - id
-          properties:
-            id:
-              description: Type string identifier
-              type: string
-
     typed_parameter_integer:
       allOf:
         - $ref: "#/components/schemas/base_parameter"
-      required:
-        - type
-      properties:
-        type:
-          $ref: "#/components/schemas/type_spec"
-        default:
-          description: Default integer value. If omitted, no default value
-          type: integer
+        - type: object
+          required:
+            - type
+          properties:
+            type:
+              type: object
+              properties:
+                id:
+                  type: string
+                  enum: ["integer"]
+                gt:
+                  type: integer
+                  description: 'input constraint to enforce: input > $gt'
+                lt:
+                  type: integer
+                  description: 'input constraint to enforce: input < $lt'
+                geq:
+                  type: integer
+                  description: 'input constraint to enforce: input >= $geq'
+                leq:
+                  type: integer
+                  description: 'input constraint to enforce: input <= $leq'
+            default:
+              description: Default integer value. If omitted, no default value
+              type: integer
+
+    typed_parameter_boolean:
+      allOf:
+        - $ref: "#/components/schemas/base_parameter"
+        - type: object
+          required:
+            - type
+          properties:
+            type:
+              type: object
+              properties:
+                id:
+                  type: string
+                  enum: ["boolean"]
+            default:
+              description: Default boolean value. If omitted, no default value
+              type: boolean
 
     input_parameter:
       oneOf:
         - $ref: "#/components/schemas/typed_parameter_integer"
+        - $ref: "#/components/schemas/typed_parameter_boolean"
 
     output_parameter:
       oneOf:
         - $ref: "#/components/schemas/typed_parameter_integer"
+        - $ref: "#/components/schemas/typed_parameter_boolean"
 
     task_run_state:
       type: string
@@ -634,7 +645,6 @@ components:
       type: object
       properties:
         task:
-          description: The parent task description
           $ref: "#/components/schemas/task_description"
         id:
           type: string
@@ -699,6 +709,7 @@ components:
         value:
           oneOf:
             - type: integer
+            - type: boolean
         param_name:
           $ref: "#/components/schemas/param_name_type"
 
@@ -770,14 +781,14 @@ components:
             desired:
               oneOf:
                 - type: string
-                  const: running
+                  enum: ["running"]
 
     generic_state_action_success:
       type: object
       properties:
         status:
           type: string
-          const: "success"
+          enum: ["success"]
         resource:
           type: object
 
@@ -814,6 +825,7 @@ components:
         - $ref: "#/components/schemas/base_task_run_parameter"
         - oneOf:
             - $ref: "#/components/schemas/integer_task_run_parameter"
+            - $ref: "#/components/schemas/boolean_task_run_parameter"
 
     integer_task_run_parameter:
       type: object
@@ -821,9 +833,19 @@ components:
       properties:
         type:
           type: string
-          const: integer
+          enum: ["integer"]
         value:
           type: integer
+
+    boolean_task_run_parameter:
+      type: object
+      required: ["value", "type"]
+      properties:
+        type:
+          type: string
+          enum: ["boolean"]
+        value:
+          type: boolean
 
     task_run_output:
       $ref: "#/components/schemas/typed_task_run_parameter"
@@ -839,4 +861,4 @@ components:
     task_run_inputs:
       type: array
       items:
-        $ref: "#/components/schemas/task_run_output"
+        $ref: "#/components/schemas/task_run_input"
