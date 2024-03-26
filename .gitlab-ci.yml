@@ -103,9 +103,12 @@ validate-openapi-spec:
   stage: test
   tags:
     - docker
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/redocly/cli:1.10.6
+  image:
+    name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/redocly/cli:1.10.6
+    entrypoint: [""]
   variables:
     OPENAPI_PATH: src/test/resources/spec/api/openapi_spec.v0.1.0.yml
+
   script:
     - redocly lint ${OPENAPI_PATH}
 
