@@ -18,6 +18,7 @@ import io.fabric8.kubernetes.api.model.VolumeBuilder;
 import io.fabric8.kubernetes.api.model.batch.v1.Job;
 import io.fabric8.kubernetes.api.model.batch.v1.JobBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.KubernetesClientException;
 import jakarta.annotation.PostConstruct;
 
 public class KubernetesScheduler implements SchedulerHandler {
@@ -88,13 +89,17 @@ public class KubernetesScheduler implements SchedulerHandler {
                 .build();
 
         logger.info("Schedule: Task Job scheduled to run on the cluster");
-        kubernetesClient
-                .batch()
-                .v1()
-                .jobs()
-                .inNamespace("default")
-                .resource(job)
-                .create();
+        try {
+            kubernetesClient
+                    .batch()
+                    .v1()
+                    .jobs()
+                    .inNamespace("default")
+                    .resource(job)
+                    .create();
+        } catch (KubernetesClientException e) {
+            throw new SchedulingException("Task Job failed to be scheduled on the cluster");
+        }
 
         return schedule;
     }
@@ -107,11 +112,16 @@ public class KubernetesScheduler implements SchedulerHandler {
     @PostConstruct
     public void monitor() throws SchedulingException {
         logger.info("Monitor: add watcher to the cluster");
-        kubernetesClient
-                .batch()
-                .v1()
-                .jobs()
-                .inNamespace("default")
-                .watch(jobWatcher);
+
+        try {
+            kubernetesClient
+                    .batch()
+                    .v1()
+                    .jobs()
+                    .inNamespace("default")
+                    .watch(jobWatcher);
+        } catch (KubernetesClientException e) {
+            throw new SchedulingException("Failed to add watcher to the cluster");
+        }
     }
 }
