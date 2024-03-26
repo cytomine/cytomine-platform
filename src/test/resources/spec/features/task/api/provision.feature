@@ -22,8 +22,8 @@ Feature: [URS00003-TASK] Provision a task run
 
     Examples:
       | task_namespace                                 | task_version | endpoint                     |
-      | com.cytomine.app-engine.tasks.toy.add_integers | 0.1.0        | /task/namespace/version/runs |
-      | com.cytomine.app-engine.tasks.toy.add_integers | 0.1.0        | /task/id/runs                |
+      | com.cytomine.dummy.arithmetic.integer.addition | 1.0.0        | /task/namespace/version/runs |
+      | com.cytomine.dummy.arithmetic.integer.addition | 1.0.0        | /task/id/runs                |
 
 
   Scenario Outline: successful provisioning of a task run with one input parameter using provisioning endpoint
@@ -45,8 +45,8 @@ Feature: [URS00003-TASK] Provision a task run
     And the App Engine returns a '200 OK' HTTP response with the updated task run information as JSON payload
 
     Examples:
-      | task_namespace                                     | task_version | param_name | param_type | payload                                       | param_value | task_run_initial_state | task_run_new_state | param_file_content |
-      | com.cytomine.app-engine.tasks.toy.identity_integer | 0.1.0        | my_input   | integer    | {\"param_name\": \"my_input\", \"value\": 18} | 18          | CREATED                | PROVISIONED        | 18                 |
+      | task_namespace                                 | task_version | param_name | param_type | payload                                | param_value | task_run_initial_state | task_run_new_state | param_file_content |
+      | com.cytomine.dummy.arithmetic.integer.addition | 1.0.0        | a          | integer    | {\"param_name\": \"a\", \"value\": 18} | 18          | CREATED                | PROVISIONED        | 18                 |
 
   Scenario Outline: successful partial provisioning of a task run with two input parameters
 
@@ -69,8 +69,8 @@ Feature: [URS00003-TASK] Provision a task run
     And the App Engine returns a '200 OK' HTTP response with the updated task run information as JSON payload
 
     Examples:
-      | task_namespace                                    | task_version | param1_name | param1_type | param1_value | param2_name | param2_type | payload                                    | task_run_initial_state | param_file_content |
-      | com.cytomine.app-engine.tasks.toy.add_two_numbers | 0.1.0        | num1        | integer     | 5            | num2        | integer     | [{\"param_name\": \"num1\", \"value\": 5}] | CREATED                | 5                  |
+      | task_namespace                                 | task_version | param1_name | param1_type | param1_value | param2_name | param2_type | payload                                 | task_run_initial_state | param_file_content |
+      | com.cytomine.dummy.arithmetic.integer.addition | 1.0.0        | a           | integer     | 5            | b           | integer     | [{\"param_name\": \"a\", \"value\": 5}] | CREATED                | 5                  |
 
   Scenario Outline: successful batch provisioning of a task run two parameters one of which one has a validation rule
 
@@ -94,8 +94,8 @@ Feature: [URS00003-TASK] Provision a task run
     And the App Engine returns a '200 OK' HTTP response with the updated task run information as JSON payload
 
     Examples:
-      | task_namespace                                    | task_version | param1_name | param1_type | param1_value | param1_validation_rule | param2_name | param2_type | param2_value | payload                                                                                | task_run_initial_state | task_run_new_state | param1_file_content | param2_file_content |
-      | com.cytomine.app-engine.tasks.toy.add_two_numbers | 0.1.0        | num1        | integer     | 25           | lt: 53                 | num2        | integer     | 30           | [{\"param_name\": \"num1\", \"value\": 25}, {\"param_name\": \"num2\", \"value\": 30}] | CREATED                | PROVISIONED        | 25                  | 30                  |
+      | task_namespace                                             | task_version | param1_name | param1_type | param1_value | param1_validation_rule | param2_name | param2_type | param2_value | payload                                                                          | task_run_initial_state | task_run_new_state | param1_file_content | param2_file_content |
+      | com.cytomine.dummy.arithmetic.integer.addition.constrained | 1.0.0        | a           | integer     | 25           | lt: 53                 | b           | integer     | 30           | [{\"param_name\": \"a\", \"value\": 25}, {\"param_name\": \"b\", \"value\": 30}] | CREATED                | PROVISIONED        | 25                  | 30                  |
 
   Scenario Outline: failed batch provisioning of a task run with invalid parameter value
 
@@ -116,8 +116,8 @@ Feature: [URS00003-TASK] Provision a task run
     And the App Engine does not record "<param1_value>" nor "<param2_value>" in file storage or database
 
     Examples:
-      | task_namespace                                    | task_version | param1_name | param1_type  | param1_validation_rule | param2_name | param2_type  | payload                                                                                | task_run_initial_state | error_payload                                                                                                                                                                                                          | param1_value | param2_value|
-      | com.cytomine.app-engine.tasks.toy.add_two_numbers | 0.1.0        | num1        | integer      | lt: 53                 | num2        | integer      | [{\"param_name\": \"num1\", \"value\": 75}, {\"param_name\": \"num2\", \"value\": 30}] | CREATED                | {\"error_code\": \"APPE-internal-batch-request-error\", \"message\": \"Error(s) occurred during a handling of a batch request.\", \"details\": {\"errors\": [{\"error_code\": \"APPE-internal-request-validation-error\", \"message\": \"value must be less than defined constraint\", \"details\": { \"param_name\": \"num1\"}}]}} | 75           | 30          |
+      | task_namespace                                 | task_version | param1_name | param1_type  | param1_validation_rule | param2_name | param2_type  | payload                                                                          | task_run_initial_state | error_payload                                                                                                                                                                                                                                                                                                                    | param1_value | param2_value|
+      | com.cytomine.dummy.arithmetic.integer.addition | 1.0.0        | a           | integer      | lt: 53                 | b           | integer      | [{\"param_name\": \"a\", \"value\": 75}, {\"param_name\": \"b\", \"value\": 30}] | CREATED                | {\"error_code\": \"APPE-internal-batch-request-error\", \"message\": \"Error(s) occurred during a handling of a batch request.\", \"details\": {\"errors\": [{\"error_code\": \"APPE-internal-request-validation-error\", \"message\": \"value must be less than defined constraint\", \"details\": { \"param_name\": \"a\"}}]}} | 75           | 30          |
 
   Scenario Outline: failed single parameter provisioning with unknown parameter name
 
@@ -135,8 +135,8 @@ Feature: [URS00003-TASK] Provision a task run
     And the task run state remains as "<task_run_initial_state>" since not all parameters are provisioned yet
 
     Examples:
-      | task_namespace                                    | task_version | unknown_param_value  | unknown_param_name | payload                                 | task_run_initial_state | error_payload                                                                                                           |
-      | com.cytomine.app-engine.tasks.toy.add_two_numbers | 0.1.0        | 5                    | n_unknown          | {\"value\": 5, \"param_name\": \"n_unknown\"} | CREATED                | {\"error_code\": \"APPE-internal-parameter-not-found\", \"message\": \"parameter not found\", \"details\": {\"param_name\": \"n_unknown\"}} |
+      | task_namespace                                 | task_version | unknown_param_value  | unknown_param_name | payload                                 | task_run_initial_state | error_payload                                                                                                           |
+      | com.cytomine.dummy.arithmetic.integer.addition | 1.0.0        | 5                    | n_unknown          | {\"value\": 5, \"param_name\": \"n_unknown\"} | CREATED                | {\"error_code\": \"APPE-internal-parameter-not-found\", \"message\": \"parameter not found\", \"details\": {\"param_name\": \"n_unknown\"}} |
 
   Scenario Outline: successful re-provisioning of a parameter for a task run
 
@@ -158,8 +158,8 @@ Feature: [URS00003-TASK] Provision a task run
     And the App Engine returns a '200 OK' HTTP response with the updated task run information as JSON payload
 
     Examples:
-      | task_namespace                                    | task_version | param_name | param_type | initial_param_value | new_param_value | payload                                   | task_run_state | param_file_initial_content | param_file_new_content |
-      | com.cytomine.app-engine.tasks.toy.add_two_numbers | 0.1.0        | num1       | integer    | 5                   | 10              | {\"param_name\": \"num1\", \"value\": 10} | CREATED        | 5                          | 10                     |
-      | com.cytomine.app-engine.tasks.toy.add_two_numbers | 0.1.0        | num2       | integer    | 20                  | 30              | {\"param_name\": \"num2\", \"value\": 30} | PROVISIONED    | 20                         | 30                     |
+      | task_namespace                                 | task_version | param_name | param_type | initial_param_value | new_param_value | payload                                | task_run_state | param_file_initial_content | param_file_new_content |
+      | com.cytomine.dummy.arithmetic.integer.addition | 1.0.0        | a          | integer    | 5                   | 10              | {\"param_name\": \"a\", \"value\": 10} | CREATED        | 5                          | 10                     |
+      | com.cytomine.dummy.arithmetic.integer.addition | 1.0.0        | b          | integer    | 20                  | 30              | {\"param_name\": \"b\", \"value\": 30} | PROVISIONED    | 20                         | 30                     |
 
   # TODO failed re-provisioning of a task of which the state is not one of {'CREATED', 'PROVISIONED'}

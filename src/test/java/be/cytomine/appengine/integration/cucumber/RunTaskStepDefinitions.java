@@ -19,6 +19,8 @@ import be.cytomine.appengine.repositories.TaskRepository;
 import be.cytomine.appengine.services.RunService;
 import be.cytomine.appengine.services.TaskService;
 import be.cytomine.appengine.states.TaskRunState;
+import be.cytomine.appengine.utils.TestTaskBuilder;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -77,111 +79,48 @@ public class RunTaskStepDefinitions {
     @Autowired
     private IntegerProvisionRepository integerProvisionRepository;
 
-    @Autowired
-    private TaskService taskService;
-
     @Given("Scheduler is up and running")
     public void scheduler_is_up_and_running() throws SchedulingException {
         schedulerHandler.alive();
     }
 
-    Run run;
+    Run persistedRun;
+    TaskRun persistedTaskRun;
+    TaskRunStateActionSuccess persistedResponse;
+    File persistedZipFile;
 
     @Given("a task run exists with identifier {string}")
     public void a_task_run_exists_with_identifier(String uuid) {
-
         runRepository.deleteAll();
-        UUID taskLocalIdentifierForTaskOne = UUID.randomUUID();
-        String storageIdentifierForTaskOne = "task-" + taskLocalIdentifierForTaskOne + "-def";
-        String imageRegistryCompliantNameForTaskOne = "com/cytomine/app-engine/tasks/toy/add-integers:0.1.0";
-        TaskIdentifiers taskIdentifiersForTaskOne = new TaskIdentifiers(taskLocalIdentifierForTaskOne, storageIdentifierForTaskOne, imageRegistryCompliantNameForTaskOne);
-
-        Task taskOne = new Task();
-        taskOne.setIdentifier(taskIdentifiersForTaskOne.getLocalTaskIdentifier());
-        taskOne.setStorageReference(taskIdentifiersForTaskOne.getStorageIdentifier());
-        taskOne.setName("calculator_addintegers");
-        taskOne.setNameShort("must_not_have_changed");
-        taskOne.setDescriptorFile("com.cytomine.app-engine.tasks.toy.add-integers");
-        taskOne.setNamespace("com.cytomine.app-engine.tasks.toy.add-integers");
-        taskOne.setVersion("0.1.0");
-        taskOne.setDescription("app to add two numbers");
-        // add authors
-        Set<Author> authors = new HashSet<>();
-        Author a = new Author();
-        a.setFirstName("Moh");
-        a.setLastName("Altahir");
-        a.setOrganization("cytomine");
-        a.setEmail("siddig@cytomine.com");
-        a.setContact(true);
-        authors.add(a);
-        taskOne.setAuthors(authors);
-        // add inputs
-
-        Set<Input> inputs = new HashSet<>();
-        Input num1 = new Input();
-        num1.setName("num1");
-        num1.setDisplayName("First Number");
-        num1.setDescription("First number in sum operation");
-        IntegerType inputType1_1 = new IntegerType();
-        inputType1_1.setId("integer");
-        num1.setType(inputType1_1);
-
-        Input num2 = new Input();
-        num2.setName("num2");
-        num2.setDisplayName("Second Number");
-        num2.setDescription("Second number in sum operation");
-        IntegerType inputType1_2 = new IntegerType();
-        inputType1_2.setId("integer");
-        num2.setType(inputType1_2);
-
-        inputs.add(num1);
-        inputs.add(num2);
-        taskOne.setInputs(inputs);
-        // add outputs for task one
-        Set<Output> outputs = new HashSet<>();
-        Output output = new Output();
-        output.setName("sum");
-        output.setDisplayName("Sum");
-        output.setDescription("sum of two integers");
-        IntegerType outputType = new IntegerType();
-        outputType.setId("integer");
-        output.setType(outputType);
-        outputs.add(output);
-        taskOne.setOutputs(outputs);
-
-        taskOne = taskRepository.save(taskOne);
-
-        run = new Run(UUID.fromString(uuid), null, taskOne);
-
+        Task task = TestTaskBuilder.buildHardcodedAddInteger(UUID.fromString(uuid));
+        task = taskRepository.save(task);
+        persistedRun = new Run(UUID.fromString(uuid), null, task);
     }
 
     @Given("the task run is in state {string}")
     public void the_task_run_is_in_state(String state) {
-        run.setState(TaskRunState.valueOf(state));
-        run = runRepository.save(run);
+        persistedRun.setState(TaskRunState.valueOf(state));
+        persistedRun = runRepository.save(persistedRun);
     }
-
-    TaskRun taskRun;
 
     @When("user calls the endpoint with {string} HTTP method GET")
     public void user_calls_the_endpoint_with_http_method_get(String uuid) throws ApiException {
-        taskRun = appEngineApi.taskRunsRunIdGet(UUID.fromString(uuid));
+        persistedTaskRun = appEngineApi.taskRunsRunIdGet(UUID.fromString(uuid));
     }
 
     @Then("App Engine sends a {string} OK response with a payload containing task run information \\(see OpenAPI spec)")
     public void app_engine_sends_a_ok_response_with_a_payload_containing_task_run_information_see_open_api_spec(String string) {
-        Assertions.assertNotNull(taskRun);
-
+        Assertions.assertNotNull(persistedTaskRun);
     }
 
     @Then("the retrieved task run information matches the expected details")
     public void the_retrieved_task_run_information_matches_the_expected_details() {
-        Assertions.assertEquals(taskRun.getId(), run.getId());
+        Assertions.assertEquals(persistedTaskRun.getId(), persistedRun.getId());
     }
 
     @Then("the task run state remains as {string}")
     public void the_task_run_state_remains_as(String state) {
-        Assertions.assertEquals(taskRun.getState(), be.cytomine.appengine.openapi.model.TaskRunState.valueOf(state));
+        Assertions.assertEquals(persistedTaskRun.getState(), be.cytomine.appengine.openapi.model.TaskRunState.valueOf(state));
     }
 
     // successful fetch of task run inputs archive in a launched task run
@@ -268,12 +207,12 @@ public class RunTaskStepDefinitions {
     public void the_content_of_file_is(String paramName, String paramValue) {
         int fileValue;
         int testValue;
-        if (paramName.equalsIgnoreCase("num1")) {
+        if (paramName.equalsIgnoreCase("a")) {
             testValue = Integer.parseInt(paramValue);
             fileValue = Integer.parseInt(new String(param1FileData.getFileData()));
             Assertions.assertEquals(fileValue, testValue);
         }
-        if (paramName.equalsIgnoreCase("num2")) {
+        if (paramName.equalsIgnoreCase("b")) {
             testValue = Integer.parseInt(paramValue);
             fileValue = Integer.parseInt(new String(param2FileData.getFileData()));
             Assertions.assertEquals(fileValue, testValue);
@@ -299,14 +238,14 @@ public class RunTaskStepDefinitions {
     public void the_task_run_has_output_parameters_of_type_with_value_and_of_type_with_value(String runId, String name, String type, Integer value) throws FileStorageException, IOException, ApiException {
         // Outputs
         integerResultRepository.deleteAll();
-        IntegerResult result = new IntegerResult(name, value, run.getId());
+        IntegerResult result = new IntegerResult(name, value, persistedRun.getId());
         result = integerResultRepository.save(result);
         Assertions.assertNotNull(result);
 
         if (runId.startsWith("0000")) {
             Storage storage = new Storage("task-run-outputs-" + runId);
             fileStorageHandler.createStorage(storage);
-            Storage outputsStorage = new Storage("task-run-outputs-" + run.getId());
+            Storage outputsStorage = new Storage("task-run-outputs-" + persistedRun.getId());
             String valueString = String.valueOf(value);
             byte[] inputFileData = valueString.getBytes(getStorageCharset(charset));
             FileData outputFileData = new FileData(inputFileData, name);
@@ -426,85 +365,23 @@ public class RunTaskStepDefinitions {
     public void a_task_run_has_successfully_been_created_for_a_task(String runId) {
         runRepository.deleteAll();
         taskRepository.deleteAll();
-        UUID taskLocalIdentifierForTaskOne = UUID.randomUUID();
-        String storageIdentifierForTaskOne = "task-" + taskLocalIdentifierForTaskOne + "-def";
-        String imageRegistryCompliantNameForTaskOne = "com/cytomine/app-engine/tasks/toy/add-integers:0.1.0";
-        TaskIdentifiers taskIdentifiersForTaskOne = new TaskIdentifiers(taskLocalIdentifierForTaskOne, storageIdentifierForTaskOne, imageRegistryCompliantNameForTaskOne);
-
-        Task taskOne = new Task();
-        taskOne.setIdentifier(taskIdentifiersForTaskOne.getLocalTaskIdentifier());
-        taskOne.setStorageReference(taskIdentifiersForTaskOne.getStorageIdentifier());
-        taskOne.setName("calculator_addintegers");
-        taskOne.setNameShort("must_not_have_changed");
-        taskOne.setDescriptorFile("com.cytomine.app-engine.tasks.toy.add-integers");
-        taskOne.setNamespace("com.cytomine.app-engine.tasks.toy.add-integers");
-        taskOne.setVersion("0.1.0");
-        taskOne.setDescription("app to add two numbers");
-        // add authors
-        Set<Author> authors = new HashSet<>();
-        Author a = new Author();
-        a.setFirstName("Moh");
-        a.setLastName("Altahir");
-        a.setOrganization("cytomine");
-        a.setEmail("siddig@cytomine.com");
-        a.setContact(true);
-        authors.add(a);
-        taskOne.setAuthors(authors);
-        // add inputs
-
-        Set<Input> inputs = new HashSet<>();
-        Input num1 = new Input();
-        num1.setName("num1");
-        num1.setDisplayName("First Number");
-        num1.setDescription("First number in sum operation");
-        IntegerType inputType1_1 = new IntegerType();
-        inputType1_1.setId("integer");
-        num1.setType(inputType1_1);
-
-        Input num2 = new Input();
-        num2.setName("num2");
-        num2.setDisplayName("Second Number");
-        num2.setDescription("Second number in sum operation");
-        IntegerType inputType1_2 = new IntegerType();
-        inputType1_2.setId("integer");
-        num2.setType(inputType1_2);
-
-        inputs.add(num1);
-        inputs.add(num2);
-        taskOne.setInputs(inputs);
-        // add outputs for task one
-        Set<Output> outputs = new HashSet<>();
-        Output output = new Output();
-        output.setName("sum");
-        output.setDisplayName("Sum");
-        output.setDescription("sum of two integers");
-        IntegerType outputType = new IntegerType();
-        outputType.setId("integer");
-        output.setType(outputType);
-        outputs.add(output);
-        taskOne.setOutputs(outputs);
-
-        taskOne = taskRepository.save(taskOne);
-
-        run = new Run(UUID.fromString(runId), null, taskOne);
-
-
+        Task task = TestTaskBuilder.buildHardcodedAddInteger();
+        task = taskRepository.save(task);
+        persistedRun = new Run(UUID.fromString(runId), null, task);
     }
 
     @Given("this task run has not been successfully provisioned yet and is therefore in state {string}")
     public void this_task_run_has_not_been_successfully_provisioned_yet_and_is_therefore_in_state(String state) {
-        run.setState(TaskRunState.valueOf(state));
-        run = runRepository.save(run);
+        persistedRun.setState(TaskRunState.valueOf(state));
+        persistedRun = runRepository.save(persistedRun);
     }
-
-    TaskRunStateActionSuccess response;
 
     @When("When user calls the endpoint to run task with HTTP method POST")
     public void when_user_calls_the_endpoint_to_run_task_with_http_method_post() {
         TaskRunStateAction taskRunStateAction = new TaskRunStateAction();
         taskRunStateAction.desired(new TaskRunStateActionAllOfDesired("RUNNING"));
         try {
-            response = appEngineApi.taskRunsRunIdStateActionsPost(run.getId(), taskRunStateAction);
+            persistedResponse = appEngineApi.taskRunsRunIdStateActionsPost(persistedRun.getId(), taskRunStateAction);
         } catch (ApiException e) {
             e.printStackTrace();
             exception = e;
@@ -521,10 +398,10 @@ public class RunTaskStepDefinitions {
 
     @Then("this task run remains in state {string}")
     public void this_task_run_remains_in_state(String state) {
-        Optional<Run> runOptional = runRepository.findById(run.getId());
-        runOptional.ifPresent(value -> run = value);
-        Assertions.assertNotNull(run);
-        Assertions.assertEquals(run.getState(), TaskRunState.CREATED);
+        Optional<Run> runOptional = runRepository.findById(persistedRun.getId());
+        runOptional.ifPresent(value -> persistedRun = value);
+        Assertions.assertNotNull(persistedRun);
+        Assertions.assertEquals(persistedRun.getState(), TaskRunState.CREATED);
     }
 
     @Then("App Engine does not initiate the process of executing this task run")
@@ -536,13 +413,13 @@ public class RunTaskStepDefinitions {
 
     @Given("App Engine has already received a run request for this task run which is therefore not in state {string}")
     public void app_engine_has_already_received_a_run_request_for_this_task_run_which_is_therefore_not_in_state(String excludedStates) {
-        run.setState(TaskRunState.RUNNING);
-        runRepository.saveAndFlush(run);
+        persistedRun.setState(TaskRunState.RUNNING);
+        runRepository.saveAndFlush(persistedRun);
     }
 
     @Then("this task run state progress is not affected by the request")
     public void this_task_run_state_progress_is_not_affected_by_the_request() {
-        Optional<Run> oprionalRun = runRepository.findById(run.getId());
+        Optional<Run> oprionalRun = runRepository.findById(persistedRun.getId());
         Assertions.assertEquals(TaskRunState.RUNNING, oprionalRun.get().getState());
     }
 
@@ -554,14 +431,14 @@ public class RunTaskStepDefinitions {
     // unsuccessful upload of task run outputs as an invalid zip file in running state
     @Given("the task run is in state {string} or {string}")
     public void the_task_run_is_in_state_or(String state1, String state2) {
-        run.setState(TaskRunState.RUNNING);
-        run = runService.update(run);
-        Assertions.assertEquals(run.getState(), TaskRunState.valueOf(state1));
+        persistedRun.setState(TaskRunState.RUNNING);
+        persistedRun = runService.update(persistedRun);
+        Assertions.assertEquals(persistedRun.getState(), TaskRunState.valueOf(state1));
     }
 
     @Given("the task run has an output parameter {string}")
     public void the_task_run_has_an_output_parameter(String output) {
-        Set<Output> outputs = run.getTask().getOutputs();
+        Set<Output> outputs = persistedRun.getTask().getOutputs();
         boolean found = false;
         for (Output runOutput : outputs) {
             if (runOutput.getName().equalsIgnoreCase(output)) {
@@ -572,15 +449,13 @@ public class RunTaskStepDefinitions {
         Assertions.assertTrue(found);
     }
 
-    File zipFile;
-
     @Given("a zip file is used which does not contain a file named {string}")
     public void a_zip_file_is_used_which_does_not_contain_a_file_named(String output) throws IOException {
         ClassPathResource invalidOutputArchiveResource = new ClassPathResource("/artifacts/invalid_output.zip");
         Assertions.assertNotNull(invalidOutputArchiveResource);
         boolean found = false;
-        zipFile = invalidOutputArchiveResource.getFile();
-        try (ZipInputStream zipInputStream = new ZipInputStream(new FileInputStream(zipFile))) {
+        persistedZipFile = invalidOutputArchiveResource.getFile();
+        try (ZipInputStream zipInputStream = new ZipInputStream(new FileInputStream(persistedZipFile))) {
             ZipEntry entry;
             while ((entry = zipInputStream.getNextEntry()) != null) {
                 if (entry.getName().equalsIgnoreCase(output)) {
@@ -595,7 +470,7 @@ public class RunTaskStepDefinitions {
     @When("user calls the endpoint to post outputs with {string} HTTP method POST and the zip file as a binary payload")
     public void user_calls_the_endpoint_to_post_outputs_with_http_method_post_and_the_zip_file_as_a_binary_payload(String runId) {
         try {
-            List<TypedTaskRunParameter> outputs = appEngineApi.taskRunsRunIdOutputsZipPost(UUID.fromString(runId), zipFile);
+            List<TypedTaskRunParameter> outputs = appEngineApi.taskRunsRunIdOutputsZipPost(UUID.fromString(runId), persistedZipFile);
         } catch (ApiException e) {
             e.printStackTrace();
             exception = e;
@@ -614,12 +489,12 @@ public class RunTaskStepDefinitions {
     // unsuccessful upload of task run outputs as a valid zip file in a non-running non-pending non-queuing non-queued state state
     @Given("the task run is not in state {string} or {string} or {string} or {string}")
     public void the_task_run_is_not_in_state_or(String state1, String state2 , String state3 , String state4) {
-        run.setState(TaskRunState.PROVISIONED);
-        run = runService.update(run);
-        Assertions.assertNotEquals(run.getState(), TaskRunState.valueOf(state1));
-        Assertions.assertNotEquals(run.getState(), TaskRunState.valueOf(state2));
-        Assertions.assertNotEquals(run.getState(), TaskRunState.valueOf(state3));
-        Assertions.assertNotEquals(run.getState(), TaskRunState.valueOf(state4));
+        persistedRun.setState(TaskRunState.PROVISIONED);
+        persistedRun = runService.update(persistedRun);
+        Assertions.assertNotEquals(persistedRun.getState(), TaskRunState.valueOf(state1));
+        Assertions.assertNotEquals(persistedRun.getState(), TaskRunState.valueOf(state2));
+        Assertions.assertNotEquals(persistedRun.getState(), TaskRunState.valueOf(state3));
+        Assertions.assertNotEquals(persistedRun.getState(), TaskRunState.valueOf(state4));
     }
 
     @When("user calls the endpoint to post outputs with {string} HTTP method POST and a valid outputs zip file")
@@ -627,10 +502,10 @@ public class RunTaskStepDefinitions {
 
         ClassPathResource validOutputArchiveResource = new ClassPathResource("/artifacts/" + runId + "-sum.zip");
         Assertions.assertNotNull(validOutputArchiveResource);
-        zipFile = validOutputArchiveResource.getFile();
+        persistedZipFile = validOutputArchiveResource.getFile();
 
         try {
-            outputs = appEngineAPI.taskRunsRunIdOutputsZipPost(UUID.fromString(runId), zipFile);
+            outputs = appEngineAPI.taskRunsRunIdOutputsZipPost(UUID.fromString(runId), persistedZipFile);
         } catch (ApiException e) {
             e.printStackTrace();
             exception = e;
@@ -659,43 +534,42 @@ public class RunTaskStepDefinitions {
     public void this_task_run_has_been_successfully_provisioned_and_is_therefore_in_state(String provisionedState) throws FileStorageException {
         // save in the database
         integerProvisionRepository.deleteAll();
-        IntegerProvision num1 = new IntegerProvision("num1", 250, run.getId());
-        integerProvisionRepository.save(num1);
-        IntegerProvision num2 = new IntegerProvision("num2", 250, run.getId());
-        integerProvisionRepository.save(num2);
+        IntegerProvision provisionInputA = new IntegerProvision("a", 250, persistedRun.getId());
+        integerProvisionRepository.save(provisionInputA);
+        IntegerProvision provisionInputB = new IntegerProvision("b", 250, persistedRun.getId());
+        integerProvisionRepository.save(provisionInputB);
 
         // store in storage
-        Storage runStorage = new Storage("task-run-inputs-" + num1.getRunId());
-        String value = String.valueOf(num1.getValue());
+        Storage runStorage = new Storage("task-run-inputs-" + provisionInputA.getRunId());
+        String value = String.valueOf(provisionInputA.getValue());
         byte[] inputFileData = value.getBytes(getStorageCharset(charset));
-        FileData inputProvisionFileData = new FileData(inputFileData, num1.getParameterName());
+        FileData inputProvisionFileData = new FileData(inputFileData, provisionInputA.getParameterName());
 
         fileStorageHandler.createFile(runStorage, inputProvisionFileData);
 
-        value = String.valueOf(num2.getValue());
+        value = String.valueOf(provisionInputB.getValue());
         inputFileData = value.getBytes(getStorageCharset(charset));
-        inputProvisionFileData = new FileData(inputFileData, num2.getParameterName());
+        inputProvisionFileData = new FileData(inputFileData, provisionInputB.getParameterName());
 
         fileStorageHandler.createFile(runStorage, inputProvisionFileData);
 
-        run.setState(TaskRunState.PROVISIONED);
-        run = runRepository.saveAndFlush(run);
-        Assertions.assertEquals(run.getState(), TaskRunState.PROVISIONED);
-
+        persistedRun.setState(TaskRunState.PROVISIONED);
+        persistedRun = runRepository.saveAndFlush(persistedRun);
+        Assertions.assertEquals(persistedRun.getState(), TaskRunState.PROVISIONED);
     }
 
     @Then("App Engine sends a {string} OK response with a payload containing the success message \\(see OpenAPI spec)")
     public void app_engine_sends_a_ok_response_with_a_payload_containing_the_success_message_see_open_api_spec(String responseCode) {
-        Assertions.assertNotNull(response);
+        Assertions.assertNotNull(persistedResponse);
     }
 
     @Then("App Engine moves the task run to a state different from {string}")
     public void app_engine_moves_the_task_run_to_a_state_different_from(String states) {
         String[] stateArray = states.split(",");
-        Optional<Run> runOptional = runRepository.findById(run.getId());
-        runOptional.ifPresent(value -> run = value);
-        Assertions.assertNotEquals(run.getState(), TaskRunState.valueOf(stateArray[0]));
-        Assertions.assertNotEquals(run.getState(), TaskRunState.valueOf(stateArray[1]));
+        Optional<Run> runOptional = runRepository.findById(persistedRun.getId());
+        runOptional.ifPresent(value -> persistedRun = value);
+        Assertions.assertNotEquals(persistedRun.getState(), TaskRunState.valueOf(stateArray[0]));
+        Assertions.assertNotEquals(persistedRun.getState(), TaskRunState.valueOf(stateArray[1]));
     }
 
     @Then("App Engine initiates the process of executing the task run")
