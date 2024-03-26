@@ -59,6 +59,7 @@ public class KubernetesScheduler implements SchedulerHandler {
                 .addNewContainer()
                 .withName(jobName)
                 .withImage(imageName)
+                .withImagePullPolicy("Never")
                 .addNewVolumeMount()
                 .withName("inputs")
                 .withMountPath(task.getInputFolder())
