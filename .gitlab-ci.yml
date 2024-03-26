@@ -108,7 +108,6 @@ validate-openapi-spec:
     entrypoint: [""]
   variables:
     OPENAPI_PATH: src/test/resources/spec/api/openapi_spec.v0.1.0.yml
-
   script:
     - redocly lint ${OPENAPI_PATH}
 
