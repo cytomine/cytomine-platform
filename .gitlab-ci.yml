@@ -113,6 +113,17 @@ validate-descriptor-schema:
     - ajv compile -s ${SCHEMA_PATH} -c ajv-formats -c ajv-formats-draft2019 --spec=${SPEC} --strict=false --all-errors
 
 
+validate-openapi-spec:
+  stage: test
+  tags:
+    - docker
+  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/redocly/cli:1.10.6
+  variables:
+    OPENAPI_PATH: src/test/resources/spec/api/openapi_spec.v0.1.0.yml
+  script:
+    - redocly lint ${OPENAPI_PATH}
+
+
 tests-storage-registry:
   stage: test
   image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/gradle:8.4-jdk17-alpine
