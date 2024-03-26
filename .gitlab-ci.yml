@@ -22,7 +22,7 @@ include:
       job-name: download-task-integer-addition
 
 
-download-integer-addition:
+download-task-integer-addition:
   artifacts:
     paths:
       - ${TEST_ARTIFACT_PATH}/${ADD_INTEGER_TASK_NAME}
@@ -31,20 +31,6 @@ download-integer-addition:
 default:
   tags:
     - docker
-
-
-# save downloaded files as artifact
-download-task-add-integer:
-  artifacts:
-    paths:
-      - ${TEST_ARTIFACT_PATH}/${ADD_INTEGER_TASK_NAME}
-
-
-# save downloaded files as artifact
-download-task-identity-integer:
-  artifacts:
-    paths:
-      - ${TEST_ARTIFACT_PATH}/${ID_INTEGER_TASK_NAME}
 
 
 lint-dockerfiles:
@@ -159,11 +145,6 @@ tests-storage-registry:
     DB_NAME: appengine
     DB_USERNAME: appengine
     DB_PASSWORD: password
-  needs:
-    - job: download-task-add-integer
-      artifacts: true
-    - job: download-task-identity-integer
-      artifacts: true
   script:
     - gradle :test --no-daemon
   artifacts:
