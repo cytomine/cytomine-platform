@@ -1,15 +1,25 @@
 package be.cytomine.appengine.utils;
 
 
+import be.cytomine.appengine.dto.inputs.task.UploadTaskArchive;
 import be.cytomine.appengine.dto.misc.TaskIdentifiers;
+import be.cytomine.appengine.exceptions.BundleArchiveException;
+import be.cytomine.appengine.exceptions.ValidationException;
 import be.cytomine.appengine.models.task.Author;
 import be.cytomine.appengine.models.task.Input;
 import be.cytomine.appengine.models.task.IntegerType;
 import be.cytomine.appengine.models.task.Output;
 import be.cytomine.appengine.models.task.Task;
-import java.util.UUID;
-import java.util.Set;
-import java.util.HashSet;
+import be.cytomine.appengine.models.task.TypeFactory;
+
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.mock.web.MockMultipartFile;
+
+import com.fasterxml.jackson.databind.JsonNode;
+
+import java.util.*;
+import java.io.*;
+
 
 
 public class TestTaskBuilder {
@@ -142,4 +152,144 @@ public class TestTaskBuilder {
   public static Task buildHardcodedSubtractInteger() {
     return buildHardcodedSubtractInteger(UUID.randomUUID());
   }
+
+  public static ClassPathResource buildSubtractIntegerFromResourceBundle(UUID taskUUID) {
+    return buildByBundleFilename("com.cytomine.dummy.arithmetic.integer.subtraction-1.0.0.zip");
+  }
+
+  public static ClassPathResource buildAddIntegerFromResourceBundle() {
+    return buildByBundleFilename("com.cytomine.dummy.arithmetic.integer.addition-1.0.0.zip");
+  }
+
+  public static ClassPathResource buildWrongArchiveFormatTask() {
+    return buildByBundleFilename("test_wrong_archive_format_task.7z");
+  }
+
+  public static ClassPathResource buildCustomImageLocationTask() {
+    return buildByBundleFilename("test_custom_image_location_task.zip");
+  }
+
+  public static ClassPathResource buildDefaultImageLocationTask() {
+    return buildByBundleFilename("test_default_image_location_task.zip");
+  }
+
+  public static ClassPathResource buildByBundleFilename(String bundleFilename) {
+    return new ClassPathResource("/artifacts/" + bundleFilename);
+  }
+
+
+  public static Task buildTaskFromResource(String bundleFilename) {
+    return buildTaskFromResource(bundleFilename, UUID.randomUUID());
+  }
+
+  public static File getDescriptorFromBundleResource(String bundleFilename) {
+    ClassPathResource resource  = buildByBundleFilename(bundleFilename);
+    ArchiveUtils archiveUtils = new ArchiveUtils();
+    try {
+      MockMultipartFile taskMultipartFile = new MockMultipartFile(bundleFilename, resource.getInputStream());
+      UploadTaskArchive taskArchive = archiveUtils.readArchive(taskMultipartFile);
+      File tempFile = File.createTempFile("descriptor", ".yml");
+      try (FileOutputStream fos = new FileOutputStream(tempFile)) {
+        fos.write(taskArchive.getDescriptorFile());
+        return tempFile;
+      }
+    } catch (IOException | ValidationException | BundleArchiveException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public static Task buildTaskFromResource(String bundleFilename, UUID taskUUID) {
+    // open bundle
+    ClassPathResource resource  = buildByBundleFilename(bundleFilename);
+    ArchiveUtils archiveUtils = new ArchiveUtils();
+
+    try {
+      MockMultipartFile taskMultipartFile = new MockMultipartFile(bundleFilename, resource.getInputStream());
+      UploadTaskArchive taskArchive = archiveUtils.readArchive(taskMultipartFile);
+
+      Task task = new Task();
+      task.setIdentifier(taskUUID);
+      task.setStorageReference("task-" + taskUUID + "-def");
+      JsonNode taskDescriptorJson = taskArchive.getDescriptorFileAsJson();
+      task.setName(taskDescriptorJson.get("name").textValue());
+      task.setNameShort(taskDescriptorJson.get("name_short").textValue());
+      task.setDescriptorFile(taskDescriptorJson.get("namespace").textValue());
+      task.setNamespace(taskDescriptorJson.get("namespace").textValue());
+      task.setVersion(taskDescriptorJson.get("version").textValue());
+      task.setInputFolder(taskDescriptorJson.get("configuration").get("input_folder").textValue());
+      task.setOutputFolder(taskDescriptorJson.get("configuration").get("output_folder").textValue());
+      if (taskDescriptorJson.get("description") != null)
+        task.setDescription(taskDescriptorJson.get("description").textValue());
+
+      task.setAuthors(getAuthors(taskArchive));
+      task.setInputs(getInputs(taskArchive));
+      task.setOutputs(getOnputs(taskArchive));
+      return task;
+    } catch(IOException | ValidationException | BundleArchiveException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private static Set<Input> getInputs(UploadTaskArchive uploadTaskArchive) {
+    Set<Input> inputs = new HashSet<>();
+    JsonNode inputsNode = uploadTaskArchive.getDescriptorFileAsJson().get("inputs");
+    if (inputsNode.isObject()) {
+      Iterator<String> fieldNames = inputsNode.fieldNames();
+      while (fieldNames.hasNext()) {
+        String inputKey = fieldNames.next();
+        JsonNode inputValue = inputsNode.get(inputKey);
+
+        Input input = new Input();
+        input.setName(inputKey);
+        input.setDisplayName(inputValue.get("display_name").textValue());
+        input.setDescription(inputValue.get("description").textValue());
+        // use type factory to generate the correct type
+        input.setType(TypeFactory.createType(inputValue));
+        inputs.add(input);
+      }
+    }
+    return inputs;
+  }
+
+  private static Set<Output> getOnputs(UploadTaskArchive uploadTaskArchive) {
+      Set<Output> outputs = new HashSet<>();
+      JsonNode outputsNode = uploadTaskArchive.getDescriptorFileAsJson().get("outputs");
+      if (outputsNode.isObject()) {
+          Iterator<String> fieldNames = outputsNode.fieldNames();
+          while (fieldNames.hasNext()) {
+              String outputKey = fieldNames.next();
+              JsonNode inputValue = outputsNode.get(outputKey);
+
+              Output output = new Output();
+              output.setName(outputKey);
+              output.setDisplayName(inputValue.get("display_name").textValue());
+              output.setDescription(inputValue.get("description").textValue());
+              // use type factory to generate the correct type
+              output.setType(TypeFactory.createType(inputValue));
+
+              outputs.add(output);
+
+          }
+      }
+      return outputs;
+  }
+
+  private static Set<Author> getAuthors(UploadTaskArchive uploadTaskArchive) {
+    Set<Author> authors = new HashSet<>();
+    JsonNode authorNode = uploadTaskArchive.getDescriptorFileAsJson().get("authors");
+    if (authorNode.isArray()) {
+        for (JsonNode author : authorNode) {
+            Author a = new Author();
+            a.setFirstName(author.get("first_name").textValue());
+            a.setLastName(author.get("last_name").textValue());
+            a.setOrganization(author.get("organization").textValue());
+            a.setEmail(author.get("email").textValue());
+            a.setContact(author.get("is_contact").asBoolean());
+            authors.add(a);
+        }
+    }
+    return authors;
+  }
+
 }
+

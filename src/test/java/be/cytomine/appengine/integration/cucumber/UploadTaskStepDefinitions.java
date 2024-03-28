@@ -23,6 +23,7 @@ import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 
 import org.junit.jupiter.api.Assertions;
+import org.junit.platform.engine.support.hierarchical.HierarchicalTestExecutorService.TestTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -118,7 +119,7 @@ public class UploadTaskStepDefinitions {
     @Given("this task is represented by a zip archive containing a task descriptor file and a docker image")
     public void this_task_is_represented_by_a_zip_archive_containing_a_task_descriptor_file_and_a_docker_image() {
         // make sure valid test archive is in classpath
-        archive = new ClassPathResource("/artifacts/com.cytomine.dummy.arithmetic.integer.addition-1.0.0.zip");
+        archive = TestTaskBuilder.buildAddIntegerFromResourceBundle();
         Assertions.assertNotNull(archive);
     }
 
