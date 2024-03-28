@@ -10,6 +10,7 @@ variables:
   TESTS_IMAGE_POSTGIS: 'cytomine/postgis:1.4.0-dev.2'
   APPENGINE_TASKS_PATH: GitLab/Artifacts/AppEngine/Tasks
   ADD_INTEGER_TASK_NAME: com.cytomine.dummy.arithmetic.integer.addition-1.0.0.zip
+  IDENTITY_BOOLEAN_TASK_NAME: com.cytomine.dummy.identity.boolean-1.0.0.zip
   TEST_ARTIFACT_PATH: ./src/test/resources/artifacts
 
 
@@ -20,12 +21,23 @@ include:
       source-filepath: ${APPENGINE_TASKS_PATH}/${ADD_INTEGER_TASK_NAME}
       target-directory: ${TEST_ARTIFACT_PATH}
       job-name: download-task-integer-addition
+  - component: gitlab.cytom.in/cm/rnd/cicd/component-nextcloud/download-file@1.1.0
+    inputs:
+      source-filepath: ${APPENGINE_TASKS_PATH}/${IDENTITY_BOOLEAN_TASK_NAME}
+      target-directory: ${TEST_ARTIFACT_PATH}
+      job-name: download-task-boolean-identity
 
 
 download-task-integer-addition:
   artifacts:
     paths:
       - ${TEST_ARTIFACT_PATH}/${ADD_INTEGER_TASK_NAME}
+
+
+download-task-boolean-identity:
+  artifacts:
+    paths:
+      - ${TEST_ARTIFACT_PATH}/${IDENTITY_BOOLEAN_TASK_NAME}
 
 
 default:
@@ -117,6 +129,8 @@ tests-storage-registry:
   image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/gradle:8.4-jdk17-alpine
   needs:
     - job: download-task-integer-addition
+      artifacts: true
+    - job: download-task-boolean-identity
       artifacts: true
   services:
     - alias: postgres
