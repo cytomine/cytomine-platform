@@ -87,7 +87,7 @@ public class ReadTaskStepDefinitions {
         ApiClient defaultClient = Configuration.getDefaultApiClient();
         defaultClient.setBasePath(buildAppEngineUrl());
         appEngineApi = new DefaultApi(defaultClient);
-        tasks = appEngineApi.tasksGet();
+        tasks = appEngineApi.getTasks();
     }
 
     @Then("App Engine retrieves relevant data from the database")
@@ -181,7 +181,7 @@ public class ReadTaskStepDefinitions {
         ApiClient defaultClient = Configuration.getDefaultApiClient();
         defaultClient.setBasePath(buildAppEngineUrl());
         appEngineApi = new DefaultApi(defaultClient);
-        description = appEngineApi.tasksNamespaceVersionGet(namespace, version);
+        description = appEngineApi.getTaskByNamespaceVersion(namespace, version);
 
     }
 
@@ -191,7 +191,7 @@ public class ReadTaskStepDefinitions {
         ApiClient defaultClient = Configuration.getDefaultApiClient();
         defaultClient.setBasePath(buildAppEngineUrl());
         appEngineApi = new DefaultApi(defaultClient);
-        description = appEngineApi.tasksIdGet(UUID.fromString(uuid));
+        description = appEngineApi.getTaskByUUID(UUID.fromString(uuid));
 
 
     }
@@ -214,7 +214,7 @@ public class ReadTaskStepDefinitions {
         ApiClient defaultClient = Configuration.getDefaultApiClient();
         defaultClient.setBasePath(buildAppEngineUrl());
         appEngineApi = new DefaultApi(defaultClient);
-        inputParameters = appEngineApi.tasksNamespaceVersionInputsGet(namespace, version);
+        inputParameters = appEngineApi.getTaskInputsByNamespaceVersion(namespace, version);
     }
 
     List<OutputParameter> outputParameters;
@@ -225,7 +225,7 @@ public class ReadTaskStepDefinitions {
         ApiClient defaultClient = Configuration.getDefaultApiClient();
         defaultClient.setBasePath(buildAppEngineUrl());
         appEngineApi = new DefaultApi(defaultClient);
-        outputParameters = appEngineApi.tasksNamespaceVersionOutputsGet(namespace, version);
+        outputParameters = appEngineApi.getTaskOutputsByNamespaceVersion(namespace, version);
     }
 
     @When("user calls the endpoint {string} with {string} HTTP method GET")
@@ -234,7 +234,7 @@ public class ReadTaskStepDefinitions {
         ApiClient defaultClient = Configuration.getDefaultApiClient();
         defaultClient.setBasePath(buildAppEngineUrl());
         appEngineApi = new DefaultApi(defaultClient);
-        inputParameters = appEngineApi.tasksIdInputsGet(UUID.fromString(uuid));
+        inputParameters = appEngineApi.getTaskInputsByUUID(UUID.fromString(uuid));
     }
 
     @When("user calls the outputs endpoint {string} with {string} HTTP method GET")
@@ -243,7 +243,7 @@ public class ReadTaskStepDefinitions {
         ApiClient defaultClient = Configuration.getDefaultApiClient();
         defaultClient.setBasePath(buildAppEngineUrl());
         appEngineApi = new DefaultApi(defaultClient);
-        outputParameters = appEngineApi.tasksIdOutputsGet(UUID.fromString(uuid));
+        outputParameters = appEngineApi.getTaskOutputsByUUID(UUID.fromString(uuid));
     }
 
     File descriptorYml;
@@ -255,7 +255,7 @@ public class ReadTaskStepDefinitions {
         ApiClient defaultClient = Configuration.getDefaultApiClient();
         defaultClient.setBasePath(buildAppEngineUrl());
         appEngineApi = new DefaultApi(defaultClient);
-        descriptorYml = appEngineApi.tasksNamespaceVersionDescriptorYmlGet(namespace, version);
+        descriptorYml = appEngineApi.getTaskDescriptorByNamespaceVersion(namespace, version);
     }
 
     @Given("the task descriptor is stored in the file storage service in storage {string} under filename {string}")
@@ -285,7 +285,7 @@ public class ReadTaskStepDefinitions {
         ApiClient defaultClient = Configuration.getDefaultApiClient();
         defaultClient.setBasePath(buildAppEngineUrl());
         appEngineApi = new DefaultApi(defaultClient);
-        descriptorYml = appEngineApi.tasksIdDescriptorYmlGet(UUID.fromString(uuid));
+        descriptorYml = appEngineApi.getTaskDescriptorByUUID(UUID.fromString(uuid));
     }
 
     @Then("App Engine retrieves the descriptor file {string} from the file storage")
@@ -342,20 +342,20 @@ public class ReadTaskStepDefinitions {
         try {
             switch (endpoint) {
                 case "/task/namespace/version/outputs" ->
-                        outputParameters = appEngineApi.tasksNamespaceVersionOutputsGet(this.namespace, this.version);
+                        outputParameters = appEngineApi.getTaskOutputsByNamespaceVersion(this.namespace, this.version);
                 case "/task/id/outputs" ->
-                        outputParameters = appEngineApi.tasksIdOutputsGet(UUID.fromString(this.uuid_id));
+                        outputParameters = appEngineApi.getTaskOutputsByUUID(UUID.fromString(this.uuid_id));
                 case "/task/namespace/version/inputs" ->
-                        inputParameters = appEngineApi.tasksNamespaceVersionInputsGet(this.namespace, this.version);
+                        inputParameters = appEngineApi.getTaskInputsByNamespaceVersion(this.namespace, this.version);
                 case "/task/id/inputs" ->
-                        inputParameters = appEngineApi.tasksIdInputsGet(UUID.fromString(this.uuid_id));
+                        inputParameters = appEngineApi.getTaskInputsByUUID(UUID.fromString(this.uuid_id));
                 case "/task/namespace/version" ->
-                        description = appEngineApi.tasksNamespaceVersionGet(this.namespace, this.version);
-                case "/task/id" -> description = appEngineApi.tasksIdGet(UUID.fromString(this.uuid_id));
+                        description = appEngineApi.getTaskByNamespaceVersion(this.namespace, this.version);
+                case "/task/id" -> description = appEngineApi.getTaskByUUID(UUID.fromString(this.uuid_id));
                 case "/task/namespace/version/descriptor.yml" ->
-                        descriptorYml = appEngineApi.tasksNamespaceVersionDescriptorYmlGet(this.namespace, this.version);
+                        descriptorYml = appEngineApi.getTaskDescriptorByNamespaceVersion(this.namespace, this.version);
                 case "/task/id/descriptor.yml" ->
-                        descriptorYml = appEngineApi.tasksIdDescriptorYmlGet(UUID.fromString(this.uuid_id));
+                        descriptorYml = appEngineApi.getTaskDescriptorByUUID(UUID.fromString(this.uuid_id));
             }
         } catch (ApiException e) {
             this.exception = e;

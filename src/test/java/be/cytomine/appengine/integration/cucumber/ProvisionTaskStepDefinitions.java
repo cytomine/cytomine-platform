@@ -104,10 +104,10 @@ public class ProvisionTaskStepDefinitions {
         appEngineApi = new DefaultApi(defaultClient);
         try {
             if (endpoint.equalsIgnoreCase("/task/namespace/version/runs")) {
-                taskRun = appEngineApi.tasksNamespaceVersionRunsPost(persistedTask.getNamespace(), persistedTask.getVersion());
+                taskRun = appEngineApi.createTaskRunByNamespaceVersion(persistedTask.getNamespace(), persistedTask.getVersion());
             }
             if (endpoint.equalsIgnoreCase("/task/id/runs")) {
-                taskRun = appEngineApi.tasksTaskIdRunsPost(persistedTask.getIdentifier());
+                taskRun = appEngineApi.createTaskRunByUUID(persistedTask.getIdentifier());
             }
         } catch (ApiException e) {
             e.printStackTrace();
@@ -204,9 +204,8 @@ public class ProvisionTaskStepDefinitions {
         TaskRunInputProvisionInputBody body = new TaskRunInputProvisionInputBody();
         body.setParamName(parameterName);
         body.setValue(new TaskRunInputProvisionInputBodyValue(value));
-        TaskRunInputProvision provision;
         try {
-            provision = appEngineApi.taskRunsRunIdInputProvisionsParamNamePut(run.getId(), parameterName, body);
+            appEngineApi.provisionTaskRunSingleParameter(run.getId(), parameterName, body);
         } catch (ApiException e) {
             exception = e;
         }
@@ -276,9 +275,8 @@ public class ProvisionTaskStepDefinitions {
                 provisionList.add(parameterBody);
             }
         }
-        List<TaskRunInputProvision> provisions;
         try {
-            provisions = appEngineApi.taskRunsRunIdInputProvisionsPut(run.getId(), provisionList);
+            appEngineApi.provisionTaskRunParameterBatch(run.getId(), provisionList);
         } catch (ApiException e) {
             exception = e;
         }
