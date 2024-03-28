@@ -368,7 +368,7 @@ paths:
   /task-runs/{run_id}/inputs.zip:
     get:
       summary: Download inputs of a task
-      operationId: getTaskRunInputs
+      operationId: getTaskRunInputsInArchive
       parameters:
         - in: path
           name: run_id
@@ -395,7 +395,7 @@ paths:
   /task-runs/{run_id}/outputs.zip:
     get:
       summary: Get all the outputs as files in a zip
-      operationId: getTaskRunOutputs
+      operationId: getTaskRunOutputsInArchive
       parameters:
         - in: path
           name: run_id
@@ -469,7 +469,7 @@ paths:
   /task-runs/{run_id}/outputs:
     get:
       summary: Get task run outputs
-      operationId: getTaskRunOutputsInArchive
+      operationId: getTaskRunOutputs
       parameters:
         - in: path
           name: run_id
@@ -501,7 +501,7 @@ paths:
   /task-runs/{run_id}/inputs:
     get:
       summary: Get task run inputs
-      operationId: getTaskRunInputsInArchive
+      operationId: getTaskRunInputs
       parameters:
         - in: path
           name: run_id
