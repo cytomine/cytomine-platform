@@ -4,18 +4,22 @@ import be.cytomine.appengine.AppEngineApplication;
 import be.cytomine.appengine.dto.handlers.filestorage.Storage;
 import be.cytomine.appengine.handlers.FileData;
 import be.cytomine.appengine.handlers.FileStorageHandler;
+import be.cytomine.appengine.models.BaseEntity;
 import be.cytomine.appengine.models.task.*;
 import be.cytomine.appengine.openapi.api.DefaultApi;
 import be.cytomine.appengine.openapi.invoker.ApiClient;
 import be.cytomine.appengine.openapi.invoker.ApiException;
 import be.cytomine.appengine.openapi.invoker.Configuration;
+import be.cytomine.appengine.openapi.model.AbstractOpenApiSchema;
 import be.cytomine.appengine.openapi.model.InputParameter;
 import be.cytomine.appengine.openapi.model.OutputParameter;
 import be.cytomine.appengine.openapi.model.TaskDescription;
+import be.cytomine.appengine.openapi.model.TypedParameterInteger;
 import be.cytomine.appengine.repositories.TaskRepository;
 import be.cytomine.appengine.services.TaskService;
 import be.cytomine.appengine.exceptions.*;
 import be.cytomine.appengine.utils.DescriptorHelper;
+import be.cytomine.appengine.utils.TaskTestsUtils;
 import be.cytomine.appengine.utils.TestTaskBuilder;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -37,9 +41,9 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ContextConfiguration;
 
+import java.lang.reflect.*;
 import java.io.*;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @ContextConfiguration(classes = AppEngineApplication.class, loader = SpringBootContextLoader.class)
 public class ReadTaskStepDefinitions {
@@ -65,6 +69,9 @@ public class ReadTaskStepDefinitions {
     String persistedVersion;
     String persistedUUID;
     ApiException persistedException;
+    List<InputParameter> persistedInputParameters;
+    List<OutputParameter> persistedOutputParameters;
+    File persistedDescriptorYml;
 
     @Autowired
     private DefaultApi appEngineApi;
@@ -185,15 +192,14 @@ public class ReadTaskStepDefinitions {
 
     @Then("App Engine retrieves task with {string}, a {string}  from the database")
     public void app_engine_retrieves_task_data_from_the_database(String namespace, String version) {
-        // a TaskDescription is received
     }
 
     @Then("App Engine retrieves task inputs with {string}, a {string}  from the database")
     public void app_engine_retrieves_task_inputs_data_from_the_database(String namespace, String version) {
         // check inputs
-        Assertions.assertNotNull(inputParameters);
-        Assertions.assertFalse(inputParameters.isEmpty());
-        Assertions.assertEquals(inputParameters.size(), 2);
+        Assertions.assertNotNull(persistedInputParameters);
+        Assertions.assertFalse(persistedInputParameters.isEmpty());
+        Assertions.assertEquals(persistedInputParameters.size(), 2);
     }
 
     @Then("App Engine retrieves task with {string} from the database")
@@ -203,9 +209,9 @@ public class ReadTaskStepDefinitions {
     @Then("App Engine retrieves task inputs with {string} from the database")
     public void app_engine_retrieves_task_inputs_data_from_the_database(String uuid) {
         // a Input Parameters is received
-        Assertions.assertNotNull(inputParameters);
-        Assertions.assertFalse(inputParameters.isEmpty());
-        Assertions.assertEquals(inputParameters.size(), 2);
+        Assertions.assertNotNull(persistedInputParameters);
+        Assertions.assertFalse(persistedInputParameters.isEmpty());
+        Assertions.assertEquals(persistedInputParameters.size(), 2);
     }
 
 
@@ -239,10 +245,10 @@ public class ReadTaskStepDefinitions {
 
     @Then("App Engine sends a {string} OK response with a payload containing the task inputs as a JSON payload \\(see OpenAPI spec)")
     public void app_engine_sends_a_ok_response_with_a_payload_containing_the_task_inputs_as_a_json_payload_see_open_api_spec(String string) {
-        Assertions.assertNotNull(inputParameters);
+        Assertions.assertNotNull(persistedInputParameters);
+        TaskTestsUtils.checkParametersSetsMatch(persistedInputParameters, persistedTask.getInputs());
     }
 
-    List<InputParameter> inputParameters;
 
     @When("user calls the endpoint {string} with {string} and {string} HTTP method GET")
     public void user_calls_the_endpoint_with_and_http_method_get(String endpoint, String namespace, String version) throws ApiException {
@@ -250,10 +256,9 @@ public class ReadTaskStepDefinitions {
         ApiClient defaultClient = Configuration.getDefaultApiClient();
         defaultClient.setBasePath(buildAppEngineUrl());
         appEngineApi = new DefaultApi(defaultClient);
-        inputParameters = appEngineApi.getTaskInputsByNamespaceVersion(namespace, version);
+        persistedInputParameters = appEngineApi.getTaskInputsByNamespaceVersion(namespace, version);
     }
 
-    List<OutputParameter> outputParameters;
 
     @When("user calls the outputs endpoint {string} with {string} and {string} HTTP method GET")
     public void user_calls_the_outputs_endpoint_with_and_http_method_get(String endpoint, String namespace, String version) throws ApiException {
@@ -261,7 +266,7 @@ public class ReadTaskStepDefinitions {
         ApiClient defaultClient = Configuration.getDefaultApiClient();
         defaultClient.setBasePath(buildAppEngineUrl());
         appEngineApi = new DefaultApi(defaultClient);
-        outputParameters = appEngineApi.getTaskOutputsByNamespaceVersion(namespace, version);
+        persistedOutputParameters = appEngineApi.getTaskOutputsByNamespaceVersion(namespace, version);
     }
 
     @When("user calls the endpoint {string} with {string} HTTP method GET")
@@ -270,7 +275,7 @@ public class ReadTaskStepDefinitions {
         ApiClient defaultClient = Configuration.getDefaultApiClient();
         defaultClient.setBasePath(buildAppEngineUrl());
         appEngineApi = new DefaultApi(defaultClient);
-        inputParameters = appEngineApi.getTaskInputsByUUID(UUID.fromString(uuid));
+        persistedInputParameters = appEngineApi.getTaskInputsByUUID(UUID.fromString(uuid));
     }
 
     @When("user calls the outputs endpoint {string} with {string} HTTP method GET")
@@ -279,10 +284,8 @@ public class ReadTaskStepDefinitions {
         ApiClient defaultClient = Configuration.getDefaultApiClient();
         defaultClient.setBasePath(buildAppEngineUrl());
         appEngineApi = new DefaultApi(defaultClient);
-        outputParameters = appEngineApi.getTaskOutputsByUUID(UUID.fromString(uuid));
+        persistedOutputParameters = appEngineApi.getTaskOutputsByUUID(UUID.fromString(uuid));
     }
-
-    File persistedDescriptorYml;
 
     @When("user calls the download endpoint with {string} and {string} with HTTP method GET")
     public void user_calls_the_download_endpoint_with_and_with_http_method_get(String namespace, String version) throws ApiException {
@@ -334,17 +337,20 @@ public class ReadTaskStepDefinitions {
 
     @Then("App Engine retrieves task outputs with {string}, a {string}  from the database")
     public void app_engine_retrieves_task_outputs_with_a_from_the_database(String name, String string2) {
-        Assertions.assertNotNull(outputParameters);
+        Assertions.assertNotNull(persistedOutputParameters);
+        TaskTestsUtils.checkParametersSetsMatch(persistedOutputParameters, persistedTask.getOutputs());
     }
 
     @Then("App Engine sends a {string} OK response with a payload containing the task outputs as a JSON payload \\(see OpenAPI spec)")
     public void app_engine_sends_a_ok_response_with_a_payload_containing_the_task_outputs_as_a_json_payload_see_open_api_spec(String string) {
-        Assertions.assertNotNull(outputParameters);
+        Assertions.assertNotNull(persistedOutputParameters);
+        TaskTestsUtils.checkParametersSetsMatch(persistedOutputParameters, persistedTask.getOutputs());
     }
 
     @Then("App Engine retrieves task outputs with {string} from the database")
     public void app_engine_retrieves_task_outputs_with_from_the_database(String string) {
-        Assertions.assertNotNull(outputParameters);
+        Assertions.assertNotNull(persistedOutputParameters);
+        TaskTestsUtils.checkParametersSetsMatch(persistedOutputParameters, persistedTask.getOutputs());
     }
 
     @Given("a task unknown to the App Engine has a {string} and a {string} and a {string}")
@@ -366,13 +372,13 @@ public class ReadTaskStepDefinitions {
         try {
             switch (endpoint) {
                 case "/task/namespace/version/outputs" ->
-                        outputParameters = appEngineApi.getTaskOutputsByNamespaceVersion(this.persistedNamespace, this.persistedVersion);
+                        persistedOutputParameters = appEngineApi.getTaskOutputsByNamespaceVersion(this.persistedNamespace, this.persistedVersion);
                 case "/task/id/outputs" ->
-                        outputParameters = appEngineApi.getTaskOutputsByUUID(UUID.fromString(this.persistedUUID));
+                        persistedOutputParameters = appEngineApi.getTaskOutputsByUUID(UUID.fromString(this.persistedUUID));
                 case "/task/namespace/version/inputs" ->
-                        inputParameters = appEngineApi.getTaskInputsByNamespaceVersion(this.persistedNamespace, this.persistedVersion);
+                        persistedInputParameters = appEngineApi.getTaskInputsByNamespaceVersion(this.persistedNamespace, this.persistedVersion);
                 case "/task/id/inputs" ->
-                        inputParameters = appEngineApi.getTaskInputsByUUID(UUID.fromString(this.persistedUUID));
+                        persistedInputParameters = appEngineApi.getTaskInputsByUUID(UUID.fromString(this.persistedUUID));
                 case "/task/namespace/version" ->
                         persistedTaskDescription = appEngineApi.getTaskByNamespaceVersion(this.persistedNamespace, this.persistedVersion);
                 case "/task/id" -> persistedTaskDescription = appEngineApi.getTaskByUUID(UUID.fromString(this.persistedUUID));
