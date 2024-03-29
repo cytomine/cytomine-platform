@@ -9,6 +9,9 @@ import be.cytomine.appengine.handlers.FileData;
 import be.cytomine.appengine.handlers.FileStorageHandler;
 import be.cytomine.appengine.handlers.RegistryHandler;
 import be.cytomine.appengine.models.task.*;
+import be.cytomine.appengine.openapi.api.DefaultApi;
+import be.cytomine.appengine.openapi.invoker.ApiException;
+import be.cytomine.appengine.openapi.model.TaskDescription;
 import be.cytomine.appengine.repositories.TaskRepository;
 import be.cytomine.appengine.utils.TestTaskBuilder;
 
@@ -23,7 +26,6 @@ import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 
 import org.junit.jupiter.api.Assertions;
-import org.junit.platform.engine.support.hierarchical.HierarchicalTestExecutorService.TestTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,10 +59,12 @@ public class UploadTaskStepDefinitions {
 
     ResponseEntity<String> persistedResponse;
 
-    String taskNameSpace;
-    String taskVersion;
+    String persistedNamespace;
+    String persistedVersion;
     Task persistedTask;
-    private ClassPathResource archive;
+    TaskDescription persistedUploadResponse;
+    ApiException persistedAPIException;
+    private ClassPathResource persistedBundle;
     private Task uploaded;
 
     @Autowired
@@ -68,6 +72,9 @@ public class UploadTaskStepDefinitions {
 
     @Value("${registry-client.host}")
     private String registry;
+
+    @Autowired
+    DefaultApi appEngineAPI;
 
     @Autowired
     FileStorageHandler fileStorageHandler;
@@ -105,22 +112,23 @@ public class UploadTaskStepDefinitions {
     }
 
     @Given("a task uniquely identified by an {string} and a {string}")
-    public void a_task_uniquely_identified_by_an_and_a(String taskNamSpace, String taskVersion) {
-        this.taskNameSpace = taskNamSpace;
-        this.taskVersion = taskVersion;
+    public void a_task_uniquely_identified_by_an_and_a(String namespace, String version) {
+        this.persistedNamespace = namespace;
+        this.persistedVersion = version;
     }
 
     @Given("this task identified by an {string} and a {string} is not yet known to the App Engine")
-    public void this_task_identified_by_an_and_a_is_not_yet_known_to_the_app_engine(String taskNameSpace, String taskVersion) {
-        Task task = taskRepository.findByNamespaceAndVersion(taskNameSpace, taskVersion);
-        Assertions.assertNull(task);
+    public void this_task_identified_by_an_and_a_is_not_yet_known_to_the_app_engine(String namespace, String version) {
+        taskRepository.deleteAll();
+
     }
 
     @Given("this task is represented by a zip archive containing a task descriptor file and a docker image")
     public void this_task_is_represented_by_a_zip_archive_containing_a_task_descriptor_file_and_a_docker_image() {
         // make sure valid test archive is in classpath
-        archive = TestTaskBuilder.buildAddIntegerFromResourceBundle();
-        Assertions.assertNotNull(archive);
+        String bundleFilename = persistedNamespace + "-" + persistedVersion + ".zip";
+        persistedBundle = TestTaskBuilder.buildByBundleFilename(bundleFilename);
+        Assertions.assertNotNull(persistedBundle);
     }
 
     @Given("the task descriptor is a YAML file stored in the zip archive named {string} structured following an agreed descriptor schema")
@@ -140,55 +148,36 @@ public class UploadTaskStepDefinitions {
 
     @When("user calls POST on endpoint with the zip archive as a multipart file parameter")
     public void user_calls_post_on_endpoint_with_the_zip_archive_as_a_multipart_file_parameter() {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-        body.add("task", archive);
-        HttpEntity<MultiValueMap<String, Object>> request = new HttpEntity<>(body, headers);
         try {
-            persistedResponse = new RestTemplate().postForEntity(buildAppEngineUrl() + "/tasks", request, String.class);
-        } catch (HttpClientErrorException.Conflict e) {
-            this.logger.error("conflict: " + e.getResponseBodyAsString(), e);
-            persistedResponse = new ResponseEntity<String>(e.getResponseBodyAsString(), HttpStatusCode.valueOf(409));
-        } catch (HttpClientErrorException.BadRequest e) {
-            this.logger.error("conflict: " + e.getResponseBodyAsString(), e);
-            persistedResponse = new ResponseEntity<String>(e.getResponseBodyAsString(), HttpStatusCode.valueOf(400));
+            persistedUploadResponse = appEngineAPI.uploadTask(persistedBundle.getFile());
+            Assertions.assertNotNull(persistedUploadResponse);
+        } catch (IOException e) {
+            Assertions.assertTrue(false, "bundle '" + persistedBundle.getFilename() + "' not found, cannot upload");
+        } catch (ApiException e) {
+            persistedAPIException = e;
+            Assertions.assertNotNull(persistedAPIException);
         }
-        Assertions.assertNotNull(persistedResponse);
     }
 
     @Then("App Engine unzip the zip archive")
     public void app_engine_unzip_the_zip_archive() throws JsonProcessingException {
-        // failure to unzip result in 400 http code
-        Assertions.assertNotEquals(persistedResponse.getStatusCode(), HttpStatusCode.valueOf(400));
-        JsonNode jsonPayLoad = new ObjectMapper().readTree(persistedResponse.getBody());
-        // doesn't reply with parsing failure
-        Assertions.assertFalse(jsonPayLoad.has("error_code"));
+        Assertions.assertNotNull(persistedUploadResponse);
     }
 
     @Then("App Engine successfully validates the task descriptor against the descriptor schema")
     public void app_engine_successfully_validates_the_task_descriptor_against_the_descriptor_schema() throws JsonProcessingException {
-        // failure to unzip result in 400 http code
-        Assertions.assertFalse(persistedResponse.getStatusCode().is4xxClientError());
-        JsonNode jsonPayLoad = new ObjectMapper().readTree(persistedResponse.getBody());
-        // doesn't reply with parsing failure
-        Assertions.assertFalse(jsonPayLoad.has("error_code"));
+        Assertions.assertNotNull(persistedUploadResponse);
     }
 
     @Then("App Engine successfully validates the docker image by checking that the tar file contains a {string} file")
     public void app_engine_successfully_validates_the_docker_image_by_checking_that_the_tar_file_contains_a_file(String string) throws JsonProcessingException {
-        // failure to unzip result in 400 http code
-        Assertions.assertFalse(persistedResponse.getStatusCode().is4xxClientError());
-        JsonNode jsonPayLoad = new ObjectMapper().readTree(persistedResponse.getBody());
-        // doesn't reply with parsing failure
-        Assertions.assertFalse(jsonPayLoad.has("error_code"));
+        Assertions.assertNotNull(persistedUploadResponse);
     }
 
     @Then("App Engine creates a unique {string} for referencing the task")
     public void app_engine_creates_a_unique_for_referencing_the(String string) {
-
-        Task uploaded = taskRepository.findByNamespaceAndVersion(taskNameSpace, taskVersion);
-        Assertions.assertEquals(UUID.fromString(uploaded.getIdentifier().toString()), uploaded.getIdentifier());
+        Task uploaded = taskRepository.findByNamespaceAndVersion(persistedNamespace, persistedVersion);
+        Assertions.assertEquals(persistedUploadResponse.getId(), uploaded.getIdentifier());
     }
 
     @Then("App Engine creates a task storage \\(e.g. a bucket reserved for the task) in the File Storage service with a unique {string} as follows {string}")
@@ -218,17 +207,16 @@ public class UploadTaskStepDefinitions {
     @Then("App Engine stores relevant task metadata \\(a subset of the task descriptor content) in the database associated with the {string}")
     public void app_engine_stores_relevant_task_metadata_a_subset_of_the_task_descriptor_content_in_the_database_associated_with_the(String string) {
         // stores task
-        uploaded = taskRepository.findByNamespaceAndVersion(taskNameSpace, taskVersion);
+        uploaded = taskRepository.findByNamespaceAndVersion(persistedNamespace, persistedVersion);
         Assertions.assertNotNull(uploaded);
-        Assertions.assertTrue(uploaded.getNamespace().equalsIgnoreCase(taskNameSpace));
-        Assertions.assertTrue(uploaded.getVersion().equalsIgnoreCase(taskVersion));
+        Assertions.assertTrue(uploaded.getNamespace().equalsIgnoreCase(persistedNamespace));
+        Assertions.assertTrue(uploaded.getVersion().equalsIgnoreCase(persistedVersion));
 
     }
 
     @Then("App Engine returns an HTTP {string} OK response")
     public void app_engine_returns_an_http_response(String responseCode) {
-        Assertions.assertTrue(persistedResponse.getStatusCode().isSameCodeAs(HttpStatusCode.valueOf(Integer.parseInt(responseCode))));
-
+        Assertions.assertNull(persistedAPIException);
     }
 
     @Then("App Engine cleans up any temporary file created during the process \\(e.g. uploaded zip file, etc)")
@@ -291,8 +279,8 @@ public class UploadTaskStepDefinitions {
     @Then("App Engine returns an HTTP {string} conflict error because this version of the task exists already")
     public void app_engine_returns_an_http_conflict_error_because_this_version_of_the_task_exists_already(String conflictCode) throws JsonProcessingException {
         // failure
-        Assertions.assertEquals(persistedResponse.getStatusCode(), HttpStatusCode.valueOf(Integer.parseInt(conflictCode)));
-        JsonNode jsonPayLoad = new ObjectMapper().readTree(persistedResponse.getBody());
+        Assertions.assertEquals(Integer.parseInt(conflictCode), persistedAPIException.getCode());
+        JsonNode jsonPayLoad = new ObjectMapper().readTree(persistedAPIException.getMessage());
         // doesn't reply with parsing failure
         Assertions.assertEquals(jsonPayLoad.get("error_code").textValue(), ErrorDefinitions.fromCode(ErrorCode.INTERNAL_TASK_EXISTS).code);
     }
@@ -300,7 +288,7 @@ public class UploadTaskStepDefinitions {
     @Then("App Engine does not create or overwrite the task and related data in the File storage, registry and database services")
     public void app_engine_does_not_create_or_overwrite_the_task_and_related_data_in_the_file_storage_registry_and_database_services() throws FileStorageException, IOException {
         // check app engine doesn't override data in database
-        Task uploaded = taskRepository.findByNamespaceAndVersion(taskNameSpace, taskVersion);
+        Task uploaded = taskRepository.findByNamespaceAndVersion(persistedNamespace, persistedVersion);
         Assertions.assertEquals(uploaded.getNameShort(), persistedTask.getNameShort());
 
         // and storage service
@@ -329,18 +317,18 @@ public class UploadTaskStepDefinitions {
         // prepare bundles that represent all failure modes based on path and version
         switch (taskName) {
             case "task1":
-                archive = new ClassPathResource("/artifacts/no_version.zip");
+                persistedBundle = new ClassPathResource("/artifacts/no_version.zip");
                 break;
 
             case "task2":
-                archive = new ClassPathResource("/artifacts/unexpected_path.zip");
+                persistedBundle = new ClassPathResource("/artifacts/unexpected_path.zip");
                 break;
 
             case "task3":
-                archive = new ClassPathResource("/artifacts/wrong_name.zip");
+                persistedBundle = new ClassPathResource("/artifacts/wrong_name.zip");
                 break;
         }
-        Assertions.assertNotNull(archive);
+        Assertions.assertNotNull(persistedBundle);
     }
 
     @Given("the {string} can be retrieved from {string} in the descriptor file or is {string} if the field is missing")
@@ -357,7 +345,7 @@ public class UploadTaskStepDefinitions {
     public void app_engine_does_not_create_the_and_related_data_in_the_file_storage_registry_and_database_services(String namespace) {
         // check database does not contain the task with the given namespace
         // database
-        Task task = taskRepository.findByNamespaceAndVersion(taskNameSpace, taskVersion);
+        Task task = taskRepository.findByNamespaceAndVersion(persistedNamespace, persistedVersion);
         Assertions.assertNull(task);
         // storage is not created because we generate the bucket id based on a generated id
 
@@ -365,12 +353,11 @@ public class UploadTaskStepDefinitions {
 
     @Then("App Engine returns an HTTP {string} bad request error because the descriptor is incorrectly structured")
     public void app_engine_returns_an_http_bad_request_error_because_the_descriptor_is_incorrectly_structured(String responseCode) {
-        Assertions.assertTrue(persistedResponse.getStatusCode().isSameCodeAs(HttpStatusCode.valueOf(400)));
+        Assertions.assertEquals(400, persistedAPIException.getCode());
     }
 
     @Then("App Engine fails to validate the task descriptor for task {string} against the descriptor schema")
     public void app_engine_fails_to_validate_the_task_descriptor_against_the_descriptor_schema(String taskName) throws JsonProcessingException {
-        JsonNode jsonPayLoad = new ObjectMapper().readTree(persistedResponse.getBody());
         ErrorCode code;
         switch (taskName) {
             case "task1":
@@ -383,7 +370,7 @@ public class UploadTaskStepDefinitions {
             default:
                 throw new RuntimeException("invalid test task");
         }
-
+        JsonNode jsonPayLoad = new ObjectMapper().readTree(persistedAPIException.getMessage());
         Assertions.assertTrue(jsonPayLoad.get("error_code").textValue().equals(ErrorDefinitions.fromCode(code).code));
     }
 }
