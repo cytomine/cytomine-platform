@@ -553,6 +553,9 @@ components:
         - version
         - description
       properties:
+        id:
+          type: string
+          format: uuid
         name:
           type: string
           description: Task name
