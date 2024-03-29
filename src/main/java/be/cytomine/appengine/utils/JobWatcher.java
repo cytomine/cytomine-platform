@@ -27,14 +27,14 @@ public class JobWatcher implements Watcher<Job> {
         this.runRepository = runRepository;
     }
 
-    private TaskRunState processJobStatus(Job job) {
+    private TaskRunState processJobStatus(Job job, String runId) {
         logger.info("Cluster event: process job status " + job.getMetadata().getName());
 
         JobStatus status = job.getStatus();
         for (JobCondition condition : status.getConditions()) {
             switch (condition.getType()) {
                 case "Complete":
-                    return TaskRunState.FINISHED;
+                    return TaskRunState.RUNNING;
                 case "Failed":
                 default:
                     return TaskRunState.FAILED;
@@ -60,7 +60,7 @@ public class JobWatcher implements Watcher<Job> {
                 run.setState(TaskRunState.QUEUED);
                 break;
             case "MODIFIED":
-                run.setState(processJobStatus(job));
+                run.setState(processJobStatus(job, runId));
                 break;
             default:
                 logger.info("Unrecognized event: " + action.name());

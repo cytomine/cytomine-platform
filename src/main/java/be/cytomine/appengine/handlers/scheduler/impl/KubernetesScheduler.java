@@ -31,36 +31,63 @@ public class KubernetesScheduler implements SchedulerHandler {
     @Autowired
     private JobWatcher jobWatcher;
 
-    @Value("${storage.host-path}")
-    private String hostPath;
+    @Value("${app-engine.api_prefix}")
+    private String apiPrefix;
+
+    @Value("${app-engine.api_version}")
+    private String apiVersion;
 
     @Override
     public Schedule schedule(Schedule schedule) throws SchedulingException {
         logger.info("Schedule: get Task parameters");
 
         Run run = schedule.getRun();
+        String runId = run.getId().toString();
         Task task = run.getTask();
 
-        String inputPath = hostPath + "/task-run-inputs-" + run.getId();
-        String outputPath = hostPath + "/task-run-outputs-" + run.getId();
+        String inputPath = "/data/app-engine/task-run-inputs-" + runId;
+        String outputPath = "/data/app-engine/task-run-outputs-" + runId;
 
-        String jobName = task.getName().replaceAll("[^a-zA-Z0-9]", "") + "-" + run.getId();
+        String jobName = task.getName().replaceAll("[^a-zA-Z0-9]", "") + "-" + runId;
         String imageName = "localhost:5051/" + task.getImageName();
 
         logger.info("Schedule: create Task Job");
-        Job job = new JobBuilder()
+        // Defining the job metadata
+        JobBuilder jobBuilder = new JobBuilder()
                 .withApiVersion("batch/v1")
                 .withNewMetadata()
                 .withName(jobName)
                 .withLabels(Collections.singletonMap("runId", run.getId().toString()))
-                .endMetadata()
+                .endMetadata();
+
+        // Defining the job image to run
+        jobBuilder
                 .withNewSpec()
                 .withNewTemplate()
                 .withNewSpec()
+
+                // Add pre job container for inputs provisioning
+                .addNewContainer()
+                .withName("pre-job-" + runId)
+                .withImage("localhost:5051/pre-job:0.1.0")
+                .withArgs(runId, "172.19.0.5", "8080")
+                .withImagePullPolicy("IfNotPresent")
+
+                // Mount volume for inputs
+                .addNewVolumeMount()
+                .withName("inputs")
+                .withMountPath(task.getInputFolder())
+                .endVolumeMount()
+
+                .endContainer()
+
+                // Add main job container
                 .addNewContainer()
                 .withName(jobName)
                 .withImage(imageName)
-                .withImagePullPolicy("Never")
+                .withImagePullPolicy("IfNotPresent")
+
+                // Mount volumes for inputs and outputs
                 .addNewVolumeMount()
                 .withName("inputs")
                 .withMountPath(task.getInputFolder())
@@ -69,7 +96,25 @@ public class KubernetesScheduler implements SchedulerHandler {
                 .withName("outputs")
                 .withMountPath(task.getOutputFolder())
                 .endVolumeMount()
+
                 .endContainer()
+
+                // Add post job container for sending outputs
+                .addNewContainer()
+                .withName("post-job-" + runId)
+                .withImage("localhost:5051/post-job:0.1.0")
+                .withArgs(runId, "172.19.0.5", "8080")
+                .withImagePullPolicy("IfNotPresent")
+
+                // Mount volume for outputs
+                .addNewVolumeMount()
+                .withName("outputs")
+                .withMountPath(task.getOutputFolder())
+                .endVolumeMount()
+
+                .endContainer()
+
+                // Mounts volumes from the scheduler file system
                 .addToVolumes(new VolumeBuilder()
                         .withName("inputs")
                         .withHostPath(new HostPathVolumeSourceBuilder()
@@ -82,11 +127,15 @@ public class KubernetesScheduler implements SchedulerHandler {
                                 .withPath(outputPath)
                                 .build())
                         .build())
+
+                // Never restart the job
                 .withRestartPolicy("Never")
+
                 .endSpec()
                 .endTemplate()
-                .endSpec()
-                .build();
+                .endSpec();
+
+        Job job = jobBuilder.build();
 
         logger.info("Schedule: Task Job scheduled to run on the cluster");
         try {
@@ -98,6 +147,7 @@ public class KubernetesScheduler implements SchedulerHandler {
                     .resource(job)
                     .create();
         } catch (KubernetesClientException e) {
+            e.printStackTrace();
             throw new SchedulingException("Task Job failed to be scheduled on the cluster");
         }
 
