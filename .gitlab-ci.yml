@@ -11,6 +11,7 @@ variables:
   APPENGINE_TASKS_PATH: GitLab/Artifacts/AppEngine/Tasks
   ADD_INTEGER_TASK_NAME: com.cytomine.dummy.arithmetic.integer.addition-1.0.0.zip
   IDENTITY_BOOLEAN_TASK_NAME: com.cytomine.dummy.identity.boolean-1.0.0.zip
+  IDENTITY_STRING_TASK_NAME: com.cytomine.dummy.identity.string-1.0.0.zip
   TEST_ARTIFACT_PATH: ./src/test/resources/artifacts
 
 
@@ -26,6 +27,11 @@ include:
       source-filepath: ${APPENGINE_TASKS_PATH}/${IDENTITY_BOOLEAN_TASK_NAME}
       target-directory: ${TEST_ARTIFACT_PATH}
       job-name: download-task-boolean-identity
+  - component: gitlab.cytom.in/cm/rnd/cicd/component-nextcloud/download-file@1.1.0
+    inputs:
+      source-filepath: ${APPENGINE_TASKS_PATH}/${IDENTITY_STRING_TASK_NAME}
+      target-directory: ${TEST_ARTIFACT_PATH}
+      job-name: download-task-string-identity
 
 
 download-task-integer-addition:
@@ -38,6 +44,12 @@ download-task-boolean-identity:
   artifacts:
     paths:
       - ${TEST_ARTIFACT_PATH}/${IDENTITY_BOOLEAN_TASK_NAME}
+
+
+download-task-string-identity:
+  artifacts:
+    paths:
+      - ${TEST_ARTIFACT_PATH}/${IDENTITY_STRING_TASK_NAME}
 
 
 default:
@@ -131,6 +143,8 @@ tests-storage-registry:
     - job: download-task-integer-addition
       artifacts: true
     - job: download-task-boolean-identity
+      artifacts: true
+    - job: download-task-string-identity
       artifacts: true
   services:
     - alias: postgres
