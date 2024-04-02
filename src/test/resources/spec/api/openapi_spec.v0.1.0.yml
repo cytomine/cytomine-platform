@@ -1,8 +1,11 @@
 openapi: 3.0.0
 info:
   title: App Engine API
-  version: 0.1.0
+  version: 0.2.0
   description: App Engine API provides a set of requests to interact with tasks and apps.
+
+security:
+  - bearerAuth: []
 
 servers:
   - url: http://localhost:8080/api/v1
@@ -11,6 +14,7 @@ paths:
   /tasks:
     post:
       summary: Upload and creates a task as a zip archive containing a 'descriptor.yml' file and related task files
+      operationId: uploadTask
       requestBody:
         required: true
         content:
@@ -43,6 +47,7 @@ paths:
 
     get:
       summary: Get descriptions of all tasks available in App Engine
+      operationId: getTasks
       responses:
         '200':
           description: Successful response
@@ -56,6 +61,7 @@ paths:
   /tasks/{id}:
     get:
       summary: Get task description by UUID
+      operationId: getTaskByUUID
       parameters: &task-uuid-only-parameters
         - in: path
           name: id
@@ -81,6 +87,7 @@ paths:
   /tasks/{namespace}/{version}:
     get:
       summary: Get task description by namespace and version
+      operationId: getTaskByNamespaceVersion
       parameters: &task-ns-version-only-parameters
         - in: path
           name: namespace
@@ -99,6 +106,7 @@ paths:
   /tasks/{id}/inputs:
     get:
       summary: List input parameters by task UUID
+      operationId: getTaskInputsByUUID
       parameters: *task-uuid-only-parameters
       responses: &get-task-inputs-responses
         '200':
@@ -119,12 +127,14 @@ paths:
   /tasks/{namespace}/{version}/inputs:
     get:
       summary: List input parameters by task namespace and version
+      operationId: getTaskInputsByNamespaceVersion
       parameters: *task-ns-version-only-parameters
       responses: *get-task-inputs-responses
 
   /tasks/{id}/outputs:
     get:
       summary: List output parameters by task UUID
+      operationId: getTaskOutputsByUUID
       parameters: *task-uuid-only-parameters
       responses: &get-task-outputs-responses
         '200':
@@ -145,12 +155,14 @@ paths:
   /tasks/{namespace}/{version}/outputs:
     get:
       summary: List output parameters by task namespace and version
+      operationId: getTaskOutputsByNamespaceVersion
       parameters: *task-ns-version-only-parameters
       responses: *get-task-outputs-responses
 
   /tasks/{id}/descriptor.yml:
     get:
       summary: Download task descriptor in YAML format
+      operationId: getTaskDescriptorByUUID
       parameters: *task-uuid-only-parameters
       responses: &get-task-descriptor-responses
         '200':
@@ -170,12 +182,14 @@ paths:
   /tasks/{namespace}/{version}/descriptor.yml:
     get:
       summary: Download task descriptor in YAML format
+      operationId: getTaskDescriptorByNamespaceVersion
       parameters: *task-ns-version-only-parameters
       responses: *get-task-descriptor-responses
-  
+
   /tasks/{namespace}/{version}/runs:
     post:
       summary: creates a Task run
+      operationId: createTaskRunByNamespaceVersion
       parameters: *task-ns-version-only-parameters
       responses: &post-task-run-responses
         '200':
@@ -194,6 +208,7 @@ paths:
   /tasks/{task_id}/runs:
     post:
       summary: creates a Task run
+      operationId: createTaskRunByUUID
       parameters:
         - in: path
           name: task_id
@@ -207,6 +222,7 @@ paths:
   /task-runs/{run_id}/input-provisions/{param_name}:
     put:
       summary: Single input parameter provisioning
+      operationId: provisionTaskRunSingleParameter
       parameters:
         - in: path
           name: run_id
@@ -250,6 +266,7 @@ paths:
   /task-runs/{run_id}/input-provisions:
     put:
       summary: Batch provisioning of input parameters (for primitive and collection of primitives only)
+      operationId: provisionTaskRunParameterBatch
       parameters:
         - in: path
           name: run_id
@@ -287,6 +304,7 @@ paths:
   /task-runs/{run_id}:
     get:
       summary: Get information about a task run
+      operationId: getTaskRun
       parameters:
         - in: path
           name: run_id
@@ -312,6 +330,7 @@ paths:
   /task-runs/{run_id}/state-actions:
     post:
       summary: Request a state change for a task run
+      operationId: performStateActionAgainstTaskRun
       parameters:
         - in: path
           name: run_id
@@ -349,6 +368,7 @@ paths:
   /task-runs/{run_id}/inputs.zip:
     get:
       summary: Download inputs of a task
+      operationId: getTaskRunInputsInArchive
       parameters:
         - in: path
           name: run_id
@@ -375,6 +395,7 @@ paths:
   /task-runs/{run_id}/outputs.zip:
     get:
       summary: Get all the outputs as files in a zip
+      operationId: getTaskRunOutputsInArchive
       parameters:
         - in: path
           name: run_id
@@ -405,6 +426,7 @@ paths:
                 format: binary
     post:
       summary: Upload outputs of a task
+      operationId: uploadTaskRunOutputs
       parameters:
         - in: path
           name: run_id
@@ -418,11 +440,12 @@ paths:
           multipart/form-data:
             schema:
               type: object
+              required:
+                - outputs
               properties:
                 outputs:
                   type: string
                   format: binary
-                  required: true
       responses:
         '404':
           description: Not found
@@ -446,6 +469,7 @@ paths:
   /task-runs/{run_id}/outputs:
     get:
       summary: Get task run outputs
+      operationId: getTaskRunOutputs
       parameters:
         - in: path
           name: run_id
@@ -477,6 +501,7 @@ paths:
   /task-runs/{run_id}/inputs:
     get:
       summary: Get task run inputs
+      operationId: getTaskRunInputs
       parameters:
         - in: path
           name: run_id
@@ -494,6 +519,12 @@ paths:
                 $ref: '#/components/schemas/task_run_inputs'
 
 components:
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+
   schemas:
     contact:
       type: object
@@ -522,6 +553,9 @@ components:
         - version
         - description
       properties:
+        id:
+          type: string
+          format: uuid
         name:
           type: string
           description: Task name
@@ -544,6 +578,7 @@ components:
       type: string
       enum:
         - integer
+        - boolean
 
     base_parameter:
       type: object
@@ -553,6 +588,7 @@ components:
         - optional
         - id
         - name
+        - type
       properties:
         id:
           type: string
@@ -570,53 +606,61 @@ components:
           description: Whether or not the parameter is optional
           type: boolean
 
-    type_spec_integer:
-      type: object
-      properties:
-        gt:
-          type: "integer"
-          description: 'input constraint to enforce: input > $gt'
-        lt:
-          type: "integer"
-          description: 'input constraint to enforce: input < $lt'
-        geq:
-          type: "integer"
-          description: 'input constraint to enforce: input >= $geq'
-        leq:
-          type: "integer"
-          description: 'input constraint to enforce: input <= $leq'
-
-    type_spec:
-      allOf:
-        - oneOf:
-            - $ref: "#/components/schemas/type_spec_integer"
-        - type: object
-          required:
-            - id
-          properties:
-            id:
-              description: Type string identifier
-              type: string
-
     typed_parameter_integer:
       allOf:
         - $ref: "#/components/schemas/base_parameter"
-      required:
-        - type
-      properties:
-        type:
-          $ref: "#/components/schemas/type_spec"
-        default:
-          description: Default integer value. If omitted, no default value
-          type: integer
+        - type: object
+          required:
+            - type
+          properties:
+            type:
+              type: object
+              properties:
+                id:
+                  type: string
+                  enum: ["integer"]
+                gt:
+                  type: integer
+                  description: 'input constraint to enforce: input > $gt'
+                lt:
+                  type: integer
+                  description: 'input constraint to enforce: input < $lt'
+                geq:
+                  type: integer
+                  description: 'input constraint to enforce: input >= $geq'
+                leq:
+                  type: integer
+                  description: 'input constraint to enforce: input <= $leq'
+            default:
+              description: Default integer value. If omitted, no default value
+              type: integer
+
+    typed_parameter_boolean:
+      allOf:
+        - $ref: "#/components/schemas/base_parameter"
+        - type: object
+          required:
+            - type
+          properties:
+            type:
+              type: object
+              properties:
+                id:
+                  type: string
+                  enum: ["boolean"]
+            default:
+              description: Default boolean value. If omitted, no default value
+              type: boolean
 
     input_parameter:
       oneOf:
         - $ref: "#/components/schemas/typed_parameter_integer"
+        - $ref: "#/components/schemas/typed_parameter_boolean"
 
     output_parameter:
       oneOf:
         - $ref: "#/components/schemas/typed_parameter_integer"
+        - $ref: "#/components/schemas/typed_parameter_boolean"
 
     task_run_state:
       type: string
@@ -634,7 +678,6 @@ components:
       type: object
       properties:
         task:
-          description: The parent task description
           $ref: "#/components/schemas/task_description"
         id:
           type: string
@@ -699,6 +742,7 @@ components:
         value:
           oneOf:
             - type: integer
+            - type: boolean
         param_name:
           $ref: "#/components/schemas/param_name_type"
 
@@ -770,14 +814,14 @@ components:
             desired:
               oneOf:
                 - type: string
-                  const: running
+                  enum: ["running"]
 
     generic_state_action_success:
       type: object
       properties:
         status:
           type: string
-          const: "success"
+          enum: ["success"]
         resource:
           type: object
 
@@ -814,6 +858,7 @@ components:
         - $ref: "#/components/schemas/base_task_run_parameter"
         - oneOf:
             - $ref: "#/components/schemas/integer_task_run_parameter"
+            - $ref: "#/components/schemas/boolean_task_run_parameter"
 
     integer_task_run_parameter:
       type: object
@@ -821,9 +866,19 @@ components:
       properties:
         type:
           type: string
-          const: integer
+          enum: ["integer"]
         value:
           type: integer
+
+    boolean_task_run_parameter:
+      type: object
+      required: ["value", "type"]
+      properties:
+        type:
+          type: string
+          enum: ["boolean"]
+        value:
+          type: boolean
 
     task_run_output:
       $ref: "#/components/schemas/typed_task_run_parameter"
@@ -839,4 +894,4 @@ components:
     task_run_inputs:
       type: array
       items:
-        $ref: "#/components/schemas/task_run_output"
+        $ref: "#/components/schemas/task_run_input"

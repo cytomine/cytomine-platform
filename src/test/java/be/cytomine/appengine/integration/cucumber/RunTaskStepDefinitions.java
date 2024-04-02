@@ -2,7 +2,6 @@ package be.cytomine.appengine.integration.cucumber;
 
 import be.cytomine.appengine.AppEngineApplication;
 import be.cytomine.appengine.dto.handlers.filestorage.Storage;
-import be.cytomine.appengine.dto.misc.TaskIdentifiers;
 import be.cytomine.appengine.exceptions.FileStorageException;
 import be.cytomine.appengine.exceptions.SchedulingException;
 import be.cytomine.appengine.handlers.FileData;
@@ -105,7 +104,7 @@ public class RunTaskStepDefinitions {
 
     @When("user calls the endpoint with {string} HTTP method GET")
     public void user_calls_the_endpoint_with_http_method_get(String uuid) throws ApiException {
-        persistedTaskRun = appEngineApi.taskRunsRunIdGet(UUID.fromString(uuid));
+        persistedTaskRun = appEngineApi.getTaskRun(UUID.fromString(uuid));
     }
 
     @Then("App Engine sends a {string} OK response with a payload containing task run information \\(see OpenAPI spec)")
@@ -141,7 +140,7 @@ public class RunTaskStepDefinitions {
                 new TaskRunInputProvisionInputBodyValue(Integer.parseInt(value2));
         input2.setValue(value2Body);
         provisionInputBodyList.add(input2);
-        appEngineApi.taskRunsRunIdInputProvisionsPut(UUID.fromString(runId), provisionInputBodyList);
+        appEngineApi.provisionTaskRunParameterBatch(UUID.fromString(runId), provisionInputBodyList);
 
         // save inputs in storage
         Storage storage = new Storage("task-run-inputs-" + runId);
@@ -159,7 +158,7 @@ public class RunTaskStepDefinitions {
     @When("user calls the endpoint to fetch inputs archive with {string} HTTP method GET")
     public void user_calls_the_endpoint_to_fetch_inputs_archive_with_http_method_get(String runId) {
         try {
-            inputsArchive = appEngineApi.taskRunsRunIdInputsZipGet(UUID.fromString(runId));
+            inputsArchive = appEngineApi.getTaskRunInputsInArchive(UUID.fromString(runId));
         } catch (ApiException e) {
             e.printStackTrace();
             exception = e;
@@ -169,7 +168,7 @@ public class RunTaskStepDefinitions {
     @When("user calls the endpoint to fetch outputs archive with {string} HTTP method GET")
     public void user_calls_the_endpoint_to_fetch_outputs_archive_with_http_method_get(String runId) {
         try {
-            outputsArchive = appEngineApi.taskRunsRunIdOutputsZipGet(UUID.fromString(runId));
+            outputsArchive = appEngineApi.getTaskRunOutputsInArchive(UUID.fromString(runId));
         } catch (ApiException e) {
             e.printStackTrace();
             exception = e;
@@ -294,7 +293,7 @@ public class RunTaskStepDefinitions {
     @When("user calls the endpoint to fetch with {string} HTTP method GET")
     public void user_calls_the_endpoint_to_fetch_with_http_method_get(String runId) {
         try {
-            outputsArchive = appEngineApi.taskRunsRunIdOutputsZipGet(UUID.fromString(runId));
+            outputsArchive = appEngineApi.getTaskRunOutputsInArchive(UUID.fromString(runId));
         } catch (ApiException e) {
             e.printStackTrace();
             exception = e;
@@ -341,7 +340,7 @@ public class RunTaskStepDefinitions {
     @When("user calls the endpoint to fetch outputs json with {string} HTTP method GET")
     public void user_calls_the_endpoint_to_fetch_outputs_json_with_http_method_get(String runId) {
         try {
-            outputs = appEngineApi.taskRunsRunIdOutputsGet(UUID.fromString(runId));
+            outputs = appEngineApi.getTaskRunOutputs(UUID.fromString(runId));
         } catch (ApiException e) {
             e.printStackTrace();
             exception = e;
@@ -381,7 +380,7 @@ public class RunTaskStepDefinitions {
         TaskRunStateAction taskRunStateAction = new TaskRunStateAction();
         taskRunStateAction.desired(new TaskRunStateActionAllOfDesired("RUNNING"));
         try {
-            persistedResponse = appEngineApi.taskRunsRunIdStateActionsPost(persistedRun.getId(), taskRunStateAction);
+            persistedResponse = appEngineApi.performStateActionAgainstTaskRun(persistedRun.getId(), taskRunStateAction);
         } catch (ApiException e) {
             e.printStackTrace();
             exception = e;
@@ -470,7 +469,7 @@ public class RunTaskStepDefinitions {
     @When("user calls the endpoint to post outputs with {string} HTTP method POST and the zip file as a binary payload")
     public void user_calls_the_endpoint_to_post_outputs_with_http_method_post_and_the_zip_file_as_a_binary_payload(String runId) {
         try {
-            List<TypedTaskRunParameter> outputs = appEngineApi.taskRunsRunIdOutputsZipPost(UUID.fromString(runId), persistedZipFile);
+            appEngineApi.uploadTaskRunOutputs(UUID.fromString(runId), persistedZipFile);
         } catch (ApiException e) {
             e.printStackTrace();
             exception = e;
@@ -505,7 +504,7 @@ public class RunTaskStepDefinitions {
         persistedZipFile = validOutputArchiveResource.getFile();
 
         try {
-            outputs = appEngineAPI.taskRunsRunIdOutputsZipPost(UUID.fromString(runId), persistedZipFile);
+            outputs = appEngineAPI.uploadTaskRunOutputs(UUID.fromString(runId), persistedZipFile);
         } catch (ApiException e) {
             e.printStackTrace();
             exception = e;

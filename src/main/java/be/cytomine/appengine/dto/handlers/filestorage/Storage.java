@@ -1,6 +1,5 @@
 package be.cytomine.appengine.dto.handlers.filestorage;
 
-import be.cytomine.appengine.dto.inputs.task.UploadTaskArchive;
 import lombok.Getter;
 import lombok.Setter;
 
