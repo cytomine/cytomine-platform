@@ -574,6 +574,11 @@ components:
           items:
             $ref: "#/components/schemas/contact"
 
+    enum_item:
+      type: string
+      maxLength: 256
+      minLength: 1
+
     param_type_identifier:
       type: string
       enum:
@@ -669,7 +674,7 @@ components:
                 values:
                   type: array
                   items:
-                    type: string
+                    $ref: "#/components/schemas/enum_item"
             default:
               description: Default value. If omitted, no default value. This value must always be one of the 'type.values' array for this parameter
               type: string
@@ -767,7 +772,7 @@ components:
           oneOf:
             - type: integer
             - type: boolean
-            - type: string
+            - $ref: "#/components/schemas/enum_item"
         param_name:
           $ref: "#/components/schemas/param_name_type"
 
@@ -914,12 +919,13 @@ components:
           type: string
           enum: ["enumeration"]
         value:
-          type: string
-          description: actual value, must be one of the values of the 'enum_values' array
+          allOf:
+            - $ref: "#/components/schemas/enum_item"
+            - description: actual value, must be one of the values of the 'enum_values' array
         enum_values:
           type: array
           items:
-            type: string
+            $ref: "#/components/schemas/enum_item"
           description: the list of available values in the enumeration
 
     task_run_output:
