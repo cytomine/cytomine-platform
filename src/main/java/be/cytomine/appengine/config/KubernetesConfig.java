@@ -27,6 +27,7 @@ public class KubernetesConfig {
                 .withMasterUrl(masterUrl)
                 .withUsername(username)
                 .withOauthToken(OAuthToken)
+                .withTrustCerts(true)
                 .build();
 
         return new KubernetesClientBuilder()
