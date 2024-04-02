@@ -9,7 +9,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class TaskRunOutput {
     private String type;
-    private int value;
+    private String value; // this is String to accommodate all pi
     private UUID task_run_id;
     private String param_name;
 }

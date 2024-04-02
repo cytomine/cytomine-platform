@@ -1,7 +1,6 @@
 package be.cytomine.appengine.models.task;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -10,14 +9,14 @@ import lombok.NoArgsConstructor;
 import java.util.UUID;
 
 @Entity
-@Table(name = "integer_result")
+@Table(name = "provision")
 @Data
 @EqualsAndHashCode(callSuper = true)
 @AllArgsConstructor
 @NoArgsConstructor
-public class IntegerResult extends PrimitiveProvision {
+public class Provision extends PrimitiveProvision {
     private String parameterName;
-    private int value;
+    private String value;
     private UUID runId;
 
 }

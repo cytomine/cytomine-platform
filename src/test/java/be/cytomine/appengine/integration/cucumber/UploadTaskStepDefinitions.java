@@ -54,6 +54,7 @@ public class UploadTaskStepDefinitions {
     @Autowired
     TaskRepository taskRepository;
 
+    ResponseEntity<String> result;
     ResponseEntity<String> persistedResponse;
 
     String taskNameSpace;

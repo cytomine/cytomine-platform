@@ -19,6 +19,7 @@ public class Type extends BaseEntity{
     @Column(name = "identifier", updatable = false, nullable = false)
     @GeneratedValue(generator = "UUID")
     private UUID identifier;
+    private String id;  // as found in the descriptor
 
     @ElementCollection
     private List<String> constraints; // used to track which constraints are defined for this type object

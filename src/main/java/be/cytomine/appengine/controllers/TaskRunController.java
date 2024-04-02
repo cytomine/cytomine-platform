@@ -29,19 +29,19 @@ public class TaskRunController {
 
     @PutMapping(value = "/task-runs/{run_id}/input-provisions/{param_name}")
     @ResponseStatus(code = HttpStatus.OK)
-    public ResponseEntity<?> provision(@PathVariable String run_id, @PathVariable String param_name, @RequestBody IntegerParameterProvision provision) throws ProvisioningException {
+    public ResponseEntity<?> provision(@PathVariable String run_id, @PathVariable String param_name, @RequestBody GenericParameterProvision provision) throws ProvisioningException {
         logger.info("/task-runs/{run_id}/input-provisions/{param_name} PUT");
         provision.setRunId(run_id);
-        IntegerParameterRunProvision provisioned = taskRunService.provisionRunParameter(provision);
+        GenericParameterRunProvision provisioned = taskRunService.provisionRunParameter(provision);
         logger.info("/task-runs/{run_id}/input-provisions/{param_name} PUT Ended");
         return ResponseEntity.ok(provisioned);
     }
 
     @PutMapping(value = "/task-runs/{run_id}/input-provisions")
     @ResponseStatus(code = HttpStatus.OK)
-    public ResponseEntity<?> provisionMultiple(@PathVariable String run_id, @RequestBody List<IntegerParameterProvision> provisions) throws ProvisioningException {
+    public ResponseEntity<?> provisionMultiple(@PathVariable String run_id, @RequestBody List<GenericParameterProvision> provisions) throws ProvisioningException {
         logger.info("/task-runs/{run_id}/input-provisions PUT");
-        List<IntegerParameterRunProvision> provisionedList = taskRunService.provisionMultipleRunParameters(run_id, provisions);
+        List<GenericParameterRunProvision> provisionedList = taskRunService.provisionMultipleRunParameters(run_id, provisions);
         logger.info("/task-runs/{run_id}/input-provisions PUT Ended");
         return ResponseEntity.ok(provisionedList);
     }

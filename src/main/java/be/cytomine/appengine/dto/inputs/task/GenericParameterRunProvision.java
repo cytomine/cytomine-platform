@@ -9,11 +9,11 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class IntegerParameterRunProvision{
+public class GenericParameterRunProvision {
 
     @JsonProperty(value = "param_name")
     private String parameterName;
-    private int value;
+    private String value; // now this is String to accommodate the new primitive types
     @JsonProperty(value = "task_run_id")
     private String runId;
 

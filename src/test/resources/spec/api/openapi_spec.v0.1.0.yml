@@ -698,7 +698,7 @@ components:
       properties:
         value:
           oneOf:
-            - type: integer
+            - type: string
         param_name:
           $ref: "#/components/schemas/param_name_type"
 
@@ -823,7 +823,7 @@ components:
           type: string
           const: integer
         value:
-          type: integer
+          type: string
 
     task_run_output:
       $ref: "#/components/schemas/typed_task_run_parameter"

@@ -16,7 +16,7 @@ public class IntegerType extends Type {
 
     final static Logger logger = LoggerFactory.getLogger(Type.class);
 
-    private String id;  // as found in the descriptor
+
     @Column(nullable = true)
     private Integer gt;
     @Column(nullable = true)

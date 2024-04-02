@@ -12,8 +12,8 @@ import be.cytomine.appengine.models.task.*;
 import be.cytomine.appengine.openapi.api.DefaultApi;
 import be.cytomine.appengine.openapi.invoker.ApiException;
 import be.cytomine.appengine.openapi.model.*;
-import be.cytomine.appengine.repositories.IntegerProvisionRepository;
-import be.cytomine.appengine.repositories.IntegerResultRepository;
+import be.cytomine.appengine.repositories.ProvisionRepository;
+import be.cytomine.appengine.repositories.ResultRepository;
 import be.cytomine.appengine.repositories.RunRepository;
 import be.cytomine.appengine.repositories.TaskRepository;
 import be.cytomine.appengine.services.RunService;
@@ -77,7 +77,7 @@ public class RunTaskStepDefinitions {
     FileStorageHandler fileStorageHandler;
 
     @Autowired
-    private IntegerProvisionRepository integerProvisionRepository;
+    private ProvisionRepository integerProvisionRepository;
 
     @Given("Scheduler is up and running")
     public void scheduler_is_up_and_running() throws SchedulingException {
@@ -131,14 +131,14 @@ public class RunTaskStepDefinitions {
         TaskRunInputProvisionInputBody input1 = new TaskRunInputProvisionInputBody();
         input1.setParamName(name1);
         TaskRunInputProvisionInputBodyValue value1Body =
-                new TaskRunInputProvisionInputBodyValue(Integer.parseInt(value1));
+                new TaskRunInputProvisionInputBodyValue(value1);
         input1.setValue(value1Body);
         provisionInputBodyList.add(input1);
         // input two
         TaskRunInputProvisionInputBody input2 = new TaskRunInputProvisionInputBody();
         input2.setParamName(name2);
         TaskRunInputProvisionInputBodyValue value2Body =
-                new TaskRunInputProvisionInputBodyValue(Integer.parseInt(value2));
+                new TaskRunInputProvisionInputBodyValue(value2);
         input2.setValue(value2Body);
         provisionInputBodyList.add(input2);
         appEngineApi.taskRunsRunIdInputProvisionsPut(UUID.fromString(runId), provisionInputBodyList);
@@ -229,7 +229,7 @@ public class RunTaskStepDefinitions {
     }
 
     @Autowired
-    private IntegerResultRepository integerResultRepository;
+    private ResultRepository integerResultRepository;
     @Value("${storage.input.charset}")
     private String charset;
 
@@ -238,7 +238,7 @@ public class RunTaskStepDefinitions {
     public void the_task_run_has_output_parameters_of_type_with_value_and_of_type_with_value(String runId, String name, String type, Integer value) throws FileStorageException, IOException, ApiException {
         // Outputs
         integerResultRepository.deleteAll();
-        IntegerResult result = new IntegerResult(name, value, persistedRun.getId());
+        Result result = new Result(name, String.valueOf(value), persistedRun.getId());
         result = integerResultRepository.save(result);
         Assertions.assertNotNull(result);
 
@@ -379,7 +379,7 @@ public class RunTaskStepDefinitions {
     @When("When user calls the endpoint to run task with HTTP method POST")
     public void when_user_calls_the_endpoint_to_run_task_with_http_method_post() {
         TaskRunStateAction taskRunStateAction = new TaskRunStateAction();
-        taskRunStateAction.desired(new TaskRunStateActionAllOfDesired("RUNNING"));
+        taskRunStateAction.desired(new TaskRunInputProvisionInputBodyValue("RUNNING"));
         try {
             persistedResponse = appEngineApi.taskRunsRunIdStateActionsPost(persistedRun.getId(), taskRunStateAction);
         } catch (ApiException e) {
@@ -534,10 +534,14 @@ public class RunTaskStepDefinitions {
     public void this_task_run_has_been_successfully_provisioned_and_is_therefore_in_state(String provisionedState) throws FileStorageException {
         // save in the database
         integerProvisionRepository.deleteAll();
-        IntegerProvision provisionInputA = new IntegerProvision("a", 250, persistedRun.getId());
+        Provision provisionInputA = new Provision("a", String.valueOf(250), persistedRun.getId());
         integerProvisionRepository.save(provisionInputA);
-        IntegerProvision provisionInputB = new IntegerProvision("b", 250, persistedRun.getId());
+        Provision provisionInputB = new Provision("b", String.valueOf(250), persistedRun.getId());
         integerProvisionRepository.save(provisionInputB);
+        Provision num1 = new Provision("num1", String.valueOf(250), persistedRun.getId());
+        integerProvisionRepository.save(num1);
+        Provision num2 = new Provision("num2", String.valueOf(250), persistedRun.getId());
+        integerProvisionRepository.save(num2);
 
         // store in storage
         Storage runStorage = new Storage("task-run-inputs-" + provisionInputA.getRunId());
@@ -549,7 +553,7 @@ public class RunTaskStepDefinitions {
 
         value = String.valueOf(provisionInputB.getValue());
         inputFileData = value.getBytes(getStorageCharset(charset));
-        inputProvisionFileData = new FileData(inputFileData, provisionInputB.getParameterName());
+        inputProvisionFileData = new FileData(inputFileData, num2.getParameterName());
 
         fileStorageHandler.createFile(runStorage, inputProvisionFileData);
 
