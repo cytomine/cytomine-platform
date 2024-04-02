@@ -1,5 +1,7 @@
 package be.cytomine.appengine.handlers.scheduler.impl;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Collections;
 
 import org.slf4j.Logger;
@@ -37,16 +39,28 @@ public class KubernetesScheduler implements SchedulerHandler {
     @Value("${app-engine.api_version}")
     private String apiVersion;
 
+    @Value("${HOSTNAME}")
+    private String hostname;
+
     @Override
     public Schedule schedule(Schedule schedule) throws SchedulingException {
         logger.info("Schedule: get Task parameters");
+
+        String hostAddress = null;
+        try {
+            InetAddress address = InetAddress.getByName(hostname);
+            hostAddress = address.getHostAddress();
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+            throw new SchedulingException("Failed to get the hostname");
+        }
 
         Run run = schedule.getRun();
         String runId = run.getId().toString();
         Task task = run.getTask();
 
-        String inputPath = "/data/app-engine/task-run-inputs-" + runId;
-        String outputPath = "/data/app-engine/task-run-outputs-" + runId;
+        String inputPath = "/tmp/app-engine/task-run-inputs-" + runId;
+        String outputPath = "/tmp/app-engine/task-run-outputs-" + runId;
 
         String jobName = task.getName().replaceAll("[^a-zA-Z0-9]", "") + "-" + runId;
         String imageName = "localhost:5051/" + task.getImageName();
@@ -70,7 +84,7 @@ public class KubernetesScheduler implements SchedulerHandler {
                 .addNewContainer()
                 .withName("pre-job-" + runId)
                 .withImage("localhost:5051/pre-job:0.1.0")
-                .withArgs(runId, "172.19.0.5", "8080")
+                .withArgs(runId, hostAddress, "8080")
                 .withImagePullPolicy("IfNotPresent")
 
                 // Mount volume for inputs
@@ -103,7 +117,7 @@ public class KubernetesScheduler implements SchedulerHandler {
                 .addNewContainer()
                 .withName("post-job-" + runId)
                 .withImage("localhost:5051/post-job:0.1.0")
-                .withArgs(runId, "172.19.0.5", "8080")
+                .withArgs(runId, hostAddress, "8080")
                 .withImagePullPolicy("IfNotPresent")
 
                 // Mount volume for outputs
