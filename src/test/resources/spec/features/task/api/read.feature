@@ -33,10 +33,10 @@ Feature: [URS00002-TASK] Read task information
     And App Engine sends a "200" OK response with the descriptor file as a binary payload (see OpenAPI spec)
 
     Examples:
-      | task   | task namespace                                 | task version | task uuid                            | task storage identifier                       |
-      | Task 1 | com.cytomine.dummy.arithmetic.integer.addition | 1.0.0        | acde070d-8c4c-4f0d-9d8a-162843c10333 | task-acde070d-8c4c-4f0d-9d8a-162843c10333-def |
-      | Task 2 | com.cytomine.dummy.identity.boolean            | 1.0.0        | acde070d-8c4c-4f0d-9d8a-162843c10333 | task-acde070d-8c4c-4f0d-9d8a-162843c10333-def |
-      | Task 2 | com.cytomine.dummy.identity.string             | 1.0.0        | acde070d-8c4c-4f0d-9d8a-162843c10333 | task-acde070d-8c4c-4f0d-9d8a-162843c10333-def |
+      | task         | task namespace                                 | task version | task uuid                            | task storage identifier                       |
+      | Add int task | com.cytomine.dummy.arithmetic.integer.addition | 1.0.0        | acde070d-8c4c-4f0d-9d8a-162843c10333 | task-acde070d-8c4c-4f0d-9d8a-162843c10333-def |
+      | Bool task    | com.cytomine.dummy.identity.boolean            | 1.0.0        | acde070d-8c4c-4f0d-9d8a-162843c10333 | task-acde070d-8c4c-4f0d-9d8a-162843c10333-def |
+      | String task  | com.cytomine.dummy.identity.string             | 1.0.0        | acde070d-8c4c-4f0d-9d8a-162843c10333 | task-acde070d-8c4c-4f0d-9d8a-162843c10333-def |
 
   Scenario Outline: successful download of the descriptor file with id
 
@@ -65,10 +65,10 @@ Feature: [URS00002-TASK] Read task information
     And App Engine sends a "200" OK response with a payload containing the task description as a JSON payload (see OpenAPI spec)
 
     Examples:
-      | task   | task namespace                                 | task version |
-      | Task 1 | com.cytomine.dummy.arithmetic.integer.addition | 1.0.0        |
-      | Task 2 | com.cytomine.dummy.identity.boolean            | 1.0.0        |
-      | Task 2 | com.cytomine.dummy.identity.string             | 1.0.0        |
+      | task         | task namespace                                 | task version |
+      | Add int task | com.cytomine.dummy.arithmetic.integer.addition | 1.0.0        |
+      | Bool task    | com.cytomine.dummy.identity.boolean            | 1.0.0        |
+      | String task  | com.cytomine.dummy.identity.string             | 1.0.0        |
 
   Scenario Outline: successful fetch of a task description using id
 
@@ -96,10 +96,10 @@ Feature: [URS00002-TASK] Read task information
     And App Engine sends a "200" OK response with a payload containing the task inputs as a JSON payload (see OpenAPI spec)
 
     Examples:
-      | task   | task namespace                                 | task version |
-      | Task 1 | com.cytomine.dummy.arithmetic.integer.addition | 1.0.0        |
-      | Task 2 | com.cytomine.dummy.identity.boolean            | 1.0.0        |
-      | Task 2 | com.cytomine.dummy.identity.string             | 1.0.0        |
+      | task         | task namespace                                 | task version |
+      | Add int task | com.cytomine.dummy.arithmetic.integer.addition | 1.0.0        |
+      | Bool task    | com.cytomine.dummy.identity.boolean            | 1.0.0        |
+      | String task  | com.cytomine.dummy.identity.string             | 1.0.0        |
 
 
   Scenario Outline: successful fetch of a task's inputs using id
@@ -128,10 +128,10 @@ Feature: [URS00002-TASK] Read task information
     And App Engine sends a "200" OK response with a payload containing the task outputs as a JSON payload (see OpenAPI spec)
 
     Examples:
-      | task   | task namespace                                 | task version |
-      | Task 1 | com.cytomine.dummy.arithmetic.integer.addition | 1.0.0        |
-      | Task 2 | com.cytomine.dummy.identity.boolean            | 1.0.0        |
-      | Task 2 | com.cytomine.dummy.identity.string             | 1.0.0        |
+      | task         | task namespace                                 | task version |
+      | Add int task | com.cytomine.dummy.arithmetic.integer.addition | 1.0.0        |
+      | Bool task    | com.cytomine.dummy.identity.boolean            | 1.0.0        |
+      | String task  | com.cytomine.dummy.identity.string             | 1.0.0        |
 
   Scenario Outline: successful fetch of a task's outputs with id
 
