@@ -652,15 +652,45 @@ components:
               description: Default boolean value. If omitted, no default value
               type: boolean
 
+    typed_parameter_datetime:
+      allOf:
+        - $ref: "#/components/schemas/base_parameter"
+        - type: object
+          required:
+            - type
+          properties:
+            type:
+              type: object
+              required:
+                - id
+              properties:
+                id:
+                  type: string
+                  enum: ["datetime"]
+                before:
+                  type: string
+                  format: date-time
+                  description: the input datetime must be before the specified datetime (inclusive bound). If not specified, no 'before' constraint applied.
+                after:
+                  type: string
+                  format: date-time
+                  description: the input datetime must be after the specified datetime (inclusive bound). If not specified, no 'after' constraint applied.
+            default:
+              description: Default datetime value. If omitted, no default value
+              type: string
+              format: date-time
+
     input_parameter:
       oneOf:
         - $ref: "#/components/schemas/typed_parameter_integer"
         - $ref: "#/components/schemas/typed_parameter_boolean"
+        - $ref: "#/components/schemas/typed_parameter_datetime"
 
     output_parameter:
       oneOf:
         - $ref: "#/components/schemas/typed_parameter_integer"
         - $ref: "#/components/schemas/typed_parameter_boolean"
+        - $ref: "#/components/schemas/typed_parameter_datetime"
 
     task_run_state:
       type: string
@@ -743,6 +773,8 @@ components:
           oneOf:
             - type: integer
             - type: boolean
+            - type: string
+              format: date-time
         param_name:
           $ref: "#/components/schemas/param_name_type"
 
@@ -859,6 +891,7 @@ components:
         - oneOf:
             - $ref: "#/components/schemas/integer_task_run_parameter"
             - $ref: "#/components/schemas/boolean_task_run_parameter"
+            - $ref: "#/components/schemas/datetime_task_run_parameter"
 
     integer_task_run_parameter:
       type: object
@@ -879,6 +912,17 @@ components:
           enum: ["boolean"]
         value:
           type: boolean
+
+    datetime_task_run_parameter:
+      type: object
+      required: ["value", "type"]
+      properties:
+        type:
+          type: string
+          enum: ["datetime"]
+        value:
+          type: string
+          format: date-time
 
     task_run_output:
       $ref: "#/components/schemas/typed_task_run_parameter"
