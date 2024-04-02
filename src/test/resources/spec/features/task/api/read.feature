@@ -36,6 +36,7 @@ Feature: [URS00002-TASK] Read task information
       | task   | task namespace                                 | task version | task uuid                            | task storage identifier                       |
       | Task 1 | com.cytomine.dummy.arithmetic.integer.addition | 1.0.0        | acde070d-8c4c-4f0d-9d8a-162843c10333 | task-acde070d-8c4c-4f0d-9d8a-162843c10333-def |
       | Task 2 | com.cytomine.dummy.identity.boolean            | 1.0.0        | acde070d-8c4c-4f0d-9d8a-162843c10333 | task-acde070d-8c4c-4f0d-9d8a-162843c10333-def |
+      | Task 2 | com.cytomine.dummy.identity.number             | 1.0.0        | acde070d-8c4c-4f0d-9d8a-162843c10333 | task-acde070d-8c4c-4f0d-9d8a-162843c10333-def |
 
   Scenario Outline: successful download of the descriptor file with id
 
@@ -67,6 +68,7 @@ Feature: [URS00002-TASK] Read task information
       | task   | task namespace                                 | task version |
       | Task 1 | com.cytomine.dummy.arithmetic.integer.addition | 1.0.0        |
       | Task 2 | com.cytomine.dummy.identity.boolean            | 1.0.0        |
+      | Task 2 | com.cytomine.dummy.identity.number             | 1.0.0        |
 
   Scenario Outline: successful fetch of a task description using id
 
@@ -97,6 +99,7 @@ Feature: [URS00002-TASK] Read task information
       | task   | task namespace                                 | task version |
       | Task 1 | com.cytomine.dummy.arithmetic.integer.addition | 1.0.0        |
       | Task 2 | com.cytomine.dummy.identity.boolean            | 1.0.0        |
+      | Task 3 | com.cytomine.dummy.identity.number             | 1.0.0        |
 
 
   Scenario Outline: successful fetch of a task's inputs using id
@@ -128,6 +131,7 @@ Feature: [URS00002-TASK] Read task information
       | task   | task namespace                                 | task version |
       | Task 1 | com.cytomine.dummy.arithmetic.integer.addition | 1.0.0        |
       | Task 2 | com.cytomine.dummy.identity.boolean            | 1.0.0        |
+      | Task 3 | com.cytomine.dummy.identity.number             | 1.0.0        |
 
   Scenario Outline: successful fetch of a task's outputs with id
 

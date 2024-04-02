@@ -26,6 +26,9 @@ Feature: [URS00003-TASK] Provision a task run
       | com.cytomine.dummy.arithmetic.integer.addition | 1.0.0        | /task/id/runs                |
       | com.cytomine.dummy.identity.boolean            | 1.0.0        | /task/namespace/version/runs |
       | com.cytomine.dummy.identity.boolean            | 1.0.0        | /task/id/runs                |
+      | com.cytomine.dummy.identity.number             | 1.0.0        | /task/namespace/version/runs |
+      | com.cytomine.dummy.identity.number             | 1.0.0        | /task/id/runs                |
+
 
   Scenario Outline: successful provisioning of a task run with one input parameter using provisioning endpoint
 
@@ -49,6 +52,8 @@ Feature: [URS00003-TASK] Provision a task run
       | task_namespace                                 | task_version | param_name | param_type | payload                                      | param_value | task_run_initial_state | task_run_new_state | param_file_content |
       | com.cytomine.dummy.arithmetic.integer.addition | 1.0.0        | a          | integer    | {\"param_name\": \"a\", \"value\": 18}       | 18          | CREATED                | PROVISIONED        | 18                 |
       | com.cytomine.dummy.identity.boolean            | 1.0.0        | input      | boolean    | {\"param_name\": \"input\", \"value\": true} | true        | CREATED                | PROVISIONED        | true               |
+      | com.cytomine.dummy.identity.number             | 1.0.0        | input      | number     | {\"param_name\": \"input\", \"value\": 2.25} | 2.25        | CREATED                | PROVISIONED        | 2.25               |
+
 
   Scenario Outline: successful partial provisioning of a task run with two input parameters
 
@@ -140,6 +145,7 @@ Feature: [URS00003-TASK] Provision a task run
       | task_namespace                                 | task_version | unknown_param_value  | unknown_param_name | payload                                          | task_run_initial_state | error_payload                                                                                                           |
       | com.cytomine.dummy.arithmetic.integer.addition | 1.0.0        | 5                    | n_unknown          | {\"value\": 5, \"param_name\": \"n_unknown\"}    | CREATED                | {\"error_code\": \"APPE-internal-parameter-not-found\", \"message\": \"parameter not found\", \"details\": {\"param_name\": \"n_unknown\"}} |
       | com.cytomine.dummy.identity.boolean            | 1.0.0        | false                | my_input           | {\"param_name\": \"my_input\", \"value\": false} | CREATED                | {\"error_code\": \"APPE-internal-parameter-not-found\", \"message\": \"parameter not found\", \"details\": {\"param_name\": \"my_input\"}}  |
+      | com.cytomine.dummy.identity.number             | 1.0.0        | 3.14                 | my_input           | {\"param_name\": \"my_input\", \"value\": 3.14}  | CREATED                | {\"error_code\": \"APPE-internal-parameter-not-found\", \"message\": \"parameter not found\", \"details\": {\"param_name\": \"my_input\"}}  |
 
   Scenario Outline: successful re-provisioning of a parameter for a task run
 
@@ -165,5 +171,6 @@ Feature: [URS00003-TASK] Provision a task run
       | com.cytomine.dummy.arithmetic.integer.addition | 1.0.0        | a          | integer    | 5                   | 10              | {\"param_name\": \"a\", \"value\": 10}    | CREATED        | 5                          | 10                     |
       | com.cytomine.dummy.arithmetic.integer.addition | 1.0.0        | b          | integer    | 20                  | 30              | {\"param_name\": \"b\", \"value\": 30}    | PROVISIONED    | 20                         | 30                     |
       | com.cytomine.dummy.identity.boolean            | 1.0.0        | input      | boolean    | true                | false           | {\"param_name\": \"b\", \"value\": false} | PROVISIONED    | true                       | false                  |
+      | com.cytomine.dummy.identity.number             | 1.0.0        | input      | number     | 2.25                | 3.14            | {\"param_name\": \"b\", \"value\": 3.14}  | PROVISIONED    | 2.25                       | 3.14                   |
 
   # TODO failed re-provisioning of a task of which the state is not one of {'CREATED', 'PROVISIONED'}
