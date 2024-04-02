@@ -3,11 +3,11 @@ package be.cytomine.appengine.handlers.scheduler.impl;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Collections;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 
 import be.cytomine.appengine.dto.handlers.scheduler.Schedule;
 import be.cytomine.appengine.exceptions.SchedulingException;
@@ -42,10 +42,14 @@ public class KubernetesScheduler implements SchedulerHandler {
     @Value("${HOSTNAME}")
     private String hostname;
 
+    @Autowired
+    private Environment environment;
+
     @Override
     public Schedule schedule(Schedule schedule) throws SchedulingException {
         logger.info("Schedule: get Task parameters");
 
+        String port = environment.getProperty("server.port");
         String hostAddress = null;
         try {
             InetAddress address = InetAddress.getByName(hostname);
@@ -65,8 +69,16 @@ public class KubernetesScheduler implements SchedulerHandler {
         String jobName = task.getName().replaceAll("[^a-zA-Z0-9]", "") + "-" + runId;
         String imageName = "localhost:5051/" + task.getImageName();
 
-        logger.info("Schedule: create Task Job");
-        // Defining the job metadata
+        // Pre and post job commands
+        String url = "http://" + hostAddress + ":" + port + "/app-engine/v1/task-runs/" + runId;
+        String installDeps = "apk --no-cache add curl zip";
+        String fetchInputs = "curl -L -o inputs.zip " + url + "/inputs.zip";
+        String unzipInputs = "unzip -o inputs.zip -d " + task.getInputFolder();
+        String sendOutputs = "curl -X POST -F 'outputs=@outputs.zip' " + url + "/outputs.zip";
+        String zipOutputs = "zip -rj outputs.zip " + task.getOutputFolder();
+        String and = " && ";
+
+        logger.info("Schedule: create task job...");
         JobBuilder jobBuilder = new JobBuilder()
                 .withApiVersion("batch/v1")
                 .withNewMetadata()
@@ -80,32 +92,33 @@ public class KubernetesScheduler implements SchedulerHandler {
                 .withNewTemplate()
                 .withNewSpec()
 
-                // Add pre job container for inputs provisioning
-                .addNewContainer()
+                // Add pre-job container for inputs provisioning
+                .addNewInitContainer()
                 .withName("pre-job-" + runId)
-                .withImage("localhost:5051/pre-job:0.1.0")
-                .withArgs(runId, hostAddress, "8080")
-                .withImagePullPolicy("IfNotPresent")
+                .withImage("alpine:latest")
+                .withImagePullPolicy("Always")
+                .withCommand("/bin/sh", "-c", installDeps + and + fetchInputs + and + unzipInputs)
 
-                // Mount volume for inputs
+                // Mount volumes for inputs provisioning
                 .addNewVolumeMount()
                 .withName("inputs")
                 .withMountPath(task.getInputFolder())
                 .endVolumeMount()
 
-                .endContainer()
+                .endInitContainer()
 
                 // Add main job container
                 .addNewContainer()
                 .withName(jobName)
                 .withImage(imageName)
-                .withImagePullPolicy("IfNotPresent")
+                .withImagePullPolicy("Always")
 
                 // Mount volumes for inputs and outputs
                 .addNewVolumeMount()
                 .withName("inputs")
                 .withMountPath(task.getInputFolder())
                 .endVolumeMount()
+
                 .addNewVolumeMount()
                 .withName("outputs")
                 .withMountPath(task.getOutputFolder())
@@ -116,9 +129,8 @@ public class KubernetesScheduler implements SchedulerHandler {
                 // Add post job container for sending outputs
                 .addNewContainer()
                 .withName("post-job-" + runId)
-                .withImage("localhost:5051/post-job:0.1.0")
-                .withArgs(runId, hostAddress, "8080")
-                .withImagePullPolicy("IfNotPresent")
+                .withImage("alpine:latest")
+                .withCommand("/bin/sh", "-c", installDeps + and + zipOutputs + and + sendOutputs)
 
                 // Mount volume for outputs
                 .addNewVolumeMount()
@@ -128,7 +140,7 @@ public class KubernetesScheduler implements SchedulerHandler {
 
                 .endContainer()
 
-                // Mounts volumes from the scheduler file system
+                // Mount volumes from the scheduler file system
                 .addToVolumes(new VolumeBuilder()
                         .withName("inputs")
                         .withHostPath(new HostPathVolumeSourceBuilder()
@@ -164,6 +176,7 @@ public class KubernetesScheduler implements SchedulerHandler {
             e.printStackTrace();
             throw new SchedulingException("Task Job failed to be scheduled on the cluster");
         }
+        logger.info("Schedule: Task Job queued for execution on the cluster");
 
         return schedule;
     }
