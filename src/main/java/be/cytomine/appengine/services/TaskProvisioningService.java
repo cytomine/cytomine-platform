@@ -511,7 +511,7 @@ public class TaskProvisioningService {
     }
 
     public TaskDescription makeTaskDescription(Task task) {
-        TaskDescription taskDescription = new TaskDescription(task.getName(), task.getNamespace(), task.getVersion(), task.getDescription());
+        TaskDescription taskDescription = new TaskDescription(task.getIdentifier(), task.getName(), task.getNamespace(), task.getVersion(), task.getDescription());
         Set<TaskAuthor> descriptionAuthors = new HashSet<>();
         for (Author author : task.getAuthors()) {
             TaskAuthor taskAuthor = new TaskAuthor(author.getFirstName(), author.getLastName(), author.getOrganization(), author.getEmail(), author.isContact());

@@ -1,6 +1,5 @@
 package be.cytomine.appengine.exceptions.handlers;
 
-import be.cytomine.appengine.dto.inputs.task.UploadTask;
 import be.cytomine.appengine.dto.responses.errors.AppEngineError;
 import be.cytomine.appengine.dto.responses.errors.ErrorBuilder;
 import be.cytomine.appengine.dto.responses.errors.ErrorCode;
