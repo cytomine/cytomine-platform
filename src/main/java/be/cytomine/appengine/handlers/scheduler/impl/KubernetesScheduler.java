@@ -14,11 +14,11 @@ import be.cytomine.appengine.exceptions.SchedulingException;
 import be.cytomine.appengine.handlers.SchedulerHandler;
 import be.cytomine.appengine.models.task.Run;
 import be.cytomine.appengine.models.task.Task;
-import be.cytomine.appengine.utils.JobWatcher;
+import be.cytomine.appengine.utils.PodWatcher;
 import io.fabric8.kubernetes.api.model.HostPathVolumeSourceBuilder;
+import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.PodBuilder;
 import io.fabric8.kubernetes.api.model.VolumeBuilder;
-import io.fabric8.kubernetes.api.model.batch.v1.Job;
-import io.fabric8.kubernetes.api.model.batch.v1.JobBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import jakarta.annotation.PostConstruct;
@@ -31,7 +31,7 @@ public class KubernetesScheduler implements SchedulerHandler {
     private Environment environment;
 
     @Autowired
-    private JobWatcher jobWatcher;
+    private PodWatcher podWatcher;
 
     @Autowired
     private KubernetesClient kubernetesClient;
@@ -66,10 +66,10 @@ public class KubernetesScheduler implements SchedulerHandler {
         String inputPath = "/tmp/app-engine/task-run-inputs-" + runId;
         String outputPath = "/tmp/app-engine/task-run-outputs-" + runId;
 
-        String jobName = task.getName().replaceAll("[^a-zA-Z0-9]", "") + "-" + runId;
+        String podName = task.getName().replaceAll("[^a-zA-Z0-9]", "") + "-" + runId;
         String imageName = "localhost:5051/" + task.getImageName();
 
-        // Pre and post job commands
+        // Pre and post container commands
         String url = "http://" + hostAddress + ":" + port + "/app-engine/v1/task-runs/" + runId;
         String installDeps = "apk --no-cache add curl zip";
         String fetchInputs = "curl -L -o inputs.zip " + url + "/inputs.zip";
@@ -78,28 +78,25 @@ public class KubernetesScheduler implements SchedulerHandler {
         String zipOutputs = "zip -rj outputs.zip " + task.getOutputFolder();
         String and = " && ";
 
-        logger.info("Schedule: create task job...");
-        JobBuilder jobBuilder = new JobBuilder()
-                .withApiVersion("batch/v1")
+        logger.info("Schedule: create task pod...");
+        PodBuilder podBuilder = new PodBuilder()
                 .withNewMetadata()
-                .withName(jobName)
+                .withName(podName)
                 .withLabels(Collections.singletonMap("runId", run.getId().toString()))
                 .endMetadata();
 
-        // Defining the job image to run
-        jobBuilder
-                .withNewSpec()
-                .withNewTemplate()
+        // Defining the pod image to run
+        podBuilder
                 .withNewSpec()
 
-                // Add pre-job container for inputs provisioning
+                // Add pre-container for inputs provisioning
                 .addNewInitContainer()
-                .withName("pre-job-" + runId)
+                .withName("inputs-provisioning-" + runId)
                 .withImage("alpine:latest")
                 .withImagePullPolicy("Always")
                 .withCommand("/bin/sh", "-c", installDeps + and + fetchInputs + and + unzipInputs)
 
-                // Mount volumes for inputs provisioning
+                // Mount volume for inputs provisioning
                 .addNewVolumeMount()
                 .withName("inputs")
                 .withMountPath(task.getInputFolder())
@@ -107,9 +104,9 @@ public class KubernetesScheduler implements SchedulerHandler {
 
                 .endInitContainer()
 
-                // Add main job container
+                // Add Task container
                 .addNewContainer()
-                .withName(jobName)
+                .withName(podName)
                 .withImage(imageName)
                 .withImagePullPolicy("Always")
 
@@ -126,9 +123,9 @@ public class KubernetesScheduler implements SchedulerHandler {
 
                 .endContainer()
 
-                // Add post job container for sending outputs
+                // Add post-container for sending outputs
                 .addNewContainer()
-                .withName("post-job-" + runId)
+                .withName("outputs-sending-" + runId)
                 .withImage("alpine:latest")
                 .withImagePullPolicy("Never")
                 .withCommand("/bin/sh", "-c", installDeps + and + zipOutputs + and + sendOutputs)
@@ -155,29 +152,25 @@ public class KubernetesScheduler implements SchedulerHandler {
                                 .build())
                         .build())
 
-                // Never restart the job
+                // Never restart the pod
                 .withRestartPolicy("Never")
 
-                .endSpec()
-                .endTemplate()
                 .endSpec();
 
-        Job job = jobBuilder.build();
+        Pod pod = podBuilder.build();
 
-        logger.info("Schedule: Task Job scheduled to run on the cluster");
+        logger.info("Schedule: Task Pod scheduled to run on the cluster");
         try {
             kubernetesClient
-                    .batch()
-                    .v1()
-                    .jobs()
+                    .pods()
                     .inNamespace("default")
-                    .resource(job)
+                    .resource(pod)
                     .create();
         } catch (KubernetesClientException e) {
             e.printStackTrace();
-            throw new SchedulingException("Task Job failed to be scheduled on the cluster");
+            throw new SchedulingException("Task Pod failed to be scheduled on the cluster");
         }
-        logger.info("Schedule: Task Job queued for execution on the cluster");
+        logger.info("Schedule: Task Pod queued for execution on the cluster");
 
         return schedule;
     }
@@ -188,9 +181,7 @@ public class KubernetesScheduler implements SchedulerHandler {
 
         try {
             kubernetesClient
-                    .batch()
-                    .v1()
-                    .jobs()
+                    .pods()
                     .inNamespace("default")
                     .list();
         } catch (KubernetesClientException e) {
@@ -205,11 +196,10 @@ public class KubernetesScheduler implements SchedulerHandler {
 
         try {
             kubernetesClient
-                    .batch()
-                    .v1()
-                    .jobs()
+                    .pods()
                     .inNamespace("default")
-                    .watch(jobWatcher);
+                    .watch(podWatcher);
+
         } catch (KubernetesClientException e) {
             throw new SchedulingException("Failed to add watcher to the cluster");
         }
