@@ -183,6 +183,18 @@ public class KubernetesScheduler implements SchedulerHandler {
 
     @Override
     public void alive() throws SchedulingException {
+        logger.info("Alive: check if the scheduler is up and running");
+
+        try {
+            kubernetesClient
+                    .batch()
+                    .v1()
+                    .jobs()
+                    .inNamespace("default")
+                    .list();
+        } catch (KubernetesClientException e) {
+            throw new SchedulingException("Scheduler is not alive");
+        }
     }
 
     @Override
