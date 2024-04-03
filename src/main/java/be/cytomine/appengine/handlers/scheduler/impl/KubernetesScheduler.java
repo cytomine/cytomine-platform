@@ -28,10 +28,13 @@ public class KubernetesScheduler implements SchedulerHandler {
     private static final Logger logger = LoggerFactory.getLogger(KubernetesScheduler.class);
 
     @Autowired
-    private KubernetesClient kubernetesClient;
+    private Environment environment;
 
     @Autowired
     private JobWatcher jobWatcher;
+
+    @Autowired
+    private KubernetesClient kubernetesClient;
 
     @Value("${app-engine.api_prefix}")
     private String apiPrefix;
@@ -41,9 +44,6 @@ public class KubernetesScheduler implements SchedulerHandler {
 
     @Value("${HOSTNAME}")
     private String hostname;
-
-    @Autowired
-    private Environment environment;
 
     @Override
     public Schedule schedule(Schedule schedule) throws SchedulingException {
@@ -130,6 +130,7 @@ public class KubernetesScheduler implements SchedulerHandler {
                 .addNewContainer()
                 .withName("post-job-" + runId)
                 .withImage("alpine:latest")
+                .withImagePullPolicy("Never")
                 .withCommand("/bin/sh", "-c", installDeps + and + zipOutputs + and + sendOutputs)
 
                 // Mount volume for outputs
