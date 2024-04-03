@@ -1,5 +1,5 @@
 # All args are listed here at the top for readability
-ARG ENTRYPOINT_SCRIPTS_VERSION=1.3.0
+ARG ENTRYPOINT_SCRIPTS_VERSION=1.4.0
 ARG GUNICORN_VERSION=20.1.0
 ARG OPENJPEG_URL=https://github.com/uclouvain/openjpeg/archive
 ARG OPENJPEG_VERSION=2.4.0
@@ -203,7 +203,10 @@ EXPOSE ${PORT}
 FROM base-pims AS dev-server
 
 RUN apt-get -y update && \
-     apt-get -y install --no-install-recommends --no-install-suggests openssh-server
+     apt-get -y install --no-install-recommends --no-install-suggests openssh-server rsync
+
+# startup scripts
+COPY --from=entrypoint-scripts --chmod=774 /setup-ssh-dev-env.sh /docker-entrypoint-cytomine.d/1-start-ssh-dev-env.sh
 
 ENTRYPOINT ["cytomine-entrypoint.sh"]
 
