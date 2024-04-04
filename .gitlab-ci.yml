@@ -67,7 +67,7 @@ unittest:
   image:
     name: ${DOCKER_IMAGE_TESTS}
     entrypoint: [""]
-    pull_policy: never
+    pull_policy: if-not-present
   needs:
     - job: build-docker-image-for-tests
       artifacts: false
