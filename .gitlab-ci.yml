@@ -67,7 +67,7 @@ unittest:
   image:
     name: ${DOCKER_IMAGE_TESTS}
     entrypoint: [""]
-    pull_policy: never
+    pull_policy: if-not-present
   needs:
     - job: build-docker-image-for-tests
       artifacts: false
@@ -93,7 +93,7 @@ build-python-package:
         echo "could not build the package, ${DIST_FILENAME} seems to be missing"
         exit -1
       fi
-    - VERSION=$(python -c 'import re; import sys; m = re.match(r"^dist/cytomine-pims-(.+)\.tar\.gz${",} sys.argv[1].strip()); print(m.group(1))' ${DIST_FILENAME})
+    - VERSION=$(python -c 'import re; import sys; m = re.match(r"^dist/cytomine-pims-(.+)\.tar\.gz$", sys.argv[1].strip()); print(m.group(1))' ${DIST_FILENAME})
     - echo "CANONICAL_VERSION_NUMBER=${VERSION}" > .env
   artifacts:
     paths:
