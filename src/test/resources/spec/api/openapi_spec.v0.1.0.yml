@@ -566,9 +566,6 @@ components:
         description:
           description: Human-readable text description of the parameter
           type: string
-        optional:
-          description: Whether or not the parameter is optional
-          type: boolean
 
     type_spec_integer:
       type: object
@@ -606,13 +603,22 @@ components:
       properties:
         type:
           $ref: "#/components/schemas/type_spec"
-        default:
-          description: Default integer value. If omitted, no default value
-          type: integer
 
     input_parameter:
-      oneOf:
-        - $ref: "#/components/schemas/typed_parameter_integer"
+      type: object
+      allOf: 
+        - oneOf:
+            - allOf: 
+              - $ref: "#/components/schemas/typed_parameter_integer"
+              - type: object
+                properties:
+                  default:
+                    description: Default integer value. If omitted, no default value
+                    type: integer
+      properties:
+        optional:
+          description: Whether or not the parameter is optional
+          type: boolean
 
     output_parameter:
       oneOf:
