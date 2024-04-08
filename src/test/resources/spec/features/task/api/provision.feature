@@ -95,7 +95,7 @@ Feature: [URS00003-TASK] Provision a task run
 
     Examples:
       | task_namespace                                             | task_version | param1_name | param1_type | param1_value | param1_validation_rule | param2_name | param2_type | param2_value | payload                                                                          | task_run_initial_state | task_run_new_state | param1_file_content | param2_file_content |
-      | com.cytomine.dummy.arithmetic.integer.addition.constrained | 1.0.0        | a           | integer     | 25           | lt: 53                 | b           | integer     | 30           | [{\"param_name\": \"a\", \"value\": \"25\"}, {\"param_name\": \"b\", \"value\": \"30\"}] | CREATED                | PROVISIONED        | 25                  | 30                  |
+      | com.cytomine.dummy.arithmetic.integer.addition.constrained | 1.0.0        | a           | integer     | 25           | lt: 53                 | b           | integer     | 30           | [{\"param_name\": \"a\", \"value\": 25}, {\"param_name\": \"b\", \"value\": 30}] | CREATED                | PROVISIONED        | 25                  | 30                  |
 
   Scenario Outline: failed batch provisioning of a task run with invalid parameter value
 
@@ -117,7 +117,7 @@ Feature: [URS00003-TASK] Provision a task run
 
     Examples:
       | task_namespace                                 | task_version | param1_name | param1_type  | param1_validation_rule | param2_name | param2_type  | payload                                                                          | task_run_initial_state | error_payload                                                                                                                                                                                                                                                                                                                    | param1_value | param2_value|
-      | com.cytomine.dummy.arithmetic.integer.addition | 1.0.0        | a           | integer      | lt: 53                 | b           | integer      | [{\"param_name\": \"a\", \"value\": \"75\"}, {\"param_name\": \"b\", \"value\": \"30\"}] | CREATED                | {\"error_code\": \"APPE-internal-batch-request-error\", \"message\": \"Error(s) occurred during a handling of a batch request.\", \"details\": {\"errors\": [{\"error_code\": \"APPE-internal-request-validation-error\", \"message\": \"value must be less than defined constraint\", \"details\": { \"param_name\": \"a\"}}]}} | 75           | 30          |
+      | com.cytomine.dummy.arithmetic.integer.addition | 1.0.0        | a           | integer      | lt: 53                 | b           | integer      | [{\"param_name\": \"a\", \"value\": 75}, {\"param_name\": \"b\", \"value\": 30}] | CREATED                | {\"error_code\": \"APPE-internal-batch-request-error\", \"message\": \"Error(s) occurred during a handling of a batch request.\", \"details\": {\"errors\": [{\"error_code\": \"APPE-internal-request-validation-error\", \"message\": \"value must be less than defined constraint\", \"details\": { \"param_name\": \"a\"}}]}} | 75           | 30          |
 
   Scenario Outline: failed single parameter provisioning with unknown parameter name
 
@@ -147,19 +147,19 @@ Feature: [URS00003-TASK] Provision a task run
     And this task has "<task_namespace>" and "<task_version>"
     And this task has at least one input parameter "<param_name>" of type "<param_type>"
     And no validation rules are defined for this parameter
-    And a task run has been created and provisioned with parameter "<param_name>" value "<initial_param_value>" for this task
+    And a task run has been created and provisioned with parameter "<param_name>" value <initial_param_value> for this task
     And this task run is attributed an id in UUID format
     And this task run is in state "<task_run_state>"
     And the file named "<param_name>" in the task run storage "task-run-"+UUID has content "<param_file_initial_content>"
     When a user calls the provisioning endpoint with JSON "<payload>" to provision parameter "<param_name>" with <new_param_value>
-    Then the value of parameter "<param_name>" is updated to "<new_param_value>" in the database
+    Then the value of parameter "<param_name>" is updated to <new_param_value> in the database
     And the input file named "<param_name>" is updated in the task run storage "task-run-"+UUID with content "<param_file_new_content>"
     And the task run state remains unchanged and set to "<task_run_state>"
     And the App Engine returns a '200 OK' HTTP response with the updated task run information as JSON payload
 
     Examples:
       | task_namespace                                 | task_version | param_name | param_type | initial_param_value | new_param_value | payload                                    | task_run_state | param_file_initial_content | param_file_new_content |
-      | com.cytomine.dummy.arithmetic.integer.addition | 1.0.0        | a          | integer    | 5                   | 10              | {\"param_name\": \"a\", \"value\": \"10\"} | CREATED        | 5                          | 10                     |
-      | com.cytomine.dummy.arithmetic.integer.addition | 1.0.0        | b          | integer    | 20                  | 30              | {\"param_name\": \"b\", \"value\": \"30\"} | PROVISIONED    | 20                         | 30                     |
+      | com.cytomine.dummy.arithmetic.integer.addition | 1.0.0        | a          | integer    | 5                   | 10              | {\"param_name\": \"a\", \"value\": 10}     | CREATED        | 5                          | 10                     |
+      | com.cytomine.dummy.arithmetic.integer.addition | 1.0.0        | b          | integer    | 20                  | 30              | {\"param_name\": \"b\", \"value\": 30}     | PROVISIONED    | 20                         | 30                     |
 
   # TODO failed re-provisioning of a task of which the state is not one of {'CREATED', 'PROVISIONED'}

@@ -2,18 +2,18 @@ package be.cytomine.appengine.integration.cucumber;
 
 import be.cytomine.appengine.AppEngineApplication;
 import be.cytomine.appengine.dto.handlers.filestorage.Storage;
-import be.cytomine.appengine.dto.misc.TaskIdentifiers;
 import be.cytomine.appengine.exceptions.FileStorageException;
 import be.cytomine.appengine.exceptions.SchedulingException;
 import be.cytomine.appengine.handlers.FileData;
 import be.cytomine.appengine.handlers.FileStorageHandler;
 import be.cytomine.appengine.handlers.SchedulerHandler;
 import be.cytomine.appengine.models.task.*;
+import be.cytomine.appengine.models.task.integer.IntegerPersistence;
 import be.cytomine.appengine.openapi.api.DefaultApi;
 import be.cytomine.appengine.openapi.invoker.ApiException;
 import be.cytomine.appengine.openapi.model.*;
-import be.cytomine.appengine.repositories.ProvisionRepository;
-import be.cytomine.appengine.repositories.ResultRepository;
+import be.cytomine.appengine.repositories.TypePersistenceRepository;
+import be.cytomine.appengine.repositories.integer.IntegerPersistenceRepository;
 import be.cytomine.appengine.repositories.RunRepository;
 import be.cytomine.appengine.repositories.TaskRepository;
 import be.cytomine.appengine.services.RunService;
@@ -77,7 +77,10 @@ public class RunTaskStepDefinitions {
     FileStorageHandler fileStorageHandler;
 
     @Autowired
-    private ProvisionRepository integerProvisionRepository;
+    private IntegerPersistenceRepository integerProvisionRepository;
+
+    @Autowired
+    private TypePersistenceRepository typePersistenceRepository;
 
     @Given("Scheduler is up and running")
     public void scheduler_is_up_and_running() throws SchedulingException {
@@ -124,21 +127,21 @@ public class RunTaskStepDefinitions {
     }
 
     // successful fetch of task run inputs archive in a launched task run
-    @Given("the task run {string} has input parameters: {string} of type {string} with value {string} and {string} of type {string} with value {string}")
+    @Given("the task run {string} has input parameters: {string} of type {string} with value {int} and {string} of type {string} with value {int}")
     public void the_task_run_has_input_parameters_of_type_with_value_and_of_type_with_value(String runId, String name1, String type1, String value1, String name2, String type2, String value2) throws ApiException, FileStorageException {
         List<TaskRunInputProvisionInputBody> provisionInputBodyList = new ArrayList<>();
         // input one
         TaskRunInputProvisionInputBody input1 = new TaskRunInputProvisionInputBody();
         input1.setParamName(name1);
         TaskRunInputProvisionInputBodyValue value1Body =
-                new TaskRunInputProvisionInputBodyValue(value1);
+                new TaskRunInputProvisionInputBodyValue(Integer.parseInt(value1));
         input1.setValue(value1Body);
         provisionInputBodyList.add(input1);
         // input two
         TaskRunInputProvisionInputBody input2 = new TaskRunInputProvisionInputBody();
         input2.setParamName(name2);
         TaskRunInputProvisionInputBodyValue value2Body =
-                new TaskRunInputProvisionInputBodyValue(value2);
+                new TaskRunInputProvisionInputBodyValue(Integer.parseInt(value2));
         input2.setValue(value2Body);
         provisionInputBodyList.add(input2);
         appEngineApi.taskRunsRunIdInputProvisionsPut(UUID.fromString(runId), provisionInputBodyList);
@@ -229,7 +232,7 @@ public class RunTaskStepDefinitions {
     }
 
     @Autowired
-    private ResultRepository integerResultRepository;
+    private IntegerPersistenceRepository integerResultRepository;
     @Value("${storage.input.charset}")
     private String charset;
 
@@ -238,7 +241,12 @@ public class RunTaskStepDefinitions {
     public void the_task_run_has_output_parameters_of_type_with_value_and_of_type_with_value(String runId, String name, String type, Integer value) throws FileStorageException, IOException, ApiException {
         // Outputs
         integerResultRepository.deleteAll();
-        Result result = new Result(name, String.valueOf(value), persistedRun.getId());
+        IntegerPersistence result = new IntegerPersistence();
+        // name, String.valueOf(value), persistedRun.getId()
+        result.setParameterType(ParameterType.OUTPUT);
+        result.setRunId(persistedRun.getId());
+        result.setValue(value);
+        result.setValueType(ValueType.INTEGER);
         result = integerResultRepository.save(result);
         Assertions.assertNotNull(result);
 
@@ -379,7 +387,7 @@ public class RunTaskStepDefinitions {
     @When("When user calls the endpoint to run task with HTTP method POST")
     public void when_user_calls_the_endpoint_to_run_task_with_http_method_post() {
         TaskRunStateAction taskRunStateAction = new TaskRunStateAction();
-        taskRunStateAction.desired(new TaskRunInputProvisionInputBodyValue("RUNNING"));
+        taskRunStateAction.desired(new TaskRunStateActionAllOfDesired("RUNNING"));
         try {
             persistedResponse = appEngineApi.taskRunsRunIdStateActionsPost(persistedRun.getId(), taskRunStateAction);
         } catch (ApiException e) {
@@ -534,13 +542,33 @@ public class RunTaskStepDefinitions {
     public void this_task_run_has_been_successfully_provisioned_and_is_therefore_in_state(String provisionedState) throws FileStorageException {
         // save in the database
         integerProvisionRepository.deleteAll();
-        Provision provisionInputA = new Provision("a", String.valueOf(250), persistedRun.getId());
+        IntegerPersistence provisionInputA = new IntegerPersistence();
+        provisionInputA.setValueType(ValueType.INTEGER);
+        provisionInputA.setValue(250);
+        provisionInputA.setParameterName("a");
+        provisionInputA.setParameterType(ParameterType.INPUT);
+        provisionInputA.setRunId(persistedRun.getId());
         integerProvisionRepository.save(provisionInputA);
-        Provision provisionInputB = new Provision("b", String.valueOf(250), persistedRun.getId());
+        IntegerPersistence provisionInputB = new IntegerPersistence();
+        provisionInputA.setValueType(ValueType.INTEGER);
+        provisionInputA.setValue(250);
+        provisionInputA.setParameterName("b");
+        provisionInputA.setParameterType(ParameterType.INPUT);
+        provisionInputA.setRunId(persistedRun.getId());
         integerProvisionRepository.save(provisionInputB);
-        Provision num1 = new Provision("num1", String.valueOf(250), persistedRun.getId());
+        IntegerPersistence num1 = new IntegerPersistence(); // "num1", String.valueOf(250), persistedRun.getId()
+        num1.setValueType(ValueType.INTEGER);
+        num1.setValue(250);
+        num1.setParameterName("num1");
+        num1.setParameterType(ParameterType.INPUT);
+        num1.setRunId(persistedRun.getId());
         integerProvisionRepository.save(num1);
-        Provision num2 = new Provision("num2", String.valueOf(250), persistedRun.getId());
+        IntegerPersistence num2 = new IntegerPersistence();
+        num2.setValueType(ValueType.INTEGER);
+        num2.setValue(250);
+        num2.setParameterName("num2");
+        num2.setParameterType(ParameterType.INPUT);
+        num2.setRunId(persistedRun.getId());
         integerProvisionRepository.save(num2);
 
         // store in storage

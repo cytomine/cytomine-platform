@@ -14,7 +14,7 @@ public class GenericParameterProvision extends ParameterProvision{
 
     @JsonProperty(value = "param_name")
     private String parameterName;
-    private String value; // this should be String now to accommodate other primitive types
+    private Object value; // this should be Object now to accommodate other primitive types
     @JsonIgnore
     private String runId;
 

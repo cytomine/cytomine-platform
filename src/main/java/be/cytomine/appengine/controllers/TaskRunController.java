@@ -4,6 +4,7 @@ import be.cytomine.appengine.dto.inputs.task.*;
 import be.cytomine.appengine.exceptions.*;
 import be.cytomine.appengine.handlers.FileData;
 import be.cytomine.appengine.services.TaskProvisioningService;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
@@ -29,19 +30,18 @@ public class TaskRunController {
 
     @PutMapping(value = "/task-runs/{run_id}/input-provisions/{param_name}")
     @ResponseStatus(code = HttpStatus.OK)
-    public ResponseEntity<?> provision(@PathVariable String run_id, @PathVariable String param_name, @RequestBody GenericParameterProvision provision) throws ProvisioningException {
+    public ResponseEntity<?> provision(@PathVariable String run_id, @PathVariable String param_name, @RequestBody JsonNode provision) throws ProvisioningException {
         logger.info("/task-runs/{run_id}/input-provisions/{param_name} PUT");
-        provision.setRunId(run_id);
-        GenericParameterRunProvision provisioned = taskRunService.provisionRunParameter(provision);
+        JsonNode provisioned = taskRunService.provisionRunParameter(provision, run_id);
         logger.info("/task-runs/{run_id}/input-provisions/{param_name} PUT Ended");
         return ResponseEntity.ok(provisioned);
     }
 
     @PutMapping(value = "/task-runs/{run_id}/input-provisions")
     @ResponseStatus(code = HttpStatus.OK)
-    public ResponseEntity<?> provisionMultiple(@PathVariable String run_id, @RequestBody List<GenericParameterProvision> provisions) throws ProvisioningException {
+    public ResponseEntity<?> provisionMultiple(@PathVariable String run_id, @RequestBody List<JsonNode> provisions) throws ProvisioningException {
         logger.info("/task-runs/{run_id}/input-provisions PUT");
-        List<GenericParameterRunProvision> provisionedList = taskRunService.provisionMultipleRunParameters(run_id, provisions);
+        List<JsonNode> provisionedList = taskRunService.provisionMultipleRunParameters(run_id, provisions);
         logger.info("/task-runs/{run_id}/input-provisions PUT Ended");
         return ResponseEntity.ok(provisionedList);
     }
@@ -82,7 +82,7 @@ public class TaskRunController {
     @ResponseStatus(code = HttpStatus.OK)
     public ResponseEntity<?> getRuninputsList(@PathVariable String run_id) throws ProvisioningException, IOException, FileStorageException {
         logger.info("/task-runs/{run_id}/inputs GET");
-        List<TaskRunOutput> outputs = taskRunService.retrieveRunInputs(run_id);
+        List<TaskRunParameterValue> outputs = taskRunService.retrieveRunInputs(run_id);
         logger.info("/task-runs/{run_id}/inputs GET Ended");
         return new ResponseEntity<>(outputs, HttpStatus.OK);
     }
@@ -91,7 +91,7 @@ public class TaskRunController {
     @ResponseStatus(code = HttpStatus.OK)
     public ResponseEntity<?> getRunOutputsList(@PathVariable String run_id) throws ProvisioningException, IOException, FileStorageException {
         logger.info("/task-runs/{run_id}/outputs GET");
-        List<TaskRunOutput> outputs = taskRunService.retrieveRunOutputs(run_id);
+        List<TaskRunParameterValue> outputs = taskRunService.retrieveRunOutputs(run_id);
         logger.info("/task-runs/{run_id}/outputs GET Ended");
         return new ResponseEntity<>(outputs, HttpStatus.OK);
     }
@@ -100,7 +100,7 @@ public class TaskRunController {
     @ResponseStatus(code = HttpStatus.OK)
     public ResponseEntity<?> getInputProvisionsArchives(@PathVariable String run_id, @RequestParam("outputs") MultipartFile outputs) throws ProvisioningException {
         logger.info("/task-runs/{run_id}/outputs.zip POST");
-        List<TaskRunOutput> taskOutputs = taskRunService.postOutputsZipArchive(run_id, outputs);
+        List<TaskRunParameterValue> taskOutputs = taskRunService.postOutputsZipArchive(run_id, outputs);
         logger.info("/task-runs/{run_id}/outputs.zip POST Ended");
         return new ResponseEntity<>(taskOutputs, HttpStatus.OK);
     }
