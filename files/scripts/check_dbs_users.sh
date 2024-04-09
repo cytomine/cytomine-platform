@@ -13,6 +13,7 @@ wait_for_db() {
 
   sh /checks/check-user.sh "check-cytomine" "$POSTGRES_USER" "$POSTGRES_PASSWORD" "$POSTGRES_DB" "1"
   sh /checks/check-user.sh "check-appengine" "$APPENGINE_USER" "$APPENGINE_PASSWORD" "$APPENGINE_DB" "0"
+  sh /checks/check-user.sh "check-iam" "$IAM_USER" "$IAM_PASSWORD" "$IAM_DB" "0"
 }
 
 # This will be executed in background as we need the database server to be ready.
