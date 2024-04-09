@@ -1,6 +1,7 @@
 # List ARGs here for better readability.
 ARG ENTRYPOINT_SCRIPTS_VERSION=1.4.0
 ARG KEYCLOAK_VERSION=22.0.4
+ARG UBI_VERSION=9.3-1610
 ARG IMAGE_VERSION
 ARG IMAGE_REVISION
 
@@ -28,7 +29,7 @@ FROM cytomine/entrypoint-scripts:${ENTRYPOINT_SCRIPTS_VERSION} as entrypoint-scr
 
 #######################################################################################
 ## Stage: Cytomine IAM dev external tools build
-FROM registry.access.redhat.com/ubi9 AS dev-tools-builder
+FROM registry.access.redhat.com/ubi9:${UBI_VERSION} AS dev-tools-builder
 RUN mkdir -p /mnt/rootfs
 RUN dnf install --installroot /mnt/rootfs findutils gettext openssh-server rsync --releasever 9 --setopt install_weak_deps=false --nodocs -y && \
     dnf --installroot /mnt/rootfs clean all && \
@@ -53,7 +54,7 @@ CMD ["start-dev"]
 
 #######################################################################################
 ## Stage: Cytomine IAM external tools build
-FROM registry.access.redhat.com/ubi9 AS prod-tools-builder
+FROM registry.access.redhat.com/ubi9:${UBI_VERSION} AS prod-tools-builder
 RUN mkdir -p /mnt/rootfs
 RUN dnf install --installroot /mnt/rootfs findutils gettext --releasever 9 --setopt install_weak_deps=false --nodocs -y && \
     dnf --installroot /mnt/rootfs clean all && \
@@ -80,6 +81,7 @@ LABEL org.opencontainers.image.authors="dev@cytomine.com" \
       org.opencontainers.image.version="${IMAGE_VERSION}" \
       org.opencontainers.image.revision="${IMAGE_REVISION}" \
       org.opencontainers.image.deps.keycloak.version="${KEYCLOAK_VERSION}" \
+      org.opencontainers.image.deps.ubi.version="${UBI_VERSION}" \
       org.opencontainers.image.deps.entrypoint.scripts.version="${ENTRYPOINT_SCRIPTS_VERSION}"
 
 COPY --from=builder /opt/keycloak/ /opt/keycloak/
