@@ -101,7 +101,7 @@ http {
 
         # Internal communication to CORE from other internal micro-services.
         # Base path convention: "/api" + special endpoints that should be moved under "/api" base path in the future.
-        location ~ /(api|ws|login|logout|saml|saml2|server|session|custom-ui|static) {
+        location ~ /(api|ws|server/ping|session/admin|custom-ui) {
             set $tmpcorehost "$INTERNAL_URLS_CORE";
             proxy_pass http://$tmpcorehost;
         }
