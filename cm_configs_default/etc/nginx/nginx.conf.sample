@@ -42,6 +42,11 @@ http {
     error_log /var/log/nginx/error.log debug;
     access_log /var/log/nginx/access.log main;
 
+    map $http_host $port {
+      default 80;
+      "~^[^\:]+:(?<p>\d+)$" $p;
+    }
+
     # Pooled PIMS servers, load balanced.
     # See http://nginx.org/en/docs/http/ngx_http_upstream_module.html
     upstream internal-ims-pooled {
@@ -65,6 +70,8 @@ http {
         proxy_set_header Host $host;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $URLS_SCHEME;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Forwarded-Port $port;
 
         # Internal communication to PIMS from other internal micro-services.
         # Base path convention: "/ims"
@@ -85,6 +92,11 @@ http {
         location /app-engine {
             set $tmpappenginehost "$INTERNAL_URLS_APPENGINE";
             proxy_pass http://$tmpappenginehost;
+        }
+
+        location /iam {
+            set $tmpiamhost "$INTERNAL_URLS_IAM";
+            proxy_pass http://$tmpiamhost;
         }
 
         # Internal communication to CORE from other internal micro-services.
@@ -109,6 +121,8 @@ http {
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $URLS_SCHEME;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Forwarded-Port $port;
 
         location / {
             include /etc/nginx/cors_params;
@@ -117,7 +131,11 @@ http {
             set $tmpwebuivar "$INTERNAL_URLS_WEB_UI";
             proxy_pass http://$tmpwebuivar;
         }
-        location ~ /(api|ws|login|logout|saml|saml2|server|session|custom-ui|static) {
+        location /iam {
+            set $tmpiamhost "$INTERNAL_URLS_IAM";
+            proxy_pass http://$tmpiamhost;
+        }
+        location ~ /(api|ws|server/ping|session/admin|custom-ui) {
             proxy_intercept_errors off;
 
             set $tmpcorehost "$INTERNAL_URLS_CORE";
