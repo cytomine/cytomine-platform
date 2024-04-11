@@ -46,7 +46,7 @@ Feature: [URS00003-TASK] Provision a task run
 
     Examples:
       | task_namespace                                 | task_version | param_name | param_type | payload                                    | param_value | task_run_initial_state | task_run_new_state | param_file_content |
-      | com.cytomine.dummy.arithmetic.integer.addition | 1.0.0        | a          | integer    | {\"param_name\": \"a\", \"value\": \"18\"} | 18          | CREATED                | PROVISIONED        | 18                 |
+      | com.cytomine.dummy.arithmetic.integer.addition | 1.0.0        | a          | integer    | {\"param_name\": \"a\", \"value\": 18} | 18          | CREATED                | PROVISIONED        | 18                 |
 
   Scenario Outline: successful partial provisioning of a task run with two input parameters
 
