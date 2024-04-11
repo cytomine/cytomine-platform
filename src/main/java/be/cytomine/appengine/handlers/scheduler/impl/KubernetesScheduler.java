@@ -12,9 +12,9 @@ import org.springframework.core.env.Environment;
 import be.cytomine.appengine.dto.handlers.scheduler.Schedule;
 import be.cytomine.appengine.exceptions.SchedulingException;
 import be.cytomine.appengine.handlers.SchedulerHandler;
+import be.cytomine.appengine.handlers.scheduler.impl.utils.PodWatcher;
 import be.cytomine.appengine.models.task.Run;
 import be.cytomine.appengine.models.task.Task;
-import be.cytomine.appengine.utils.PodWatcher;
 import io.fabric8.kubernetes.api.model.HostPathVolumeSourceBuilder;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodBuilder;
@@ -31,10 +31,10 @@ public class KubernetesScheduler implements SchedulerHandler {
     private Environment environment;
 
     @Autowired
-    private PodWatcher podWatcher;
+    private KubernetesClient kubernetesClient;
 
     @Autowired
-    private KubernetesClient kubernetesClient;
+    private PodWatcher podWatcher;
 
     @Value("${app-engine.api_prefix}")
     private String apiPrefix;
@@ -66,10 +66,10 @@ public class KubernetesScheduler implements SchedulerHandler {
         String inputPath = "/tmp/app-engine/task-run-inputs-" + runId;
         String outputPath = "/tmp/app-engine/task-run-outputs-" + runId;
 
-        String podName = task.getName().replaceAll("[^a-zA-Z0-9]", "") + "-" + runId;
+        String podName = task.getName().toLowerCase().replaceAll("[^a-zA-Z0-9]", "") + "-" + runId;
         String imageName = "localhost:5051/" + task.getImageName();
 
-        // Pre and post container commands
+        // Pre container commands
         String url = "http://" + hostAddress + ":" + port + "/app-engine/v1/task-runs/" + runId;
         String installDeps = "apk --no-cache add curl zip";
         String fetchInputs = "curl -L -o inputs.zip " + url + "/inputs.zip";
@@ -93,7 +93,7 @@ public class KubernetesScheduler implements SchedulerHandler {
                 .addNewInitContainer()
                 .withName("inputs-provisioning-" + runId)
                 .withImage("alpine:latest")
-                .withImagePullPolicy("Always")
+                .withImagePullPolicy("IfNotPresent")
                 .withCommand("/bin/sh", "-c", installDeps + and + fetchInputs + and + unzipInputs)
 
                 // Mount volume for inputs provisioning
@@ -108,7 +108,7 @@ public class KubernetesScheduler implements SchedulerHandler {
                 .addNewContainer()
                 .withName(podName)
                 .withImage(imageName)
-                .withImagePullPolicy("Always")
+                .withImagePullPolicy("IfNotPresent")
 
                 // Mount volumes for inputs and outputs
                 .addNewVolumeMount()
