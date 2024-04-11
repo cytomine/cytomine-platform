@@ -31,7 +31,7 @@ public class Run extends BaseEntity {
     private Task task;
 
     @OneToMany(cascade = CascadeType.ALL , fetch = FetchType.EAGER)
-    private Set<IntegerProvision> provisions;
+    private Set<TypePersistence> provisions;
 
     public Run(UUID taskRunID, TaskRunState taskRunState, Task task) {
         super();

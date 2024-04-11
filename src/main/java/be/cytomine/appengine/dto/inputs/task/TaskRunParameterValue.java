@@ -2,14 +2,14 @@ package be.cytomine.appengine.dto.inputs.task;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.UUID;
 
 @Data
 @AllArgsConstructor
-public class TaskRunOutput {
-    private String type;
-    private int value;
-    private UUID task_run_id;
-    private String param_name;
+@NoArgsConstructor
+public class TaskRunParameterValue {
+    protected UUID task_run_id;
+    protected String param_name;
 }

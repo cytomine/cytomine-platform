@@ -4,7 +4,7 @@ package be.cytomine.appengine.utils;
 import be.cytomine.appengine.dto.misc.TaskIdentifiers;
 import be.cytomine.appengine.models.task.Author;
 import be.cytomine.appengine.models.task.Input;
-import be.cytomine.appengine.models.task.IntegerType;
+import be.cytomine.appengine.models.task.integer.IntegerType;
 import be.cytomine.appengine.models.task.Output;
 import be.cytomine.appengine.models.task.Task;
 import java.util.UUID;
