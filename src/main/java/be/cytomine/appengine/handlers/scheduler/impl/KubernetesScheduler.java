@@ -2,7 +2,9 @@ package be.cytomine.appengine.handlers.scheduler.impl;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +23,8 @@ import io.fabric8.kubernetes.api.model.PodBuilder;
 import io.fabric8.kubernetes.api.model.VolumeBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
+import io.fabric8.kubernetes.client.Watcher;
+import io.fabric8.kubernetes.client.WatcherException;
 import jakarta.annotation.PostConstruct;
 
 public class KubernetesScheduler implements SchedulerHandler {
@@ -44,6 +48,75 @@ public class KubernetesScheduler implements SchedulerHandler {
 
     @Value("${HOSTNAME}")
     private String hostname;
+
+    private void schedulePostTask(String outputFolder, String outputPath, String runId, String url)
+            throws SchedulingException {
+        logger.info("Schedule: create post task pod...");
+
+        // Post container commands
+        String installDeps = "apk --no-cache add curl zip";
+        String sendOutputs = "curl -X POST -F 'outputs=@outputs.zip' " + url + "/outputs.zip";
+        String zipOutputs = "zip -rj outputs.zip " + outputFolder;
+        String and = " && ";
+
+        String podName = "outputs-sending-" + runId;
+        Map<String, String> podLabels = new HashMap<>() {
+            {
+                put("postTask", "true");
+                put("runId", runId);
+            }
+        };
+        PodBuilder podBuilder = new PodBuilder()
+                .withNewMetadata()
+                .withName(podName)
+                .withLabels(podLabels)
+                .endMetadata();
+
+        // Defining the pod image to run
+        podBuilder
+                .withNewSpec()
+
+                // Add post-container for sending outputs
+                .addNewContainer()
+                .withName(podName)
+                .withImage("alpine:latest")
+                .withImagePullPolicy("IfNotPresent")
+                .withCommand("/bin/sh", "-c", installDeps + and + zipOutputs + and + sendOutputs)
+
+                // Mount volume for outputs
+                .addNewVolumeMount()
+                .withName("outputs")
+                .withMountPath(outputFolder)
+                .endVolumeMount()
+
+                .endContainer()
+
+                // Mount volume from the scheduler file system
+                .addToVolumes(new VolumeBuilder()
+                        .withName("outputs")
+                        .withHostPath(new HostPathVolumeSourceBuilder()
+                                .withPath(outputPath)
+                                .build())
+                        .build())
+
+                // Never restart the pod
+                .withRestartPolicy("Never")
+
+                .endSpec();
+
+        logger.info("Schedule: Post task Pod scheduled to run on the cluster");
+        try {
+            kubernetesClient
+                    .pods()
+                    .inNamespace("default")
+                    .resource(podBuilder.build())
+                    .create();
+        } catch (KubernetesClientException e) {
+            e.printStackTrace();
+            throw new SchedulingException("Post task failed to be scheduled on the cluster");
+        }
+        logger.info("Schedule: Post task Pod queued for execution on the cluster");
+    }
 
     @Override
     public Schedule schedule(Schedule schedule) throws SchedulingException {
@@ -74,15 +147,20 @@ public class KubernetesScheduler implements SchedulerHandler {
         String installDeps = "apk --no-cache add curl zip";
         String fetchInputs = "curl -L -o inputs.zip " + url + "/inputs.zip";
         String unzipInputs = "unzip -o inputs.zip -d " + task.getInputFolder();
-        String sendOutputs = "curl -X POST -F 'outputs=@outputs.zip' " + url + "/outputs.zip";
-        String zipOutputs = "zip -rj outputs.zip " + task.getOutputFolder();
         String and = " && ";
+
+        Map<String, String> labels = new HashMap<>() {
+            {
+                put("postTask", "false");
+                put("runId", runId);
+            }
+        };
 
         logger.info("Schedule: create task pod...");
         PodBuilder podBuilder = new PodBuilder()
                 .withNewMetadata()
                 .withName(podName)
-                .withLabels(Collections.singletonMap("runId", run.getId().toString()))
+                .withLabels(labels)
                 .endMetadata();
 
         // Defining the pod image to run
@@ -123,21 +201,6 @@ public class KubernetesScheduler implements SchedulerHandler {
 
                 .endContainer()
 
-                // Add post-container for sending outputs
-                .addNewContainer()
-                .withName("outputs-sending-" + runId)
-                .withImage("alpine:latest")
-                .withImagePullPolicy("Never")
-                .withCommand("/bin/sh", "-c", installDeps + and + zipOutputs + and + sendOutputs)
-
-                // Mount volume for outputs
-                .addNewVolumeMount()
-                .withName("outputs")
-                .withMountPath(task.getOutputFolder())
-                .endVolumeMount()
-
-                .endContainer()
-
                 // Mount volumes from the scheduler file system
                 .addToVolumes(new VolumeBuilder()
                         .withName("inputs")
@@ -157,20 +220,48 @@ public class KubernetesScheduler implements SchedulerHandler {
 
                 .endSpec();
 
-        Pod pod = podBuilder.build();
-
         logger.info("Schedule: Task Pod scheduled to run on the cluster");
         try {
             kubernetesClient
                     .pods()
                     .inNamespace("default")
-                    .resource(pod)
+                    .resource(podBuilder.build())
                     .create();
         } catch (KubernetesClientException e) {
             e.printStackTrace();
             throw new SchedulingException("Task Pod failed to be scheduled on the cluster");
         }
         logger.info("Schedule: Task Pod queued for execution on the cluster");
+
+        // Schedule the post task when the task is done
+        kubernetesClient
+                .pods()
+                .inNamespace("default")
+                .withName(podName)
+                .watch(new Watcher<Pod>() {
+                    private boolean isAlreadySucceeded = false;
+
+                    @Override
+                    public void eventReceived(Action action, Pod resource) {
+                        boolean isSucceeded = resource.getStatus().getPhase().equals("Succeeded");
+                        if (isSucceeded && !isAlreadySucceeded) {
+                            try {
+                                schedulePostTask(task.getOutputFolder(), outputPath, runId, url);
+                            } catch (SchedulingException e) {
+                                e.printStackTrace();
+                                logger.info("Schedule: Post task Pod failed to be scheduled on the cluster");
+                            }
+
+                            isAlreadySucceeded = true;
+                        }
+
+                    }
+
+                    @Override
+                    public void onClose(WatcherException cause) {
+                        logger.info("Schedule: post Task Pod watcher closed");
+                    }
+                });
 
         return schedule;
     }

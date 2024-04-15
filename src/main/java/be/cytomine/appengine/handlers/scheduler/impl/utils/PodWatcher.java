@@ -1,5 +1,6 @@
 package be.cytomine.appengine.handlers.scheduler.impl.utils;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -32,9 +33,8 @@ public class PodWatcher implements Watcher<Pod> {
             case "Pending":
                 return TaskRunState.PENDING;
             case "Running":
+            case "Succeeded": // The main task is done, the post task needs to run
                 return TaskRunState.RUNNING;
-            case "Succeeded":
-                return TaskRunState.FINISHED;
             case "Failed":
             case "Unknown":
             default:
@@ -46,22 +46,30 @@ public class PodWatcher implements Watcher<Pod> {
     public void eventReceived(Action action, Pod pod) {
         logger.info("Pod Watcher: pod " + pod.getMetadata().getName());
 
-        String runId = pod.getMetadata().getLabels().get("runId");
+        Map<String, String> labels = pod.getMetadata().getLabels();
+
+        String runId = labels.get("runId");
         Optional<Run> runOptional = runRepository.findById(UUID.fromString(runId));
         if (runOptional.isEmpty()) {
             return;
         }
-
         Run run = runOptional.get();
-        switch (action.name()) {
-            case "ADDED":
-                run.setState(TaskRunState.QUEUED);
-                break;
-            case "MODIFIED":
-                run.setState(processPodStatus(pod));
-                break;
-            default:
-                logger.info("Unrecognized event: " + action.name());
+
+        boolean isPostTask = labels.get("postTask").equals("true");
+        boolean hasFailed = pod.getStatus().getPhase().equals("Failed");
+        if (isPostTask && hasFailed) {
+            run.setState(TaskRunState.FAILED);
+        } else if (!isPostTask) {
+            switch (action.name()) {
+                case "ADDED":
+                    run.setState(TaskRunState.QUEUED);
+                    break;
+                case "MODIFIED":
+                    run.setState(processPodStatus(pod));
+                    break;
+                default:
+                    logger.info("Unrecognized event: " + action.name());
+            }
         }
 
         runRepository.saveAndFlush(run);
