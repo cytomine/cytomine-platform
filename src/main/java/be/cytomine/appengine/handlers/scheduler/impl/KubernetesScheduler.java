@@ -4,27 +4,25 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.event.EventListener;
 import org.springframework.core.env.Environment;
 
 import be.cytomine.appengine.dto.handlers.scheduler.Schedule;
 import be.cytomine.appengine.exceptions.SchedulingException;
 import be.cytomine.appengine.handlers.SchedulerHandler;
+import be.cytomine.appengine.handlers.scheduler.impl.utils.PodEvent;
 import be.cytomine.appengine.handlers.scheduler.impl.utils.PodWatcher;
 import be.cytomine.appengine.models.task.Run;
 import be.cytomine.appengine.models.task.Task;
 import io.fabric8.kubernetes.api.model.HostPathVolumeSourceBuilder;
-import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodBuilder;
 import io.fabric8.kubernetes.api.model.VolumeBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
-import io.fabric8.kubernetes.client.Watcher;
-import io.fabric8.kubernetes.client.WatcherException;
 import jakarta.annotation.PostConstruct;
 
 public class KubernetesScheduler implements SchedulerHandler {
@@ -49,9 +47,28 @@ public class KubernetesScheduler implements SchedulerHandler {
     @Value("${HOSTNAME}")
     private String hostname;
 
-    private void schedulePostTask(String outputFolder, String outputPath, String runId, String url)
-            throws SchedulingException {
+    private String getHostAddress() throws SchedulingException {
+        try {
+            InetAddress address = InetAddress.getByName(hostname);
+            return address.getHostAddress();
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+            throw new SchedulingException("Failed to get the hostname");
+        }
+    }
+
+    @EventListener
+    private void schedulePostTask(PodEvent event) throws SchedulingException {
         logger.info("Schedule: create post task pod...");
+
+        Map<String, String> labels = event.getLabels();
+        String port = environment.getProperty("server.port");
+        String hostAddress = getHostAddress();
+
+        String runId = labels.get("runId");
+        String url = "http://" + hostAddress + ":" + port + "/app-engine/v1/task-runs/" + runId;
+        String outputPath = "/tmp/app-engine/task-run-outputs-" + runId;
+        String outputFolder = labels.get("outputFolder");
 
         // Post container commands
         String installDeps = "apk --no-cache add curl zip";
@@ -123,14 +140,7 @@ public class KubernetesScheduler implements SchedulerHandler {
         logger.info("Schedule: get Task parameters");
 
         String port = environment.getProperty("server.port");
-        String hostAddress = null;
-        try {
-            InetAddress address = InetAddress.getByName(hostname);
-            hostAddress = address.getHostAddress();
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-            throw new SchedulingException("Failed to get the hostname");
-        }
+        String hostAddress = getHostAddress();
 
         Run run = schedule.getRun();
         String runId = run.getId().toString();
@@ -232,36 +242,6 @@ public class KubernetesScheduler implements SchedulerHandler {
             throw new SchedulingException("Task Pod failed to be scheduled on the cluster");
         }
         logger.info("Schedule: Task Pod queued for execution on the cluster");
-
-        // Schedule the post task when the task is done
-        kubernetesClient
-                .pods()
-                .inNamespace("default")
-                .withName(podName)
-                .watch(new Watcher<Pod>() {
-                    private boolean isAlreadySucceeded = false;
-
-                    @Override
-                    public void eventReceived(Action action, Pod resource) {
-                        boolean isSucceeded = resource.getStatus().getPhase().equals("Succeeded");
-                        if (isSucceeded && !isAlreadySucceeded) {
-                            try {
-                                schedulePostTask(task.getOutputFolder(), outputPath, runId, url);
-                            } catch (SchedulingException e) {
-                                e.printStackTrace();
-                                logger.info("Schedule: Post task Pod failed to be scheduled on the cluster");
-                            }
-
-                            isAlreadySucceeded = true;
-                        }
-
-                    }
-
-                    @Override
-                    public void onClose(WatcherException cause) {
-                        logger.info("Schedule: post Task Pod watcher closed");
-                    }
-                });
 
         return schedule;
     }

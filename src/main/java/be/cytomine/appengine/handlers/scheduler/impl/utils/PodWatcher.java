@@ -6,12 +6,14 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
 import be.cytomine.appengine.models.task.Run;
 import be.cytomine.appengine.repositories.RunRepository;
 import be.cytomine.appengine.states.TaskRunState;
 import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.Volume;
 import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.kubernetes.client.WatcherException;
 
@@ -20,10 +22,28 @@ public class PodWatcher implements Watcher<Pod> {
 
     private static final Logger logger = LoggerFactory.getLogger(PodWatcher.class);
 
+    private ApplicationEventPublisher eventPublisher;
+
     private RunRepository runRepository;
 
-    public PodWatcher(RunRepository runRepository) {
+    public PodWatcher(ApplicationEventPublisher eventPublisher, RunRepository runRepository) {
+        this.eventPublisher = eventPublisher;
         this.runRepository = runRepository;
+    }
+
+    private Map<String, String> getLabels(Pod pod) {
+        Map<String, String> labels = pod.getMetadata().getLabels();
+
+        Volume volume = pod.getSpec()
+                .getVolumes()
+                .stream()
+                .filter(v -> v.getName().equals("outputs"))
+                .findFirst()
+                .get();
+
+        labels.put("outputFolder", volume.getHostPath().getPath());
+
+        return labels;
     }
 
     private TaskRunState processPodStatus(Pod pod) {
@@ -33,7 +53,10 @@ public class PodWatcher implements Watcher<Pod> {
             case "Pending":
                 return TaskRunState.PENDING;
             case "Running":
-            case "Succeeded": // The main task is done, the post task needs to run
+                return TaskRunState.RUNNING;
+            case "Succeeded":
+                // Start the post task
+                eventPublisher.publishEvent(new PodEvent(this, getLabels(pod)));
                 return TaskRunState.RUNNING;
             case "Failed":
             case "Unknown":
