@@ -49,6 +49,7 @@ COPY --from=dev-tools-builder /mnt/rootfs /
 COPY --from=dev-tools-builder /docker-entrypoint-cytomine.d/ /docker-entrypoint-cytomine.d/
 COPY --from=entrypoint-scripts --chmod=774 /cytomine-entrypoint.sh /usr/local/bin/
 
+ENV KC_DB=postgres
 ENTRYPOINT ["cytomine-entrypoint.sh", "/opt/keycloak/bin/kc.sh"]
 CMD ["start-dev"]
 
@@ -89,5 +90,6 @@ COPY --from=prod-tools-builder /mnt/rootfs /
 COPY --from=prod-tools-builder /docker-entrypoint-cytomine.d/ /docker-entrypoint-cytomine.d/
 COPY --from=entrypoint-scripts --chmod=774 /cytomine-entrypoint.sh /usr/local/bin/
 
+ENV KC_DB=postgres
 ENTRYPOINT ["cytomine-entrypoint.sh", "/opt/keycloak/bin/kc.sh"]
 CMD ["start"]
