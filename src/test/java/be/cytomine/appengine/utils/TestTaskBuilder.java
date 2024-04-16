@@ -7,7 +7,7 @@ import be.cytomine.appengine.exceptions.BundleArchiveException;
 import be.cytomine.appengine.exceptions.ValidationException;
 import be.cytomine.appengine.models.task.Author;
 import be.cytomine.appengine.models.task.Input;
-import be.cytomine.appengine.models.task.IntegerType;
+import be.cytomine.appengine.models.task.integer.IntegerType;
 import be.cytomine.appengine.models.task.Output;
 import be.cytomine.appengine.models.task.Task;
 import be.cytomine.appengine.models.task.TypeFactory;

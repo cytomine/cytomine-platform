@@ -1,7 +1,6 @@
 package be.cytomine.appengine.dto.inputs.task;
 
-import be.cytomine.appengine.models.task.Input;
-import be.cytomine.appengine.models.task.IntegerType;
+import be.cytomine.appengine.models.task.integer.IntegerType;
 import be.cytomine.appengine.models.task.Output;
 
 public class TaskOutputFactory {

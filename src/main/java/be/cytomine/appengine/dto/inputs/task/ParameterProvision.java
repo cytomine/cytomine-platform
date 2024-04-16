@@ -5,5 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-
-public interface ParameterProvision {}
+@Data
+public class ParameterProvision {
+    private ParameterType type;
+}
