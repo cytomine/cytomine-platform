@@ -106,7 +106,7 @@ dependencies {
     // OpenAPI generated client from Maven local repository for testing
     implementation group: 'be.cytomine.appengine', name: 'appengine-client', version: '0.1.0'
     // registry client
-    implementation 'com.cytomine:registry-client:2.0.0'
+    implementation 'com.cytomine:registry-client:3.0.0'
     // liquibase
     liquibaseRuntime 'info.picocli:picocli:4.7.5'
 
