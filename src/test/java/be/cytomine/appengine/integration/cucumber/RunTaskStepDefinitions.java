@@ -541,6 +541,7 @@ public class RunTaskStepDefinitions {
 
         // store in storage
         Storage runStorage = new Storage("task-run-inputs-" + provisionInputA.getRunId());
+        fileStorageHandler.createStorage(runStorage);
         String value = String.valueOf(provisionInputA.getValue());
         byte[] inputFileData = value.getBytes(getStorageCharset(charset));
         FileData inputProvisionFileData = new FileData(inputFileData, provisionInputA.getParameterName());
