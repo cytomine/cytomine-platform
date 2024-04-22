@@ -602,9 +602,58 @@ components:
         description:
           description: Human-readable text description of the parameter
           type: string
-        optional:
-          description: Whether or not the parameter is optional
-          type: boolean
+
+    type_spec_integer:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: string
+          enum: ["integer"]
+        gt:
+          type: "integer"
+          description: 'input constraint to enforce: input > $gt'
+        lt:
+          type: "integer"
+          description: 'input constraint to enforce: input < $lt'
+        geq:
+          type: "integer"
+          description: 'input constraint to enforce: input >= $geq'
+        leq:
+          type: "integer"
+          description: 'input constraint to enforce: input <= $leq'
+
+    type_spec_boolean:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: string
+          enum: ["boolean"]
+
+    type_spec_datetime:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: object
+          required:
+            - id
+          properties:
+            id:
+              type: string
+              enum: ["datetime"]
+            before:
+              type: string
+              format: date-time
+              description: the input datetime must be before the specified datetime (inclusive bound). If not specified, no 'before' constraint applied.
+            after:
+              type: string
+              format: date-time
+              description: the input datetime must be after the specified datetime (inclusive bound). If not specified, no 'after' constraint applied.
 
     typed_parameter_integer:
       allOf:
@@ -614,26 +663,7 @@ components:
             - type
           properties:
             type:
-              type: object
-              properties:
-                id:
-                  type: string
-                  enum: ["integer"]
-                gt:
-                  type: integer
-                  description: 'input constraint to enforce: input > $gt'
-                lt:
-                  type: integer
-                  description: 'input constraint to enforce: input < $lt'
-                geq:
-                  type: integer
-                  description: 'input constraint to enforce: input >= $geq'
-                leq:
-                  type: integer
-                  description: 'input constraint to enforce: input <= $leq'
-            default:
-              description: Default integer value. If omitted, no default value
-              type: integer
+              $ref: "#/components/schemas/type_spec_integer"
 
     typed_parameter_boolean:
       allOf:
@@ -643,14 +673,7 @@ components:
             - type
           properties:
             type:
-              type: object
-              properties:
-                id:
-                  type: string
-                  enum: ["boolean"]
-            default:
-              description: Default boolean value. If omitted, no default value
-              type: boolean
+              $ref: "#/components/schemas/type_spec_boolean"
 
     typed_parameter_datetime:
       allOf:
@@ -660,31 +683,40 @@ components:
             - type
           properties:
             type:
-              type: object
-              required:
-                - id
-              properties:
-                id:
-                  type: string
-                  enum: ["datetime"]
-                before:
-                  type: string
-                  format: date-time
-                  description: the input datetime must be before the specified datetime (inclusive bound). If not specified, no 'before' constraint applied.
-                after:
-                  type: string
-                  format: date-time
-                  description: the input datetime must be after the specified datetime (inclusive bound). If not specified, no 'after' constraint applied.
-            default:
-              description: Default datetime value. If omitted, no default value
-              type: string
-              format: date-time
+              $ref: "#/components/schemas/type_spec_datetime"
 
     input_parameter:
-      oneOf:
-        - $ref: "#/components/schemas/typed_parameter_integer"
-        - $ref: "#/components/schemas/typed_parameter_boolean"
-        - $ref: "#/components/schemas/typed_parameter_datetime"
+      type: object
+      allOf:
+        - oneOf:
+            - allOf:
+              - $ref: "#/components/schemas/typed_parameter_integer"
+              - type: object
+                properties:
+                  default:
+                    description: Default integer value. If omitted, no default value
+                    type: integer
+        - oneOf:
+            - allOf:
+              - $ref: "#/components/schemas/typed_parameter_boolean"
+              - type: object
+                properties:
+                  default:
+                    description: Default boolean value. If omitted, no default value
+                    type: boolean
+        - oneOf:
+            - allOf:
+              - $ref: "#/components/schemas/typed_parameter_datetime"
+              - type: object
+                properties:
+                  default:
+                    description: Default datetime value. If omitted, no default value
+                    type: string
+                    format: date-time
+      properties:
+        optional:
+          description: Whether or not the parameter is optional
+          type: boolean
 
     output_parameter:
       oneOf:

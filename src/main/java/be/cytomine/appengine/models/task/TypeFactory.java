@@ -1,5 +1,6 @@
 package be.cytomine.appengine.models.task;
 
+import be.cytomine.appengine.models.task.integer.IntegerType;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import be.cytomine.appengine.dto.inputs.task.types.integer.IntegerTypeConstraint;
