@@ -603,9 +603,65 @@ components:
         description:
           description: Human-readable text description of the parameter
           type: string
-        optional:
-          description: Whether or not the parameter is optional
+
+    type_spec_integer:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: string
+          enum: ["integer"]
+        gt:
+          type: "integer"
+          description: 'input constraint to enforce: input > $gt'
+        lt:
+          type: "integer"
+          description: 'input constraint to enforce: input < $lt'
+        geq:
+          type: "integer"
+          description: 'input constraint to enforce: input >= $geq'
+        leq:
+          type: "integer"
+          description: 'input constraint to enforce: input <= $leq'
+
+    type_spec_boolean:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: string
+          enum: ["boolean"]
+
+    type_spec_number:
+      type: object
+      required:
+        - id
+        - infinity_allowed
+        - nan_allowed
+      properties:
+        id:
+          type: string
+          enum: ["number"]
+        gt:
+          type: number
+          description: 'input constraint to enforce: input > $gt'
+        lt:
+          type: number
+          description: 'input constraint to enforce: input < $lt'
+        geq:
+          type: number
+          description: 'input constraint to enforce: input >= $geq'
+        leq:
+          type: number
+          description: 'input constraint to enforce: input <= $leq'
+        nan_allowed:
           type: boolean
+          description: 'whether or not nan is accepted as a value for this parameters'
+        infinity_allowed:
+          type: boolean
+          description: 'whether or not infinity is accepted as a value for this parameter'
 
     typed_parameter_integer:
       allOf:
@@ -615,28 +671,7 @@ components:
             - type
           properties:
             type:
-              type: object
-              required:
-                - id
-              properties:
-                id:
-                  type: string
-                  enum: ["integer"]
-                gt:
-                  type: integer
-                  description: 'input constraint to enforce: input > $gt'
-                lt:
-                  type: integer
-                  description: 'input constraint to enforce: input < $lt'
-                geq:
-                  type: integer
-                  description: 'input constraint to enforce: input >= $geq'
-                leq:
-                  type: integer
-                  description: 'input constraint to enforce: input <= $leq'
-            default:
-              description: Default integer value. If omitted, no default value
-              type: integer
+              $ref: "#/components/schemas/type_spec_integer"
 
     typed_parameter_boolean:
       allOf:
@@ -646,16 +681,7 @@ components:
             - type
           properties:
             type:
-              type: object
-              required:
-                - id
-              properties:
-                id:
-                  type: string
-                  enum: ["boolean"]
-            default:
-              description: Default boolean value. If omitted, no default value
-              type: boolean
+              $ref: "#/components/schemas/type_spec_boolean"
 
     typed_parameter_number:
       allOf:
@@ -665,42 +691,39 @@ components:
             - type
           properties:
             type:
-              type: object
-              required:
-                - id
-                - infinity_allowed
-                - nan_allowed
-              properties:
-                id:
-                  type: string
-                  enum: ["number"]
-                gt:
-                  type: number
-                  description: 'input constraint to enforce: input > $gt'
-                lt:
-                  type: number
-                  description: 'input constraint to enforce: input < $lt'
-                geq:
-                  type: number
-                  description: 'input constraint to enforce: input >= $geq'
-                leq:
-                  type: number
-                  description: 'input constraint to enforce: input <= $leq'
-                nan_allowed:
-                  type: boolean
-                  description: 'whether or not nan is accepted as a value for this parameters'
-                infinity_allowed:
-                  type: boolean
-                  description: 'whether or not infinity is accepted as a value for this parameter'
-            default:
-              description: Default number value. If omitted, no default value
-              type: number
+              $ref: "#/components/schemas/type_spec_number"
 
     input_parameter:
-      oneOf:
-        - $ref: "#/components/schemas/typed_parameter_integer"
-        - $ref: "#/components/schemas/typed_parameter_boolean"
-        - $ref: "#/components/schemas/typed_parameter_number"
+      type: object
+      allOf:
+        - oneOf:
+            - allOf:
+              - $ref: "#/components/schemas/typed_parameter_integer"
+              - type: object
+                properties:
+                  default:
+                    description: Default integer value. If omitted, no default value
+                    type: integer
+        - oneOf:
+            - allOf:
+              - $ref: "#/components/schemas/typed_parameter_boolean"
+              - type: object
+                properties:
+                  default:
+                    description: Default boolean value. If omitted, no default value
+                    type: boolean
+        - oneOf:
+            - allOf:
+              - $ref: "#/components/schemas/typed_parameter_number"
+              - type: object
+                properties:
+                  default:
+                    description: Default number value. If omitted, no default value
+                    type: number
+      properties:
+        optional:
+          description: Whether or not the parameter is optional
+          type: boolean
 
     output_parameter:
       oneOf:
