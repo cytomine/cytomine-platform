@@ -75,8 +75,8 @@ Feature: [URS00003-TASK] Provision a task run
     And the App Engine returns a '200 OK' HTTP response with the updated task run information as JSON payload
 
     Examples:
-      | task_namespace                                 | task_version | param1_name | param1_type | param1_value | param2_name | param2_type | payload                                 | task_run_initial_state | param_file_content |
-      | com.cytomine.dummy.arithmetic.integer.addition | 1.0.0        | a           | integer     | 5            | b           | integer     | [{\"param_name\": \"a\", \"value\": 5}] | CREATED                | 5                  |
+      | task_namespace                                 | task_version | param1_name | param1_type | param1_value | param2_name | param2_type | payload                                     | task_run_initial_state | param_file_content |
+      | com.cytomine.dummy.arithmetic.integer.addition | 1.0.0        | a           | integer     | 5            | b           | integer     | [{\"param_name\": \"a\", \"value\": \"5\"}] | CREATED                | 5                  |
 
   Scenario Outline: successful batch provisioning of a task run two parameters one of which one has a validation rule
 
@@ -155,12 +155,12 @@ Feature: [URS00003-TASK] Provision a task run
     And this task has "<task_namespace>" and "<task_version>"
     And this task has at least one input parameter "<param_name>" of type "<param_type>"
     And no validation rules are defined for this parameter
-    And a task run has been created and provisioned with parameter "<param_name>" value "<initial_param_value>" for this task
+    And a task run has been created and provisioned with parameter "<param_name>" value <initial_param_value> for this task
     And this task run is attributed an id in UUID format
     And this task run is in state "<task_run_state>"
     And the file named "<param_name>" in the task run storage "task-run-"+UUID has content "<param_file_initial_content>"
     When a user calls the provisioning endpoint with JSON "<payload>" to provision parameter "<param_name>" with <new_param_value>
-    Then the value of parameter "<param_name>" is updated to "<new_param_value>" in the database
+    Then the value of parameter "<param_name>" is updated to <new_param_value> in the database
     And the input file named "<param_name>" is updated in the task run storage "task-run-"+UUID with content "<param_file_new_content>"
     And the task run state remains unchanged and set to "<task_run_state>"
     And the App Engine returns a '200 OK' HTTP response with the updated task run information as JSON payload
