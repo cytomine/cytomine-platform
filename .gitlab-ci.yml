@@ -8,20 +8,36 @@ variables:
   # docker images for test services
   TESTS_IMAGE_REGISTRY: 'registry:2.8.3'
   TESTS_IMAGE_POSTGIS: 'cytomine/postgis:1.4.0-dev.2'
+  APPENGINE_TASKS_PATH: GitLab/Artifacts/AppEngine/Tasks
+  ADD_INTEGER_TASK_NAME: com.cytomine.dummy.arithmetic.integer.addition-1.0.0.zip
+  IDENTITY_BOOLEAN_TASK_NAME: com.cytomine.dummy.identity.boolean-1.0.0.zip
+  TEST_ARTIFACT_PATH: ./src/test/resources/artifacts
 
 
 include:
+  # download tasks
   - component: gitlab.cytom.in/cm/rnd/cicd/component-nextcloud/download-file@1.1.0
     inputs:
-      source-filepath: GitLab/Artifacts/AppEngine/Tasks/com.cytomine.dummy.arithmetic.integer.addition-1.0.0.zip
-      target-directory: ./src/test/resources/artifacts
-      job-name: download-integer-addition
+      source-filepath: ${APPENGINE_TASKS_PATH}/${ADD_INTEGER_TASK_NAME}
+      target-directory: ${TEST_ARTIFACT_PATH}
+      job-name: download-task-integer-addition
+  - component: gitlab.cytom.in/cm/rnd/cicd/component-nextcloud/download-file@1.1.0
+    inputs:
+      source-filepath: ${APPENGINE_TASKS_PATH}/${IDENTITY_BOOLEAN_TASK_NAME}
+      target-directory: ${TEST_ARTIFACT_PATH}
+      job-name: download-task-boolean-identity
 
 
-download-integer-addition:
+download-task-integer-addition:
   artifacts:
     paths:
-      - ./src/test/resources/artifacts/com.cytomine.dummy.arithmetic.integer.addition-1.0.0.zip
+      - ${TEST_ARTIFACT_PATH}/${ADD_INTEGER_TASK_NAME}
+
+
+download-task-boolean-identity:
+  artifacts:
+    paths:
+      - ${TEST_ARTIFACT_PATH}/${IDENTITY_BOOLEAN_TASK_NAME}
 
 
 default:
@@ -95,11 +111,26 @@ validate-descriptor-schema:
     - ajv compile -s ${SCHEMA_PATH} -c ajv-formats -c ajv-formats-draft2019 --spec=${SPEC} --strict=false --all-errors
 
 
+validate-openapi-spec:
+  stage: test
+  tags:
+    - docker
+  image:
+    name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/redocly/cli:1.10.6
+    entrypoint: [""]
+  variables:
+    OPENAPI_PATH: src/test/resources/spec/api/openapi_spec.v0.1.0.yml
+  script:
+    - redocly lint ${OPENAPI_PATH}
+
+
 tests-storage-registry:
   stage: test
   image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/gradle:8.4-jdk17-alpine
   needs:
-    - job: download-integer-addition
+    - job: download-task-integer-addition
+      artifacts: true
+    - job: download-task-boolean-identity
       artifacts: true
   services:
     - alias: postgres

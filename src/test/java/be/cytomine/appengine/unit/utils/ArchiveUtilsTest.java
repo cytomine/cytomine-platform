@@ -4,6 +4,8 @@ import be.cytomine.appengine.dto.inputs.task.UploadTaskArchive;
 import be.cytomine.appengine.exceptions.BundleArchiveException;
 import be.cytomine.appengine.exceptions.ValidationException;
 import be.cytomine.appengine.utils.ArchiveUtils;
+import be.cytomine.appengine.utils.TestTaskBuilder;
+
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ClassPathResource;
@@ -16,9 +18,10 @@ public class ArchiveUtilsTest {
 
     @Test
     public void readArchiveTest_testDefaultImageLocation() throws IOException, ValidationException, BundleArchiveException {
-        ClassPathResource resource = new ClassPathResource("/artifacts/test_default_image_location_task.zip");
+        String bundleFilename = "test_default_image_location_task.zip";
+        ClassPathResource resource = TestTaskBuilder.buildByBundleFilename(bundleFilename);
 
-        MockMultipartFile testAppBundle = new MockMultipartFile("test_default_image_location_task.zip", resource.getInputStream());
+        MockMultipartFile testAppBundle = new MockMultipartFile(bundleFilename, resource.getInputStream());
         ArchiveUtils archiveUtils = new ArchiveUtils();
         UploadTaskArchive test = archiveUtils.readArchive(testAppBundle);
 
@@ -30,9 +33,10 @@ public class ArchiveUtilsTest {
 
     @Test
     public void readArchiveTest_testCustomImageLocation() throws IOException, ValidationException, BundleArchiveException {
-        ClassPathResource resource = new ClassPathResource("/artifacts/test_custom_image_location_task.zip");
+        String bundleFilename = "test_custom_image_location_task.zip";
+        ClassPathResource resource = TestTaskBuilder.buildByBundleFilename(bundleFilename);
 
-        MockMultipartFile testAppBundle = new MockMultipartFile("test_custom_image_location_task.zip", resource.getInputStream());
+        MockMultipartFile testAppBundle = new MockMultipartFile(bundleFilename, resource.getInputStream());
         ArchiveUtils archiveUtils = new ArchiveUtils();
         UploadTaskArchive test = archiveUtils.readArchive(testAppBundle);
 
@@ -46,9 +50,10 @@ public class ArchiveUtilsTest {
 
     @Test
     public void readArchiveTest_testBundleArchiveTypeDetection() throws IOException, ValidationException, BundleArchiveException {
-        ClassPathResource resource = new ClassPathResource("/artifacts/test_wrong_archive_format_task.7z");
+        String bundleFilename = "test_wrong_archive_format_task.7z";
+        ClassPathResource resource = TestTaskBuilder.buildByBundleFilename(bundleFilename);
 
-        MockMultipartFile testAppBundle = new MockMultipartFile("test_wrong_archive_format_task.7z", resource.getInputStream());
+        MockMultipartFile testAppBundle = new MockMultipartFile(bundleFilename, resource.getInputStream());
         ArchiveUtils archiveUtils = new ArchiveUtils();
         BundleArchiveException bae = Assertions.assertThrows(BundleArchiveException.class, () -> {
             UploadTaskArchive test = archiveUtils.readArchive(testAppBundle);

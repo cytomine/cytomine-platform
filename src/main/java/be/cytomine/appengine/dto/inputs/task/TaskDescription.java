@@ -8,6 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import java.util.Set;
+import java.util.UUID;
 
 /*
 * {
@@ -29,6 +30,8 @@ import java.util.Set;
 @AllArgsConstructor
 public class TaskDescription {
     @JsonProperty(defaultValue = "")
+    private UUID id;
+    @JsonProperty(defaultValue = "")
     private String name;
     @JsonProperty(defaultValue = "")
     private String namespace;
@@ -38,7 +41,8 @@ public class TaskDescription {
     private String description;
     private Set<TaskAuthor> authors;
 
-    public TaskDescription(String name, String namespace, String version, String description) {
+    public TaskDescription(UUID id, String name, String namespace, String version, String description) {
+        this.id = id;
         this.name = name;
         this.namespace = namespace;
         this.version = version;
