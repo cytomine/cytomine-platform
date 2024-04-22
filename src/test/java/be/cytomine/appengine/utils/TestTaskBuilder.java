@@ -28,6 +28,8 @@ public class TestTaskBuilder {
     task.setNamespace("com.cytomine.dummy.arithmetic.integer.addition");
     task.setVersion("1.0.0");
     task.setDescription("");
+    task.setInputFolder("/inputs");
+    task.setOutputFolder("/outputs");
     // add authors
     Set<Author> authors = new HashSet<>();
     Author author = new Author();

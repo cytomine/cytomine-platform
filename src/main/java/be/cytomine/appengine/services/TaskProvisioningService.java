@@ -382,6 +382,14 @@ public class TaskProvisioningService {
     private void storeOutputInFileStorage(Run run, Optional<Run> runOptional, int outputValue, String name) throws ProvisioningException {
         logger.info("Posting Outputs Archive : storing in file storage...");
         Storage outputsStorage = new Storage("task-run-outputs-" + runOptional.get().getId());
+        try {
+            boolean storageExists = fileStorageHandler.checkStorageExists("task-run-outputs-" + runOptional.get().getId());
+            if (!storageExists) {
+                fileStorageHandler.createStorage(outputsStorage);
+            }
+        } catch (FileStorageException e) {
+            e.printStackTrace();
+        }
         String value = String.valueOf(outputValue);
         byte[] inputFileData = value.getBytes(getStorageCharset(charset));
         FileData outputFileData = new FileData(inputFileData, name);
