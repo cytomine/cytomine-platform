@@ -19,6 +19,7 @@ import be.cytomine.appengine.handlers.scheduler.impl.utils.PodWatcher;
 import be.cytomine.appengine.models.task.Run;
 import be.cytomine.appengine.models.task.Task;
 import io.fabric8.kubernetes.api.model.HostPathVolumeSourceBuilder;
+import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodBuilder;
 import io.fabric8.kubernetes.api.model.VolumeBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -59,13 +60,25 @@ public class KubernetesScheduler implements SchedulerHandler {
 
     @EventListener
     private void schedulePostTask(PodEvent event) throws SchedulingException {
+        Map<String, String> labels = event.getLabels();
+        String runId = labels.get("runId");
+        String podName = "outputs-sending-" + runId;
+
+        // Avoid creating the post task on every watch event
+        Pod pod = kubernetesClient
+                .pods()
+                .inNamespace("default")
+                .withName(podName)
+                .get();
+        if (pod != null) {
+            return;
+        }
+
         logger.info("Schedule: create post task pod...");
 
-        Map<String, String> labels = event.getLabels();
         String port = environment.getProperty("server.port");
         String hostAddress = getHostAddress();
 
-        String runId = labels.get("runId");
         String url = "http://" + hostAddress + ":" + port + "/app-engine/v1/task-runs/" + runId;
         String outputPath = "/tmp/app-engine/task-run-outputs-" + runId;
         String outputFolder = labels.get("outputFolder");
@@ -76,7 +89,6 @@ public class KubernetesScheduler implements SchedulerHandler {
         String zipOutputs = "zip -rj outputs.zip " + outputFolder;
         String and = " && ";
 
-        String podName = "outputs-sending-" + runId;
         Map<String, String> podLabels = new HashMap<>() {
             {
                 put("postTask", "true");
