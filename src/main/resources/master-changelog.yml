@@ -5,6 +5,9 @@ databaseChangeLog:
   - include:
       file: migrations/remove-not-null-constraint-from-integer-type.sql
       relativeToChangelogFile: false
+  - include:
+      file: migrations/integer_provision_to_provision.sql
+      relativeToChangelogFile: false
 #  - includeAll:
 #      path: migrations/
 #      relativeToChangelogFile: false
