@@ -608,9 +608,50 @@ components:
         description:
           description: Human-readable text description of the parameter
           type: string
-        optional:
-          description: Whether or not the parameter is optional
-          type: boolean
+
+    type_spec_integer:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: string
+          enum: ["integer"]
+        gt:
+          type: "integer"
+          description: 'input constraint to enforce: input > $gt'
+        lt:
+          type: "integer"
+          description: 'input constraint to enforce: input < $lt'
+        geq:
+          type: "integer"
+          description: 'input constraint to enforce: input >= $geq'
+        leq:
+          type: "integer"
+          description: 'input constraint to enforce: input <= $leq'
+
+    type_spec_boolean:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: string
+          enum: ["boolean"]
+
+    type_spec_enumeration:
+      type: object
+      required:
+        - id
+        - values
+      properties:
+        id:
+          type: string
+          enum: ["enumeration"]
+        values:
+          type: array
+          items:
+            $ref: "#/components/schemas/enum_item"
 
     typed_parameter_integer:
       allOf:
@@ -620,26 +661,7 @@ components:
             - type
           properties:
             type:
-              type: object
-              properties:
-                id:
-                  type: string
-                  enum: ["integer"]
-                gt:
-                  type: integer
-                  description: 'input constraint to enforce: input > $gt'
-                lt:
-                  type: integer
-                  description: 'input constraint to enforce: input < $lt'
-                geq:
-                  type: integer
-                  description: 'input constraint to enforce: input >= $geq'
-                leq:
-                  type: integer
-                  description: 'input constraint to enforce: input <= $leq'
-            default:
-              description: Default integer value. If omitted, no default value
-              type: integer
+              $ref: "#/components/schemas/type_spec_integer"
 
     typed_parameter_boolean:
       allOf:
@@ -649,14 +671,7 @@ components:
             - type
           properties:
             type:
-              type: object
-              properties:
-                id:
-                  type: string
-                  enum: ["boolean"]
-            default:
-              description: Default boolean value. If omitted, no default value
-              type: boolean
+              $ref: "#/components/schemas/type_spec_boolean"
 
     typed_parameter_enumeration:
       allOf:
@@ -666,24 +681,39 @@ components:
             - type
           properties:
             type:
-              type: object
-              properties:
-                id:
-                  type: string
-                  enum: ["enumeration"]
-                values:
-                  type: array
-                  items:
-                    $ref: "#/components/schemas/enum_item"
-            default:
-              description: Default value. If omitted, no default value. This value must always be one of the 'type.values' array for this parameter
-              type: string
+              $ref: "#/components/schemas/type_spec_enumeration"
 
     input_parameter:
-      oneOf:
-        - $ref: "#/components/schemas/typed_parameter_integer"
-        - $ref: "#/components/schemas/typed_parameter_boolean"
-        - $ref: "#/components/schemas/typed_parameter_enumeration"
+      type: object
+      allOf:
+        - oneOf:
+            - allOf:
+              - $ref: "#/components/schemas/typed_parameter_integer"
+              - type: object
+                properties:
+                  default:
+                    description: Default integer value. If omitted, no default value
+                    type: integer
+        - oneOf:
+            - allOf:
+              - $ref: "#/components/schemas/typed_parameter_boolean"
+              - type: object
+                properties:
+                  default:
+                    description: Default boolean value. If omitted, no default value
+                    type: boolean
+        - oneOf:
+            - allOf:
+              - $ref: "#/components/schemas/typed_parameter_enumeration"
+              - type: object
+                properties:
+                  default:
+                    description: Default enumeration value. If omitted, no default value
+                    type: string
+      properties:
+        optional:
+          description: Whether or not the parameter is optional
+          type: boolean
 
     output_parameter:
       oneOf:
