@@ -63,7 +63,7 @@ public class TestTaskBuilder {
     // add outputs for task one
     Set<Output> outputs = new HashSet<>();
     Output output = new Output();
-    output.setName("out");
+    output.setName("sum");
     output.setDisplayName("Sum");
     output.setDescription("Sum of operands A and B");
     IntegerType outputType = new IntegerType();

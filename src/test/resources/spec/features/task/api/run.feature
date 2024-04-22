@@ -161,7 +161,7 @@ Feature: [URS00003-TASK] Execute a task
     And the task run has an output parameter "sum"
     And a zip file is used which does not contain a file named "sum"
     When user calls the endpoint to post outputs with "<task_run_id>" HTTP method POST and the zip file as a binary payload
-    Then App Engine sends a "400" Bad Request response with a payload containing the error message (see OpenAPI spec) and code "APPE-internal-task_run-invalid-output-archive"
+    Then App Engine sends a "400" Bad Request response with a payload containing the error message (see OpenAPI spec) and code "APPE-internal-task-run-unknown-output"
 
     Examples:
       | task_run_id                          |

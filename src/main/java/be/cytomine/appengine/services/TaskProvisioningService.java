@@ -340,6 +340,7 @@ public class TaskProvisioningService {
                         remainingOutputs.remove(i);
                         break;
                     }
+                    currentOutput = null;
                 }
 
                 // there's a file that do not match any output parameter
