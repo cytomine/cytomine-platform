@@ -72,8 +72,8 @@ Feature: [URS00003-TASK] Execute a task
 
     Examples:
       | task_run_id                          | task_run_state | param1_name | param1_type | param1_value | param2_name | param2_type | param2_value |
-      | acde070d-8c4c-4f0d-9d8a-162843c10333 | FINISHED       | num1        | integer     | 5            | num2        | integer     | 10           |
-      | 123e4567-e89b-12d3-a456-426614174001 | RUNNING        | num1        | integer     | 25           | num2        | integer     | 54           |
+      | acde070d-8c4c-4f0d-9d8a-162843c10333 | FINISHED       | a           | integer     | 5            | b           | integer     | 10           |
+      | 123e4567-e89b-12d3-a456-426614174001 | RUNNING        | a           | integer     | 25           | b           | integer     | 54           |
 
   @Scheduler
   Scenario Outline: unsuccessful fetch of task run inputs archive in a created task run
