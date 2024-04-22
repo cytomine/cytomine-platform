@@ -2,12 +2,12 @@ package be.cytomine.appengine.integration.cucumber;
 
 import be.cytomine.appengine.AppEngineApplication;
 import be.cytomine.appengine.dto.handlers.filestorage.Storage;
-import be.cytomine.appengine.dto.inputs.task.types.integer.IntegerTypeConstraint;
-import be.cytomine.appengine.dto.misc.TaskIdentifiers;
 import be.cytomine.appengine.exceptions.FileStorageException;
 import be.cytomine.appengine.handlers.FileData;
 import be.cytomine.appengine.handlers.FileStorageHandler;
 import be.cytomine.appengine.models.task.*;
+import be.cytomine.appengine.models.task.integer.IntegerPersistence;
+import be.cytomine.appengine.models.task.integer.IntegerType;
 import be.cytomine.appengine.openapi.api.DefaultApi;
 import be.cytomine.appengine.openapi.invoker.ApiClient;
 import be.cytomine.appengine.openapi.invoker.ApiException;
@@ -16,7 +16,8 @@ import be.cytomine.appengine.openapi.model.TaskRun;
 import be.cytomine.appengine.openapi.model.TaskRunInputProvision;
 import be.cytomine.appengine.openapi.model.TaskRunInputProvisionInputBody;
 import be.cytomine.appengine.openapi.model.TaskRunInputProvisionInputBodyValue;
-import be.cytomine.appengine.repositories.IntegerProvisionRepository;
+import be.cytomine.appengine.repositories.TypePersistenceRepository;
+import be.cytomine.appengine.repositories.integer.IntegerPersistenceRepository;
 import be.cytomine.appengine.repositories.RunRepository;
 import be.cytomine.appengine.repositories.TaskRepository;
 import be.cytomine.appengine.states.TaskRunState;
@@ -34,7 +35,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootContextLoader;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.util.Assert;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -55,7 +55,10 @@ public class ProvisionTaskStepDefinitions {
     RunRepository taskRunRepository;
 
     @Autowired
-    IntegerProvisionRepository integerProvisionRepository;
+    IntegerPersistenceRepository integerProvisionRepository;
+
+    @Autowired
+    TypePersistenceRepository typePersistenceRepository;
 
     @Autowired
     private DefaultApi appEngineApi;
@@ -172,14 +175,26 @@ public class ProvisionTaskStepDefinitions {
         fileStorageHandler.createStorage(runStorage);
     }
 
-    @Given("a task run has been created and provisioned with parameter {string} value {string} for this task")
-    public void a_task_run_has_been_created_for_this_task(String parameterName, String initialValue) throws FileStorageException {
+    @Given("a task run has been created and provisioned with parameter {string} value {int} for this task")
+    public void a_task_run_has_been_created_for_this_task(String parameterName, int initialValue) throws FileStorageException {
         run = new Run(UUID.randomUUID(), TaskRunState.CREATED, persistedTask);
 
-        IntegerProvision provision = new IntegerProvision(parameterName, Integer.parseInt(initialValue), run.getId());
+        IntegerPersistence provision = new IntegerPersistence();
+        // parameterName, initialValue, run.getId()
+        provision.setRunId(run.getId());
+        provision.setValueType(ValueType.INTEGER);
+        provision.setValue(initialValue);
+        provision.setParameterName(parameterName);
+        provision.setParameterType(ParameterType.INPUT);
         run.getProvisions().add(provision);
         if (parameterName.equals("b")) {
-            IntegerProvision provisionInputA = new IntegerProvision("a", 10, run.getId());
+            IntegerPersistence provisionInputA = new IntegerPersistence();
+            provision.setRunId(run.getId());
+            provision.setValueType(ValueType.INTEGER);
+            provision.setValue(10);
+            provision.setParameterName("a");
+            provision.setParameterType(ParameterType.INPUT);
+            //"a", String.valueOf(10), run.getId()
             run.getProvisions().add(provisionInputA);
             run.setState(TaskRunState.PROVISIONED);
         }
@@ -191,8 +206,8 @@ public class ProvisionTaskStepDefinitions {
 
     @Given("this task run has not been provisioned yet and is therefore in state {string}")
     public void this_task_run_has_not_been_provisioned_yet_and_is_therefore_in_state(String state) {
-        integerProvisionRepository.deleteAll();
-        List<IntegerProvision> provisions = integerProvisionRepository.findIntegerProvisionByRunId(run.getId());
+        typePersistenceRepository.deleteAll();
+        List<TypePersistence> provisions = typePersistenceRepository.findTypePersistenceByRunIdAndParameterType(run.getId() , ParameterType.INPUT);
         Assertions.assertTrue(provisions.isEmpty());
     }
 
@@ -214,7 +229,7 @@ public class ProvisionTaskStepDefinitions {
     @Then("the value {string} is saved and associated parameter {string} in the database")
     public void the_value_is_saved_and_associated_parameter_in_the_database(String value, String parameterName) {
 
-        IntegerProvision provision = integerProvisionRepository.findIntegerProvisionByParameterNameAndRunId(parameterName, run.getId());
+        IntegerPersistence provision = integerProvisionRepository.findIntegerPersistenceByParameterNameAndRunIdAndParameterType(parameterName, run.getId() , ParameterType.INPUT);
         Assertions.assertNotNull(provision);
         Assertions.assertTrue(provision.getParameterName().equalsIgnoreCase(parameterName));
     }
@@ -284,7 +299,7 @@ public class ProvisionTaskStepDefinitions {
 
     @Then("the value {string} is saved and associated with parameter {string} in the database")
     public void the_value_is_saved_and_associated_with_parameter_in_the_database(String value, String parameterName) {
-        IntegerProvision provision = integerProvisionRepository.findIntegerProvisionByParameterNameAndRunId(parameterName, run.getId());
+        IntegerPersistence provision = integerProvisionRepository.findIntegerPersistenceByParameterNameAndRunIdAndParameterType(parameterName, run.getId() , ParameterType.INPUT);
         Assertions.assertNotNull(provision);
         Assertions.assertTrue(provision.getParameterName().equalsIgnoreCase(parameterName));
     }
@@ -320,7 +335,7 @@ public class ProvisionTaskStepDefinitions {
 
     @Then("the value {string} is saved and associated with parameter {string} after passing the validation rule {string}")
     public void the_value_is_saved_and_associated_with_parameter_after_passing_the_validation_rule(String value, String parameterName, String validationRule) {
-        IntegerProvision provision = integerProvisionRepository.findIntegerProvisionByParameterNameAndRunId(parameterName, run.getId());
+        TypePersistence provision = integerProvisionRepository.findIntegerPersistenceByParameterNameAndRunIdAndParameterType(parameterName, run.getId() , ParameterType.INPUT);
         Assertions.assertNotNull(provision);
         Assertions.assertTrue(provision.getParameterName().equalsIgnoreCase(parameterName));
     }
@@ -343,7 +358,7 @@ public class ProvisionTaskStepDefinitions {
 
     @Then("the App Engine does not record {string} nor {string} in file storage or database")
     public void the_app_engine_does_not_record_nor_in_file_storage_or_database(String parameterOneValue, String parameterTwoValue) {
-        List<IntegerProvision> provisionList = integerProvisionRepository.findIntegerProvisionByRunId(run.getId());
+        List<IntegerPersistence> provisionList = integerProvisionRepository.findIntegerPersistenceByRunIdAndParameterType(run.getId() , ParameterType.INPUT);
         Assertions.assertTrue(provisionList.isEmpty());
     }
 
@@ -400,12 +415,12 @@ public class ProvisionTaskStepDefinitions {
         Assertions.assertEquals(run.getState().toString(), state);
     }
 
-    @Then("the value of parameter {string} is updated to {string} in the database")
-    public void the_value_of_parameter_is_updated_to_in_the_database(String parameterName, String newValue) {
-        IntegerProvision provision = integerProvisionRepository.findIntegerProvisionByParameterNameAndRunId(parameterName, run.getId());
+    @Then("the value of parameter {string} is updated to {int} in the database")
+    public void the_value_of_parameter_is_updated_to_in_the_database(String parameterName, int newValue) {
+        IntegerPersistence provision = integerProvisionRepository.findIntegerPersistenceByParameterNameAndRunIdAndParameterType(parameterName, run.getId() , ParameterType.INPUT);
         Assertions.assertNotNull(provision);
         Assertions.assertTrue(provision.getParameterName().equalsIgnoreCase(parameterName));
-        Assertions.assertEquals(provision.getValue(), Integer.parseInt(newValue));
+        Assertions.assertEquals(provision.getValue(), newValue);
     }
 
     @Then("the input file named {string} is updated in the task run storage {string}+UUID with content {string}")
