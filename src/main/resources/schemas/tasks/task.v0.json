@@ -176,7 +176,6 @@
             "type": "string",
             "minLength": 1
           },
-          "optional": {"$ref": "#/$defs/io/parameter/optional"},
           "description": {"$ref": "#/$defs/io/parameter/description"}
         }
       },
@@ -295,8 +294,7 @@
           ],
           "required": ["type"],
           "properties": {
-            "type": {"$ref": "#/$defs/io/type_specs/integer"},
-            "default": {"type": "integer"}
+            "type": {"$ref": "#/$defs/io/type_specs/integer"}
           },
           "unevaluatedProperties": false
         },
@@ -307,8 +305,7 @@
           ],
           "required": ["type"],
           "properties": {
-            "type": {"$ref": "#/$defs/io/type_specs/boolean"},
-            "default": {"type": "boolean"}
+            "type": {"$ref": "#/$defs/io/type_specs/boolean"}
           },
           "unevaluatedProperties": false
         },
@@ -319,8 +316,7 @@
           ],
           "required": ["type"],
           "properties": {
-            "type": {"$ref": "#/$defs/io/type_specs/number"},
-            "default": {"type": "number"}
+            "type": {"$ref": "#/$defs/io/type_specs/number"}
           },
           "unevaluatedProperties": false
         },
@@ -331,8 +327,7 @@
           ],
           "required": ["type"],
           "properties": {
-            "type": {"$ref": "#/$defs/io/type_specs/string"},
-            "default": {"type": "string"}
+            "type": {"$ref": "#/$defs/io/type_specs/string"}
           },
           "unevaluatedProperties": false
         },
@@ -343,8 +338,7 @@
           ],
           "required": ["type"],
           "properties": {
-            "type": {"$ref": "#/$defs/io/type_specs/enumeration"},
-            "default": {"$ref": "#/$defs/types/enum_item"}
+            "type": {"$ref": "#/$defs/io/type_specs/enumeration"}
           },
           "unevaluatedProperties": false
         },
@@ -355,23 +349,60 @@
           ],
           "required": ["type"],
           "properties": {
-            "type": {"$ref": "#/$defs/io/type_specs/datetime"},
-            "default": {
-              "type": "string",
-              "format": "date-time"
-            }
+            "type": {"$ref": "#/$defs/io/type_specs/datetime"}
           },
           "unevaluatedProperties": false
         }
       },
       "input_parameter": {
-        "oneOf": [
-          {"$ref": "#/$defs/io/typed_parameter/integer"},
-          {"$ref": "#/$defs/io/typed_parameter/boolean"},
-          {"$ref": "#/$defs/io/typed_parameter/number"},
-          {"$ref": "#/$defs/io/typed_parameter/string"},
-          {"$ref": "#/$defs/io/typed_parameter/enumeration"},
-          {"$ref": "#/$defs/io/typed_parameter/datetime"}
+        "$comment": "input definition is more verbose than output's because we increase with 'default' and 'optional' fields which are not available for outputs",
+        "allOf": [
+          {
+            "oneOf": [
+              {
+                "allOf": [
+                  {"$ref": "#/$defs/io/typed_parameter/integer"},
+                  { "type": "object", "properties": { "default": {"type": "integer"}} }
+                ]
+              },
+              {
+                "allOf": [
+                  {"$ref": "#/$defs/io/typed_parameter/boolean"},
+                  { "type": "object", "properties": { "default": {"type": "boolean"}} }
+                ]
+              },
+              {
+                "allOf": [
+                  {"$ref": "#/$defs/io/typed_parameter/number"},
+                  { "type": "object", "properties": { "default": {"type": "number"}} }
+                ]
+              },
+              {
+                "allOf": [
+                  {"$ref": "#/$defs/io/typed_parameter/string"},
+                  { "type": "object", "properties": { "default": {"type": "string"}} }
+                ]
+              },
+              {
+                "allOf": [
+                  {"$ref": "#/$defs/io/typed_parameter/enumeration"},
+                  { "type": "object", "properties": { "default": {"$ref": "#/$defs/types/enum_item"}} }
+                ]
+              },
+              {
+                "allOf": [
+                  {"$ref": "#/$defs/io/typed_parameter/datetime"},
+                  { "type": "object", "properties": {"default": { "type": "string", "format": "date-time"}} }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "optional": {"$ref": "#/$defs/io/parameter/optional"}
+            }
+          }
         ]
       },
       "output_parameter": {
