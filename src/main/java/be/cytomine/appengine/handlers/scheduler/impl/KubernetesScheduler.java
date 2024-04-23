@@ -66,6 +66,16 @@ public class KubernetesScheduler implements SchedulerHandler {
         }
     }
 
+    private String getRegistryAddress() throws SchedulingException {
+        try {
+            InetAddress address = InetAddress.getByName(registryHost);
+            return address.getHostAddress() + ":" + registryPort;
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+            throw new SchedulingException("Failed to get the hostname of the registry");
+        }
+    }
+
     @PostConstruct
     private void initUrl() throws SchedulingException {
         String port = environment.getProperty("server.port");
@@ -95,7 +105,6 @@ public class KubernetesScheduler implements SchedulerHandler {
         logger.info("Schedule: create post task pod...");
 
         String url = baseUrl + runId;
-        String outputPath = baseOutputPath + runId;
         String outputFolder = labels.get("outputFolder");
 
         // Post container commands
@@ -139,7 +148,7 @@ public class KubernetesScheduler implements SchedulerHandler {
                 .addToVolumes(new VolumeBuilder()
                         .withName("outputs")
                         .withHostPath(new HostPathVolumeSourceBuilder()
-                                .withPath(outputPath)
+                                .withPath(baseOutputPath + runId)
                                 .build())
                         .build())
 
@@ -170,11 +179,8 @@ public class KubernetesScheduler implements SchedulerHandler {
         String runId = run.getId().toString();
         Task task = run.getTask();
 
-        String inputPath = baseInputPath + runId;
-        String outputPath = baseOutputPath + runId;
-
         String podName = task.getName().toLowerCase().replaceAll("[^a-zA-Z0-9]", "") + "-" + runId;
-        String imageName = "localhost:5051/" + task.getImageName();
+        String imageName = getRegistryAddress() + "/" + task.getImageName();
 
         // Pre container commands
         String url = baseUrl + runId;
@@ -239,13 +245,13 @@ public class KubernetesScheduler implements SchedulerHandler {
                 .addToVolumes(new VolumeBuilder()
                         .withName("inputs")
                         .withHostPath(new HostPathVolumeSourceBuilder()
-                                .withPath(inputPath)
+                                .withPath(baseInputPath + runId)
                                 .build())
                         .build())
                 .addToVolumes(new VolumeBuilder()
                         .withName("outputs")
                         .withHostPath(new HostPathVolumeSourceBuilder()
-                                .withPath(outputPath)
+                                .withPath(baseOutputPath + runId)
                                 .build())
                         .build())
 
