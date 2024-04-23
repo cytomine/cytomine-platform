@@ -1,0 +1,157 @@
+package be.cytomine.appengine.models.task.integer;
+
+import be.cytomine.appengine.dto.inputs.task.TaskRunParameterValue;
+import be.cytomine.appengine.dto.inputs.task.types.integer.IntegerTypeConstraint;
+import be.cytomine.appengine.dto.inputs.task.types.integer.IntegerValue;
+import be.cytomine.appengine.dto.responses.errors.ErrorCode;
+import be.cytomine.appengine.exceptions.TypeValidationException;
+import be.cytomine.appengine.handlers.FileData;
+import be.cytomine.appengine.models.task.*;
+import be.cytomine.appengine.repositories.integer.IntegerPersistenceRepository;
+import be.cytomine.appengine.utils.AppEngineApplicationContext;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import jakarta.persistence.*;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+
+import java.util.UUID;
+
+@Entity
+@Data
+@EqualsAndHashCode(callSuper = true)
+public class IntegerType extends Type {
+
+    @Column(nullable = true)
+    private Integer gt;
+    @Column(nullable = true)
+    private Integer lt;
+    @Column(nullable = true)
+    private Integer geq;
+    @Column(nullable = true)
+    private Integer leq;
+
+
+    public void setConstraint(IntegerTypeConstraint constraint, Integer value) {
+        switch (constraint) {
+            case GREATER_EQUAL:
+                this.setGeq(value);
+                break;
+            case GREATER_THAN:
+                this.setGt(value);
+                break;
+            case LOWER_EQUAL:
+                this.setLeq(value);
+                break;
+            case LOWER_THAN:
+                this.setLt(value);
+                break;
+        }
+    }
+
+    @Override
+    public void validate(Object valueObject) throws TypeValidationException {
+        Integer value = (Integer) valueObject;
+        if (this.hasConstraint(IntegerTypeConstraint.GREATER_THAN) && value <= this.getGt())
+            throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_GT_VALIDATION_ERROR);
+        if (this.hasConstraint(IntegerTypeConstraint.GREATER_EQUAL) && value < this.getGeq())
+            throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_GEQ_VALIDATION_ERROR);
+        if (this.hasConstraint(IntegerTypeConstraint.LOWER_THAN) && value >= this.getLt())
+            throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_LT_VALIDATION_ERROR);
+        if (this.hasConstraint(IntegerTypeConstraint.LOWER_EQUAL) && value > this.getLeq())
+            throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_LEQ_VALIDATION_ERROR);
+    }
+
+    public boolean hasConstraint(IntegerTypeConstraint constraint) {
+        return switch (constraint) {
+            case GREATER_EQUAL -> this.geq != null;
+            case GREATER_THAN -> this.gt != null;
+            case LOWER_EQUAL -> this.leq != null;
+            case LOWER_THAN -> this.lt != null;
+            default -> false;
+        };
+    }
+
+    public boolean hasConstraint(String constraintKey) {
+        return this.hasConstraint(IntegerTypeConstraint.getConstraint(constraintKey));
+    }
+
+    @Override
+    public void persistProvision(JsonNode provision, UUID runId) {
+        IntegerPersistenceRepository integerPersistenceRepository = AppEngineApplicationContext.getBean(IntegerPersistenceRepository.class);
+        String parameterName = provision.get("param_name").asText();
+        int value = provision.get("value").asInt();
+        IntegerPersistence persistedProvision = integerPersistenceRepository.findIntegerPersistenceByParameterNameAndRunIdAndParameterType(parameterName, runId, ParameterType.INPUT);
+        if (persistedProvision == null) {
+            persistedProvision = new IntegerPersistence();
+            persistedProvision.setValueType(ValueType.INTEGER);
+            persistedProvision.setParameterType(ParameterType.INPUT);
+            persistedProvision.setParameterName(parameterName);
+            persistedProvision.setRunId(runId);
+            persistedProvision.setValue(value);
+            integerPersistenceRepository.save(persistedProvision);
+        } else {
+
+            persistedProvision.setValue(value);
+            integerPersistenceRepository.saveAndFlush(persistedProvision);
+        }
+    }
+
+    @Override
+    public void persistResult(Run run, Output currentOutput, String outputValue) {
+        IntegerPersistenceRepository integerPersistenceRepository = AppEngineApplicationContext.getBean(IntegerPersistenceRepository.class);
+        IntegerPersistence result = integerPersistenceRepository.findIntegerPersistenceByParameterNameAndRunIdAndParameterType(currentOutput.getName(), run.getId(), ParameterType.INPUT);
+        if (result == null) {
+            result = new IntegerPersistence();
+            result.setValue(Integer.parseInt(outputValue));
+            result.setValueType(ValueType.INTEGER);
+            result.setParameterType(ParameterType.OUTPUT);
+            result.setRunId(run.getId());
+            result.setParameterName(currentOutput.getName());
+            integerPersistenceRepository.save(result);
+        } else {
+            result.setValue(Integer.parseInt(outputValue));
+            integerPersistenceRepository.saveAndFlush(result);
+        }
+    }
+
+    @Override
+    public FileData mapToStorageFileData(JsonNode provision, String charset) {
+        String value = provision.get("value").asText();
+        String parameterName = provision.get("param_name").asText();
+        byte[] inputFileData = value.getBytes(getStorageCharset(charset));
+        return new FileData(inputFileData, parameterName);
+    }
+
+
+    @Override
+    public JsonNode createTypedParameterResponse(JsonNode provision, Run run) {
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode provisionedParameter = mapper.createObjectNode();
+        provisionedParameter.put("param_name", provision.get("param_name").asText());
+        provisionedParameter.put("value", provision.get("value").asInt());
+        provisionedParameter.put("task_run_id", String.valueOf(run.getId()));
+        return provisionedParameter;
+    }
+
+    @Override
+    public IntegerValue buildTaskRunParameterValue(String output, UUID id, String outputName) {
+        IntegerValue integerValue = new IntegerValue();
+        integerValue.setTask_run_id(id);
+        integerValue.setValue(Integer.parseInt(output));
+        integerValue.setParam_name(outputName);
+        return integerValue;
+    }
+
+    @Override
+    public TaskRunParameterValue buildTaskRunParameterValue(TypePersistence typePersistence) {
+        IntegerPersistence integerPersistence = (IntegerPersistence) typePersistence;
+        IntegerValue integerValue = new IntegerValue();
+        integerValue.setTask_run_id(integerPersistence.getRunId());
+        integerValue.setValue(integerPersistence.getValue());
+        integerValue.setParam_name(integerPersistence.getParameterName());
+        return integerValue;
+    }
+}

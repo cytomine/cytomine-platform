@@ -1,11 +1,18 @@
 package be.cytomine.appengine.models.task;
 
+import be.cytomine.appengine.dto.inputs.task.TaskRunParameterValue;
+import be.cytomine.appengine.exceptions.TypeValidationException;
+import be.cytomine.appengine.handlers.FileData;
 import be.cytomine.appengine.models.BaseEntity;
+import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Entity
@@ -19,7 +26,37 @@ public class Type extends BaseEntity{
     @Column(name = "identifier", updatable = false, nullable = false)
     @GeneratedValue(generator = "UUID")
     private UUID identifier;
+    private String id;  // as found in the descriptor
 
     @ElementCollection
     private List<String> constraints; // used to track which constraints are defined for this type object
+
+    public void validate(Object value) throws TypeValidationException {}
+
+    public void persistProvision(JsonNode provision , UUID runId){};
+
+    public void persistResult(Run runOptional, Output currentOutput, String outputValue){};
+
+    public FileData mapToStorageFileData(JsonNode provision , String charset) {
+        return null;
+    }
+
+    public Charset getStorageCharset(String charset) {
+        return switch (charset.toUpperCase()) {
+            case "US_ASCII" -> StandardCharsets.US_ASCII;
+            case "ISO_8859_1" -> StandardCharsets.ISO_8859_1;
+            case "UTF_16LE" -> StandardCharsets.UTF_16LE;
+            case "UTF_16BE" -> StandardCharsets.UTF_16BE;
+            case "UTF_16" -> StandardCharsets.UTF_16;
+            default -> StandardCharsets.UTF_8;
+        };
+    }
+
+    public JsonNode createTypedParameterResponse(JsonNode provision, Run run) {
+        return null;
+    }
+
+    public TaskRunParameterValue buildTaskRunParameterValue(String trimmedOutput, UUID id, String outputName) {return null;}
+
+    public TaskRunParameterValue buildTaskRunParameterValue(TypePersistence typePersistence) {return null;}
 }
