@@ -574,11 +574,17 @@ components:
           items:
             $ref: "#/components/schemas/contact"
 
+    enum_item:
+      type: string
+      maxLength: 256
+      minLength: 1
+
     param_type_identifier:
       type: string
       enum:
         - integer
         - boolean
+        - enumeration
 
     base_parameter:
       type: object
@@ -633,6 +639,20 @@ components:
           type: string
           enum: ["boolean"]
 
+    type_spec_enumeration:
+      type: object
+      required:
+        - id
+        - values
+      properties:
+        id:
+          type: string
+          enum: ["enumeration"]
+        values:
+          type: array
+          items:
+            $ref: "#/components/schemas/enum_item"
+
     typed_parameter_integer:
       allOf:
         - $ref: "#/components/schemas/base_parameter"
@@ -653,6 +673,16 @@ components:
             type:
               $ref: "#/components/schemas/type_spec_boolean"
 
+    typed_parameter_enumeration:
+      allOf:
+        - $ref: "#/components/schemas/base_parameter"
+        - type: object
+          required:
+            - type
+          properties:
+            type:
+              $ref: "#/components/schemas/type_spec_enumeration"
+
     input_parameter:
       type: object
       allOf:
@@ -672,6 +702,14 @@ components:
                   default:
                     description: Default boolean value. If omitted, no default value
                     type: boolean
+        - oneOf:
+            - allOf:
+              - $ref: "#/components/schemas/typed_parameter_enumeration"
+              - type: object
+                properties:
+                  default:
+                    description: Default enumeration value. If omitted, no default value
+                    type: string
       properties:
         optional:
           description: Whether or not the parameter is optional
@@ -681,6 +719,7 @@ components:
       oneOf:
         - $ref: "#/components/schemas/typed_parameter_integer"
         - $ref: "#/components/schemas/typed_parameter_boolean"
+        - $ref: "#/components/schemas/typed_parameter_enumeration"
 
     task_run_state:
       type: string
@@ -763,6 +802,7 @@ components:
           oneOf:
             - type: integer
             - type: boolean
+            - $ref: "#/components/schemas/enum_item"
         param_name:
           $ref: "#/components/schemas/param_name_type"
 
@@ -879,6 +919,7 @@ components:
         - oneOf:
             - $ref: "#/components/schemas/integer_task_run_parameter"
             - $ref: "#/components/schemas/boolean_task_run_parameter"
+            - $ref: "#/components/schemas/enumeration_task_run_parameter"
 
     integer_task_run_parameter:
       type: object
@@ -899,6 +940,23 @@ components:
           enum: ["boolean"]
         value:
           type: boolean
+
+    enumeration_task_run_parameter:
+      type: object
+      required: ["value", "type"]
+      properties:
+        type:
+          type: string
+          enum: ["enumeration"]
+        value:
+          allOf:
+            - $ref: "#/components/schemas/enum_item"
+            - description: actual value, must be one of the values of the 'enum_values' array
+        enum_values:
+          type: array
+          items:
+            $ref: "#/components/schemas/enum_item"
+          description: the list of available values in the enumeration
 
     task_run_output:
       $ref: "#/components/schemas/typed_task_run_parameter"
