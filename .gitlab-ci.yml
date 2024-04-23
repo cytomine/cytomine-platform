@@ -11,7 +11,7 @@ variables:
   APPENGINE_TASKS_PATH: GitLab/Artifacts/AppEngine/Tasks
   ADD_INTEGER_TASK_NAME: com.cytomine.dummy.arithmetic.integer.addition-1.0.0.zip
   IDENTITY_BOOLEAN_TASK_NAME: com.cytomine.dummy.identity.boolean-1.0.0.zip
-  IDENTITY_NUMBER_TASK_NAME: com.cytomine.dummy.identity.boolean-1.0.0.zip
+  IDENTITY_NUMBER_TASK_NAME: com.cytomine.dummy.identity.number-1.0.0.zip
   TEST_ARTIFACT_PATH: ./src/test/resources/artifacts
 
 
