@@ -45,17 +45,35 @@ public class KubernetesScheduler implements SchedulerHandler {
     @Value("${app-engine.api_version}")
     private String apiVersion;
 
-    @Value("${HOSTNAME}")
-    private String hostname;
+    @Value("${registry-client.host}")
+    private String registryHost;
+
+    @Value("${registry-client.port}")
+    private String registryPort;
+
+    private String baseUrl;
+
+    private String baseInputPath;
+
+    private String baseOutputPath;
 
     private String getHostAddress() throws SchedulingException {
         try {
-            InetAddress address = InetAddress.getByName(hostname);
-            return address.getHostAddress();
+            return InetAddress.getLocalHost().getHostAddress();
         } catch (UnknownHostException e) {
             e.printStackTrace();
-            throw new SchedulingException("Failed to get the hostname");
+            throw new SchedulingException("Failed to get the hostname the app engine");
         }
+    }
+
+    @PostConstruct
+    private void initUrl() throws SchedulingException {
+        String port = environment.getProperty("server.port");
+        String hostAddress = getHostAddress();
+
+        this.baseUrl = hostAddress + ":" + port + "/app-engine/v1/task-runs/";
+        this.baseInputPath = "/tmp/app-engine/task-run-inputs-";
+        this.baseOutputPath = "/tmp/app-engine/task-run-outputs-";
     }
 
     @EventListener
@@ -76,11 +94,8 @@ public class KubernetesScheduler implements SchedulerHandler {
 
         logger.info("Schedule: create post task pod...");
 
-        String port = environment.getProperty("server.port");
-        String hostAddress = getHostAddress();
-
-        String url = "http://" + hostAddress + ":" + port + "/app-engine/v1/task-runs/" + runId;
-        String outputPath = "/tmp/app-engine/task-run-outputs-" + runId;
+        String url = baseUrl + runId;
+        String outputPath = baseOutputPath + runId;
         String outputFolder = labels.get("outputFolder");
 
         // Post container commands
@@ -151,21 +166,18 @@ public class KubernetesScheduler implements SchedulerHandler {
     public Schedule schedule(Schedule schedule) throws SchedulingException {
         logger.info("Schedule: get Task parameters");
 
-        String port = environment.getProperty("server.port");
-        String hostAddress = getHostAddress();
-
         Run run = schedule.getRun();
         String runId = run.getId().toString();
         Task task = run.getTask();
 
-        String inputPath = "/tmp/app-engine/task-run-inputs-" + runId;
-        String outputPath = "/tmp/app-engine/task-run-outputs-" + runId;
+        String inputPath = baseInputPath + runId;
+        String outputPath = baseOutputPath + runId;
 
         String podName = task.getName().toLowerCase().replaceAll("[^a-zA-Z0-9]", "") + "-" + runId;
         String imageName = "localhost:5051/" + task.getImageName();
 
         // Pre container commands
-        String url = "http://" + hostAddress + ":" + port + "/app-engine/v1/task-runs/" + runId;
+        String url = baseUrl + runId;
         String installDeps = "apk --no-cache add curl zip";
         String fetchInputs = "curl -L -o inputs.zip " + url + "/inputs.zip";
         String unzipInputs = "unzip -o inputs.zip -d " + task.getInputFolder();
@@ -282,7 +294,6 @@ public class KubernetesScheduler implements SchedulerHandler {
                     .pods()
                     .inNamespace("default")
                     .watch(podWatcher);
-
         } catch (KubernetesClientException e) {
             throw new SchedulingException("Failed to add watcher to the cluster");
         }
