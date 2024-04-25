@@ -170,6 +170,20 @@
         }
       },
       "type_specs": {
+        "boolean": {
+          "oneOf": [
+            {
+              "const": "boolean"
+            },
+            {
+              "type": "object",
+              "required": ["id"],
+              "properties": {
+                "id": {"const": "boolean"}
+              }
+            }
+          ]
+        },
         "integer": {
           "oneOf": [
             {
@@ -200,6 +214,17 @@
         }
       },
       "typed_parameter": {
+        "boolean": {
+          "allOf": [
+            {"$ref": "#/$defs/io/base_parameter"}
+          ],
+          "required": ["type"],
+          "properties": {
+            "type": {"$ref": "#/$defs/io/type_specs/boolean"},
+            "default": {"type": "boolean"}
+          },
+          "unevaluatedProperties": false
+        },
         "integer": {
           "allOf": [
             {"$ref": "#/$defs/io/base_parameter"}
@@ -214,11 +239,13 @@
       },
       "input_parameter": {
         "oneOf": [
+          {"$ref": "#/$defs/io/typed_parameter/boolean"},
           {"$ref": "#/$defs/io/typed_parameter/integer"}
         ]
       },
       "output_parameter": {
         "oneOf": [
+          {"$ref": "#/$defs/io/typed_parameter/boolean"},
           {"$ref": "#/$defs/io/typed_parameter/integer"}
         ]
       }
