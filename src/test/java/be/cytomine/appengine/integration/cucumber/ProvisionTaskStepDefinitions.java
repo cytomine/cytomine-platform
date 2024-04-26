@@ -409,8 +409,21 @@ public class ProvisionTaskStepDefinitions {
     public void this_task_has_at_least_one_input_parameter_of_type(String paramName, String type) {
         // Check if the set contains an object matching the conditions
         // Will raise an error if the persisted task is not valid with the test
-        Assertions.assertTrue(persistedTask.getInputs().stream()
-                .anyMatch(input -> ((IntegerType)input.getType()).getId().equals(type) && input.getName().equals(paramName)));
+        boolean hasInput = persistedTask
+                .getInputs()
+                .stream()
+                .anyMatch(input -> {
+                    switch (type) {
+                        case "boolean":
+                            return ((BooleanType) input.getType()).getId().equals(type) && input.getName().equals(paramName);
+                        case "integer":
+                            return ((IntegerType) input.getType()).getId().equals(type) && input.getName().equals(paramName);
+                        default:
+                            return false;
+                    }
+                });
+
+        Assertions.assertTrue(hasInput);
     }
 
     @Then("the task run state remains unchanged and set to {string}")

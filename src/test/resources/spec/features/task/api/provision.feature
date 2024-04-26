@@ -161,9 +161,9 @@ Feature: [URS00003-TASK] Provision a task run
     And the App Engine returns a '200 OK' HTTP response with the updated task run information as JSON payload
 
     Examples:
-      | task_namespace                                 | task_version | param_name | param_type | initial_param_value | new_param_value | payload                                   | task_run_state | param_file_initial_content | param_file_new_content |
-      | com.cytomine.dummy.arithmetic.integer.addition | 1.0.0        | a          | integer    | 5                   | 10              | {\"param_name\": \"a\", \"value\": 10}    | CREATED        | 5                          | 10                     |
-      | com.cytomine.dummy.arithmetic.integer.addition | 1.0.0        | b          | integer    | 20                  | 30              | {\"param_name\": \"b\", \"value\": 30}    | PROVISIONED    | 20                         | 30                     |
-      | com.cytomine.dummy.identity.boolean            | 1.0.0        | input      | boolean    | true                | false           | {\"param_name\": \"b\", \"value\": false} | PROVISIONED    | true                       | false                  |
+      | task_namespace                                 | task_version | param_name | param_type | initial_param_value | new_param_value | payload                                       | task_run_state | param_file_initial_content | param_file_new_content |
+      | com.cytomine.dummy.arithmetic.integer.addition | 1.0.0        | a          | integer    | 5                   | 10              | {\"param_name\": \"a\", \"value\": 10}        | CREATED        | 5                          | 10                     |
+      | com.cytomine.dummy.arithmetic.integer.addition | 1.0.0        | b          | integer    | 20                  | 30              | {\"param_name\": \"b\", \"value\": 30}        | PROVISIONED    | 20                         | 30                     |
+      | com.cytomine.dummy.identity.boolean            | 1.0.0        | input      | boolean    | true                | false           | {\"param_name\": \"input\", \"value\": false} | PROVISIONED    | true                       | false                  |
 
   # TODO failed re-provisioning of a task of which the state is not one of {'CREATED', 'PROVISIONED'}
