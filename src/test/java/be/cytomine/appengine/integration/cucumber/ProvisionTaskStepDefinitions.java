@@ -6,6 +6,7 @@ import be.cytomine.appengine.exceptions.FileStorageException;
 import be.cytomine.appengine.handlers.FileData;
 import be.cytomine.appengine.handlers.FileStorageHandler;
 import be.cytomine.appengine.models.task.*;
+import be.cytomine.appengine.models.task.bool.BooleanType;
 import be.cytomine.appengine.models.task.integer.IntegerPersistence;
 import be.cytomine.appengine.models.task.integer.IntegerType;
 import be.cytomine.appengine.openapi.api.DefaultApi;
@@ -13,7 +14,6 @@ import be.cytomine.appengine.openapi.invoker.ApiClient;
 import be.cytomine.appengine.openapi.invoker.ApiException;
 import be.cytomine.appengine.openapi.invoker.Configuration;
 import be.cytomine.appengine.openapi.model.TaskRun;
-import be.cytomine.appengine.openapi.model.TaskRunInputProvision;
 import be.cytomine.appengine.openapi.model.TaskRunInputProvisionInputBody;
 import be.cytomine.appengine.openapi.model.TaskRunInputProvisionInputBodyValue;
 import be.cytomine.appengine.repositories.TypePersistenceRepository;
@@ -35,9 +35,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootContextLoader;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.ContextConfiguration;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -90,8 +87,8 @@ public class ProvisionTaskStepDefinitions {
 
     @Given("this task has {string} and {string}")
     public void this_task_has_and(String namespace, String version) {
-        persistedTask.setNamespace(namespace);
-        persistedTask.setVersion(version);
+        String bundleFilename = namespace + "-" + version + ".zip";
+        persistedTask = TestTaskBuilder.buildTaskFromResource(bundleFilename);
         persistedTask = taskRepository.save(persistedTask);
     }
 
@@ -153,10 +150,18 @@ public class ProvisionTaskStepDefinitions {
 
     @Given("this task has only one input parameter {string} of type {string}")
     public void this_task_has_only_one_input_parameter_of_type(String paramName, String type) {
-        persistedTask.getInputs().removeIf(input -> !(((IntegerType)input.getType()).getId().equals(type) && input.getName().equals(paramName)));
+        persistedTask.getInputs().removeIf(input -> {
+            switch (input.getType().getClass().getSimpleName()) {
+                case "BooleanType":
+                    return !(((BooleanType) input.getType()).getId().equals(type) && input.getName().equals(paramName));
+                case "IntegerType":
+                    return !(((IntegerType) input.getType()).getId().equals(type) && input.getName().equals(paramName));
+                default:
+                    return true;
+            }
+        });
         persistedTask = taskRepository.saveAndFlush(persistedTask);
         Assertions.assertEquals(persistedTask.getInputs().size(), 1);
-        persistedTask = taskRepository.saveAndFlush(persistedTask);
     }
 
     @Given("this parameter has no validation rules")
