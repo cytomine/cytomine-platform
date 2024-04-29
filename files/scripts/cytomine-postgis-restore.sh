@@ -38,6 +38,7 @@ if (( $(stat -c%s "$RESTORE_DIR/$RESTORE_FILENAME") < 1000 )); then
 fi
 
 TMP_RESTORE_DIR="/var/lib/postgresql/data/backup/tmp-restore"
+mkdir -p $TMP_RESTORE_DIR
 echo -e "\n$(date) Extracting $RESTORE_DIR/$RESTORE_FILENAME to $TMP_RESTORE_DIR/db_to_restore.sql $DB_USER"
 cd $RESTORE_DIR || exit 7
 mkdir -p $TMP_RESTORE_DIR || exit 8
