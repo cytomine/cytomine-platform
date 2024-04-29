@@ -65,7 +65,7 @@ if [ $? -ne 0 ]; then
 fi
 
 echo -e "\n$(date) Import postgis databases from $TMP_RESTORE_DIR/restore.sql ..."
-psql --username="$DB_USER" --dbname="postgres" --file=$TMP_RESTORE_DIR/restore.sql
+psql --username="$DB_USER" --dbname="$DB_NAME" --file=$TMP_RESTORE_DIR/restore.sql
 # Check the exit status of pg_dupsqlmp
 if [ $? -ne 0 ]; then
   echo -e "$(date) Could not inject dump. Aborting restore."
