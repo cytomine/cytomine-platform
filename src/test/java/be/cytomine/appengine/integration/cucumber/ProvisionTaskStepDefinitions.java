@@ -217,16 +217,22 @@ public class ProvisionTaskStepDefinitions {
         provision.setParameterType(ParameterType.INPUT);
         run.getProvisions().add(provision);
 
-        if (parameterName.equals("b")) {
-            IntegerPersistence provisionInputA = new IntegerPersistence();
-            provisionInputA.setRunId(run.getId());
-            provisionInputA.setValueType(ValueType.INTEGER);
-            provisionInputA.setValue(10);
-            provisionInputA.setParameterName("a");
-            provisionInputA.setParameterType(ParameterType.INPUT);
-            //"a", String.valueOf(10), run.getId()
-            run.getProvisions().add(provisionInputA);
-            run.setState(TaskRunState.PROVISIONED);
+        switch (parameterName) {
+            case "b":
+                IntegerPersistence provisionInputA = new IntegerPersistence();
+                provisionInputA.setRunId(run.getId());
+                provisionInputA.setValueType(ValueType.INTEGER);
+                provisionInputA.setValue(10);
+                provisionInputA.setParameterName("a");
+                provisionInputA.setParameterType(ParameterType.INPUT);
+                //"a", String.valueOf(10), run.getId()
+                run.getProvisions().add(provisionInputA);
+                run.setState(TaskRunState.PROVISIONED);
+                break;
+
+            case "input":
+                run.setState(TaskRunState.PROVISIONED);
+                break;
         }
 
         run = taskRunRepository.save(run);
