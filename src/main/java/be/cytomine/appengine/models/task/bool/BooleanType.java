@@ -43,7 +43,7 @@ public class BooleanType extends Type {
         BooleanPersistence persistedProvision = booleanPersistenceRepository.findBooleanPersistenceByParameterNameAndRunIdAndParameterType(parameterName, runId, ParameterType.INPUT);
         if (persistedProvision == null) {
             persistedProvision = new BooleanPersistence();
-            persistedProvision.setValueType(ValueType.INTEGER);
+            persistedProvision.setValueType(ValueType.BOOLEAN);
             persistedProvision.setParameterType(ParameterType.INPUT);
             persistedProvision.setParameterName(parameterName);
             persistedProvision.setRunId(runId);
