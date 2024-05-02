@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 
 import java.util.UUID;
 @Entity
-@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
+@Inheritance(strategy = InheritanceType.JOINED)
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
