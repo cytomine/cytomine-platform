@@ -126,24 +126,30 @@ public class RunTaskStepDefinitions {
         Assertions.assertEquals(persistedTaskRun.getState(), be.cytomine.appengine.openapi.model.TaskRunState.valueOf(state));
     }
 
+    private TaskRunInputProvisionInputBodyValue provisionInput(String name, String type, String value) {
+        return switch (type) {
+            case "boolean" -> new TaskRunInputProvisionInputBodyValue(Boolean.parseBoolean(value));
+            case "integer" -> new TaskRunInputProvisionInputBodyValue(Integer.parseInt(value));
+            default -> null;
+        };
+    }
+
     // successful fetch of task run inputs archive in a launched task run
-    @Given("the task run {string} has input parameters: {string} of type {string} with value {int} and {string} of type {string} with value {int}")
+    @Given("the task run {string} has input parameters: {string} of type {string} with value {string} and {string} of type {string} with value {string}")
     public void the_task_run_has_input_parameters_of_type_with_value_and_of_type_with_value(String runId, String name1, String type1, String value1, String name2, String type2, String value2) throws ApiException, FileStorageException {
         List<TaskRunInputProvisionInputBody> provisionInputBodyList = new ArrayList<>();
         // input one
         TaskRunInputProvisionInputBody input1 = new TaskRunInputProvisionInputBody();
         input1.setParamName(name1);
-        TaskRunInputProvisionInputBodyValue value1Body =
-                new TaskRunInputProvisionInputBodyValue(Integer.parseInt(value1));
-        input1.setValue(value1Body);
+        input1.setValue(provisionInput(name1, type1, value1));
         provisionInputBodyList.add(input1);
+
         // input two
         TaskRunInputProvisionInputBody input2 = new TaskRunInputProvisionInputBody();
         input2.setParamName(name2);
-        TaskRunInputProvisionInputBodyValue value2Body =
-                new TaskRunInputProvisionInputBodyValue(Integer.parseInt(value2));
-        input2.setValue(value2Body);
+        input2.setValue(provisionInput(name2, type2, value2));
         provisionInputBodyList.add(input2);
+
         appEngineApi.provisionTaskRunParameterBatch(UUID.fromString(runId), provisionInputBodyList);
 
         // save inputs in storage
