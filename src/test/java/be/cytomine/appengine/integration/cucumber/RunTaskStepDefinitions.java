@@ -249,6 +249,7 @@ public class RunTaskStepDefinitions {
         integerResultRepository.deleteAll();
         IntegerPersistence result = new IntegerPersistence();
         // name, String.valueOf(value), persistedRun.getId()
+        result.setParameterName(name);
         result.setParameterType(ParameterType.OUTPUT);
         result.setRunId(persistedRun.getId());
         result.setValue(value);
