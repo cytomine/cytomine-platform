@@ -402,8 +402,7 @@ public class TaskProvisioningService {
             throw new ProvisioningException(error);
         }
         // find all the results
-        List<TypePersistence> results = typePersistenceRepository.findTypePersistenceByRunIdAndParameterType(UUID.fromString(runId), ParameterType.OUTPUT);
-        buildTaskRunParameterValues(outputList, run, results);
+        buildTaskRunParameterValues(outputList, run, ParameterType.OUTPUT);
         logger.info("Retrieving Outputs Json : retrieved");
         return outputList;
     }
@@ -421,7 +420,7 @@ public class TaskProvisioningService {
 
     public List<TaskRunParameterValue> retrieveRunInputs(String runId) throws ProvisioningException {
         logger.info("Retrieving Inputs : retrieving...");
-        List<TaskRunParameterValue> outputList = new ArrayList<>();
+        List<TaskRunParameterValue> inputList = new ArrayList<>();
         // validate run
         Run run = getRunIfValid(runId);
         if (run.getState().equals(TaskRunState.CREATED)) {
@@ -429,17 +428,27 @@ public class TaskProvisioningService {
             throw new ProvisioningException(error);
         }
         // find all the results
-        buildTaskRunParameterValues(outputList, run, typePersistenceRepository.findTypePersistenceByRunIdAndParameterType(UUID.fromString(runId), ParameterType.INPUT));
+        buildTaskRunParameterValues(inputList, run, ParameterType.INPUT);
         logger.info("Retrieving Inputs : retrieved");
-        return outputList;
+        return inputList;
     }
 
-    private void buildTaskRunParameterValues(List<TaskRunParameterValue> outputList, Run run, List<TypePersistence> results) {
-        for (TypePersistence result : results) {
-            // based on the type of the parameter assign the type
+    private void buildTaskRunParameterValues(List<TaskRunParameterValue> parametersValues, Run run, ParameterType type) {
+        List<TypePersistence> results = typePersistenceRepository.findTypePersistenceByRunIdAndParameterType(run.getId(), type);
+        if (type.equals(ParameterType.INPUT)) {
+            Set<Input> inputs = run.getTask().getInputs();
+            for (TypePersistence result : results) {
+                // based on the type of the parameter assign the type
+                Input inputForType = inputs.stream().filter(input -> input.getName().equalsIgnoreCase(result.getParameterName())).findFirst().get();
+                parametersValues.add(inputForType.getType().buildTaskRunParameterValue(result));
+            }
+        } else {
             Set<Output> outputs = run.getTask().getOutputs();
-            Output outputForType = outputs.stream().filter(output -> output.getName().equalsIgnoreCase(result.getParameterName())).findFirst().get();
-            outputList.add(outputForType.getType().buildTaskRunParameterValue(result));
+            for (TypePersistence result : results) {
+                // based on the type of the parameter assign the type
+                Output outputForType = outputs.stream().filter(output -> output.getName().equalsIgnoreCase(result.getParameterName())).findFirst().get();
+                parametersValues.add(outputForType.getType().buildTaskRunParameterValue(result));
+            }
         }
     }
 
