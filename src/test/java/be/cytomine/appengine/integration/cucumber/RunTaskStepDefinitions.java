@@ -556,40 +556,27 @@ public class RunTaskStepDefinitions {
         provisionInputA.setParameterType(ParameterType.INPUT);
         provisionInputA.setRunId(persistedRun.getId());
         integerProvisionRepository.save(provisionInputA);
+
         IntegerPersistence provisionInputB = new IntegerPersistence();
-        provisionInputA.setValueType(ValueType.INTEGER);
-        provisionInputA.setValue(250);
-        provisionInputA.setParameterName("b");
-        provisionInputA.setParameterType(ParameterType.INPUT);
-        provisionInputA.setRunId(persistedRun.getId());
+        provisionInputB.setValueType(ValueType.INTEGER);
+        provisionInputB.setValue(250);
+        provisionInputB.setParameterName("b");
+        provisionInputB.setParameterType(ParameterType.INPUT);
+        provisionInputB.setRunId(persistedRun.getId());
         integerProvisionRepository.save(provisionInputB);
-        IntegerPersistence num1 = new IntegerPersistence(); // "num1", String.valueOf(250), persistedRun.getId()
-        num1.setValueType(ValueType.INTEGER);
-        num1.setValue(250);
-        num1.setParameterName("num1");
-        num1.setParameterType(ParameterType.INPUT);
-        num1.setRunId(persistedRun.getId());
-        integerProvisionRepository.save(num1);
-        IntegerPersistence num2 = new IntegerPersistence();
-        num2.setValueType(ValueType.INTEGER);
-        num2.setValue(250);
-        num2.setParameterName("num2");
-        num2.setParameterType(ParameterType.INPUT);
-        num2.setRunId(persistedRun.getId());
-        integerProvisionRepository.save(num2);
 
         // store in storage
         Storage runStorage = new Storage("task-run-inputs-" + provisionInputA.getRunId());
+        fileStorageHandler.createStorage(runStorage);
+
         String value = String.valueOf(provisionInputA.getValue());
         byte[] inputFileData = value.getBytes(getStorageCharset(charset));
         FileData inputProvisionFileData = new FileData(inputFileData, provisionInputA.getParameterName());
-
         fileStorageHandler.createFile(runStorage, inputProvisionFileData);
 
         value = String.valueOf(provisionInputB.getValue());
         inputFileData = value.getBytes(getStorageCharset(charset));
-        inputProvisionFileData = new FileData(inputFileData, num2.getParameterName());
-
+        inputProvisionFileData = new FileData(inputFileData, provisionInputB.getParameterName());
         fileStorageHandler.createFile(runStorage, inputProvisionFileData);
 
         persistedRun.setState(TaskRunState.PROVISIONED);
