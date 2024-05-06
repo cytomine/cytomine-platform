@@ -173,19 +173,19 @@ public class TaskProvisioningService {
     @NotNull
     private void saveInDatabase(JsonNode provision, Run run) {
         Set<Input> inputs = run.getTask().getInputs();
-        Input inputForType = inputs.stream().filter(output -> output.getName().equalsIgnoreCase(provision.get("param_name").asText())).findFirst().get();
+        Input inputForType = inputs.stream().filter(input -> input.getName().equalsIgnoreCase(provision.get("param_name").asText())).findFirst().get();
         inputForType.getType().persistProvision(provision, run.getId());
     }
 
     private Type getInputParameterType(JsonNode provision, Run run) {
         Set<Input> inputs = run.getTask().getInputs();
-        Input inputForType = inputs.stream().filter(output -> output.getName().equalsIgnoreCase(provision.get("param_name").asText())).findFirst().get();
+        Input inputForType = inputs.stream().filter(input -> input.getName().equalsIgnoreCase(provision.get("param_name").asText())).findFirst().get();
         return inputForType.getType();
     }
 
     private void saveProvisionInStorage(JsonNode provision, Run run) throws ProvisioningException {
         Set<Input> inputs = run.getTask().getInputs();
-        Input inputForType = inputs.stream().filter(output -> output.getName().equalsIgnoreCase(provision.get("param_name").asText())).findFirst().get();
+        Input inputForType = inputs.stream().filter(input -> input.getName().equalsIgnoreCase(provision.get("param_name").asText())).findFirst().get();
 
         Storage runStorage = new Storage("task-run-inputs-" + run.getId());
         FileData inputProvisionFileData = inputForType.getType().mapToStorageFileData(provision, charset);
