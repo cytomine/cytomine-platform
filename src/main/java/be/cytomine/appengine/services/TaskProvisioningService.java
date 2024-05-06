@@ -485,7 +485,7 @@ public class TaskProvisioningService {
         // return response
         StateAction action = new StateAction();
 
-        action.setStatus("successful");
+        action.setStatus("success");
 
         TaskDescription description = makeTaskDescription(run.getTask());
         Resource resource = new Resource(description, run.getId(), TaskRunState.QUEUING, new Date(), new Date(), new Date());
