@@ -33,7 +33,7 @@ public class Task extends BaseEntity {
     private String nameShort;
     private String inputFolder;
     private String outputFolder;
-
+    private String imageName;
 
     @OneToMany(cascade = CascadeType.ALL , fetch = FetchType.LAZY)
     private Set<Author> authors;
