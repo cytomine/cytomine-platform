@@ -9,7 +9,7 @@ import jakarta.validation.constraints.NotNull;
 
 public class TypeFactory {
 
-    private static String getTypeId(JsonNode typeNode) {
+    public static String getTypeId(JsonNode typeNode) {
         if (typeNode.isTextual()) {
             return typeNode.textValue();
         } else {
