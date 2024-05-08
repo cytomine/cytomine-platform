@@ -1,5 +1,6 @@
 package be.cytomine.appengine.models.task;
 
+import be.cytomine.appengine.models.task.bool.BooleanType;
 import be.cytomine.appengine.models.task.integer.IntegerType;
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -8,10 +9,10 @@ import jakarta.validation.constraints.NotNull;
 
 public class TypeFactory {
 
-    private static String getTypeId(JsonNode typeNode) {
+    public static String getTypeId(JsonNode typeNode) {
         if (typeNode.isTextual()) {
             return typeNode.textValue();
-        } else  {
+        } else {
             return typeNode.get("id").textValue();
         }
     }
@@ -20,11 +21,19 @@ public class TypeFactory {
         JsonNode typeNode = node.get("type");
         // add new types here
         String typeId = getTypeId(typeNode);
-        if (typeId.equals("integer")) {
-            return createIntegerType(typeNode, typeId);
-        } else {
-            return new Type();
-        }
+        return switch (typeId) {
+            case "boolean" -> createBooleanType(typeId);
+            case "integer" -> createIntegerType(typeNode, typeId);
+            default -> new Type();
+        };
+    }
+
+    @NotNull
+    private static BooleanType createBooleanType(String typeId) {
+        BooleanType type = new BooleanType();
+        type.setId(typeId);
+
+        return type;
     }
 
     @NotNull

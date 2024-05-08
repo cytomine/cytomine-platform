@@ -4,17 +4,14 @@ import be.cytomine.appengine.AppEngineApplication;
 import be.cytomine.appengine.dto.handlers.filestorage.Storage;
 import be.cytomine.appengine.handlers.FileData;
 import be.cytomine.appengine.handlers.FileStorageHandler;
-import be.cytomine.appengine.models.BaseEntity;
 import be.cytomine.appengine.models.task.*;
 import be.cytomine.appengine.openapi.api.DefaultApi;
 import be.cytomine.appengine.openapi.invoker.ApiClient;
 import be.cytomine.appengine.openapi.invoker.ApiException;
 import be.cytomine.appengine.openapi.invoker.Configuration;
-import be.cytomine.appengine.openapi.model.AbstractOpenApiSchema;
 import be.cytomine.appengine.openapi.model.InputParameter;
 import be.cytomine.appengine.openapi.model.OutputParameter;
 import be.cytomine.appengine.openapi.model.TaskDescription;
-import be.cytomine.appengine.openapi.model.TypedParameterInteger;
 import be.cytomine.appengine.repositories.TaskRepository;
 import be.cytomine.appengine.services.TaskService;
 import be.cytomine.appengine.exceptions.*;
@@ -25,8 +22,6 @@ import be.cytomine.appengine.utils.TestTaskBuilder;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
@@ -37,11 +32,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootContextLoader;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.web.client.RestTemplate;
 
-import java.lang.reflect.*;
 import java.io.*;
 import java.util.*;
 
@@ -71,6 +67,8 @@ public class ReadTaskStepDefinitions {
     ApiException persistedException;
     List<InputParameter> persistedInputParameters;
     List<OutputParameter> persistedOutputParameters;
+    List<Input> persistedInputs;
+    List<Output> persistedOutputs;
     File persistedDescriptorYml;
 
     @Autowired
@@ -196,10 +194,8 @@ public class ReadTaskStepDefinitions {
 
     @Then("App Engine retrieves task inputs with {string}, a {string}  from the database")
     public void app_engine_retrieves_task_inputs_data_from_the_database(String namespace, String version) {
-        // check inputs
-        Assertions.assertNotNull(persistedInputParameters);
-        Assertions.assertFalse(persistedInputParameters.isEmpty());
-        Assertions.assertEquals(persistedInputParameters.size(), 2);
+        Assertions.assertNotNull(persistedInputs);
+        Assertions.assertFalse(persistedInputs.isEmpty());
     }
 
     @Then("App Engine retrieves task with {string} from the database")
@@ -209,9 +205,9 @@ public class ReadTaskStepDefinitions {
     @Then("App Engine retrieves task inputs with {string} from the database")
     public void app_engine_retrieves_task_inputs_data_from_the_database(String uuid) {
         // a Input Parameters is received
-        Assertions.assertNotNull(persistedInputParameters);
-        Assertions.assertFalse(persistedInputParameters.isEmpty());
-        Assertions.assertEquals(persistedInputParameters.size(), 2);
+        Assertions.assertNotNull(persistedInputs);
+        Assertions.assertFalse(persistedInputs.isEmpty());
+        Assertions.assertEquals(persistedInputs.size(), 2);
     }
 
 
@@ -245,46 +241,38 @@ public class ReadTaskStepDefinitions {
 
     @Then("App Engine sends a {string} OK response with a payload containing the task inputs as a JSON payload \\(see OpenAPI spec)")
     public void app_engine_sends_a_ok_response_with_a_payload_containing_the_task_inputs_as_a_json_payload_see_open_api_spec(String string) {
-        Assertions.assertNotNull(persistedInputParameters);
-        TaskTestsUtils.checkParametersSetsMatch(persistedInputParameters, persistedTask.getInputs());
+        Assertions.assertNotNull(persistedInputs);
+        Assertions.assertTrue(TaskTestsUtils.areSetEquals(persistedTask.getInputs(), persistedInputs));
     }
 
 
     @When("user calls the endpoint {string} with {string} and {string} HTTP method GET")
     public void user_calls_the_endpoint_with_and_http_method_get(String endpoint, String namespace, String version) throws ApiException {
-        // call the correct endpoint based on URI
-        ApiClient defaultClient = Configuration.getDefaultApiClient();
-        defaultClient.setBasePath(buildAppEngineUrl());
-        appEngineApi = new DefaultApi(defaultClient);
-        persistedInputParameters = appEngineApi.getTaskInputsByNamespaceVersion(namespace, version);
+        String endpointUrl = buildAppEngineUrl() + "/tasks/" + namespace + "/" + version + "/inputs";
+        ResponseEntity<List<Input>> response = new RestTemplate().exchange(endpointUrl, HttpMethod.GET, null, new ParameterizedTypeReference<List<Input>>() {});
+        persistedInputs = response.getBody();
     }
 
 
     @When("user calls the outputs endpoint {string} with {string} and {string} HTTP method GET")
     public void user_calls_the_outputs_endpoint_with_and_http_method_get(String endpoint, String namespace, String version) throws ApiException {
-        // call the correct endpoint based on URI
-        ApiClient defaultClient = Configuration.getDefaultApiClient();
-        defaultClient.setBasePath(buildAppEngineUrl());
-        appEngineApi = new DefaultApi(defaultClient);
-        persistedOutputParameters = appEngineApi.getTaskOutputsByNamespaceVersion(namespace, version);
+        String endpointUrl = buildAppEngineUrl() + "/tasks/" + namespace + "/" + version + "/outputs";
+        ResponseEntity<List<Output>> response = new RestTemplate().exchange(endpointUrl, HttpMethod.GET, null, new ParameterizedTypeReference<List<Output>>() {});
+        persistedOutputs = response.getBody();
     }
 
     @When("user calls the endpoint {string} with {string} HTTP method GET")
     public void user_calls_the_endpoint_with_http_method_get(String endpoint, String uuid) throws ApiException {
-        // call the correct endpoint based on URI
-        ApiClient defaultClient = Configuration.getDefaultApiClient();
-        defaultClient.setBasePath(buildAppEngineUrl());
-        appEngineApi = new DefaultApi(defaultClient);
-        persistedInputParameters = appEngineApi.getTaskInputsByUUID(UUID.fromString(uuid));
+        String endpointUrl = buildAppEngineUrl() + "/tasks/" + uuid + "/inputs";
+        ResponseEntity<List<Input>> response = new RestTemplate().exchange(endpointUrl, HttpMethod.GET, null, new ParameterizedTypeReference<List<Input>>() {});
+        persistedInputs = response.getBody();
     }
 
     @When("user calls the outputs endpoint {string} with {string} HTTP method GET")
     public void user_calls_the_outputs_endpoint_with_http_method_get(String endpoint, String uuid) throws ApiException {
-        // call the correct endpoint based on URI
-        ApiClient defaultClient = Configuration.getDefaultApiClient();
-        defaultClient.setBasePath(buildAppEngineUrl());
-        appEngineApi = new DefaultApi(defaultClient);
-        persistedOutputParameters = appEngineApi.getTaskOutputsByUUID(UUID.fromString(uuid));
+        String endpointUrl = buildAppEngineUrl() + "/tasks/" + uuid + "/outputs";
+        ResponseEntity<List<Output>> response = new RestTemplate().exchange(endpointUrl, HttpMethod.GET, null, new ParameterizedTypeReference<List<Output>>() {});
+        persistedOutputs = response.getBody();
     }
 
     @When("user calls the download endpoint with {string} and {string} with HTTP method GET")
@@ -336,21 +324,21 @@ public class ReadTaskStepDefinitions {
     }
 
     @Then("App Engine retrieves task outputs with {string}, a {string}  from the database")
-    public void app_engine_retrieves_task_outputs_with_a_from_the_database(String name, String string2) {
-        Assertions.assertNotNull(persistedOutputParameters);
-        TaskTestsUtils.checkParametersSetsMatch(persistedOutputParameters, persistedTask.getOutputs());
+    public void app_engine_retrieves_task_outputs_with_a_from_the_database(String namespace, String version) {
+        Assertions.assertNotNull(persistedOutputs);
+        Assertions.assertTrue(TaskTestsUtils.areSetEquals(persistedTask.getOutputs(), persistedOutputs));
     }
 
     @Then("App Engine sends a {string} OK response with a payload containing the task outputs as a JSON payload \\(see OpenAPI spec)")
     public void app_engine_sends_a_ok_response_with_a_payload_containing_the_task_outputs_as_a_json_payload_see_open_api_spec(String string) {
-        Assertions.assertNotNull(persistedOutputParameters);
-        TaskTestsUtils.checkParametersSetsMatch(persistedOutputParameters, persistedTask.getOutputs());
+        Assertions.assertNotNull(persistedOutputs);
+        Assertions.assertTrue(TaskTestsUtils.areSetEquals(persistedTask.getOutputs(), persistedOutputs));
     }
 
     @Then("App Engine retrieves task outputs with {string} from the database")
     public void app_engine_retrieves_task_outputs_with_from_the_database(String string) {
-        Assertions.assertNotNull(persistedOutputParameters);
-        TaskTestsUtils.checkParametersSetsMatch(persistedOutputParameters, persistedTask.getOutputs());
+        Assertions.assertNotNull(persistedOutputs);
+        Assertions.assertTrue(TaskTestsUtils.areSetEquals(persistedTask.getOutputs(), persistedOutputs));
     }
 
     @Given("a task unknown to the App Engine has a {string} and a {string} and a {string}")

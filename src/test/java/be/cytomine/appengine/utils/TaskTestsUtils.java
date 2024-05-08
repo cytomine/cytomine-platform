@@ -1,45 +1,80 @@
 package be.cytomine.appengine.utils;
 
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
-import org.junit.jupiter.api.Assertions;
-
-import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import be.cytomine.appengine.dto.inputs.task.TaskRunParameterValue;
+import be.cytomine.appengine.dto.inputs.task.types.bool.BooleanValue;
+import be.cytomine.appengine.dto.inputs.task.types.integer.IntegerValue;
 import be.cytomine.appengine.models.BaseEntity;
-import be.cytomine.appengine.openapi.model.AbstractOpenApiSchema;
 
 public class TaskTestsUtils {
 
-
-  public static <T> JsonNode backToJson(T object) {
-    ObjectMapper mapper = new ObjectMapper();
-    return mapper.convertValue(object, JsonNode.class);
-  }
-
-  public static <F extends AbstractOpenApiSchema, P extends BaseEntity> void checkParametersSetsMatch(List<F> actualParameters, Set<P> expectedParameters) {
-    // convert to json to avoid issue with OutputParameter actual instance type
-    Assertions.assertEquals(actualParameters.size(), expectedParameters.size());
-    Map<String, JsonNode> fetchedOutputs = new HashMap<>();
-    for (F output : actualParameters) {
-      JsonNode outputAsJsonNode = backToJson(output.getActualInstance());
-      fetchedOutputs.put(outputAsJsonNode.get("name").textValue(), outputAsJsonNode);
+    private static <E extends BaseEntity> List<String> getName(List<E> entities) {
+        return entities
+                .stream()
+                .map(entity -> {
+                    try {
+                        return (String) entity.getClass().getMethod("getName").invoke(entity);
+                    } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+                        throw new RuntimeException(e);
+                    }
+                })
+                .collect(Collectors.toList());
     }
 
-    for (P output : expectedParameters) {
-      try {  // need reflection because there is no common Parameter interface above Output and Input to reach getName
-        Method getNameMethod = output.getClass().getMethod("getName");
-        String name = (String) getNameMethod.invoke(output);
-        Assertions.assertTrue(fetchedOutputs.containsKey(name));
-      } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-        throw new RuntimeException(e);
-      }
+    public static <E extends BaseEntity> boolean areSetEquals(Set<E> expected, List<E> actual) {
+        if (actual.size() != expected.size()) {
+            return false;
+        }
+
+        List<String> expectedNames = getName(new ArrayList<>(expected));
+        List<String> actualNames = getName(actual);
+
+        return expectedNames.containsAll(actualNames) && actualNames.containsAll(expectedNames);
     }
-}
+
+    public static List<TaskRunParameterValue> convertTo(String body) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        List<Map<String, Object>> values = new ArrayList<>();
+        try {
+            values = objectMapper.readValue(body, new TypeReference<List<Map<String, Object>>>() {
+            });
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+
+        List<TaskRunParameterValue> parameterValues = new ArrayList<>();
+        for (Map<String, Object> entity : values) {
+            Object value = entity.get("value");
+            switch (value.getClass().getSimpleName().toLowerCase()) {
+                case "boolean":
+                    BooleanValue booleanValue = new BooleanValue();
+                    booleanValue.setParam_name((String) entity.get("param_name"));
+                    booleanValue.setTask_run_id(UUID.fromString((String) entity.get("task_run_id")));
+                    booleanValue.setValue((boolean) entity.get("value"));
+                    parameterValues.add(booleanValue);
+                    break;
+
+                case "integer":
+                    IntegerValue integerValue = new IntegerValue();
+                    integerValue.setParam_name((String) entity.get("param_name"));
+                    integerValue.setTask_run_id(UUID.fromString((String) entity.get("task_run_id")));
+                    integerValue.setValue((int) entity.get("value"));
+                    parameterValues.add(integerValue);
+                    break;
+            }
+        }
+
+        return parameterValues;
+    }
 }

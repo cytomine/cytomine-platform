@@ -86,6 +86,7 @@ dependencies {
     implementation 'org.hibernate:hibernate-core:6.3.0.Final'
     implementation 'io.hypersistence:hypersistence-utils-hibernate-60:3.5.2'
     implementation 'org.liquibase:liquibase-core:4.25.0'
+    implementation 'io.fabric8:kubernetes-client:6.10.0'
     runtimeOnly 'org.postgresql:postgresql'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
@@ -105,7 +106,7 @@ dependencies {
     // OpenAPI generated client from Maven local repository for testing
     implementation group: 'be.cytomine.appengine', name: 'appengine-client', version: '0.1.0'
     // registry client
-    implementation 'com.cytomine:registry-client:2.0.0'
+    implementation 'com.cytomine:registry-client:3.0.0'
     // liquibase
     liquibaseRuntime 'info.picocli:picocli:4.7.5'
 

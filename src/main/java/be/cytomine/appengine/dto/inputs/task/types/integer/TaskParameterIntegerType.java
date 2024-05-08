@@ -1,6 +1,8 @@
-package be.cytomine.appengine.dto.inputs.task;
+package be.cytomine.appengine.dto.inputs.task.types.integer;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+
+import be.cytomine.appengine.dto.inputs.task.TaskParameterType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
