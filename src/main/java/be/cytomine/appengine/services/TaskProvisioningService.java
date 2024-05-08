@@ -395,7 +395,6 @@ public class TaskProvisioningService {
 
     public List<TaskRunParameterValue> retrieveRunOutputs(String runId) throws ProvisioningException {
         logger.info("Retrieving Outputs Json : retrieving...");
-        List<TaskRunParameterValue> outputList = new ArrayList<>();
         // validate run
         Run run = getRunIfValid(runId);
         if (!run.getState().equals(TaskRunState.FINISHED)) {
@@ -403,7 +402,7 @@ public class TaskProvisioningService {
             throw new ProvisioningException(error);
         }
         // find all the results
-        buildTaskRunParameterValues(outputList, run, ParameterType.OUTPUT);
+        List<TaskRunParameterValue> outputList = buildTaskRunParameterValues(run, ParameterType.OUTPUT);
         logger.info("Retrieving Outputs Json : retrieved");
         return outputList;
     }
@@ -415,13 +414,11 @@ public class TaskProvisioningService {
             throw new ProvisioningException(error);
         }
         // check the state is valid
-        Run run = runOptional.get();
-        return run;
+        return runOptional.get();
     }
 
     public List<TaskRunParameterValue> retrieveRunInputs(String runId) throws ProvisioningException {
         logger.info("Retrieving Inputs : retrieving...");
-        List<TaskRunParameterValue> inputList = new ArrayList<>();
         // validate run
         Run run = getRunIfValid(runId);
         if (run.getState().equals(TaskRunState.CREATED)) {
@@ -429,28 +426,31 @@ public class TaskProvisioningService {
             throw new ProvisioningException(error);
         }
         // find all the results
-        buildTaskRunParameterValues(inputList, run, ParameterType.INPUT);
+        List<TaskRunParameterValue> inputList = buildTaskRunParameterValues(run, ParameterType.INPUT);
         logger.info("Retrieving Inputs : retrieved");
         return inputList;
     }
 
-    private void buildTaskRunParameterValues(List<TaskRunParameterValue> parametersValues, Run run, ParameterType type) {
+    private List<TaskRunParameterValue> buildTaskRunParameterValues(Run run, ParameterType type) {
+        List<TaskRunParameterValue> parameterValues = new ArrayList<>();
         List<TypePersistence> results = typePersistenceRepository.findTypePersistenceByRunIdAndParameterType(run.getId(), type);
         if (type.equals(ParameterType.INPUT)) {
             Set<Input> inputs = run.getTask().getInputs();
             for (TypePersistence result : results) {
                 // based on the type of the parameter assign the type
                 Input inputForType = inputs.stream().filter(input -> input.getName().equalsIgnoreCase(result.getParameterName())).findFirst().get();
-                parametersValues.add(inputForType.getType().buildTaskRunParameterValue(result));
+                parameterValues.add(inputForType.getType().buildTaskRunParameterValue(result));
             }
         } else {
             Set<Output> outputs = run.getTask().getOutputs();
             for (TypePersistence result : results) {
                 // based on the type of the parameter assign the type
                 Output outputForType = outputs.stream().filter(output -> output.getName().equalsIgnoreCase(result.getParameterName())).findFirst().get();
-                parametersValues.add(outputForType.getType().buildTaskRunParameterValue(result));
+                parameterValues.add(outputForType.getType().buildTaskRunParameterValue(result));
             }
         }
+
+        return parameterValues;
     }
 
 
