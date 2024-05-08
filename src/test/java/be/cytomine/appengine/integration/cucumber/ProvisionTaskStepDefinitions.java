@@ -10,6 +10,8 @@ import be.cytomine.appengine.models.task.bool.BooleanPersistence;
 import be.cytomine.appengine.models.task.bool.BooleanType;
 import be.cytomine.appengine.models.task.integer.IntegerPersistence;
 import be.cytomine.appengine.models.task.integer.IntegerType;
+import be.cytomine.appengine.models.task.number.NumberPersistence;
+import be.cytomine.appengine.models.task.number.NumberType;
 import be.cytomine.appengine.openapi.api.DefaultApi;
 import be.cytomine.appengine.openapi.invoker.ApiClient;
 import be.cytomine.appengine.openapi.invoker.ApiException;
@@ -20,6 +22,7 @@ import be.cytomine.appengine.openapi.model.TaskRunInputProvisionInputBodyValue;
 import be.cytomine.appengine.repositories.TypePersistenceRepository;
 import be.cytomine.appengine.repositories.bool.BooleanPersistenceRepository;
 import be.cytomine.appengine.repositories.integer.IntegerPersistenceRepository;
+import be.cytomine.appengine.repositories.number.NumberPersistenceRepository;
 import be.cytomine.appengine.repositories.RunRepository;
 import be.cytomine.appengine.repositories.TaskRepository;
 import be.cytomine.appengine.states.TaskRunState;
@@ -39,6 +42,7 @@ import org.springframework.boot.test.context.SpringBootContextLoader;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.ContextConfiguration;
 
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
@@ -59,6 +63,9 @@ public class ProvisionTaskStepDefinitions {
 
     @Autowired
     IntegerPersistenceRepository integerProvisionRepository;
+
+    @Autowired
+    NumberPersistenceRepository numberProvisionRepository;
 
     @Autowired
     TypePersistenceRepository typePersistenceRepository;
@@ -162,6 +169,8 @@ public class ProvisionTaskStepDefinitions {
                     return !(((BooleanType) input.getType()).getId().equals(type) && input.getName().equals(paramName));
                 case "IntegerType":
                     return !(((IntegerType) input.getType()).getId().equals(type) && input.getName().equals(paramName));
+                case "NumberType":
+                    return !(((NumberType) input.getType()).getId().equals(type) && input.getName().equals(paramName));
                 default:
                     return true;
             }
@@ -209,6 +218,11 @@ public class ProvisionTaskStepDefinitions {
                 provision = new IntegerPersistence();
                 provision.setValueType(ValueType.INTEGER);
                 ((IntegerPersistence) provision).setValue(Integer.parseInt(initialValue));
+                break;
+            case "NumberType":
+                provision = new NumberPersistence();
+                provision.setValueType(ValueType.NUMBER);
+                ((NumberPersistence) provision).setValue(Double.parseDouble(initialValue));
                 break;
         }
 
@@ -274,6 +288,9 @@ public class ProvisionTaskStepDefinitions {
                 case "IntegerType":
                     body.setValue(new TaskRunInputProvisionInputBodyValue(Integer.parseInt(value)));
                     break;
+                case "NumberType":
+                    body.setValue(new TaskRunInputProvisionInputBodyValue(BigDecimal.valueOf(Double.parseDouble(value))));
+                    break;
             }
         }
 
@@ -301,6 +318,9 @@ public class ProvisionTaskStepDefinitions {
                 break;
             case "IntegerType":
                 provision = integerProvisionRepository.findIntegerPersistenceByParameterNameAndRunIdAndParameterType(parameterName, run.getId() , ParameterType.INPUT);
+                break;
+            case "NumberType":
+                provision = numberProvisionRepository.findNumberPersistenceByParameterNameAndRunIdAndParameterType(parameterName, run.getId() , ParameterType.INPUT);
                 break;
         }
 
@@ -487,6 +507,8 @@ public class ProvisionTaskStepDefinitions {
                             return ((BooleanType) input.getType()).getId().equals(type) && input.getName().equals(paramName);
                         case "integer":
                             return ((IntegerType) input.getType()).getId().equals(type) && input.getName().equals(paramName);
+                        case "number":
+                            return ((NumberType) input.getType()).getId().equals(type) && input.getName().equals(paramName);
                         default:
                             return false;
                     }
@@ -521,6 +543,10 @@ public class ProvisionTaskStepDefinitions {
             case "IntegerType":
                 provision = integerProvisionRepository.findIntegerPersistenceByParameterNameAndRunIdAndParameterType(parameterName, run.getId() , ParameterType.INPUT);
                 Assertions.assertEquals(((IntegerPersistence) provision).getValue(), Integer.parseInt(newValue));
+                break;
+            case "NumberType":
+                provision = numberProvisionRepository.findNumberPersistenceByParameterNameAndRunIdAndParameterType(parameterName, run.getId() , ParameterType.INPUT);
+                Assertions.assertEquals(((NumberPersistence) provision).getValue(), Double.parseDouble(newValue));
                 break;
         }
 
