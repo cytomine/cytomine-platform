@@ -302,9 +302,9 @@ public class TaskService {
 
     public List<TaskInput> makeTaskInputs(Task task) {
         List<TaskInput> inputs = new ArrayList<>();
-        for (Input input : task.getInputs())
+        for (Input input : task.getInputs()) {
             inputs.add(TaskInputFactory.createTaskInput(input));
-
+        }
         return inputs;
     }
 
@@ -312,10 +312,7 @@ public class TaskService {
     public List<TaskOutput> makeTaskOutputs(Task task) {
         List<TaskOutput> outputs = new ArrayList<>();
         for (Output output : task.getOutputs()) {
-            if (output.getType() instanceof IntegerType type)
-                outputs.add(TaskOutputFactory.createTaskOutput(output));
-
-
+            outputs.add(TaskOutputFactory.createTaskOutput(output));
         }
         return outputs;
     }
