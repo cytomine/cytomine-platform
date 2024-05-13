@@ -3,11 +3,13 @@ package be.cytomine.appengine.models.task;
 import be.cytomine.appengine.models.task.bool.BooleanType;
 import be.cytomine.appengine.models.task.integer.IntegerType;
 import be.cytomine.appengine.models.task.number.NumberType;
+import be.cytomine.appengine.models.task.string.StringType;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
 import be.cytomine.appengine.dto.inputs.task.types.integer.IntegerTypeConstraint;
 import be.cytomine.appengine.dto.inputs.task.types.number.NumberTypeConstraint;
+import be.cytomine.appengine.dto.inputs.task.types.string.StringTypeConstraint;
 import jakarta.validation.constraints.NotNull;
 
 import java.util.Arrays;
@@ -30,6 +32,7 @@ public class TypeFactory {
             case "boolean" -> createBooleanType(typeId);
             case "integer" -> createIntegerType(typeNode, typeId);
             case "number" -> createNumberType(typeNode, typeId);
+            case "string" -> createStringType(typeNode, typeId);
             default -> new Type();
         };
     }
@@ -64,6 +67,19 @@ public class TypeFactory {
             .map(NumberTypeConstraint::getStringKey)
             .filter(typeNode::has)
             .forEach(key -> type.setConstraint(NumberTypeConstraint.getConstraint(key), typeNode.get(key).asText()));
+
+        return type;
+    }
+
+    @NotNull
+    private static StringType createStringType(JsonNode typeNode, String typeId) {
+        StringType type = new StringType();
+        type.setId(typeId);
+
+        Arrays.stream(StringTypeConstraint.values())
+            .map(StringTypeConstraint::getStringKey)
+            .filter(typeNode::has)
+            .forEach(key -> type.setConstraint(StringTypeConstraint.getConstraint(key), typeNode.get(key).asText()));
 
         return type;
     }
