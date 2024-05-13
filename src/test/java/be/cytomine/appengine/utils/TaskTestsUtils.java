@@ -16,6 +16,7 @@ import be.cytomine.appengine.dto.inputs.task.GenericParameterProvision;
 import be.cytomine.appengine.dto.inputs.task.TaskRunParameterValue;
 import be.cytomine.appengine.dto.inputs.task.types.bool.BooleanValue;
 import be.cytomine.appengine.dto.inputs.task.types.integer.IntegerValue;
+import be.cytomine.appengine.dto.inputs.task.types.string.StringValue;
 import be.cytomine.appengine.models.BaseEntity;
 
 public class TaskTestsUtils {
@@ -73,6 +74,14 @@ public class TaskTestsUtils {
                     integerValue.setValue((int) entity.get("value"));
                     parameterValues.add(integerValue);
                     break;
+
+                case "string":
+                    StringValue stringValue = new StringValue();
+                    stringValue.setParam_name((String) entity.get("param_name"));
+                    stringValue.setTask_run_id(UUID.fromString((String) entity.get("task_run_id")));
+                    stringValue.setValue((String) entity.get("value"));
+                    parameterValues.add(stringValue);
+                    break;
             }
         }
 
@@ -99,6 +108,10 @@ public class TaskTestsUtils {
             case "NumberType":
                 provision.setType(be.cytomine.appengine.dto.inputs.task.ParameterType.NUMBER);
                 provision.setValue(Double.parseDouble(value));
+                break;
+            case "StringType":
+                provision.setType(be.cytomine.appengine.dto.inputs.task.ParameterType.STRING);
+                provision.setValue(value);
                 break;
             default:
                 break;
