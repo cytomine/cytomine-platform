@@ -166,6 +166,9 @@ public class TaskService {
                     case "integer":
                         input.setDefaultValue("0");
                         break;
+                    case "number":
+                        input.setDefaultValue("0.0");
+                        break;
                     default:
                         input.setDefaultValue("");
                         break;
