@@ -16,7 +16,7 @@ public class Input extends BaseEntity {
     @Column(name = "id", updatable = false, nullable = false)
     @GeneratedValue(generator = "UUID")
     private UUID id;
-    private int defaultValue; // this matches a reserved keyword
+    private String defaultValue; // this matches a reserved keyword
     private String name;
     private String displayName;
     private String description;
@@ -24,5 +24,4 @@ public class Input extends BaseEntity {
 
     @OneToOne(cascade = CascadeType.ALL)
     private Type type;
-
 }

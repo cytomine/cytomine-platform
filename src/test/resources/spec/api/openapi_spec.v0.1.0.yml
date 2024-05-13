@@ -580,6 +580,7 @@ components:
         - integer
         - boolean
         - string
+        - number
 
     base_parameter:
       type: object
@@ -654,6 +655,35 @@ components:
               minimum: 1
               description: 'input constraint, string length should be less than or equal to $max_length'
 
+    type_spec_number:
+      type: object
+      required:
+        - id
+        - infinity_allowed
+        - nan_allowed
+      properties:
+        id:
+          type: string
+          enum: ["number"]
+        gt:
+          type: number
+          description: 'input constraint to enforce: input > $gt'
+        lt:
+          type: number
+          description: 'input constraint to enforce: input < $lt'
+        geq:
+          type: number
+          description: 'input constraint to enforce: input >= $geq'
+        leq:
+          type: number
+          description: 'input constraint to enforce: input <= $leq'
+        nan_allowed:
+          type: boolean
+          description: 'whether or not nan is accepted as a value for this parameters'
+        infinity_allowed:
+          type: boolean
+          description: 'whether or not infinity is accepted as a value for this parameter'
+
     typed_parameter_integer:
       allOf:
         - $ref: "#/components/schemas/base_parameter"
@@ -684,6 +714,16 @@ components:
             type:
               $ref: "#/components/schemas/type_spec_string"
 
+    typed_parameter_number:
+      allOf:
+        - $ref: "#/components/schemas/base_parameter"
+        - type: object
+          required:
+            - type
+          properties:
+            type:
+              $ref: "#/components/schemas/type_spec_number"
+
     input_parameter:
       type: object
       allOf:
@@ -705,6 +745,14 @@ components:
                     type: boolean
         - oneOf:
             - allOf:
+              - $ref: "#/components/schemas/typed_parameter_number"
+              - type: object
+                properties:
+                  default:
+                    description: Default number value. If omitted, no default value
+                    type: number
+        - oneOf:
+            - allOf:
               - $ref: "#/components/schemas/typed_parameter_string"
               - type: object
                 properties:
@@ -720,6 +768,7 @@ components:
       oneOf:
         - $ref: "#/components/schemas/typed_parameter_integer"
         - $ref: "#/components/schemas/typed_parameter_boolean"
+        - $ref: "#/components/schemas/typed_parameter_number"
         - $ref: "#/components/schemas/typed_parameter_string"
 
     task_run_state:
@@ -803,6 +852,7 @@ components:
           oneOf:
             - type: integer
             - type: boolean
+            - type: number
             - type: string
         param_name:
           $ref: "#/components/schemas/param_name_type"
@@ -920,6 +970,7 @@ components:
         - oneOf:
             - $ref: "#/components/schemas/integer_task_run_parameter"
             - $ref: "#/components/schemas/boolean_task_run_parameter"
+            - $ref: "#/components/schemas/number_task_run_parameter"
             - $ref: "#/components/schemas/string_task_run_parameter"
 
     integer_task_run_parameter:
@@ -941,6 +992,16 @@ components:
           enum: ["boolean"]
         value:
           type: boolean
+
+    number_task_run_parameter:
+      type: object
+      required: ["value", "type"]
+      properties:
+        type:
+          type: string
+          enum: ["number"]
+        value:
+          type: number
 
     string_task_run_parameter:
       type: object

@@ -13,12 +13,11 @@ public class TaskInput {
 
     private String id;
     @JsonProperty(value = "default")
-    private int defaultValue; // this matches a java reserved keyword
+    private String defaultValue; // this matches a java reserved keyword
     private String name;
     @JsonProperty(value = "display_name")
     private String displayName;
     private String description;
     private boolean optional;
     private TaskParameterType type;
-
 }

@@ -80,7 +80,7 @@ public class TaskProvisioningService {
             AppEngineError error = ErrorBuilder.build(ErrorCode.INTERNAL_PARAMETER_DOES_NOT_EXIST, parameterError);
             throw new ProvisioningException(error);
         } catch (JsonProcessingException e) {
-            logger.info("ProvisionMultipleParameter : provision is not invalid");
+            logger.info("ProvisionParameter : provision is not valid");
             ParameterError parameterError = new ParameterError(genericParameterProvision.getParameterName());
             AppEngineError error = ErrorBuilder.build(ErrorCode.INTERNAL_JSON_PROCESSING_ERROR, parameterError);
             throw new ProvisioningException(error);
@@ -173,19 +173,19 @@ public class TaskProvisioningService {
     @NotNull
     private void saveInDatabase(JsonNode provision, Run run) {
         Set<Input> inputs = run.getTask().getInputs();
-        Input inputForType = inputs.stream().filter(output -> output.getName().equalsIgnoreCase(provision.get("param_name").asText())).findFirst().get();
+        Input inputForType = inputs.stream().filter(input -> input.getName().equalsIgnoreCase(provision.get("param_name").asText())).findFirst().get();
         inputForType.getType().persistProvision(provision, run.getId());
     }
 
     private Type getInputParameterType(JsonNode provision, Run run) {
         Set<Input> inputs = run.getTask().getInputs();
-        Input inputForType = inputs.stream().filter(output -> output.getName().equalsIgnoreCase(provision.get("param_name").asText())).findFirst().get();
+        Input inputForType = inputs.stream().filter(input -> input.getName().equalsIgnoreCase(provision.get("param_name").asText())).findFirst().get();
         return inputForType.getType();
     }
 
     private void saveProvisionInStorage(JsonNode provision, Run run) throws ProvisioningException {
         Set<Input> inputs = run.getTask().getInputs();
-        Input inputForType = inputs.stream().filter(output -> output.getName().equalsIgnoreCase(provision.get("param_name").asText())).findFirst().get();
+        Input inputForType = inputs.stream().filter(input -> input.getName().equalsIgnoreCase(provision.get("param_name").asText())).findFirst().get();
 
         Storage runStorage = new Storage("task-run-inputs-" + run.getId());
         FileData inputProvisionFileData = inputForType.getType().mapToStorageFileData(provision, charset);
@@ -313,6 +313,7 @@ public class TaskProvisioningService {
                         remainingOutputs.remove(i);
                         break;
                     }
+                    currentOutput = null;
                 }
 
                 // there's a file that do not match any output parameter
@@ -394,7 +395,6 @@ public class TaskProvisioningService {
 
     public List<TaskRunParameterValue> retrieveRunOutputs(String runId) throws ProvisioningException {
         logger.info("Retrieving Outputs Json : retrieving...");
-        List<TaskRunParameterValue> outputList = new ArrayList<>();
         // validate run
         Run run = getRunIfValid(runId);
         if (!run.getState().equals(TaskRunState.FINISHED)) {
@@ -402,8 +402,7 @@ public class TaskProvisioningService {
             throw new ProvisioningException(error);
         }
         // find all the results
-        List<TypePersistence> results = typePersistenceRepository.findTypePersistenceByRunIdAndParameterType(UUID.fromString(runId), ParameterType.OUTPUT);
-        buildTaskRunParameterValues(outputList, run, results);
+        List<TaskRunParameterValue> outputList = buildTaskRunParameterValues(run, ParameterType.OUTPUT);
         logger.info("Retrieving Outputs Json : retrieved");
         return outputList;
     }
@@ -415,13 +414,11 @@ public class TaskProvisioningService {
             throw new ProvisioningException(error);
         }
         // check the state is valid
-        Run run = runOptional.get();
-        return run;
+        return runOptional.get();
     }
 
     public List<TaskRunParameterValue> retrieveRunInputs(String runId) throws ProvisioningException {
         logger.info("Retrieving Inputs : retrieving...");
-        List<TaskRunParameterValue> outputList = new ArrayList<>();
         // validate run
         Run run = getRunIfValid(runId);
         if (run.getState().equals(TaskRunState.CREATED)) {
@@ -429,18 +426,31 @@ public class TaskProvisioningService {
             throw new ProvisioningException(error);
         }
         // find all the results
-        buildTaskRunParameterValues(outputList, run, typePersistenceRepository.findTypePersistenceByRunIdAndParameterType(UUID.fromString(runId), ParameterType.INPUT));
+        List<TaskRunParameterValue> inputList = buildTaskRunParameterValues(run, ParameterType.INPUT);
         logger.info("Retrieving Inputs : retrieved");
-        return outputList;
+        return inputList;
     }
 
-    private void buildTaskRunParameterValues(List<TaskRunParameterValue> outputList, Run run, List<TypePersistence> results) {
-        for (TypePersistence result : results) {
-            // based on the type of the parameter assign the type
+    private List<TaskRunParameterValue> buildTaskRunParameterValues(Run run, ParameterType type) {
+        List<TaskRunParameterValue> parameterValues = new ArrayList<>();
+        List<TypePersistence> results = typePersistenceRepository.findTypePersistenceByRunIdAndParameterType(run.getId(), type);
+        if (type.equals(ParameterType.INPUT)) {
+            Set<Input> inputs = run.getTask().getInputs();
+            for (TypePersistence result : results) {
+                // based on the type of the parameter assign the type
+                Input inputForType = inputs.stream().filter(input -> input.getName().equalsIgnoreCase(result.getParameterName())).findFirst().get();
+                parameterValues.add(inputForType.getType().buildTaskRunParameterValue(result));
+            }
+        } else {
             Set<Output> outputs = run.getTask().getOutputs();
-            Output outputForType = outputs.stream().filter(output -> output.getName().equalsIgnoreCase(result.getParameterName())).findFirst().get();
-            outputList.add(outputForType.getType().buildTaskRunParameterValue(result));
+            for (TypePersistence result : results) {
+                // based on the type of the parameter assign the type
+                Output outputForType = outputs.stream().filter(output -> output.getName().equalsIgnoreCase(result.getParameterName())).findFirst().get();
+                parameterValues.add(outputForType.getType().buildTaskRunParameterValue(result));
+            }
         }
+
+        return parameterValues;
     }
 
 
@@ -476,7 +486,7 @@ public class TaskProvisioningService {
         // return response
         StateAction action = new StateAction();
 
-        action.setStatus("successful");
+        action.setStatus("success");
 
         TaskDescription description = makeTaskDescription(run.getTask());
         Resource resource = new Resource(description, run.getId(), TaskRunState.QUEUING, new Date(), new Date(), new Date());
