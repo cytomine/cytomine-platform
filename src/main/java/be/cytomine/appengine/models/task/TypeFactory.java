@@ -1,17 +1,25 @@
 package be.cytomine.appengine.models.task;
 
+import be.cytomine.appengine.models.task.bool.BooleanType;
 import be.cytomine.appengine.models.task.integer.IntegerType;
+import be.cytomine.appengine.models.task.number.NumberType;
+import be.cytomine.appengine.models.task.string.StringType;
+
 import com.fasterxml.jackson.databind.JsonNode;
 
 import be.cytomine.appengine.dto.inputs.task.types.integer.IntegerTypeConstraint;
+import be.cytomine.appengine.dto.inputs.task.types.number.NumberTypeConstraint;
+import be.cytomine.appengine.dto.inputs.task.types.string.StringTypeConstraint;
 import jakarta.validation.constraints.NotNull;
+
+import java.util.Arrays;
 
 public class TypeFactory {
 
-    private static String getTypeId(JsonNode typeNode) {
+    public static String getTypeId(JsonNode typeNode) {
         if (typeNode.isTextual()) {
             return typeNode.textValue();
-        } else  {
+        } else {
             return typeNode.get("id").textValue();
         }
     }
@@ -20,11 +28,21 @@ public class TypeFactory {
         JsonNode typeNode = node.get("type");
         // add new types here
         String typeId = getTypeId(typeNode);
-        if (typeId.equals("integer")) {
-            return createIntegerType(typeNode, typeId);
-        } else {
-            return new Type();
-        }
+        return switch (typeId) {
+            case "boolean" -> createBooleanType(typeId);
+            case "integer" -> createIntegerType(typeNode, typeId);
+            case "number" -> createNumberType(typeNode, typeId);
+            case "string" -> createStringType(typeNode, typeId);
+            default -> new Type();
+        };
+    }
+
+    @NotNull
+    private static BooleanType createBooleanType(String typeId) {
+        BooleanType type = new BooleanType();
+        type.setId(typeId);
+
+        return type;
     }
 
     @NotNull
@@ -32,12 +50,36 @@ public class TypeFactory {
         IntegerType type = new IntegerType();
         type.setId(typeId);
 
-        for (IntegerTypeConstraint constraint : IntegerTypeConstraint.values()) {
-            String constraintStringKey = constraint.getStringKey();
-            if (typeNode.has(constraintStringKey)) {
-                type.setConstraint(constraint, typeNode.get(constraintStringKey).asInt());
-            }
-        }
+        Arrays.stream(IntegerTypeConstraint.values())
+            .map(IntegerTypeConstraint::getStringKey)
+            .filter(typeNode::has)
+            .forEach(key -> type.setConstraint(IntegerTypeConstraint.getConstraint(key), typeNode.get(key).asInt()));
+
+        return type;
+    }
+
+    @NotNull
+    private static NumberType createNumberType(JsonNode typeNode, String typeId) {
+        NumberType type = new NumberType();
+        type.setId(typeId);
+
+        Arrays.stream(NumberTypeConstraint.values())
+            .map(NumberTypeConstraint::getStringKey)
+            .filter(typeNode::has)
+            .forEach(key -> type.setConstraint(NumberTypeConstraint.getConstraint(key), typeNode.get(key).asText()));
+
+        return type;
+    }
+
+    @NotNull
+    private static StringType createStringType(JsonNode typeNode, String typeId) {
+        StringType type = new StringType();
+        type.setId(typeId);
+
+        Arrays.stream(StringTypeConstraint.values())
+            .map(StringTypeConstraint::getStringKey)
+            .filter(typeNode::has)
+            .forEach(key -> type.setConstraint(StringTypeConstraint.getConstraint(key), typeNode.get(key).asText()));
 
         return type;
     }

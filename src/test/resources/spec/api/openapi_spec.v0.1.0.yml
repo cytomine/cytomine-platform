@@ -585,6 +585,8 @@ components:
         - integer
         - boolean
         - enumeration
+        - number
+        - string
 
     base_parameter:
       type: object
@@ -653,6 +655,55 @@ components:
           items:
             $ref: "#/components/schemas/enum_item"
 
+    type_spec_string:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: object
+          properties:
+            id:
+              type: string
+              enum: ["string"]
+            min_length:
+              type: integer
+              minimum: 0
+              description: 'input constraint, string length should be greater or equal to than $min_length'
+            max_length:
+              type: integer
+              minimum: 1
+              description: 'input constraint, string length should be less than or equal to $max_length'
+
+    type_spec_number:
+      type: object
+      required:
+        - id
+        - infinity_allowed
+        - nan_allowed
+      properties:
+        id:
+          type: string
+          enum: ["number"]
+        gt:
+          type: number
+          description: 'input constraint to enforce: input > $gt'
+        lt:
+          type: number
+          description: 'input constraint to enforce: input < $lt'
+        geq:
+          type: number
+          description: 'input constraint to enforce: input >= $geq'
+        leq:
+          type: number
+          description: 'input constraint to enforce: input <= $leq'
+        nan_allowed:
+          type: boolean
+          description: 'whether or not nan is accepted as a value for this parameters'
+        infinity_allowed:
+          type: boolean
+          description: 'whether or not infinity is accepted as a value for this parameter'
+
     typed_parameter_integer:
       allOf:
         - $ref: "#/components/schemas/base_parameter"
@@ -683,6 +734,26 @@ components:
             type:
               $ref: "#/components/schemas/type_spec_enumeration"
 
+    typed_parameter_string:
+      allOf:
+        - $ref: "#/components/schemas/base_parameter"
+        - type: object
+          required:
+            - type
+          properties:
+            type:
+              $ref: "#/components/schemas/type_spec_string"
+
+    typed_parameter_number:
+      allOf:
+        - $ref: "#/components/schemas/base_parameter"
+        - type: object
+          required:
+            - type
+          properties:
+            type:
+              $ref: "#/components/schemas/type_spec_number"
+
     input_parameter:
       type: object
       allOf:
@@ -709,6 +780,21 @@ components:
                 properties:
                   default:
                     description: Default enumeration value. If omitted, no default value
+        - oneOf:
+            - allOf:
+              - $ref: "#/components/schemas/typed_parameter_number"
+              - type: object
+                properties:
+                  default:
+                    description: Default number value. If omitted, no default value
+                    type: number
+        - oneOf:
+            - allOf:
+              - $ref: "#/components/schemas/typed_parameter_string"
+              - type: object
+                properties:
+                  default:
+                    description: Default string value. If omitted, no default value
                     type: string
       properties:
         optional:
@@ -720,6 +806,8 @@ components:
         - $ref: "#/components/schemas/typed_parameter_integer"
         - $ref: "#/components/schemas/typed_parameter_boolean"
         - $ref: "#/components/schemas/typed_parameter_enumeration"
+        - $ref: "#/components/schemas/typed_parameter_number"
+        - $ref: "#/components/schemas/typed_parameter_string"
 
     task_run_state:
       type: string
@@ -803,6 +891,8 @@ components:
             - type: integer
             - type: boolean
             - $ref: "#/components/schemas/enum_item"
+            - type: number
+            - type: string
         param_name:
           $ref: "#/components/schemas/param_name_type"
 
@@ -920,6 +1010,8 @@ components:
             - $ref: "#/components/schemas/integer_task_run_parameter"
             - $ref: "#/components/schemas/boolean_task_run_parameter"
             - $ref: "#/components/schemas/enumeration_task_run_parameter"
+            - $ref: "#/components/schemas/number_task_run_parameter"
+            - $ref: "#/components/schemas/string_task_run_parameter"
 
     integer_task_run_parameter:
       type: object
@@ -957,6 +1049,26 @@ components:
           items:
             $ref: "#/components/schemas/enum_item"
           description: the list of available values in the enumeration
+          enum: ["number"]          
+              
+    number_task_run_parameter:
+      type: object
+      required: ["value", "type"]
+      properties:
+        type:
+          type: string
+        value:
+          type: number
+
+    string_task_run_parameter:
+      type: object
+      required: ["value", "type"]
+      properties:
+        type:
+          type: string
+          enum: ["string"]
+        value:
+          type: string
 
     task_run_output:
       $ref: "#/components/schemas/typed_task_run_parameter"

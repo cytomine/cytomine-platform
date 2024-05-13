@@ -102,7 +102,7 @@ public class IntegerType extends Type {
     @Override
     public void persistResult(Run run, Output currentOutput, String outputValue) {
         IntegerPersistenceRepository integerPersistenceRepository = AppEngineApplicationContext.getBean(IntegerPersistenceRepository.class);
-        IntegerPersistence result = integerPersistenceRepository.findIntegerPersistenceByParameterNameAndRunIdAndParameterType(currentOutput.getName(), run.getId(), ParameterType.INPUT);
+        IntegerPersistence result = integerPersistenceRepository.findIntegerPersistenceByParameterNameAndRunIdAndParameterType(currentOutput.getName(), run.getId(), ParameterType.OUTPUT);
         if (result == null) {
             result = new IntegerPersistence();
             result.setValue(Integer.parseInt(outputValue));
