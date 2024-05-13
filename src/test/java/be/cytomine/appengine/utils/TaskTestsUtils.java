@@ -12,6 +12,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import be.cytomine.appengine.dto.inputs.task.GenericParameterProvision;
 import be.cytomine.appengine.dto.inputs.task.TaskRunParameterValue;
 import be.cytomine.appengine.dto.inputs.task.types.bool.BooleanValue;
 import be.cytomine.appengine.dto.inputs.task.types.integer.IntegerValue;
@@ -76,5 +77,33 @@ public class TaskTestsUtils {
         }
 
         return parameterValues;
+    }
+
+    public static GenericParameterProvision createProvision(String parameterName, String type, String value) {
+        GenericParameterProvision provision = new GenericParameterProvision();
+        provision.setParameterName(parameterName);
+        if (type.isEmpty()) {
+            provision.setValue(value);
+            return provision;
+        }
+
+        switch (type) {
+            case "BooleanType":
+                provision.setType(be.cytomine.appengine.dto.inputs.task.ParameterType.BOOLEAN);
+                provision.setValue(Boolean.parseBoolean(value));
+                break;
+            case "IntegerType":
+                provision.setType(be.cytomine.appengine.dto.inputs.task.ParameterType.INTEGER);
+                provision.setValue(Integer.parseInt(value));
+                break;
+            case "NumberType":
+                provision.setType(be.cytomine.appengine.dto.inputs.task.ParameterType.NUMBER);
+                provision.setValue(Double.parseDouble(value));
+                break;
+            default:
+                break;
+        }
+
+        return provision;
     }
 }

@@ -25,6 +25,8 @@ import be.cytomine.appengine.utils.TestTaskBuilder;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
@@ -160,14 +162,6 @@ public class RunTaskStepDefinitions {
         };
     }
 
-    private TaskRunInputProvisionInputBodyValue provisionInput(String name, String type, String value) {
-        return switch (type) {
-            case "boolean" -> new TaskRunInputProvisionInputBodyValue(Boolean.parseBoolean(value));
-            case "integer" -> new TaskRunInputProvisionInputBodyValue(Integer.parseInt(value));
-            default -> null;
-        };
-    }
-
     @Given("Scheduler is up and running")
     public void scheduler_is_up_and_running() throws SchedulingException {
         schedulerHandler.alive();
@@ -211,20 +205,19 @@ public class RunTaskStepDefinitions {
     // successful fetch of task run inputs archive in a launched task run
     @Given("the task run {string} has input parameters: {string} of type {string} with value {string} and {string} of type {string} with value {string}")
     public void the_task_run_has_input_parameters_of_type_with_value_and_of_type_with_value(String runId, String name1, String type1, String value1, String name2, String type2, String value2) throws ApiException, FileStorageException {
-        List<TaskRunInputProvisionInputBody> provisionInputBodyList = new ArrayList<>();
-        // input one
-        TaskRunInputProvisionInputBody input1 = new TaskRunInputProvisionInputBody();
-        input1.setParamName(name1);
-        input1.setValue(provisionInput(name1, type1, value1));
-        provisionInputBodyList.add(input1);
+        String endpointUrl = buildAppEngineUrl() + "/task-runs/" + persistedRun.getId() + "/input-provisions";
 
-        // input two
-        TaskRunInputProvisionInputBody input2 = new TaskRunInputProvisionInputBody();
-        input2.setParamName(name2);
-        input2.setValue(provisionInput(name2, type2, value2));
-        provisionInputBodyList.add(input2);
+        ObjectMapper mapper = new ObjectMapper();
+        List<ObjectNode> provisions = new ArrayList<>();
+        provisions.add(mapper.valueToTree(TaskTestsUtils.createProvision(name1, type1, value1)));
+        provisions.add(mapper.valueToTree(TaskTestsUtils.createProvision(name2, type2, value2)));
 
-        appEngineApi.provisionTaskRunParameterBatch(UUID.fromString(runId), provisionInputBodyList);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        HttpEntity<List<ObjectNode>> entity = new HttpEntity<>(provisions, headers);
+
+        new RestTemplate().exchange(endpointUrl, HttpMethod.PUT, entity, JsonNode.class);
 
         // save inputs in storage
         Storage storage = new Storage("task-run-inputs-" + runId);

@@ -25,6 +25,7 @@ import be.cytomine.appengine.repositories.number.NumberPersistenceRepository;
 import be.cytomine.appengine.repositories.RunRepository;
 import be.cytomine.appengine.repositories.TaskRepository;
 import be.cytomine.appengine.states.TaskRunState;
+import be.cytomine.appengine.utils.TaskTestsUtils;
 import be.cytomine.appengine.utils.TestTaskBuilder;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -97,34 +98,6 @@ public class ProvisionTaskStepDefinitions {
 
     private String buildAppEngineUrl() {
         return "http://localhost:" + port + apiPrefix + apiVersion;
-    }
-
-    private GenericParameterProvision createProvision(String parameterName, String type, String value) {
-        GenericParameterProvision provision = new GenericParameterProvision();
-        provision.setParameterName(parameterName);
-        if (type.isEmpty()) {
-            provision.setValue(value);
-            return provision;
-        }
-
-        switch (type) {
-            case "BooleanType":
-                provision.setType(be.cytomine.appengine.dto.inputs.task.ParameterType.BOOLEAN);
-                provision.setValue(Boolean.parseBoolean(value));
-                break;
-            case "IntegerType":
-                provision.setType(be.cytomine.appengine.dto.inputs.task.ParameterType.INTEGER);
-                provision.setValue(Integer.parseInt(value));
-                break;
-            case "NumberType":
-                provision.setType(be.cytomine.appengine.dto.inputs.task.ParameterType.NUMBER);
-                provision.setValue(Double.parseDouble(value));
-                break;
-            default:
-                break;
-        }
-
-        return provision;
     }
 
     @Given("a task has been successfully uploaded")
@@ -306,7 +279,7 @@ public class ProvisionTaskStepDefinitions {
                 .orElse(null);
 
         ObjectMapper mapper = new ObjectMapper();
-        ObjectNode jsonNode = mapper.valueToTree(createProvision(parameterName, input == null ? "" : input.getType().getClass().getSimpleName(), value));
+        ObjectNode jsonNode = mapper.valueToTree(TaskTestsUtils.createProvision(parameterName, input == null ? "" : input.getType().getClass().getSimpleName(), value));
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -404,7 +377,7 @@ public class ProvisionTaskStepDefinitions {
                     .findFirst()
                     .orElse(null);
 
-            GenericParameterProvision provision = createProvision(
+            GenericParameterProvision provision = TaskTestsUtils.createProvision(
                 parameterName,
                 input == null ? "" : input.getType().getClass().getSimpleName(),
                 parameter.get("value").asText()
