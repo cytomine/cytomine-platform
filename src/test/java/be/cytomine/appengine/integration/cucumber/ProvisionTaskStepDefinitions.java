@@ -9,6 +9,8 @@ import be.cytomine.appengine.handlers.FileStorageHandler;
 import be.cytomine.appengine.models.task.*;
 import be.cytomine.appengine.models.task.bool.BooleanPersistence;
 import be.cytomine.appengine.models.task.bool.BooleanType;
+import be.cytomine.appengine.models.task.enumeration.EnumerationPersistence;
+import be.cytomine.appengine.models.task.enumeration.EnumerationType;
 import be.cytomine.appengine.models.task.integer.IntegerPersistence;
 import be.cytomine.appengine.models.task.integer.IntegerType;
 import be.cytomine.appengine.models.task.number.NumberPersistence;
@@ -22,6 +24,7 @@ import be.cytomine.appengine.openapi.invoker.Configuration;
 import be.cytomine.appengine.openapi.model.TaskRun;
 import be.cytomine.appengine.repositories.TypePersistenceRepository;
 import be.cytomine.appengine.repositories.bool.BooleanPersistenceRepository;
+import be.cytomine.appengine.repositories.enumeration.EnumerationPersistenceRepository;
 import be.cytomine.appengine.repositories.integer.IntegerPersistenceRepository;
 import be.cytomine.appengine.repositories.number.NumberPersistenceRepository;
 import be.cytomine.appengine.repositories.string.StringPersistenceRepository;
@@ -76,6 +79,9 @@ public class ProvisionTaskStepDefinitions {
 
     @Autowired
     private BooleanPersistenceRepository booleanProvisionRepository;
+
+    @Autowired
+    private EnumerationPersistenceRepository enumerationProvisionRepository;
 
     @Autowired
     private IntegerPersistenceRepository integerProvisionRepository;
@@ -187,6 +193,8 @@ public class ProvisionTaskStepDefinitions {
                     return !(((NumberType) input.getType()).getId().equals(type) && input.getName().equals(paramName));
                 case "StringType":
                     return !(((StringType) input.getType()).getId().equals(type) && input.getName().equals(paramName));
+                case "EnumerationType":
+                    return !(((EnumerationType) input.getType()).getId().equals(type) && input.getName().equals(paramName));
                 default:
                     return false;
             }
@@ -243,6 +251,11 @@ public class ProvisionTaskStepDefinitions {
                 provision = new StringPersistence();
                 provision.setValueType(ValueType.STRING);
                 ((StringPersistence) provision).setValue(initialValue);
+                break;
+            case "EnumerationType":
+                provision = new EnumerationPersistence();
+                provision.setValueType(ValueType.ENUMERATION);
+                ((EnumerationPersistence) provision).setValue(initialValue);
                 break;
         }
 
@@ -329,6 +342,9 @@ public class ProvisionTaskStepDefinitions {
                 break;
             case "StringType":
                 provision = stringProvisionRepository.findStringPersistenceByParameterNameAndRunIdAndParameterType(parameterName, persistedRun.getId() , ParameterType.INPUT);
+                break;
+            case "EnumerationType":
+                provision = enumerationProvisionRepository.findEnumerationPersistenceByParameterNameAndRunIdAndParameterType(parameterName, persistedRun.getId() , ParameterType.INPUT);
                 break;
         }
 
@@ -529,6 +545,8 @@ public class ProvisionTaskStepDefinitions {
                             return ((NumberType) input.getType()).getId().equals(type) && input.getName().equals(paramName);
                         case "string":
                             return ((StringType) input.getType()).getId().equals(type) && input.getName().equals(paramName);
+                        case "enumeration":
+                            return ((EnumerationType) input.getType()).getId().equals(type) && input.getName().equals(paramName);
                         default:
                             return false;
                     }
@@ -571,6 +589,10 @@ public class ProvisionTaskStepDefinitions {
             case "StringType":
                 provision = stringProvisionRepository.findStringPersistenceByParameterNameAndRunIdAndParameterType(parameterName, persistedRun.getId() , ParameterType.INPUT);
                 Assertions.assertEquals(((StringPersistence) provision).getValue(), newValue);
+                break;
+            case "EnumerationType":
+                provision = enumerationProvisionRepository.findEnumerationPersistenceByParameterNameAndRunIdAndParameterType(parameterName, persistedRun.getId() , ParameterType.INPUT);
+                Assertions.assertEquals(((EnumerationPersistence) provision).getValue(), newValue);
                 break;
         }
 
