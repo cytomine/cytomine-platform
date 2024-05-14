@@ -780,6 +780,7 @@ components:
                 properties:
                   default:
                     description: Default enumeration value. If omitted, no default value
+                    type: string
         - oneOf:
             - allOf:
               - $ref: "#/components/schemas/typed_parameter_number"
@@ -1049,14 +1050,14 @@ components:
           items:
             $ref: "#/components/schemas/enum_item"
           description: the list of available values in the enumeration
-          enum: ["number"]          
-              
+
     number_task_run_parameter:
       type: object
       required: ["value", "type"]
       properties:
         type:
           type: string
+          enum: ["number"]
         value:
           type: number
 
