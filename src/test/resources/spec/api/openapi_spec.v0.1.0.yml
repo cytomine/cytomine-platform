@@ -517,6 +517,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/task_run_inputs'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/generic_error'
 
 components:
 
@@ -634,16 +640,6 @@ components:
       type: string
       maxLength: 256
       minLength: 1
-
-    param_type_identifier:
-      type: string
-      enum:
-        - integer
-        - boolean
-        - enumeration
-        - number
-        - string
-        - geometry
 
     base_parameter:
       type: object
