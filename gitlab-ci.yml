@@ -61,3 +61,5 @@ build-push-docker-image:
     - docker push ${DOCKER_IMAGE_NAME}:${IMAGE_VERSION}
     - docker push ${DOCKER_IMAGE_NAME}:latest
     - echo "Successfully pushed docker image ${DOCKER_IMAGE_NAME}:${IMAGE_VERSION} and ${DOCKER_IMAGE_NAME}:latest"
+
+
