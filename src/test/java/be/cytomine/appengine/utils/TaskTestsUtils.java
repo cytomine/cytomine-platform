@@ -16,6 +16,7 @@ import be.cytomine.appengine.dto.inputs.task.GenericParameterProvision;
 import be.cytomine.appengine.dto.inputs.task.TaskRunParameterValue;
 import be.cytomine.appengine.dto.inputs.task.types.bool.BooleanValue;
 import be.cytomine.appengine.dto.inputs.task.types.enumeration.EnumerationValue;
+import be.cytomine.appengine.dto.inputs.task.types.geometry.GeometryValue;
 import be.cytomine.appengine.dto.inputs.task.types.integer.IntegerValue;
 import be.cytomine.appengine.dto.inputs.task.types.string.StringValue;
 import be.cytomine.appengine.models.BaseEntity;
@@ -91,6 +92,14 @@ public class TaskTestsUtils {
                     enumerationValue.setValue((String) entity.get("value"));
                     parameterValues.add(enumerationValue);
                     break;
+
+                case "geometry":
+                    GeometryValue geometryValue = new GeometryValue();
+                    geometryValue.setParam_name((String) entity.get("param_name"));
+                    geometryValue.setTask_run_id(UUID.fromString((String) entity.get("task_run_id")));
+                    geometryValue.setValue((String) entity.get("value"));
+                    parameterValues.add(geometryValue);
+                    break;
             }
         }
 
@@ -124,6 +133,10 @@ public class TaskTestsUtils {
                 break;
             case "EnumerationType":
                 provision.setType(be.cytomine.appengine.dto.inputs.task.ParameterType.ENUMERATION);
+                provision.setValue(value);
+                break;
+            case "GeometryType":
+                provision.setType(be.cytomine.appengine.dto.inputs.task.ParameterType.GEOMETRY);
                 provision.setValue(value);
                 break;
         }
