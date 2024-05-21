@@ -116,6 +116,24 @@
     }
   },
   "$defs": {
+    "dependencies": {
+      "derived_from": {
+        "type": "object",
+        "required": ["dependencies"],
+        "properties": {
+          "dependencies": {
+            "type": "object",
+            "required": ["derived_from"],
+            "properties": {
+              "derived_from": {
+                "type": "string",
+                "pattern": "^inputs/[a-zA-Z0-9_]+$"
+              }
+            }
+          }
+        }
+      }
+    },
     "types": {
       "semver": {
         "type": "string",
@@ -287,6 +305,37 @@
         },
         "geometry": {
           "const": "geometry"
+        },
+        "image": {
+          "oneOf": [
+            {
+              "const": "image"
+            },
+            {
+              "type": "object",
+              "required": ["id"],
+              "properties": {
+                "id": {"const": "image"},
+                "max_file_size": {
+                  "$ref": "#/$defs/types/memory"
+                },
+                "formats": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "string",
+                    "enum": ["png", "jpeg", "tiff"]
+                  }
+                },
+                "max_width": {
+                  "type": "integer"
+                },
+                "max_height": {
+                  "type": "integer"
+                }
+              }
+            }
+          ]
         }
       },
       "typed_parameter": {
@@ -366,6 +415,17 @@
             "type": {"$ref": "#/$defs/io/type_specs/geometry"}
           },
           "unevaluatedProperties": false
+        },
+        "image": {
+          "type": "object",
+          "allOf": [
+            {"$ref": "#/$defs/io/base_parameter"}
+          ],
+          "required": ["type"],
+          "properties": {
+            "type": {"$ref": "#/$defs/io/type_specs/image"}
+          },
+          "unevaluatedProperties": false
         }
       },
       "input_parameter": {
@@ -423,14 +483,19 @@
         ]
       },
       "output_parameter": {
-        "oneOf": [
-          {"$ref": "#/$defs/io/typed_parameter/integer"},
-          {"$ref": "#/$defs/io/typed_parameter/boolean"},
-          {"$ref": "#/$defs/io/typed_parameter/number"},
-          {"$ref": "#/$defs/io/typed_parameter/string"},
-          {"$ref": "#/$defs/io/typed_parameter/enumeration"},
-          {"$ref": "#/$defs/io/typed_parameter/datetime"},
-          {"$ref": "#/$defs/io/typed_parameter/geometry"}
+        "allOf": [
+          {
+            "oneOf": [
+              {"$ref": "#/$defs/io/typed_parameter/integer"},
+              {"$ref": "#/$defs/io/typed_parameter/boolean"},
+              {"$ref": "#/$defs/io/typed_parameter/number"},
+              {"$ref": "#/$defs/io/typed_parameter/string"},
+              {"$ref": "#/$defs/io/typed_parameter/enumeration"},
+              {"$ref": "#/$defs/io/typed_parameter/datetime"},
+              {"$ref": "#/$defs/io/typed_parameter/geometry"}
+            ]
+          },
+          {"$ref": "#/$defs/dependencies/derived_from"}
         ]
       }
     }
