@@ -1,6 +1,6 @@
 # List ARGs here for better readability.
 ARG ENTRYPOINT_SCRIPTS_VERSION=1.4.0
-ARG KEYCLOAK_VERSION=22.0.4
+ARG KEYCLOAK_VERSION=24.0.2
 ARG UBI_VERSION=9.3-1610
 ARG IMAGE_VERSION
 ARG IMAGE_REVISION
@@ -96,4 +96,4 @@ COPY configs/kc_config.json /opt/keycloak/data/import
 ENV KC_DB=postgres
 
 ENTRYPOINT ["cytomine-entrypoint.sh", "/opt/keycloak/bin/kc.sh"]
-CMD ["start-dev" , "--http-port=8100" , "--import-realm"]
+CMD ["start-dev" , "--http-port=8100" , "--import-realm" , "--hostname=iam:8100"  , "--hostname-strict-backchannel=true"]
