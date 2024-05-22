@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import be.cytomine.appengine.dto.inputs.task.TaskRunParameterValue;
 import be.cytomine.appengine.dto.inputs.task.types.geometry.GeometryValue;
 import be.cytomine.appengine.dto.responses.errors.ErrorCode;
+import be.cytomine.appengine.exceptions.ParseException;
 import be.cytomine.appengine.exceptions.TypeValidationException;
 import be.cytomine.appengine.handlers.FileData;
 import be.cytomine.appengine.models.task.Output;
@@ -20,16 +21,88 @@ import be.cytomine.appengine.utils.AppEngineApplicationContext;
 import jakarta.persistence.Entity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
+
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.io.geojson.GeoJsonReader;
 
 @Entity
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class GeometryType extends Type {
 
+    public static final List<String> SUPPORTED_TYPES = Arrays.asList(
+        "Point",
+        "MultiPoint",
+        "LineString",
+        "MultiLineString",
+        "Polygon",
+        "MultiPolygon"
+    );
+
+    /**
+     * Parse a string representation of a geometry to a geometry
+     *
+     * @param input The string representation of the geometry
+     * @return The geometry
+     * @throws ParseException
+     */
+    public static Geometry parse(String input) throws ParseException {
+        try {
+            JSONParser parser = new JSONParser();
+            JSONObject json = (JSONObject) parser.parse(input);
+
+            GeoJsonReader reader = new GeoJsonReader();
+            Geometry geometry = reader.read(json.get("geometry").toString());
+            geometry.setUserData(json.get("properties"));
+
+            return geometry;
+        } catch(Exception e) {
+            throw new ParseException("Error while parsing geometry: " + e.getMessage());
+        }
+    }
+
     @Override
     public void validate(Object valueObject) throws TypeValidationException {
         if (!(valueObject instanceof String)) {
+            throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_VALIDATION_ERROR);
+        }
+
+        Geometry geometry;
+        try {
+            geometry = parse((String) valueObject);
+        } catch (ParseException e) {
+            throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_VALIDATION_ERROR);
+        }
+
+        if (!geometry.isValid()) {
+            throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_VALIDATION_ERROR);
+        }
+
+        if (!SUPPORTED_TYPES.contains(geometry.getGeometryType())) {
+            throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_VALIDATION_ERROR);
+        }
+
+        // Validation for Circle and Rectangle
+        JSONObject properties = (JSONObject) geometry.getUserData();
+        if (properties == null || properties.isEmpty()) {
+            return;
+        }
+
+        if (!properties.containsKey("subType")) {
+            throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_VALIDATION_ERROR);
+        }
+
+        String subType = (String) properties.get("subType");
+        if (!subType.equals("Circle") && !subType.equals("Rectangle")) {
+            throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_VALIDATION_ERROR);
+        }
+
+        if (subType.equals("Circle") && !properties.containsKey("radius")) {
             throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_VALIDATION_ERROR);
         }
     }
@@ -54,6 +127,7 @@ public class GeometryType extends Type {
             geometryPersistenceRepository.saveAndFlush(persistedProvision);
         }
     }
+
 
     @Override
     public void persistResult(Run run, Output currentOutput, String outputValue) {
