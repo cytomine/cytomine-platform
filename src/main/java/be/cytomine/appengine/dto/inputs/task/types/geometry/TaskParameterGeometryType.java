@@ -8,6 +8,6 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 @Data
 @AllArgsConstructor
-public class TaskparameterGeometryType extends TaskParameterType {
+public class TaskParameterGeometryType extends TaskParameterType {
     private String id;
 }

@@ -2,7 +2,7 @@ package be.cytomine.appengine.dto.inputs.task;
 
 import be.cytomine.appengine.dto.inputs.task.types.bool.TaskParameterBooleanType;
 import be.cytomine.appengine.dto.inputs.task.types.enumeration.TaskParameterEnumerationType;
-import be.cytomine.appengine.dto.inputs.task.types.geometry.TaskparameterGeometryType;
+import be.cytomine.appengine.dto.inputs.task.types.geometry.TaskParameterGeometryType;
 import be.cytomine.appengine.dto.inputs.task.types.integer.TaskParameterIntegerType;
 import be.cytomine.appengine.dto.inputs.task.types.number.TaskParameterNumberType;
 import be.cytomine.appengine.dto.inputs.task.types.string.TaskParameterStringType;
@@ -30,7 +30,7 @@ public class TaskOutputFactory {
         } else if (output.getType() instanceof EnumerationType type) {
             taskParameterType = new TaskParameterEnumerationType(type.getId(), type.getValues());
         } else if (output.getType() instanceof GeometryType type) {
-            taskParameterType = new TaskparameterGeometryType(type.getId());
+            taskParameterType = new TaskParameterGeometryType(type.getId());
         }
 
         return new TaskOutput(output.getId().toString(), output.getDefaultValue(), output.getName(), output.getDisplayName(), output.getDescription(), output.isOptional(), taskParameterType);
