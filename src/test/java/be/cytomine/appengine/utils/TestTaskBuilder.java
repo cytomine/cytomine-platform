@@ -38,6 +38,8 @@ public class TestTaskBuilder {
     task.setNamespace("com.cytomine.dummy.arithmetic.integer.addition");
     task.setVersion("1.0.0");
     task.setDescription("");
+    task.setInputFolder("/inputs");
+    task.setOutputFolder("/outputs");
     // add authors
     Set<Author> authors = new HashSet<>();
     Author author = new Author();
@@ -58,6 +60,7 @@ public class TestTaskBuilder {
     IntegerType inputType1_1 = new IntegerType();
     inputType1_1.setId("integer");
     inputa.setType(inputType1_1);
+    inputa.setDefaultValue("0");
 
     Input inputb = new Input();
     inputb.setName("b");
@@ -66,6 +69,7 @@ public class TestTaskBuilder {
     IntegerType inputType1_2 = new IntegerType();
     inputType1_2.setId("integer");
     inputb.setType(inputType1_2);
+    inputb.setDefaultValue("0");
 
     inputs.add(inputa);
     inputs.add(inputb);
@@ -73,7 +77,7 @@ public class TestTaskBuilder {
     // add outputs for task one
     Set<Output> outputs = new HashSet<>();
     Output output = new Output();
-    output.setName("out");
+    output.setName("sum");
     output.setDisplayName("Sum");
     output.setDescription("Sum of operands A and B");
     IntegerType outputType = new IntegerType();
@@ -123,6 +127,7 @@ public class TestTaskBuilder {
     IntegerType inputType1_1 = new IntegerType();
     inputType1_1.setId("integer");
     inputa.setType(inputType1_1);
+    inputa.setDefaultValue("0");
 
     Input inputb = new Input();
     inputb.setName("b");
@@ -131,6 +136,7 @@ public class TestTaskBuilder {
     IntegerType inputType1_2 = new IntegerType();
     inputType1_2.setId("integer");
     inputb.setType(inputType1_2);
+    inputb.setDefaultValue("0");
 
     inputs.add(inputa);
     inputs.add(inputb);
@@ -245,6 +251,18 @@ public class TestTaskBuilder {
         input.setDescription(inputValue.get("description").textValue());
         // use type factory to generate the correct type
         input.setType(TypeFactory.createType(inputValue));
+        switch (TypeFactory.getTypeId(inputValue.get("type"))) {
+          case "boolean":
+              input.setDefaultValue("false");
+              break;
+          case "integer":
+              input.setDefaultValue("0");
+              break;
+          default:
+              input.setDefaultValue("");
+              break;
+        }
+
         inputs.add(input);
       }
     }

@@ -1,5 +1,9 @@
 package be.cytomine.appengine.dto.inputs.task;
 
 public enum ParameterType { // add types to this enum
-    INTEGER
+    BOOLEAN,
+    INTEGER,
+    NUMBER,
+    STRING,
+    ENUMERATION
 }

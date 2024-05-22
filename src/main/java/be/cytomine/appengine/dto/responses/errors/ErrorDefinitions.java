@@ -19,6 +19,7 @@ public class ErrorDefinitions {
         codes.put(ErrorCode.INTERNAL_PARAMETER_GT_VALIDATION_ERROR, new MessageCode("APPE-internal-request-validation-error", "value must be greater than defined constraint"));
         codes.put(ErrorCode.INTERNAL_PARAMETER_LEQ_VALIDATION_ERROR, new MessageCode("APPE-internal-request-validation-error", "value must be less than or equal to defined constraint"));
         codes.put(ErrorCode.INTERNAL_PARAMETER_GEQ_VALIDATION_ERROR, new MessageCode("APPE-internal-request-validation-error", "value must be greater than or equal to define constraint"));
+        codes.put(ErrorCode.INTERNAL_PARAMETER_VALIDATION_ERROR, new MessageCode("APPE-internal-request-validation-error", "value does not match defined constraint."));
         codes.put(ErrorCode.INTERNAL_PARAMETER_DOES_NOT_EXIST, new MessageCode("APPE-internal-parameter-not-found", "parameter not found"));
         codes.put(ErrorCode.RUN_NOT_FOUND, new MessageCode("APPE-internal-run-not-found-error", "Run not found."));
         codes.put(ErrorCode.INTERNAL_PROVISIONS_NOT_FOUND, new MessageCode("APPE-internal-task-run-state-error", "provisions not found for this run"));

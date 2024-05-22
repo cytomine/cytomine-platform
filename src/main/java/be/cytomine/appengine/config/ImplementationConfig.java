@@ -4,7 +4,7 @@ package be.cytomine.appengine.config;
 import be.cytomine.appengine.handlers.FileStorageHandler;
 import be.cytomine.appengine.handlers.RegistryHandler;
 import be.cytomine.appengine.handlers.SchedulerHandler;
-import be.cytomine.appengine.handlers.scheduler.impl.DefaultScheduler;
+import be.cytomine.appengine.handlers.scheduler.impl.KubernetesScheduler;
 import be.cytomine.appengine.handlers.storage.impl.FileSystemStorageHandler;
 import be.cytomine.appengine.handlers.registry.impl.DefaultRegistryHandler;
 import be.cytomine.appengine.handlers.registry.impl.DockerRegistryHandler;
@@ -55,6 +55,6 @@ public class ImplementationConfig {
     @Bean
     @Primary
     public SchedulerHandler loadSchedulerHandler() throws Exception {
-        return new DefaultScheduler();
+        return new KubernetesScheduler();
     }
 }

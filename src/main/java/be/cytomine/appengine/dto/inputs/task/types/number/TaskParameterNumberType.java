@@ -1,24 +1,28 @@
-package be.cytomine.appengine.dto.inputs.task;
+package be.cytomine.appengine.dto.inputs.task.types.number;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+
+import be.cytomine.appengine.dto.inputs.task.TaskParameterType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-
 @EqualsAndHashCode(callSuper = true)
 @Data
 @AllArgsConstructor
-public class TaskParameterIntegerType extends TaskParameterType {
-
+public class TaskParameterNumberType extends TaskParameterType {
 
     private String id;
+
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private Integer gt;
+    private Double gt;
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private Integer lt;
+    private Double geq;
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private Integer geq;
+    private Double lt;
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private Integer leq;
+    private Double leq;
+
+    private boolean infinityAllowed;
+    private boolean nanAllowed;
 }
