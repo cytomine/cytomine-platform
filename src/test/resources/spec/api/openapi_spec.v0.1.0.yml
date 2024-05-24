@@ -492,7 +492,7 @@ paths:
           description: The UUID of the task run
       responses:
         '200':
-          description: valid zip file with output data (request should not fail if data is invalid)
+          description: task run outputs
           content:
             application/json:
               schema:
@@ -524,7 +524,7 @@ paths:
           description: The UUID of the task run
       responses:
         '200':
-          description: valid zip file with output data (request should not fail if data is invalid)
+          description: task run inputs
           content:
             application/json:
               schema:
@@ -641,7 +641,7 @@ components:
   schemas:
     memory-string:
       type: string
-      pattern: ^(?:0|[1-9]\d*)(?:\.\d+)?\s*(?:(?:[KMGTPEZY]i?)?B|(?:[kmgtpezy]i?)?b)?$
+      pattern: ^(?:0|[1-9]\d*)(?:\.\d+)?(?:\s*(?:[KMGTPEZY]i?)?B|(?:[kmgtpezy]i?)?b)?$
 
     contact:
       type: object
@@ -664,7 +664,7 @@ components:
 
     individual_geojson_geometry:
       type: object
-      oneOf: 
+      oneOf:
         - $ref: "https://geojson.org/schema/Point.json"
         - $ref: "https://geojson.org/schema/MultiPoint.json"
         - $ref: "https://geojson.org/schema/LineString.json"
@@ -680,7 +680,7 @@ components:
             type:
               type: string
               enum: ["Feature"]
-            geometry: 
+            geometry:
               $ref: "https://geojson.org/schema/Point.json"
             properties:
               type: object
@@ -717,7 +717,7 @@ components:
                 subType:
                   type: string
                   enum: ["Rectangle"]
-        
+
     task_description:
       type: object
       required:
@@ -886,9 +886,10 @@ components:
           type: string
           enum: ["image"]
         max_file_size:
-          $ref: "#/components/schemas/memory-string"
+          type: integer
+          minimum: 1
           description: max image file size, in bytes
-        max_width: 
+        max_width:
           type: integer
           minimum: 1
           description: maximum width for the image
@@ -955,7 +956,7 @@ components:
           properties:
             type:
               $ref: "#/components/schemas/type_spec_number"
-    
+
     typed_parameter_geometry:
       allOf:
         - $ref: "#/components/schemas/base_parameter"
@@ -965,7 +966,7 @@ components:
           properties:
             type:
               $ref: "#/components/schemas/type_spec_geometry"
-        
+
     typed_parameter_image:
       allOf:
         - $ref: "#/components/schemas/base_parameter"
@@ -975,7 +976,7 @@ components:
           properties:
             type:
               $ref: "#/components/schemas/type_spec_image"
-  
+
     input_parameter:
       type: object
       allOf:
@@ -1022,7 +1023,10 @@ components:
 
         - oneOf:
           - $ref: "#/components/schemas/typed_parameter_geometry"
-              
+
+        - oneOf:
+          - $ref: "#/components/schemas/typed_parameter_image"
+
       properties:
         optional:
           description: Whether or not the parameter is optional
@@ -1301,7 +1305,7 @@ components:
           enum: ["string"]
         value:
           type: string
-    
+
     geometry_task_run_parameter:
       type: object
       required: ["value", "type"]
@@ -1318,7 +1322,7 @@ components:
       properties:
         type:
           type: string
-          enum: ["image"]        
+          enum: ["image"]
 
     task_run_output:
       $ref: "#/components/schemas/typed_task_run_parameter"
