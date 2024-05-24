@@ -639,6 +639,7 @@ components:
       scheme: bearer
 
   schemas:
+
     memory-string:
       type: string
       pattern: ^(?:0|[1-9]\d*)(?:\.\d+)?(?:\s*(?:[KMGTPEZY]i?)?B|(?:[kmgtpezy]i?)?b)?$
@@ -751,6 +752,17 @@ components:
       type: string
       maxLength: 256
       minLength: 1
+
+    param-deps-derived-from:
+      type: "object"
+      properties:
+        dependencies:
+          type: "object"
+          required: ["derived_from"]
+          properties:
+            derived_from:
+              type: "string"
+              pattern: "^inputs/[a-zA-Z0-9_]+$"
 
     base_parameter:
       type: object
@@ -1041,6 +1053,7 @@ components:
         - $ref: "#/components/schemas/typed_parameter_string"
         - $ref: "#/components/schemas/typed_parameter_geometry"
         - $ref: "#/components/schemas/typed_parameter_image"
+
 
     task_run_state:
       type: string
