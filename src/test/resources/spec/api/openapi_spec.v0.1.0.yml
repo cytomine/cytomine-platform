@@ -536,7 +536,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/generic_error'
 
-  /task-runs/{run_id}/inputs/{parameter_name}/file:
+  /task-runs/{run_id}/inputs/{param_name}/file:
     get:
       summary: Get a task run input file
       operationId: getTaskRunInputFile
@@ -584,7 +584,7 @@ paths:
                 $ref: '#/components/schemas/generic_error'
 
 
-  /task-runs/{run_id}/outputs/{parameter_name}/file:
+  /task-runs/{run_id}/outputs/{param_name}/file:
     get:
       summary: Get a task run output file
       operationId: getTaskRunOutputFile
