@@ -470,6 +470,9 @@
               },
               {
                 "$ref": "#/$defs/io/typed_parameter/geometry"
+              },
+              {
+                "$ref": "#/$defs/io/typed_parameter/image"
               }
             ]
           },
@@ -491,7 +494,8 @@
               {"$ref": "#/$defs/io/typed_parameter/string"},
               {"$ref": "#/$defs/io/typed_parameter/enumeration"},
               {"$ref": "#/$defs/io/typed_parameter/datetime"},
-              {"$ref": "#/$defs/io/typed_parameter/geometry"}
+              {"$ref": "#/$defs/io/typed_parameter/geometry"},
+              {"$ref": "#/$defs/io/typed_parameter/image"}
             ]
           },
           {"$ref": "#/$defs/dependencies/derived_from"}
