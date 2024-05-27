@@ -33,13 +33,14 @@ echo -e "\n$(date) Backing up cytomine postgis databases ... $DB_USER"
 
 # Create the backup
 export LC_TIME=en_US.UTF-8 # to change the language of the date to English
-pg_dumpall --username="$DB_USER" --clean -f "/$BACKUP_TMP_PATH/$BACKUP_FILENAME.sql"
+pg_dumpall --username="$DB_USER" --clean -f "$BACKUP_TMP_PATH/$BACKUP_FILENAME.sql"
 # Check the exit status of pg_dump
 if [ $? -ne 0 ]; then
   echo -e "$(date) Could not extract SQL dump. Aborting backup."
   exit 1
 fi
 
+mkdir -p $BACKUP_TMP_PATH
 cd $BACKUP_TMP_PATH
 tar -czf "$BACKUP_TARGET_PATH" "$BACKUP_FILENAME".sql 2>&1
 # Check the exit status of tar
@@ -48,12 +49,12 @@ if [ $? -eq 0 ]; then
 else
   echo "$(date) Backup failed"
   # Clean tmp file
-  rm "/$BACKUP_TMP_PATH/$BACKUP_FILENAME.sql"
+  rm "$BACKUP_TMP_PATH/$BACKUP_FILENAME.sql"
   exit 2
 fi
 
 # Clean tmp file
-rm "/$BACKUP_TMP_PATH/$BACKUP_FILENAME.sql"
+rm "$BACKUP_TMP_PATH/$BACKUP_FILENAME.sql"
 
 # If first of the month, update the current month backup with the daily backup. If not first of the month but current month backup does not exist (new instances), update the current month backup with the daily backup
 if [ $(date "+%d") -eq 01 ] || [ ! -f "$CURR_MONTH_BACKUP_TARGET_PATH" ]; then
