@@ -16,6 +16,7 @@ variables:
   IDENTITY_NUMBER_TASK_NAME: com.cytomine.dummy.identity.number-1.0.0.zip
   IDENTITY_STRING_TASK_NAME: com.cytomine.dummy.identity.string-1.0.0.zip
   IDENTITY_GEOMETRY_TASK_NAME: com.cytomine.dummy.identity.geometry-1.0.0.zip
+  IDENTITY_IMAGE_TASK_NAME: com.cytomine.dummy.identity.image-1.0.0.zip
   SUB_INTEGER_TASK_NAME: com.cytomine.dummy.arithmetic.integer.subtraction-1.0.0.zip
   TEST_ARTIFACT_PATH: ./src/test/resources/artifacts
 
@@ -62,6 +63,12 @@ include:
       source-filepath: ${APPENGINE_TASKS_PATH}/${IDENTITY_GEOMETRY_TASK_NAME}
       target-directory: ${TEST_ARTIFACT_PATH}
       job-name: download-task-geometry-identity
+  - component: gitlab.cytom.in/cm/rnd/cicd/component-nextcloud/download-file@1.1.0
+    inputs:
+      source-filepath: ${APPENGINE_TASKS_PATH}/${IDENTITY_IMAGE_TASK_NAME}
+      target-directory: ${TEST_ARTIFACT_PATH}
+      job-name: download-task-image-identity
+
 
 
 download-task-integer-addition:
@@ -103,6 +110,12 @@ download-task-geometry-identity:
   artifacts:
     paths:
       - ${TEST_ARTIFACT_PATH}/${IDENTITY_GEOMETRY_TASK_NAME}
+
+
+download-task-image-identity:
+  artifacts:
+    paths:
+      - ${TEST_ARTIFACT_PATH}/${IDENTITY_IMAGE_TASK_NAME}
 
 
 download-task-integer-subtraction:
@@ -212,6 +225,8 @@ tests-storage-registry:
     - job: download-task-string-identity
       artifacts: true
     - job: download-task-geometry-identity
+      artifacts: true
+    - job: download-task-image-identity
       artifacts: true
     - job: download-task-integer-subtraction
       artifacts: true
