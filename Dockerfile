@@ -39,7 +39,7 @@ COPY files/initdb/initdb-cytomine-extensions.sql /docker-entrypoint-initdb.d/11_
 
 # default configuration
 COPY files/conf/postgres.conf /etc/postgres/postgres.conf
-COPY files/conf/postgres.default.conf /etc/postgres/00-default.conf
+COPY files/conf/postgres.default.conf /etc/postgres/conf.d/00-default.conf
 
 # entry points. Triggered at every container starts
 COPY files/scripts/check-backup-folder.sh /docker-entrypoint-cytomine.d/550-check-backup-folder.sh
