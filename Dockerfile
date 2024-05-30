@@ -96,4 +96,4 @@ COPY configs/kc_config.json /opt/keycloak/data/import
 ENV KC_DB=postgres
 
 ENTRYPOINT ["cytomine-entrypoint.sh", "/opt/keycloak/bin/kc.sh"]
-CMD ["start-dev" , "--http-port=8100" , "--import-realm" , "--hostname=iam:8100"  , "--hostname-strict-backchannel=true"]
+CMD ["start-dev" , "--http-port=8100" , "--import-realm" ]
