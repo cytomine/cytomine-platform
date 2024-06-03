@@ -49,9 +49,13 @@ COPY --from=dev-tools-builder /mnt/rootfs /
 COPY --from=dev-tools-builder /docker-entrypoint-cytomine.d/ /docker-entrypoint-cytomine.d/
 COPY --from=entrypoint-scripts --chmod=774 /cytomine-entrypoint.sh /usr/local/bin/
 
+RUN mkdir /opt/keycloak/data/import
+COPY configs/kc_config.json /opt/keycloak/data/import
+
 ENV KC_DB=postgres
+ENV KC_HOSTNAME_DEBUG=true
 ENTRYPOINT ["cytomine-entrypoint.sh", "/opt/keycloak/bin/kc.sh"]
-CMD ["start-dev"]
+CMD ["start-dev", "--import-realm"]
 
 #######################################################################################
 ## Stage: Cytomine IAM external tools build
@@ -96,4 +100,4 @@ COPY configs/kc_config.json /opt/keycloak/data/import
 ENV KC_DB=postgres
 
 ENTRYPOINT ["cytomine-entrypoint.sh", "/opt/keycloak/bin/kc.sh"]
-CMD ["start-dev" , "--http-port=8100" , "--import-realm" , "--hostname=iam:8100"  , "--hostname-strict-backchannel=true"]
+CMD ["start" , "--import-realm"]
