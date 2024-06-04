@@ -284,6 +284,9 @@
               }
             }
           ]
+        },
+        "geometry": {
+          "const": "geometry"
         }
       },
       "typed_parameter": {
@@ -352,6 +355,17 @@
             "type": {"$ref": "#/$defs/io/type_specs/datetime"}
           },
           "unevaluatedProperties": false
+        },
+        "geometry": {
+          "type": "object",
+          "allOf": [
+            {"$ref": "#/$defs/io/base_parameter"}
+          ],
+          "required": ["type"],
+          "properties": {
+            "type": {"$ref": "#/$defs/io/type_specs/geometry"}
+          },
+          "unevaluatedProperties": false
         }
       },
       "input_parameter": {
@@ -394,6 +408,9 @@
                   {"$ref": "#/$defs/io/typed_parameter/datetime"},
                   { "type": "object", "properties": {"default": { "type": "string", "format": "date-time"}} }
                 ]
+              },
+              {
+                "$ref": "#/$defs/io/typed_parameter/geometry"
               }
             ]
           },
@@ -412,7 +429,8 @@
           {"$ref": "#/$defs/io/typed_parameter/number"},
           {"$ref": "#/$defs/io/typed_parameter/string"},
           {"$ref": "#/$defs/io/typed_parameter/enumeration"},
-          {"$ref": "#/$defs/io/typed_parameter/datetime"}
+          {"$ref": "#/$defs/io/typed_parameter/datetime"},
+          {"$ref": "#/$defs/io/typed_parameter/geometry"}
         ]
       }
     }
