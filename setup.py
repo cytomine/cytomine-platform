@@ -30,39 +30,38 @@ from setuptools import Command, find_packages, setup
 
 # Package meta-data.
 NAME = 'cytomine-pims'
-REQUIRES_PYTHON = '>=3.8.0'
+REQUIRES_PYTHON = '>=3.8.0,<3.9.0'
 
 # What packages are required for this module to be executed?
 REQUIRED = [
-    'uvicorn[standard]>=0.13.4',
-    'asgiref>=3.4.1',
-    'fastapi>=0.65.1,<=0.68.2',
+    'uvicorn[standard]>=0.29.0,<0.30.0',
+    'fastapi>=0.110.0,<0.111.0',
     'pydantic>=1.8.2',
-    'orjson>=3.6.5',
+    'orjson>=3.10.3',
     'rich>=10.2.2',
-    'python-dotenv>=0.17.1',
-    'python-multipart>=0.0.5',
+    'python-dotenv>=1.0.1',
+    'python-multipart>=0.0.9',
     'pathvalidate>=2.4.1',
-    'importlib_metadata>=4.7.1',
-    'aiofiles>=0.7.0',
+    'importlib_metadata>=6.0.0',
+    'aiofiles>=23.1.0',
     'aioredis[hiredis]>=2.0.0',
     'celery>=5.0.0',
     'matplotlib>=3.5.0',
-    'Pint>=0.17',
+    'Pint>=0.20.1',
     'numpy>=1.24.1',
     'Pillow>=9.1.1',
-    'pyvips>=2.1.14',
+    'pyvips>=2.2.1',
     'tifffile>=2021.11.2',
-    'imagecodecs>=2021.3.31',
-    'scikit-image>=0.18',
-    'zarr>=2.8.3',
+    'imagecodecs>=2023.1.23',
+    'scikit-image>=0.20.0',
+    'zarr>=2.14.2',
     'pydicom>=2.2.2',
     'python-gdcm>=3.0.10',
     'python-dateutil>=2.7.0',
 
-    'Shapely>=1.8.0',
-    'rasterio>=1.2.1',
-    'cytomine-python-client>=2.3.0',
+    'Shapely>=2.0.1',
+    'rasterio>=1.3.6',
+    'cytomine-python-client>=2.4.1',
 ]
 
 DEPENDENCY_LINKS = [ ]

@@ -16,8 +16,8 @@ from typing import Any, Optional, Union
 
 import orjson
 from cytomine.models import Model as CytomineModel
-from fastapi.encoders import DictIntStrAny, SetIntStr
 from fastapi.responses import ORJSONResponse
+from fastapi.types import IncEx
 from pint import Quantity
 from pydantic import BaseModel
 from starlette.background import BackgroundTask
@@ -90,8 +90,8 @@ class FastJsonResponse(ORJSONResponse):
         headers: dict = None,
         media_type: str = None,
         background: BackgroundTask = None,
-        include: Optional[Union[SetIntStr, DictIntStrAny]] = None,
-        exclude: Optional[Union[SetIntStr, DictIntStrAny]] = None,
+        include: Optional[IncEx]  = None,
+        exclude: Optional[IncEx] = None,
         by_alias: bool = True,
         exclude_unset: bool = False,
         exclude_defaults: bool = False,
