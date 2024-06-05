@@ -53,11 +53,12 @@ public class GeometryType extends Type {
      */
     public static Geometry parse(String input) throws ParseException {
         try {
+            GeoJsonReader reader = new GeoJsonReader();
+            Geometry geometry = reader.read(input);
+
+            // Parse properties if any
             JSONParser parser = new JSONParser();
             JSONObject json = (JSONObject) parser.parse(input);
-
-            GeoJsonReader reader = new GeoJsonReader();
-            Geometry geometry = reader.read(json.get("geometry").toString());
             geometry.setUserData(json.get("properties"));
 
             return geometry;
