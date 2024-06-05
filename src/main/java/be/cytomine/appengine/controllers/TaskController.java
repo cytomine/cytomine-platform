@@ -31,13 +31,11 @@ public class TaskController {
     }
 
     @PostMapping(path = "tasks")
-    public ResponseEntity<UploadTask> upload(@RequestParam("task") MultipartFile task) throws TaskServiceException, ValidationException, BundleArchiveException {
+    public ResponseEntity<?> upload(@RequestParam("task") MultipartFile task) throws TaskServiceException, ValidationException, BundleArchiveException {
         logger.info("Task Upload POST");
-        UploadTask uploadTask = new UploadTask();
-        taskService.uploadTask(task);
-        uploadTask.setMessage("success");
+        Optional<TaskDescription> taskDescription = taskService.uploadTask(task);
         logger.info("Task Upload POST Ended");
-        return ResponseEntity.ok(uploadTask);
+        return ResponseEntity.ok(taskDescription);
     }
 
     @GetMapping(value = "tasks")

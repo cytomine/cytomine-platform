@@ -1,5 +1,6 @@
 package be.cytomine.appengine.unit.services;
 
+import be.cytomine.appengine.dto.inputs.task.TaskDescription;
 import be.cytomine.appengine.dto.inputs.task.UploadTaskArchive;
 import be.cytomine.appengine.exceptions.BundleArchiveException;
 import be.cytomine.appengine.exceptions.TaskServiceException;
@@ -11,6 +12,8 @@ import be.cytomine.appengine.repositories.TaskRepository;
 import be.cytomine.appengine.services.TaskService;
 import be.cytomine.appengine.services.TaskValidationService;
 import be.cytomine.appengine.utils.ArchiveUtils;
+import be.cytomine.appengine.utils.TestTaskBuilder;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
@@ -25,7 +28,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.mock.web.MockMultipartFile;
 
 import java.io.IOException;
-import java.util.UUID;
+import java.util.*;
 
 import static org.mockito.Mockito.lenient;
 
@@ -55,7 +58,7 @@ public class TaskServiceTest {
     @Test
     @DisplayName("Testing successful upload")
     public void succesfulUpload() throws IOException, TaskServiceException, ValidationException, BundleArchiveException {
-        ClassPathResource resource = new ClassPathResource("/artifacts/test_custom_image_location_task.zip");
+        ClassPathResource resource = TestTaskBuilder.buildCustomImageLocationTask();
         MockMultipartFile testAppBundle = new MockMultipartFile("test_custom_image_location_task.zip", resource.getInputStream());
 
         String nameSpace = "namespace";
@@ -111,12 +114,9 @@ public class TaskServiceTest {
 
         lenient().when(taskRepository.findByNamespaceAndVersion(nameSpace, version)).thenReturn(task);
         lenient().when(archiveUtils.readArchive(testAppBundle)).thenReturn(uploadTaskArchive);
-        Task result = taskService.uploadTask(testAppBundle);
+        Optional<TaskDescription> result = taskService.uploadTask(testAppBundle);
 
-        Assertions.assertNotNull(task);
-
-
-
+        Assertions.assertTrue(result.isPresent());
     }
 
     // TODO : test generateTaskIdentifiers

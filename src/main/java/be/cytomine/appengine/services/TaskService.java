@@ -12,6 +12,7 @@ import be.cytomine.appengine.handlers.FileData;
 import be.cytomine.appengine.handlers.FileStorageHandler;
 import be.cytomine.appengine.handlers.RegistryHandler;
 import be.cytomine.appengine.models.task.*;
+import be.cytomine.appengine.models.task.integer.IntegerType;
 import be.cytomine.appengine.repositories.RunRepository;
 import be.cytomine.appengine.repositories.TaskRepository;
 import be.cytomine.appengine.states.TaskRunState;
@@ -55,7 +56,7 @@ public class TaskService {
     }
 
     @Transactional
-    public Task uploadTask(MultipartFile taskArchive) throws TaskServiceException, ValidationException, BundleArchiveException {
+    public Optional<TaskDescription> uploadTask(MultipartFile taskArchive) throws TaskServiceException, ValidationException, BundleArchiveException {
 
         logger.info("UploadTask : building archive...");
         UploadTaskArchive uploadTaskArchive = archiveUtils.readArchive(taskArchive);
@@ -92,7 +93,7 @@ public class TaskService {
                 AppEngineError error = ErrorBuilder.build(ErrorCode.STORAGE_STORING_TASK_DEFINITION_FAILED);
                 throw new TaskServiceException(error);
             }
-            return null;
+            return Optional.empty();
         }
         // push image
         try {
@@ -132,15 +133,13 @@ public class TaskService {
 
         task.setAuthors(getAuthors(uploadTaskArchive));
         task.setInputs(getInputs(uploadTaskArchive));
-        task.setOutputs(getOnputs(uploadTaskArchive));
+        task.setOutputs(getOutputs(uploadTaskArchive));
 
         logger.info("UploadTask : saving task...");
         taskRepository.save(task);
         logger.info("UploadTask : task saved");
         // TODO : if save failed a delete request should be sent to both storage and registry
-        return task;
-
-
+        return Optional.of(makeTaskDescription(task));
     }
 
     private Set<Input> getInputs(UploadTaskArchive uploadTaskArchive) {
@@ -166,7 +165,7 @@ public class TaskService {
         return inputs;
     }
 
-    private Set<Output> getOnputs(UploadTaskArchive uploadTaskArchive) {
+    private Set<Output> getOutputs(UploadTaskArchive uploadTaskArchive) {
         logger.info("UploadTask : getting outputs...");
         Set<Output> outputs = new HashSet<>();
         JsonNode outputsNode = uploadTaskArchive.getDescriptorFileAsJson().get("outputs");
@@ -278,7 +277,7 @@ public class TaskService {
     }
 
     public TaskDescription makeTaskDescription(Task task) {
-        TaskDescription taskDescription = new TaskDescription(task.getName(), task.getNamespace(), task.getVersion(), task.getDescription());
+        TaskDescription taskDescription = new TaskDescription(task.getIdentifier(), task.getName(), task.getNamespace(), task.getVersion(), task.getDescription());
         Set<TaskAuthor> descriptionAuthors = new HashSet<>();
         for (Author author : task.getAuthors()) {
             TaskAuthor taskAuthor = new TaskAuthor(author.getFirstName(), author.getLastName(), author.getOrganization(), author.getEmail(), author.isContact());

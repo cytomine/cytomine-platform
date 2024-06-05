@@ -1,7 +1,5 @@
 package be.cytomine.appengine.services;
 
-import be.cytomine.appengine.dto.inputs.task.IntegerParameterProvision;
-import be.cytomine.appengine.dto.inputs.task.ParameterProvision;
 import be.cytomine.appengine.dto.inputs.task.UploadTaskArchive;
 import be.cytomine.appengine.dto.responses.errors.AppEngineError;
 import be.cytomine.appengine.dto.responses.errors.ErrorBuilder;
