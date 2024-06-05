@@ -32,7 +32,6 @@ from aioredis.exceptions import ConnectionError, TimeoutError
 from pims.utils.background_task import add_background_task
 from pims.cache import startup_cache
 from pims.config import get_settings
-from pims.docs import get_redoc_html
 from pims.api.exceptions import add_problem_exception_handler
 from pims.api import (
     server, housekeeping, formats, metadata, thumb, window, resized, annotation, tile,
@@ -48,7 +47,7 @@ app = FastAPI(
                 "external (public) Cytomine API.",
     version=__api_version__,
     docs_url=None,
-    redoc_url=None,
+    redoc_url="/docs",
 )
 
 
@@ -139,18 +138,6 @@ async def log_requests(request: Request, call_next):
     add_background_task(response, _log, request, response, duration)
     return response
 
-
-documentation_router = APIRouter(prefix=get_settings().api_base_path)
-
-
-@documentation_router.get("/docs", include_in_schema=False)
-def docs(req: Request):
-    root_path = req.scope.get("root_path", "").rstrip("/")
-    openapi_url = root_path + app.openapi_url
-    return get_redoc_html(openapi_url=openapi_url, title=app.title)
-
-
-app.include_router(documentation_router)
 app.include_router(metadata.router)
 app.include_router(tile.router)
 app.include_router(thumb.router)
