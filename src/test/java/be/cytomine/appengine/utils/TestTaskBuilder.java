@@ -38,6 +38,8 @@ public class TestTaskBuilder {
     task.setNamespace("com.cytomine.dummy.arithmetic.integer.addition");
     task.setVersion("1.0.0");
     task.setDescription("");
+    task.setInputFolder("/inputs");
+    task.setOutputFolder("/outputs");
     // add authors
     Set<Author> authors = new HashSet<>();
     Author author = new Author();
@@ -73,7 +75,7 @@ public class TestTaskBuilder {
     // add outputs for task one
     Set<Output> outputs = new HashSet<>();
     Output output = new Output();
-    output.setName("out");
+    output.setName("sum");
     output.setDisplayName("Sum");
     output.setDescription("Sum of operands A and B");
     IntegerType outputType = new IntegerType();

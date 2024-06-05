@@ -92,12 +92,25 @@ public class RunTaskStepDefinitions {
     TaskRunStateActionSuccess persistedResponse;
     File persistedZipFile;
 
+    private void createStorage(String uuid) throws FileStorageException {
+        Storage inputStorage = new Storage("task-run-inputs-" + uuid);
+        if (!fileStorageHandler.checkStorageExists(inputStorage)) {
+            fileStorageHandler.createStorage(inputStorage);
+        }
+
+        Storage outputStorage = new Storage("task-run-outputs-" + uuid);
+        if (!fileStorageHandler.checkStorageExists(outputStorage)) {
+            fileStorageHandler.createStorage(outputStorage);
+        }
+    }
+
     @Given("a task run exists with identifier {string}")
-    public void a_task_run_exists_with_identifier(String uuid) {
+    public void a_task_run_exists_with_identifier(String uuid) throws FileStorageException {
         runRepository.deleteAll();
         Task task = TestTaskBuilder.buildHardcodedAddInteger(UUID.fromString(uuid));
         task = taskRepository.save(task);
         persistedRun = new Run(UUID.fromString(uuid), null, task);
+        createStorage(uuid);
     }
 
     @Given("the task run is in state {string}")
@@ -573,6 +586,7 @@ public class RunTaskStepDefinitions {
 
         // store in storage
         Storage runStorage = new Storage("task-run-inputs-" + provisionInputA.getRunId());
+        fileStorageHandler.createStorage(runStorage);
         String value = String.valueOf(provisionInputA.getValue());
         byte[] inputFileData = value.getBytes(getStorageCharset(charset));
         FileData inputProvisionFileData = new FileData(inputFileData, provisionInputA.getParameterName());
