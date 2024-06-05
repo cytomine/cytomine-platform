@@ -15,7 +15,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, List, Optional, Union
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Path as PathParam
 from pydantic import BaseModel, Field, conint
 from starlette.requests import Request
 from starlette.responses import Response
@@ -671,7 +671,7 @@ async def show_associated_image(
     request: Request, response: Response,
     path: Path = Depends(imagepath_parameter),
     output: ImageOutDisplayQueryParams = Depends(),
-    associated_key: AssociatedName = Query(...),
+    associated_key: AssociatedName = PathParam(...),
     headers: ImageRequestHeaders = Depends(),
     config: Settings = Depends(get_settings)
 ):
