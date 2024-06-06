@@ -47,7 +47,7 @@ app = FastAPI(
                 "external (public) Cytomine API.",
     version=__api_version__,
     docs_url=None,
-    redoc_url="/docs",
+    redoc_url=f"{get_settings().api_base_path}/docs",
 )
 
 
