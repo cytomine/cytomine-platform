@@ -169,7 +169,7 @@ python-multipart==0.0.9
     # via cytomine-pims (setup.py)
 pytz==2022.7.1
     # via celery
-pyvips==2.2.1
+pyvips==2.2.3
     # via cytomine-pims (setup.py)
 pywavelets==1.4.1
     # via scikit-image

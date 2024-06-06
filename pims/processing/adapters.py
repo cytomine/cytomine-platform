@@ -18,14 +18,13 @@ from typing import Callable, Dict, Optional, Tuple, Type, Union
 import numpy as np
 from PIL import Image as PILImage
 from pyvips import Image as VIPSImage
+from pyvips.vimage import FORMAT_TO_TYPESTR
 
 from pims.utils.vips import dtype_to_vips_format, vips_format_to_dtype
 
 
 def numpy_to_vips(
     np_array: np.ndarray,
-    width: Optional[int] = None, height: Optional[int] = None,
-    n_channels: Optional[int] = None
 ) -> VIPSImage:
     """
     Convert a Numpy array to a VIPS image.
@@ -35,15 +34,6 @@ def numpy_to_vips(
     np_array : array-like
         Numpy array to convert.
         If 1D, it is expected it contains flattened image data.
-    width : int (optional)
-        Width of the image, must be given if `np_array` is 1D,
-        otherwise inferred from shape.
-    height : int (optional)
-        Height of the image, must be given if `np_array` is 1D,
-        otherwise inferred from shape.
-    n_channels : int (optional)
-        n_channels of the image, must be given if `np_array` is 1D,
-        otherwise inferred from shape.
 
     Returns
     -------
@@ -55,30 +45,7 @@ def numpy_to_vips(
     ValueError
         If it is impossible to convert provided array.
     """
-    if not np_array.flags['C_CONTIGUOUS']:
-        np_array = np.ascontiguousarray(np_array)
-
-    if np_array.ndim > 3:
-        raise NotImplementedError
-    elif np_array.ndim > 1:
-        if np_array.ndim == 2:
-            height_, width_ = np_array.shape
-            n_channels_ = 1
-        else:
-            height_, width_, n_channels_ = np_array.shape
-
-        width = width if width is not None else width_
-        height = height if height is not None else height_
-        n_channels = n_channels if n_channels is not None else n_channels_
-
-    if width * height * n_channels != np_array.size:
-        raise ValueError(f"Cannot convert {np_array} to VIPS image")
-
-    flat = np_array.reshape(np_array.size)
-    vips_format = dtype_to_vips_format[str(np_array.dtype)]
-    return VIPSImage.new_from_memory(
-        flat.data, width, height, n_channels, vips_format
-    )
+    return VIPSImage.new_from_array(np_array)
 
 
 def vips_to_numpy(vips_image: VIPSImage) -> np.ndarray:
@@ -96,11 +63,9 @@ def vips_to_numpy(vips_image: VIPSImage) -> np.ndarray:
         Array representation of VIPS image.
         Shape is always (height, width, bands).
     """
-    return np.ndarray(
-        buffer=vips_image.write_to_memory(),
-        dtype=vips_format_to_dtype[vips_image.format],
-        shape=[vips_image.height, vips_image.width, vips_image.bands]
-    )
+    return np.frombuffer(
+        vips_image.write_to_memory(), dtype=FORMAT_TO_TYPESTR[vips_image.format]
+    ).reshape(vips_image.height, vips_image.width, vips_image.bands)
 
 
 def numpy_to_pil(np_array: np.ndarray) -> PILImage.Image:
@@ -153,7 +118,7 @@ def pil_to_vips(pil_image: PILImage.Image) -> VIPSImage:
     image
         VIPS image
     """
-    return numpy_to_vips(pil_to_numpy(pil_image))
+    return VIPSImage.new_from_array(pil_image)
 
 
 def vips_to_pil(vips_image: VIPSImage) -> PILImage.Image:
