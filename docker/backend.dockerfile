@@ -1,8 +1,8 @@
 # All args are listed here at the top for readability
 ARG ENTRYPOINT_SCRIPTS_VERSION=1.4.0
-ARG GUNICORN_VERSION=20.1.0
+ARG GUNICORN_VERSION=22.0.0
 ARG OPENJPEG_URL=https://github.com/uclouvain/openjpeg/archive
-ARG OPENJPEG_VERSION=2.4.0
+ARG OPENJPEG_VERSION=2.5.2
 ARG PIMS_REVISION
 ARG PIMS_VERSION
 ARG PLUGIN_CSV=scripts/plugin-list.csv
@@ -10,7 +10,7 @@ ARG PY_VERSION=3.8
 ARG SETUPTOOLS_VERSION=59.6.0
 ARG UBUNTU_VERSION=20.04
 ARG VIPS_URL=https://github.com/libvips/libvips/releases/download
-ARG VIPS_VERSION=8.12.1
+ARG VIPS_VERSION=8.15.2
 
 #######################################################################################
 ## Stage: entrypoint script. Use a multi-stage because COPY --from cannot interpolate variables
@@ -28,6 +28,7 @@ ARG PY_VERSION=3.8
 RUN apt-get -y update && apt-get -y install --no-install-recommends --no-install-suggests \
         `# Essentials` \
         automake \
+        bc \
         build-essential \
         ca-certificates \
         cmake \
@@ -37,18 +38,18 @@ RUN apt-get -y update && apt-get -y install --no-install-recommends --no-install
         python${PY_VERSION} \
         python${PY_VERSION}-dev \
         python${PY_VERSION}-distutils \
+        ninja-build \
         wget \
         software-properties-common \
         `# Vips dependencies` \
         pkg-config \
         glib2.0-dev \
-        libexpat1-dev \
-        libtiff5-dev \
-        libjpeg-turbo8 \
+        libexpat-dev \
+        libtiff-dev \
+        libjpeg-turbo8-dev \
         libgsf-1-dev \
         libexif-dev \
-        libvips-dev \
-        orc-0.4-dev \
+        liborc-dev \
         libwebp-dev \
         liblcms2-dev \
         libpng-dev \
@@ -66,7 +67,7 @@ RUN cd /tmp && \
     rm -rf get-pip.py
 
 # openjpeg 2.4 is required by vips (J2000 support)
-ARG OPENJPEG_VERSION=2.4.0
+ARG OPENJPEG_VERSION=2.5.2
 ARG OPENJPEG_URL=https://github.com/uclouvain/openjpeg/archive
 RUN cd /usr/local/src && \
     wget ${OPENJPEG_URL}/v${OPENJPEG_VERSION}/openjpeg-${OPENJPEG_VERSION}.tar.gz && \
@@ -105,17 +106,18 @@ RUN python plugins.py \
    --method dependencies_before_vips
 
 # vips
-ARG VIPS_VERSION=8.12.1
+ARG VIPS_VERSION=8.15.2
 ARG VIPS_URL=https://github.com/libvips/libvips/releases/download
+RUN pip install --no-cache-dir meson
 RUN cd /usr/local/src && \
-    wget ${VIPS_URL}/v${VIPS_VERSION}/vips-${VIPS_VERSION}.tar.gz && \
-    tar -zxvf vips-${VIPS_VERSION}.tar.gz && \
-    rm -rf vips-${VIPS_VERSION}.tar.gz && \
+    wget ${VIPS_URL}/v${VIPS_VERSION}/vips-${VIPS_VERSION}.tar.xz && \
+    tar -xvf vips-${VIPS_VERSION}.tar.xz && \
+    rm -rf vips-${VIPS_VERSION}.tar.xz && \
     cd vips-${VIPS_VERSION} && \
-    ./configure && \
-    make V=0 && \
-    make install && \
-    ldconfig
+    meson build --libdir lib -Dintrospection=disabled --buildtype release && \
+    cd build && \
+    ninja && \
+    ninja install
 
 # Run before_python() from plugins prerequisites
 RUN python plugins.py \
@@ -128,7 +130,7 @@ RUN python plugins.py \
 RUN rm -rf /var/lib/apt/lists/*
 
 # Install python requirements
-ARG GUNICORN_VERSION=20.1.0
+ARG GUNICORN_VERSION=22.0.0
 ARG SETUPTOOLS_VERSION=59.6.0
 COPY ./requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir gunicorn==${GUNICORN_VERSION} && \
@@ -158,10 +160,10 @@ RUN mkdir /docker-entrypoint-cytomine.d/
 COPY --from=entrypoint-scripts --chmod=774 /cytomine-entrypoint.sh /usr/local/bin/
 COPY --from=entrypoint-scripts --chmod=774 /envsubst-on-templates-and-move.sh /docker-entrypoint-cytomine.d/500-envsubst-on-templates-and-move.sh
 
-ARG ENTRYPOINT_SCRIPTS_VERSION=1.3.0
-ARG GUNICORN_VERSION=20.1.0
+ARG ENTRYPOINT_SCRIPTS_VERSION=1.4.0
+ARG GUNICORN_VERSION=22.0.0
 ARG OPENJPEG_URL=https://github.com/uclouvain/openjpeg/archive
-ARG OPENJPEG_VERSION=2.4.0
+ARG OPENJPEG_VERSION=2.5.2
 ARG PIMS_PACKAGE_REVISION
 ARG PIMS_PACKAGE_VERSION
 ARG PIMS_VERSION
@@ -170,7 +172,7 @@ ARG PY_VERSION=3.8
 ARG SETUPTOOLS_VERSION=59.6.0
 ARG UBUNTU_VERSION=20.04
 ARG VIPS_URL=https://github.com/libvips/libvips/releases/download
-ARG VIPS_VERSION=8.12.1
+ARG VIPS_VERSION=8.15.2
 
 LABEL org.opencontainers.image.authors='support@cytomine.com' \
       org.opencontainers.image.url='https://www.cytomine.org/' \
