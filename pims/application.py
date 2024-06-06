@@ -17,8 +17,8 @@ import sys
 
 from . import __api_version__, __version__
 logger = logging.getLogger("pims.app")
-logger.info("[green bold]PIMS initialization...")
-logger.info("[green bold]PIMS version: {} ; api version: {}".format(__version__, __api_version__))
+logger.info("PIMS initialization...")
+logger.info("PIMS version: {} ; api version: {}".format(__version__, __api_version__))
 
 from pims.fastapi_tweaks import apply_fastapi_tweaks
 
@@ -56,9 +56,9 @@ async def startup():
     # Check PIMS configuration
     try:
         settings = get_settings()
-        logger.info("[green bold]PIMS is starting with config:[/]")
+        logger.info("PIMS is starting with config:")
         for k, v in settings.dict().items():
-            logger.info(f"[green]* {k}:[/] [blue]{v}[/]", extra={"highlight": False})
+            logger.info(f"* {k}: {v}")
     except ValidationError as e:
         logger.error("Impossible to read or parse some PIMS settings:")
         logger.error(e)
@@ -67,12 +67,12 @@ async def startup():
     # Check optimisation are enabled for external libs
     from pydantic import compiled as pydantic_compiled
     if not pydantic_compiled:
-        logger.warning(f"[red]Pydantic is running in non compiled mode.")
+        logger.warning(f"Pydantic is running in non compiled mode.")
 
     import pyvips
     pyvips_binary = pyvips.API_mode
     if not pyvips_binary:
-        logger.warning("[red]Pyvips is running in non binary mode.")
+        logger.warning("Pyvips is running in non binary mode.")
     pyvips.leak_set(get_settings().vips_allow_leak)
     pyvips.cache_set_max(get_settings().vips_cache_max_items)
     pyvips.cache_set_max_mem(get_settings().vips_cache_max_memory * 1048576)
@@ -80,16 +80,16 @@ async def startup():
 
     from shapely.speedups import enabled as shapely_speedups
     if not shapely_speedups:
-        logger.warning("[red]Shapely is running without speedups.")
+        logger.warning("Shapely is running without speedups.")
 
     # Caching
     if not get_settings().cache_enabled:
-        logger.warning(f"[orange3]Cache is disabled by configuration.")
+        logger.warning(f"Cache is disabled by configuration.")
     else:
         try:
-            logger.info(f"[orange3] Try to reach cache ... ")
+            logger.info(f" Try to reach cache ... ")
             await startup_cache(__version__)
-            logger.info(f"[green]Cache is ready!")
+            logger.info(f"Cache is ready!")
         except ConnectionError:
             sys.exit(
                 f"Impossible to connect to cache \"{get_settings().cache_url}\" "
@@ -106,25 +106,24 @@ def _log(request_, response_, duration_):
     cached = response_.headers.get("X-Pims-Cache")
     log_cached = None
     if cached is not None:
-        color = "red" if cached == "MISS" else "green"
-        log_cached = ('cache', cached, color)
+        log_cached = ('cache', cached)
 
     log_params = [
-        ('method', request_.method, 'magenta'),
-        ('path', request_.url.path, 'blue'),
-        ('status', response_.status_code, 'yellow'),
-        ('duration', f"{duration_:.2f}ms", 'green'),
-        ('params', args, 'blue'),
+        ('method', request_.method),
+        ('path', request_.url.path),
+        ('status', response_.status_code),
+        ('duration', f"{duration_:.2f}ms"),
+        ('params', args),
     ]
 
     if log_cached:
         log_params.insert(-1, log_cached)
 
     parts = []
-    for name, value, color in log_params:
-        parts.append(f"[{color}]{value}[/]")
+    for name, value in log_params:
+        parts.append(f"{value}")
     line = " ".join(parts)
-    logger.info(line, extra={"highlight": False})
+    logger.info(line)
 
 
 @app.middleware("http")

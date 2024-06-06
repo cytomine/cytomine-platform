@@ -76,5 +76,5 @@ class Settings(ReadableSettings):
 @lru_cache()
 def get_settings():
     env_file = os.getenv("CONFIG_FILE", "pims-config.env")
-    logger.info(f"[green]Loading config from {env_file}")
+    logger.info(f"Loading config from {env_file}")
     return Settings(_env_file=env_file)

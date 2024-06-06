@@ -27,7 +27,7 @@ NON_PLUGINS_MODULES = ["pims.filters.utils"]
 _CAMEL_TO_SPACE_PATTERN = re.compile(r'((?<=[a-z])[A-Z]|(?<!\A)[A-Z](?=[a-z]))')
 
 logger = logging.getLogger("pims.app")
-logger.info("[green bold]Filters initialization...")
+logger.info("Filters initialization...")
 
 
 class AbstractFilter(ABC):
@@ -147,8 +147,8 @@ def _discover_filter_plugins():
                 if name.startswith(FILTER_PLUGIN_PREFIX)]
 
     logger.info(
-        f"[green bold]Filter plugins: found {len(plugins)} plugin(s)[/] "
-        f"[yellow]({', '.join(plugins)})", )
+        f"Filter plugins: found {len(plugins)} plugin(s) "
+        f"({', '.join(plugins)})", )
     return plugins
 
 
@@ -182,8 +182,8 @@ def _find_filters_in_module(module_name):
                     filters.append(var)
                     imgfilter.init()
                     logger.info(
-                        f"[green] * [yellow]{imgfilter.get_identifier()} "
-                        f"- {imgfilter.get_name()}[/] imported."
+                        f" * {imgfilter.get_identifier()} "
+                        f"- {imgfilter.get_name()} imported."
                     )
         except ImportError as e:
             logger.error(f"{module_name} submodule cannot be checked for filters !", exc_info=e)
@@ -201,7 +201,7 @@ def _get_all_filters():
     """
     filters = list()
     for module_name in FILTER_PLUGINS:
-        logger.info(f"[green bold]Importing filters from [yellow]{module_name}[/] plugin...")
+        logger.info(f"Importing filters from {module_name} plugin...")
         filters.extend(_find_filters_in_module(module_name))
 
     return filters

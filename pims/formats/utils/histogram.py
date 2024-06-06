@@ -179,7 +179,7 @@ class DefaultHistogramReader(AbstractHistogramReader):
 
     def image_bounds(self) -> Tuple[int, int]:
         log.warning(
-            f"[orange]Impossible {self.format.path} to compute "
+            f"Impossible {self.format.path} to compute "
             f"image histogram bounds. Default values used."
         )
         return 0, 2 ** self.format.main_imd.significant_bits
@@ -191,7 +191,7 @@ class DefaultHistogramReader(AbstractHistogramReader):
 
     def channels_bounds(self) -> List[Tuple[int, int]]:
         log.warning(
-            f"[orange]Impossible {self.format.path} to compute "
+            f"Impossible {self.format.path} to compute "
             f"channels histogram bounds. Default values used."
         )
         return [(0, 2 ** self.format.main_imd.significant_bits)] \
@@ -199,7 +199,7 @@ class DefaultHistogramReader(AbstractHistogramReader):
 
     def channel_bounds(self, c: int) -> Tuple[int, int]:
         log.warning(
-            f"[orange]Impossible {self.format.path} to compute "
+            f"Impossible {self.format.path} to compute "
             f"channel histogram bounds. Default values used."
         )
         return 0, 2 ** self.format.main_imd.significant_bits
@@ -211,7 +211,7 @@ class DefaultHistogramReader(AbstractHistogramReader):
 
     def planes_bounds(self) -> List[Tuple[int, int]]:
         log.warning(
-            f"[orange]Impossible {self.format.path} to compute "
+            f"Impossible {self.format.path} to compute "
             f"plane histogram bounds. Default values used."
         )
         return [(0, 2 ** self.format.main_imd.significant_bits)] \
@@ -219,7 +219,7 @@ class DefaultHistogramReader(AbstractHistogramReader):
 
     def plane_bounds(self, c: int, z: int, t: int) -> Tuple[int, int]:
         log.warning(
-            f"[orange]Impossible {self.format.path} to compute "
+            f"Impossible {self.format.path} to compute "
             f"plane histogram bounds. Default values used."
         )
         return 0, 2 ** self.format.main_imd.significant_bits

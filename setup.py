@@ -38,7 +38,6 @@ REQUIRED = [
     'fastapi>=0.110.0,<0.111.0',
     'pydantic>=1.8.2',
     'orjson>=3.10.3',
-    'rich>=10.2.2',
     'python-dotenv>=1.0.1',
     'python-multipart>=0.0.9',
     'pathvalidate>=2.4.1',
