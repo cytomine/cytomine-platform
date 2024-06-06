@@ -130,7 +130,7 @@ if __name__ == "__main__":
     plugins = enabled_plugins(load_plugin_list(params.plugin_csv_path))
 
     if params.method == Method.GENERATE_CHECKER_RESOLUTION_FILE:
-        if params.resolution_order_column in plugins[0]:
+        if len(plugins) > 0 and params.resolution_order_column in plugins[0]:
             generate_checker_resolution_file(
                 plugins,
                 params.checkerResolution_file_path,
