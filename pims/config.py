@@ -48,10 +48,12 @@ class ReadableSettings(BaseSettings):
     max_pixels_complete_histogram: int = 1024 * 1024
     max_length_complete_histogram: int = 1024
 
-    vips_allow_leak: bool = False
-    vips_cache_max_items: int = 5000
-    vips_cache_max_memory: int = 300  # in MB
-    vips_cache_max_files: int = 500
+    # Maximum number of operations to cache
+    vips_cache_max_items: int = 100
+    # Maximum memory in MB to use for this cache
+    vips_cache_max_memory: int = 50
+    # Maximum number of files to hold open
+    vips_cache_max_files: int = 100
 
     auto_delete_multi_file_format_archive: bool = True
     auto_delete_collection_archive: bool = True

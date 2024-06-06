@@ -73,9 +73,8 @@ async def startup():
     pyvips_binary = pyvips.API_mode
     if not pyvips_binary:
         logger.warning("Pyvips is running in non binary mode.")
-    pyvips.leak_set(get_settings().vips_allow_leak)
     pyvips.cache_set_max(get_settings().vips_cache_max_items)
-    pyvips.cache_set_max_mem(get_settings().vips_cache_max_memory * 1048576)
+    pyvips.cache_set_max_mem(get_settings().vips_cache_max_memory * 1048576) # 2^20 = 1048576 (1MiB)
     pyvips.cache_set_max_files(get_settings().vips_cache_max_files)
 
     from shapely.speedups import enabled as shapely_speedups
