@@ -13,30 +13,27 @@
 #  * limitations under the License.
 import logging
 import os
-import shutil
 import traceback
-from typing import Optional
-from distutils.util import strtobool
 import warnings
-import aiofiles
+from distutils.util import strtobool
+from typing import Optional
 
 from cytomine import Cytomine
 from cytomine.models import (
     Project, ProjectCollection, Storage, UploadedFile
 )
-from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, Query, UploadFile
-from starlette.requests import Request, ClientDisconnect
+from fastapi import APIRouter, BackgroundTasks, Depends, Query
+from starlette.requests import Request
 from starlette.responses import FileResponse, JSONResponse, Response
-from starlette.formparsers import MultiPartMessage, MultiPartParser, _user_safe_decode
 
 from pims.api.exceptions import (
-    AuthenticationException, BadRequestException, CytomineProblem, UploadCanceledException,
-    check_representation_existence
+    AuthenticationException, BadRequestException, CytomineProblem, check_representation_existence
 )
 from pims.api.utils.cytomine_auth import (
     parse_authorization_header,
     parse_request_token, sign_token
 )
+from pims.api.utils.multipart import FastSinglePartParser
 from pims.api.utils.parameter import filepath_parameter, imagepath_parameter, sanitize_filename
 from pims.api.utils.response import serialize_cytomine_model
 from pims.config import Settings, get_settings
@@ -47,14 +44,6 @@ from pims.importer.listeners import CytomineListener
 from pims.tasks.queue import Task, send_task
 from pims.utils.iterables import ensure_list
 from pims.utils.strings import unique_name_generator
-from pims.files.archive import Archive, ArchiveError
-
-try:
-    import multipart
-    from multipart.multipart import parse_options_header
-except ModuleNotFoundError:  # pragma: nocover
-    parse_options_header = None
-    multipart = None
 
 router = APIRouter(prefix=get_settings().api_base_path)
 
@@ -79,30 +68,33 @@ async def import_direct_chunks(
         values: Optional[str] = None,
         config: Settings = Depends(get_settings)
 ):
-    ''' Upload file using the request inspired by UploadFile class from FastAPI along with improved efficiency '''
+    """
+    Upload file using the request inspired by UploadFile class from FastAPI along with improved efficiency
+    """
 
-    multipart_parser = MultiPartParser(request.headers, request.stream())
-    filename = str(unique_name_generator())
-    if not os.path.exists(WRITING_PATH):
-        os.makedirs(WRITING_PATH)
-
-    pending_path = Path(WRITING_PATH, filename)
     if (core is not None and core != INTERNAL_URL_CORE) or (cytomine is not None and cytomine != INTERNAL_URL_CORE):
         warnings.warn("This Cytomine version no longer support PIMS to be shared between multiple CORE such that \
                       query parameters 'core' and 'cytomine' are ignored if instanciated")
 
+    if not os.path.exists(WRITING_PATH):
+        os.makedirs(WRITING_PATH)
+
+    filename = str(unique_name_generator())
+    pending_path = Path(WRITING_PATH, filename)
+
     try:
-        upload_name = await write_file(multipart_parser, pending_path)
+        multipart_parser = FastSinglePartParser(pending_path, request.headers, request.stream())
+        upload_filename = await multipart_parser.parse()
         upload_size = request.headers['content-length']
 
         # Use non sanitized upload_name as UF originalFilename attribute
         cytomine_listener, cytomine_auth, root = connexion_to_core(
-            request, str(pending_path), upload_size, upload_name, id_project, id_storage,
+            request, str(pending_path), upload_size, upload_filename, id_project, id_storage,
             projects, storage, config, keys, values
         )
 
         # Sanitized upload name is used for path on disk in the import procedure (part of UF filename attribute)
-        upload_name = sanitize_filename(upload_name)
+        upload_filename = sanitize_filename(upload_filename)
     except Exception as e:
         debug = bool(strtobool(os.getenv('DEBUG', 'false')))
         if debug:
@@ -122,14 +114,14 @@ async def import_direct_chunks(
     if sync:
         try:
             run_import(
-                pending_path, upload_name,
+                pending_path, upload_filename,
                 extra_listeners=[cytomine_listener], prefer_copy=False
             )
             root = cytomine_listener.initial_uf.fetch()
             images = cytomine_listener.images
             return [{
                 "status": 200,
-                "name": upload_name,
+                "name": upload_filename,
                 "size": upload_size,
                 "uploadedFile": serialize_cytomine_model(root),
                 "images": [{
@@ -152,14 +144,14 @@ async def import_direct_chunks(
     else:
         send_task(
             Task.IMPORT_WITH_CYTOMINE,
-            args=[cytomine_auth, pending_path, upload_name, cytomine_listener, False],
+            args=[cytomine_auth, pending_path, upload_filename, cytomine_listener, False],
             starlette_background=background
         )
 
         return JSONResponse(
             content=[{
                 "status": 200,
-                "name": upload_name,
+                "name": upload_filename,
                 "size": upload_size,
                 "uploadedFile": serialize_cytomine_model(root),
                 "images": []
@@ -274,89 +266,11 @@ def delete(
     return Response(status_code=200)
 
 
-async def write_file(fastapi_parser: MultiPartParser, pending_path):
-    '''
-    This function is inspired by parse(self) function from formparsers.py in fastapi>=0.65.1,<=0.68.2' used to upload a file:
-
-    We know that, besides the first chunks where it is useful to retrieve the headers "Content-Disposition" and the "Content-Type" 
-    (and not write them in the file) , all the other chunks will be bytes of the image to upload an can be written right away in a file on disk.
-    Therefore, we can get inspired by the parse() function of FastAPI and, by assuming that there is only one file per request
-    (we do not handle multiple file upload) and no other key-value pairs, we can parse the first chunks until the headers are finished to retrieve 
-    the headers "Content-Disposition" and the "Content-Type" (to get the filename) by calling process_chunks_headers(). Once the headers are process,
-    we can directly write the bytes into a file.
-    
-    '''
-
-    _, params = parse_options_header(fastapi_parser.headers["Content-Type"])
-    charset = params.get(b"charset", "utf-8")
-    if type(charset) == bytes:
-        charset = charset.decode("latin-1")
-    fastapi_parser._charset = charset
-    original_filename = "no-name"
-
-    boundary = params[b"boundary"]
-    headers_finised = False
-    callbacks = {
-        "on_part_data": fastapi_parser.on_part_data,
-        "on_header_field": fastapi_parser.on_header_field,
-        "on_header_value": fastapi_parser.on_header_value,
-        "on_header_end": fastapi_parser.on_header_end,
-        "on_headers_finished": fastapi_parser.on_headers_finished,
-    }
-    parser = multipart.MultipartParser(boundary, callbacks)
-    async with aiofiles.open(pending_path, 'wb') as f:
-        try:
-            async for chunk in fastapi_parser.stream:
-                # we assume that there is only one key-value in the body request (that is only one file to upload and
-                # no other parameter in the request such taht there is only one headers block)
-                if not headers_finised:
-                    # going through the one-only headers block of the body request and retrieve the filename
-                    original_filename, headers_finised = await process_chunks_headers(
-                        parser, fastapi_parser, chunk, f, original_filename=original_filename
-                    )
-                else:
-                    # enables more efficient upload by by-passing the mutlipart parser logic and just writing the data bytes directly
-                    await f.write(chunk)
-        except ClientDisconnect:
-            raise UploadCanceledException()
-
-    return original_filename
-
-
-async def process_chunks_headers(
-        parser, fastapi_parser, chunk, file, header_field: bytes = b"", header_value: bytes = b"",
-        original_filename='no-name'
+def connexion_to_core(
+        request: Request, upload_path: str, upload_size: str, upload_name: str, id_project: Optional[str],
+        id_storage: Optional[int], projects: Optional[str], storage: Optional[int],
+        config: Settings, keys: Optional[str], values: Optional[str]
 ):
-    """
-    This function is inspired by parse(self) function from formparsers.py in fastapi>=0.65.1,<=0.68.2' used to upload a file:
-
-    """
-
-    parser.write(chunk)  # when this line is run at each chunk, it is time-consuming for big files
-    messages = list(fastapi_parser.messages)
-    fastapi_parser.messages.clear()
-    for message_type, message_bytes in messages:
-        if message_type == MultiPartMessage.HEADER_FIELD:
-            header_field += message_bytes
-        elif message_type == MultiPartMessage.HEADER_VALUE:
-            header_value += message_bytes
-        elif message_type == MultiPartMessage.HEADER_END:
-            field = header_field.lower()
-            if field == b"content-disposition":
-                content_disposition = header_value
-        elif message_type == MultiPartMessage.HEADERS_FINISHED:
-            headers_finished = True
-            _, options = parse_options_header(content_disposition)
-            if b"filename" in options:
-                original_filename = _user_safe_decode(options[b"filename"], fastapi_parser._charset)
-        elif message_type == MultiPartMessage.PART_DATA:
-            await file.write(message_bytes)
-    return original_filename, headers_finished
-
-
-def connexion_to_core(request: Request, upload_path: str, upload_size: str, upload_name: str, id_project: str,
-                      id_storage: str, projects: str, storage: str,
-                      config: Settings, keys: str, values: str):
     if not INTERNAL_URL_CORE:
         raise BadRequestException(detail="Internal URL core is missing.")
 
