@@ -12,6 +12,7 @@ variables:
   ADD_INTEGER_TASK_NAME: com.cytomine.dummy.arithmetic.integer.addition-1.0.0.zip
   ADD_CONSTRAINED_INTEGER_TASK_NAME: com.cytomine.dummy.arithmetic.integer.addition.constrained-1.0.0.zip
   IDENTITY_BOOLEAN_TASK_NAME: com.cytomine.dummy.identity.boolean-1.0.0.zip
+  IDENTITY_NUMBER_TASK_NAME: com.cytomine.dummy.identity.number-1.0.0.zip
   SUB_INTEGER_TASK_NAME: com.cytomine.dummy.arithmetic.integer.subtraction-1.0.0.zip
   TEST_ARTIFACT_PATH: ./src/test/resources/artifacts
 
@@ -35,6 +36,11 @@ include:
       job-name: download-task-boolean-identity
   - component: gitlab.cytom.in/cm/rnd/cicd/component-nextcloud/download-file@1.1.0
     inputs:
+      source-filepath: ${APPENGINE_TASKS_PATH}/${IDENTITY_NUMBER_TASK_NAME}
+      target-directory: ${TEST_ARTIFACT_PATH}
+      job-name: download-task-number-identity
+  - component: gitlab.cytom.in/cm/rnd/cicd/component-nextcloud/download-file@1.1.0
+    inputs:
       source-filepath: ${APPENGINE_TASKS_PATH}/${SUB_INTEGER_TASK_NAME}
       target-directory: ${TEST_ARTIFACT_PATH}
       job-name: download-task-integer-subtraction
@@ -56,6 +62,12 @@ download-task-boolean-identity:
   artifacts:
     paths:
       - ${TEST_ARTIFACT_PATH}/${IDENTITY_BOOLEAN_TASK_NAME}
+
+
+download-task-number-identity:
+  artifacts:
+    paths:
+      - ${TEST_ARTIFACT_PATH}/${IDENTITY_NUMBER_TASK_NAME}
 
 
 download-task-integer-subtraction:
@@ -157,6 +169,8 @@ tests-storage-registry:
     - job: download-task-constrained-integer-addition
       artifacts: true
     - job: download-task-boolean-identity
+      artifacts: true
+    - job: download-task-number-identity
       artifacts: true
     - job: download-task-integer-subtraction
       artifacts: true

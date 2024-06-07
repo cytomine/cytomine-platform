@@ -80,7 +80,7 @@ public class TaskProvisioningService {
             AppEngineError error = ErrorBuilder.build(ErrorCode.INTERNAL_PARAMETER_DOES_NOT_EXIST, parameterError);
             throw new ProvisioningException(error);
         } catch (JsonProcessingException e) {
-            logger.info("ProvisionMultipleParameter : provision is not invalid");
+            logger.info("ProvisionParameter : provision is not valid");
             ParameterError parameterError = new ParameterError(genericParameterProvision.getParameterName());
             AppEngineError error = ErrorBuilder.build(ErrorCode.INTERNAL_JSON_PROCESSING_ERROR, parameterError);
             throw new ProvisioningException(error);

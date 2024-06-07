@@ -2,9 +2,11 @@ package be.cytomine.appengine.dto.inputs.task;
 
 import be.cytomine.appengine.dto.inputs.task.types.bool.TaskParameterBooleanType;
 import be.cytomine.appengine.dto.inputs.task.types.integer.TaskParameterIntegerType;
+import be.cytomine.appengine.dto.inputs.task.types.number.TaskParameterNumberType;
 import be.cytomine.appengine.models.task.Output;
 import be.cytomine.appengine.models.task.bool.BooleanType;
 import be.cytomine.appengine.models.task.integer.IntegerType;
+import be.cytomine.appengine.models.task.number.NumberType;
 
 public class TaskOutputFactory {
 
@@ -15,6 +17,8 @@ public class TaskOutputFactory {
             taskParameterType = new TaskParameterBooleanType(type.getId());
         } else if (output.getType() instanceof IntegerType type) {
             taskParameterType = new TaskParameterIntegerType(type.getId(), type.getGt(), type.getLt(), type.getGeq(), type.getLeq());
+        } else if (output.getType() instanceof NumberType type) {
+            taskParameterType = new TaskParameterNumberType(type.getId(), type.getGt(), type.getGeq(), type.getLt(), type.getLeq(), type.isInfinityAllowed(), type.isNanAllowed());
         }
 
         return new TaskOutput(output.getId().toString(), output.getDefaultValue(), output.getName(), output.getDisplayName(), output.getDescription(), output.isOptional(), taskParameterType);
