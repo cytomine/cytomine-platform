@@ -6,6 +6,8 @@ import be.cytomine.appengine.exceptions.FileStorageException;
 import be.cytomine.appengine.handlers.FileData;
 import be.cytomine.appengine.handlers.FileStorageHandler;
 import be.cytomine.appengine.models.task.*;
+import be.cytomine.appengine.models.task.bool.BooleanPersistence;
+import be.cytomine.appengine.models.task.bool.BooleanType;
 import be.cytomine.appengine.models.task.integer.IntegerPersistence;
 import be.cytomine.appengine.models.task.integer.IntegerType;
 import be.cytomine.appengine.openapi.api.DefaultApi;
@@ -13,10 +15,10 @@ import be.cytomine.appengine.openapi.invoker.ApiClient;
 import be.cytomine.appengine.openapi.invoker.ApiException;
 import be.cytomine.appengine.openapi.invoker.Configuration;
 import be.cytomine.appengine.openapi.model.TaskRun;
-import be.cytomine.appengine.openapi.model.TaskRunInputProvision;
 import be.cytomine.appengine.openapi.model.TaskRunInputProvisionInputBody;
 import be.cytomine.appengine.openapi.model.TaskRunInputProvisionInputBodyValue;
 import be.cytomine.appengine.repositories.TypePersistenceRepository;
+import be.cytomine.appengine.repositories.bool.BooleanPersistenceRepository;
 import be.cytomine.appengine.repositories.integer.IntegerPersistenceRepository;
 import be.cytomine.appengine.repositories.RunRepository;
 import be.cytomine.appengine.repositories.TaskRepository;
@@ -29,15 +31,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
+
 import org.junit.jupiter.api.Assertions;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootContextLoader;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.ContextConfiguration;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -53,6 +53,9 @@ public class ProvisionTaskStepDefinitions {
 
     @Autowired
     RunRepository taskRunRepository;
+
+    @Autowired
+    BooleanPersistenceRepository booleanProvisionRepository;
 
     @Autowired
     IntegerPersistenceRepository integerProvisionRepository;
@@ -90,8 +93,8 @@ public class ProvisionTaskStepDefinitions {
 
     @Given("this task has {string} and {string}")
     public void this_task_has_and(String namespace, String version) {
-        persistedTask.setNamespace(namespace);
-        persistedTask.setVersion(version);
+        String bundleFilename = namespace + "-" + version + ".zip";
+        persistedTask = TestTaskBuilder.buildTaskFromResource(bundleFilename);
         persistedTask = taskRepository.save(persistedTask);
     }
 
@@ -153,10 +156,18 @@ public class ProvisionTaskStepDefinitions {
 
     @Given("this task has only one input parameter {string} of type {string}")
     public void this_task_has_only_one_input_parameter_of_type(String paramName, String type) {
-        persistedTask.getInputs().removeIf(input -> !(((IntegerType)input.getType()).getId().equals(type) && input.getName().equals(paramName)));
+        persistedTask.getInputs().removeIf(input -> {
+            switch (input.getType().getClass().getSimpleName()) {
+                case "BooleanType":
+                    return !(((BooleanType) input.getType()).getId().equals(type) && input.getName().equals(paramName));
+                case "IntegerType":
+                    return !(((IntegerType) input.getType()).getId().equals(type) && input.getName().equals(paramName));
+                default:
+                    return true;
+            }
+        });
         persistedTask = taskRepository.saveAndFlush(persistedTask);
         Assertions.assertEquals(persistedTask.getInputs().size(), 1);
-        persistedTask = taskRepository.saveAndFlush(persistedTask);
     }
 
     @Given("this parameter has no validation rules")
@@ -175,33 +186,60 @@ public class ProvisionTaskStepDefinitions {
         fileStorageHandler.createStorage(runStorage);
     }
 
-    @Given("a task run has been created and provisioned with parameter {string} value {int} for this task")
-    public void a_task_run_has_been_created_for_this_task(String parameterName, int initialValue) throws FileStorageException {
+    @Given("a task run has been created and provisioned with parameter {string} value {string} for this task")
+    public void a_task_run_has_been_created_for_this_task(String parameterName, String initialValue) throws FileStorageException {
         run = new Run(UUID.randomUUID(), TaskRunState.CREATED, persistedTask);
 
-        IntegerPersistence provision = new IntegerPersistence();
-        // parameterName, initialValue, run.getId()
+        Input input = persistedTask
+                .getInputs()
+                .stream()
+                .filter(i -> i.getName().equals(parameterName))
+                .findFirst()
+                .orElse(null);
+        Assertions.assertNotNull(input);
+
+        TypePersistence provision = new TypePersistence();
+        switch (input.getType().getClass().getSimpleName()) {
+            case "BooleanType":
+                provision = new BooleanPersistence();
+                provision.setValueType(ValueType.BOOLEAN);
+                ((BooleanPersistence) provision).setValue(Boolean.parseBoolean(initialValue));
+                break;
+            case "IntegerType":
+                provision = new IntegerPersistence();
+                provision.setValueType(ValueType.INTEGER);
+                ((IntegerPersistence) provision).setValue(Integer.parseInt(initialValue));
+                break;
+        }
+
         provision.setRunId(run.getId());
-        provision.setValueType(ValueType.INTEGER);
-        provision.setValue(initialValue);
         provision.setParameterName(parameterName);
         provision.setParameterType(ParameterType.INPUT);
         run.getProvisions().add(provision);
-        if (parameterName.equals("b")) {
-            IntegerPersistence provisionInputA = new IntegerPersistence();
-            provision.setRunId(run.getId());
-            provision.setValueType(ValueType.INTEGER);
-            provision.setValue(10);
-            provision.setParameterName("a");
-            provision.setParameterType(ParameterType.INPUT);
-            //"a", String.valueOf(10), run.getId()
-            run.getProvisions().add(provisionInputA);
-            run.setState(TaskRunState.PROVISIONED);
+
+        switch (parameterName) {
+            case "b":
+                IntegerPersistence provisionInputA = new IntegerPersistence();
+                provisionInputA.setRunId(run.getId());
+                provisionInputA.setValueType(ValueType.INTEGER);
+                provisionInputA.setValue(10);
+                provisionInputA.setParameterName("a");
+                provisionInputA.setParameterType(ParameterType.INPUT);
+                //"a", String.valueOf(10), run.getId()
+                run.getProvisions().add(provisionInputA);
+                run.setState(TaskRunState.PROVISIONED);
+                break;
+
+            case "input":
+                run.setState(TaskRunState.PROVISIONED);
+                break;
         }
+
         run = taskRunRepository.save(run);
         Storage runStorage = new Storage("task-run-inputs-" + run.getId().toString());
         fileStorageHandler.createStorage(runStorage);
     }
+
 
 
     @Given("this task run has not been provisioned yet and is therefore in state {string}")
@@ -211,14 +249,34 @@ public class ProvisionTaskStepDefinitions {
         Assertions.assertTrue(provisions.isEmpty());
     }
 
-    @When("a user calls the provisioning endpoint with JSON {string} to provision parameter {string} with {int}")
-    public void a_user_calls_the_batch_provisioning_endpoint_put_task_runs_input_provisions_with_json_to_provision_parameter_my_input_with(String payload, String parameterName, int value) {
+    @When("a user calls the provisioning endpoint with JSON {string} to provision parameter {string} with {string}")
+    public void a_user_calls_the_batch_provisioning_endpoint_put_task_runs_input_provisions_with_json_to_provision_parameter_my_input_with(String payload, String parameterName, String value) {
         ApiClient defaultClient = Configuration.getDefaultApiClient();
         defaultClient.setBasePath(buildAppEngineUrl());
         appEngineApi = new DefaultApi(defaultClient);
+
+        Input input = persistedTask
+                .getInputs()
+                .stream()
+                .filter(i -> i.getName().equals(parameterName))
+                .findFirst()
+                .orElse(null);
+
         TaskRunInputProvisionInputBody body = new TaskRunInputProvisionInputBody();
         body.setParamName(parameterName);
-        body.setValue(new TaskRunInputProvisionInputBodyValue(value));
+        if (input == null) {
+            body.setValue(new TaskRunInputProvisionInputBodyValue(0));
+        } else {
+            switch (input.getType().getClass().getSimpleName()) {
+                case "BooleanType":
+                    body.setValue(new TaskRunInputProvisionInputBodyValue(Boolean.parseBoolean(value)));
+                    break;
+                case "IntegerType":
+                    body.setValue(new TaskRunInputProvisionInputBodyValue(Integer.parseInt(value)));
+                    break;
+            }
+        }
+
         try {
             appEngineApi.provisionTaskRunSingleParameter(run.getId(), parameterName, body);
         } catch (ApiException e) {
@@ -228,8 +286,24 @@ public class ProvisionTaskStepDefinitions {
 
     @Then("the value {string} is saved and associated parameter {string} in the database")
     public void the_value_is_saved_and_associated_parameter_in_the_database(String value, String parameterName) {
+        Input input = persistedTask
+                .getInputs()
+                .stream()
+                .filter(i -> i.getName().equals(parameterName))
+                .findFirst()
+                .orElse(null);
+        Assertions.assertNotNull(input);
 
-        IntegerPersistence provision = integerProvisionRepository.findIntegerPersistenceByParameterNameAndRunIdAndParameterType(parameterName, run.getId() , ParameterType.INPUT);
+        TypePersistence provision = null;
+        switch (input.getType().getClass().getSimpleName()) {
+            case "BooleanType":
+                provision = booleanProvisionRepository.findBooleanPersistenceByParameterNameAndRunIdAndParameterType(parameterName, run.getId() , ParameterType.INPUT);
+                break;
+            case "IntegerType":
+                provision = integerProvisionRepository.findIntegerPersistenceByParameterNameAndRunIdAndParameterType(parameterName, run.getId() , ParameterType.INPUT);
+                break;
+        }
+
         Assertions.assertNotNull(provision);
         Assertions.assertTrue(provision.getParameterName().equalsIgnoreCase(parameterName));
     }
@@ -404,8 +478,21 @@ public class ProvisionTaskStepDefinitions {
     public void this_task_has_at_least_one_input_parameter_of_type(String paramName, String type) {
         // Check if the set contains an object matching the conditions
         // Will raise an error if the persisted task is not valid with the test
-        Assertions.assertTrue(persistedTask.getInputs().stream()
-                .anyMatch(input -> ((IntegerType)input.getType()).getId().equals(type) && input.getName().equals(paramName)));
+        boolean hasInput = persistedTask
+                .getInputs()
+                .stream()
+                .anyMatch(input -> {
+                    switch (type) {
+                        case "boolean":
+                            return ((BooleanType) input.getType()).getId().equals(type) && input.getName().equals(paramName);
+                        case "integer":
+                            return ((IntegerType) input.getType()).getId().equals(type) && input.getName().equals(paramName);
+                        default:
+                            return false;
+                    }
+                });
+
+        Assertions.assertTrue(hasInput);
     }
 
     @Then("the task run state remains unchanged and set to {string}")
@@ -415,12 +502,30 @@ public class ProvisionTaskStepDefinitions {
         Assertions.assertEquals(run.getState().toString(), state);
     }
 
-    @Then("the value of parameter {string} is updated to {int} in the database")
-    public void the_value_of_parameter_is_updated_to_in_the_database(String parameterName, int newValue) {
-        IntegerPersistence provision = integerProvisionRepository.findIntegerPersistenceByParameterNameAndRunIdAndParameterType(parameterName, run.getId() , ParameterType.INPUT);
+    @Then("the value of parameter {string} is updated to {string} in the database")
+    public void the_value_of_parameter_is_updated_to_in_the_database(String parameterName, String newValue) {
+        Input input = persistedTask
+                .getInputs()
+                .stream()
+                .filter(i -> i.getName().equals(parameterName))
+                .findFirst()
+                .orElse(null);
+        Assertions.assertNotNull(input);
+
+        TypePersistence provision = null;
+        switch (input.getType().getClass().getSimpleName()) {
+            case "BooleanType":
+                provision = booleanProvisionRepository.findBooleanPersistenceByParameterNameAndRunIdAndParameterType(parameterName, run.getId() , ParameterType.INPUT);
+                Assertions.assertEquals(((BooleanPersistence) provision).isValue(), Boolean.parseBoolean(newValue));
+                break;
+            case "IntegerType":
+                provision = integerProvisionRepository.findIntegerPersistenceByParameterNameAndRunIdAndParameterType(parameterName, run.getId() , ParameterType.INPUT);
+                Assertions.assertEquals(((IntegerPersistence) provision).getValue(), Integer.parseInt(newValue));
+                break;
+        }
+
         Assertions.assertNotNull(provision);
         Assertions.assertTrue(provision.getParameterName().equalsIgnoreCase(parameterName));
-        Assertions.assertEquals(provision.getValue(), newValue);
     }
 
     @Then("the input file named {string} is updated in the task run storage {string}+UUID with content {string}")

@@ -158,6 +158,19 @@ public class TaskService {
                 input.setDescription(inputValue.get("description").textValue());
                 // use type factory to generate the correct type
                 input.setType(TypeFactory.createType(inputValue));
+                // Set default value
+                switch (TypeFactory.getTypeId(inputValue.get("type"))) {
+                    case "boolean":
+                        input.setDefaultValue("false");
+                        break;
+                    case "integer":
+                        input.setDefaultValue("0");
+                        break;
+                    default:
+                        input.setDefaultValue("");
+                        break;
+                }
+
                 inputs.add(input);
             }
         }
@@ -289,9 +302,9 @@ public class TaskService {
 
     public List<TaskInput> makeTaskInputs(Task task) {
         List<TaskInput> inputs = new ArrayList<>();
-        for (Input input : task.getInputs())
+        for (Input input : task.getInputs()) {
             inputs.add(TaskInputFactory.createTaskInput(input));
-
+        }
         return inputs;
     }
 
@@ -299,10 +312,7 @@ public class TaskService {
     public List<TaskOutput> makeTaskOutputs(Task task) {
         List<TaskOutput> outputs = new ArrayList<>();
         for (Output output : task.getOutputs()) {
-            if (output.getType() instanceof IntegerType type)
-                outputs.add(TaskOutputFactory.createTaskOutput(output));
-
-
+            outputs.add(TaskOutputFactory.createTaskOutput(output));
         }
         return outputs;
     }

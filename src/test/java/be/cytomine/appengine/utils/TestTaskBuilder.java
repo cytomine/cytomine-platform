@@ -60,6 +60,7 @@ public class TestTaskBuilder {
     IntegerType inputType1_1 = new IntegerType();
     inputType1_1.setId("integer");
     inputa.setType(inputType1_1);
+    inputa.setDefaultValue("0");
 
     Input inputb = new Input();
     inputb.setName("b");
@@ -68,6 +69,7 @@ public class TestTaskBuilder {
     IntegerType inputType1_2 = new IntegerType();
     inputType1_2.setId("integer");
     inputb.setType(inputType1_2);
+    inputb.setDefaultValue("0");
 
     inputs.add(inputa);
     inputs.add(inputb);
@@ -125,6 +127,7 @@ public class TestTaskBuilder {
     IntegerType inputType1_1 = new IntegerType();
     inputType1_1.setId("integer");
     inputa.setType(inputType1_1);
+    inputa.setDefaultValue("0");
 
     Input inputb = new Input();
     inputb.setName("b");
@@ -133,6 +136,7 @@ public class TestTaskBuilder {
     IntegerType inputType1_2 = new IntegerType();
     inputType1_2.setId("integer");
     inputb.setType(inputType1_2);
+    inputb.setDefaultValue("0");
 
     inputs.add(inputa);
     inputs.add(inputb);
@@ -247,6 +251,18 @@ public class TestTaskBuilder {
         input.setDescription(inputValue.get("description").textValue());
         // use type factory to generate the correct type
         input.setType(TypeFactory.createType(inputValue));
+        switch (TypeFactory.getTypeId(inputValue.get("type"))) {
+          case "boolean":
+              input.setDefaultValue("false");
+              break;
+          case "integer":
+              input.setDefaultValue("0");
+              break;
+          default:
+              input.setDefaultValue("");
+              break;
+        }
+
         inputs.add(input);
       }
     }

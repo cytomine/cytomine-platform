@@ -20,6 +20,7 @@ import com.cytomine.registry.client.http.resp.CatalogResp;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
@@ -35,9 +36,6 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.*;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.File;
@@ -84,10 +82,6 @@ public class UploadTaskStepDefinitions {
 
     @Value("${app-engine.api_version}")
     private String apiVersion;
-
-    private String buildAppEngineUrl() {
-        return "http://localhost:" + port + apiPrefix + apiVersion;
-    }
 
     @Given("App Engine is up and running")
     public void app_engine_is_up_and_running() {
@@ -234,37 +228,31 @@ public class UploadTaskStepDefinitions {
     @Given("this task is already registered by the App Engine")
     public void this_task_is_already_registered_by_the_app_engine() {
         // store task in database
-        persistedTask = TestTaskBuilder.buildHardcodedAddInteger();
-        taskRepository.save(persistedTask);
+        String bundleFilename = persistedNamespace + "-" + persistedVersion + ".zip";
+        persistedTask = TestTaskBuilder.buildTaskFromResource(bundleFilename);
+
         Assertions.assertNotNull(persistedTask);
+        taskRepository.save(persistedTask);
 
         // create bucket
         try {
-            boolean bucketExists = fileStorageHandler.checkStorageExists(persistedTask.getStorageReference());
-            if (!bucketExists) {
-                Storage storage = new Storage(persistedTask.getStorageReference());
+            Storage storage = new Storage(persistedTask.getStorageReference());
+            if (!fileStorageHandler.checkStorageExists(storage)) {
                 fileStorageHandler.createStorage(storage);
-
             }
 
             // save file using defined storage reference
+            File file = TestTaskBuilder.getDescriptorFromBundleResource(bundleFilename);
 
-            ClassPathResource descriptor = new ClassPathResource("/artifacts/descriptorduplicate.yml");
-            Assertions.assertNotNull(descriptor);
+            try (FileInputStream fileInputStream = new FileInputStream(file)) {
+                ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+                JsonNode descriptor = mapper.readTree(fileInputStream);
+                ((ObjectNode) descriptor).put("name_short", "must_not_have_changed");
 
-            File file = descriptor.getFile();
-            FileInputStream fileInputStream = new FileInputStream(file);
-
-            Storage storage = new Storage(persistedTask.getStorageReference());
-            byte[] fileByteArray = new byte[(int) file.length()];
-            fileByteArray = fileInputStream.readAllBytes();
-            FileData fileData = new FileData(fileByteArray, "descriptor.yml");
-            fileStorageHandler.createFile(storage, fileData);
-
-
-        } catch (IOException e) {
-
-        } catch (FileStorageException e) {
+                FileData fileData = new FileData(mapper.writeValueAsBytes(descriptor), "descriptor.yml");
+                fileStorageHandler.createFile(storage, fileData);
+            }
+        } catch (IOException | FileStorageException e) {
             throw new RuntimeException(e);
         }
     }
