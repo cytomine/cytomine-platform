@@ -82,6 +82,7 @@ public class PodWatcher implements Watcher<Pod> {
         boolean hasFailed = pod.getStatus().getPhase().equals("Failed");
         if (isPostTask && hasFailed) {
             run.setState(TaskRunState.FAILED);
+            runRepository.saveAndFlush(run);
         } else if (!isPostTask) {
             switch (action.name()) {
                 case "ADDED":
@@ -93,9 +94,9 @@ public class PodWatcher implements Watcher<Pod> {
                 default:
                     logger.info("Unrecognized event: " + action.name());
             }
+            runRepository.saveAndFlush(run);
         }
 
-        runRepository.saveAndFlush(run);
         logger.info("Pod Watcher: updated Run state to " + run.getState());
     }
 
