@@ -579,6 +579,7 @@ components:
       enum:
         - integer
         - boolean
+        - string
         - number
 
     base_parameter:
@@ -634,6 +635,26 @@ components:
           type: string
           enum: ["boolean"]
 
+    type_spec_string:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: object
+          properties:
+            id:
+              type: string
+              enum: ["string"]
+            min_length:
+              type: integer
+              minimum: 0
+              description: 'input constraint, string length should be greater or equal to than $min_length'
+            max_length:
+              type: integer
+              minimum: 1
+              description: 'input constraint, string length should be less than or equal to $max_length'
+
     type_spec_number:
       type: object
       required:
@@ -683,6 +704,16 @@ components:
             type:
               $ref: "#/components/schemas/type_spec_boolean"
 
+    typed_parameter_string:
+      allOf:
+        - $ref: "#/components/schemas/base_parameter"
+        - type: object
+          required:
+            - type
+          properties:
+            type:
+              $ref: "#/components/schemas/type_spec_string"
+
     typed_parameter_number:
       allOf:
         - $ref: "#/components/schemas/base_parameter"
@@ -720,6 +751,14 @@ components:
                   default:
                     description: Default number value. If omitted, no default value
                     type: number
+        - oneOf:
+            - allOf:
+              - $ref: "#/components/schemas/typed_parameter_string"
+              - type: object
+                properties:
+                  default:
+                    description: Default string value. If omitted, no default value
+                    type: string
       properties:
         optional:
           description: Whether or not the parameter is optional
@@ -730,6 +769,7 @@ components:
         - $ref: "#/components/schemas/typed_parameter_integer"
         - $ref: "#/components/schemas/typed_parameter_boolean"
         - $ref: "#/components/schemas/typed_parameter_number"
+        - $ref: "#/components/schemas/typed_parameter_string"
 
     task_run_state:
       type: string
@@ -813,6 +853,7 @@ components:
             - type: integer
             - type: boolean
             - type: number
+            - type: string
         param_name:
           $ref: "#/components/schemas/param_name_type"
 
@@ -930,6 +971,7 @@ components:
             - $ref: "#/components/schemas/integer_task_run_parameter"
             - $ref: "#/components/schemas/boolean_task_run_parameter"
             - $ref: "#/components/schemas/number_task_run_parameter"
+            - $ref: "#/components/schemas/string_task_run_parameter"
 
     integer_task_run_parameter:
       type: object
@@ -960,6 +1002,16 @@ components:
           enum: ["number"]
         value:
           type: number
+
+    string_task_run_parameter:
+      type: object
+      required: ["value", "type"]
+      properties:
+        type:
+          type: string
+          enum: ["string"]
+        value:
+          type: string
 
     task_run_output:
       $ref: "#/components/schemas/typed_task_run_parameter"
