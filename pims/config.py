@@ -16,12 +16,15 @@ import logging
 import os
 from functools import lru_cache
 
-from pydantic import BaseSettings, Extra
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 logger = logging.getLogger("pims.app")
 
 
 class ReadableSettings(BaseSettings):
+    model_config = SettingsConfigDict(extra="ignore")
+
+
     api_base_path: str = ""  # if set, must start with /.
 
     root: str
@@ -59,20 +62,16 @@ class ReadableSettings(BaseSettings):
     auto_delete_collection_archive: bool = True
     auto_delete_failed_upload: bool = True
 
-    class Config:
-        extra = Extra.ignore
-
 
 class Settings(ReadableSettings):
+    model_config = SettingsConfigDict(env_file="pims-config.env", env_file_encoding="utf-8")
+
+
     cytomine_public_key: str
     cytomine_private_key: str
 
     task_queue_user: str = "router"
     task_queue_password: str = "router"
-
-    class Config:
-        env_file = "pims-config.env"
-        env_file_encoding = "utf-8"
 
 
 @lru_cache()

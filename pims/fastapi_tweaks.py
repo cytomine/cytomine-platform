@@ -24,7 +24,8 @@ from typing import (
 )
 
 from fastapi import params, routing
-from fastapi._compat import _regenerate_error_with_loc, get_missing_field_error, _normalize_errors
+from fastapi._compat import _regenerate_error_with_loc, get_missing_field_error, _normalize_errors, Undefined, \
+    ModelField, ErrorWrapper
 from fastapi.datastructures import Default, DefaultPlaceholder
 from fastapi.dependencies import utils
 from fastapi.dependencies.models import Dependant
@@ -33,8 +34,7 @@ from fastapi.exceptions import HTTPException, RequestValidationError, FastAPIErr
 from fastapi.routing import run_endpoint_function, serialize_response
 from fastapi.types import IncEx
 from fastapi.utils import is_body_allowed_for_status_code
-from pydantic.error_wrappers import ErrorWrapper
-from pydantic.fields import ModelField, Undefined
+
 from starlette.datastructures import Headers, QueryParams
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response

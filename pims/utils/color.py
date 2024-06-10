@@ -16,9 +16,10 @@ from typing import List, Optional, Union
 
 import numpy as np
 from pydantic.color import (
-    Color as PydanticColor, ColorError, ColorType as PydanticColorType,
     RGBA, float_to_255, ints_to_rgba, parse_str, parse_tuple
 )
+from pydantic_core import PydanticCustomError
+from pydantic_extra_types.color import Color as PydanticColor, ColorType as PydanticColorType
 
 ColorType = Union[PydanticColorType, int]
 
@@ -37,7 +38,10 @@ class Color(PydanticColor):
             self._rgba = value._rgba
             value = value._original
         else:
-            raise ColorError(reason='value must be a tuple, list, int or string')
+            raise PydanticCustomError(
+                'color_error',
+                'value is not a valid color: value must be a tuple, list or string',
+            )
 
         # if we've got here value must be a valid color
         self._original = value

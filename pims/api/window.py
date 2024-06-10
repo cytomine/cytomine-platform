@@ -81,7 +81,7 @@ async def show_window_with_body(
     """
     return await _show_window(
         request, response,
-        path, **body.dict(),
+        path, **body.model_dump(serialize_as_any=True),
         extension=extension, headers=headers, config=config
     )
 

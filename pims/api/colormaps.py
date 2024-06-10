@@ -15,7 +15,7 @@
 from typing import List
 
 from fastapi import APIRouter, Depends, Query
-from pydantic import BaseModel, Field, conint
+from pydantic import BaseModel, Field
 
 from pims.api.exceptions import ColormapNotFoundProblem
 from pims.api.utils.header import ImageRequestHeaders
@@ -28,6 +28,7 @@ from pims.api.utils.response import FastJsonResponse, response_list
 from pims.config import get_settings
 from pims.processing.colormaps import COLORMAPS, ColormapType
 from pims.processing.image_response import ColormapRepresentationResponse
+from typing_extensions import Annotated
 
 router = APIRouter(prefix=get_settings().api_base_path)
 api_tags = ['Colormaps']
@@ -93,10 +94,10 @@ def show_colormap(colormap_id: str):
 @router.get('/colormaps/{colormap_id}/representation{extension:path}', tags=api_tags)
 def show_colormap_representation(
     colormap_id: str,
-    width: conint(gt=10, le=512) = Query(
+    width: Annotated[int, Field(gt=10, le=512)] = Query(
         100, description="Width of the graphic representation, in pixels."
     ),
-    height: conint(gt=0, le=512) = Query(
+    height: Annotated[int, Field(gt=0, le=512)] = Query(
         10, description="Height of the graphic representation, in pixels."
     ),
     headers: ImageRequestHeaders = Depends(),

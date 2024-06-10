@@ -12,6 +12,8 @@ aioredis[hiredis]==2.0.1
     # via cytomine-pims (setup.py)
 amqp==5.1.1
     # via kombu
+annotated-types==0.7.0
+    # via pydantic
 anyio==3.6.2
     # via
     #   starlette
@@ -93,12 +95,8 @@ kombu==5.2.4
     # via celery
 lazy-loader==0.1
     # via scikit-image
-markdown-it-py==2.2.0
-    # via rich
 matplotlib==3.7.1
     # via cytomine-pims (setup.py)
-mdurl==0.1.2
-    # via markdown-it-py
 msgpack==1.0.4
     # via cachecontrol
 networkx==3.0
@@ -143,14 +141,20 @@ prompt-toolkit==3.0.38
     # via click-repl
 pycparser==2.21
     # via cffi
-pydantic==1.10.5
+pydantic==2.7.3
     # via
     #   cytomine-pims (setup.py)
     #   fastapi
+    #   pydantic-extra-types
+    #   pydantic-settings
+pydantic-core==2.18.4
+    # via pydantic
+pydantic-extra-types==2.8.0
+    # via cytomine-pims (setup.py)
+pydantic-settings==2.3.1
+    # via cytomine-pims (setup.py)
 pydicom==2.3.1
     # via cytomine-pims (setup.py)
-pygments==2.14.0
-    # via rich
 pyparsing==3.0.9
     # via
     #   matplotlib
@@ -162,6 +166,7 @@ python-dateutil==2.8.2
 python-dotenv==1.0.1
     # via
     #   cytomine-pims (setup.py)
+    #   pydantic-settings
     #   uvicorn
 python-gdcm==3.0.21
     # via cytomine-pims (setup.py)
@@ -184,8 +189,6 @@ requests==2.28.2
     #   requests-toolbelt
 requests-toolbelt==0.10.1
     # via cytomine-python-client
-rich==13.3.2
-    # via cytomine-pims (setup.py)
 scikit-image==0.20.0
     # via cytomine-pims (setup.py)
 scipy==1.9.1
@@ -214,6 +217,7 @@ typing-extensions==4.12.1
     #   aioredis
     #   fastapi
     #   pydantic
+    #   pydantic-core
     #   uvicorn
 urllib3==1.26.14
     # via

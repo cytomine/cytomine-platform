@@ -16,7 +16,7 @@ import operator
 from typing import List, Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Query, Response
-from pydantic import BaseModel, Field, conint
+from pydantic import BaseModel, Field
 from starlette import status
 
 from pims.api.exceptions import BadRequestException, check_representation_existence
@@ -31,6 +31,7 @@ from pims.config import get_settings
 from pims.files.file import HISTOGRAM_STEM, Path
 from pims.processing.histograms.utils import argmax_nonzero, argmin_nonzero, build_histogram_file
 from pims.utils.iterables import ensure_list
+from typing_extensions import Annotated
 
 router = APIRouter(prefix=get_settings().api_base_path)
 api_tags = ['Histograms']
@@ -210,7 +211,7 @@ def show_image_histogram_bounds(
 def show_channels_histogram(
     path: Path = Depends(imagepath_parameter),
     hist_config: HistogramConfig = Depends(),
-    channels: Optional[List[conint(ge=0)]] = Query(
+    channels: Optional[List[Annotated[int, Field(ge=0)]]] = Query(
         None, description="Only return histograms for these channels"
     ),
 ):
@@ -256,7 +257,7 @@ def show_channels_histogram(
 )
 def show_channels_histogram_bounds(
     path: Path = Depends(imagepath_parameter),
-    channels: Optional[List[conint(ge=0)]] = Query(
+    channels: Optional[List[Annotated[int, Field(ge=0)]]] = Query(
         None, description="Only return histograms for these channels"
     ),
 ):
@@ -298,11 +299,11 @@ def show_channels_histogram_bounds(
     response_class=FastJsonResponse
 )
 def show_plane_histogram(
-    z_slices: conint(ge=0),
-    timepoints: conint(ge=0),
+    z_slices: Annotated[int, Field(ge=0)],
+    timepoints: Annotated[int, Field(ge=0)],
     path: Path = Depends(imagepath_parameter),
     hist_config: HistogramConfig = Depends(),
-    channels: Optional[List[conint(ge=0)]] = Query(
+    channels: Optional[List[Annotated[int, Field(ge=0)]]] = Query(
         None, description="Only return histograms for these channels"
     ),
 ):
@@ -348,10 +349,10 @@ def show_plane_histogram(
     response_class=FastJsonResponse
 )
 def show_plane_histogram(
-    z_slices: conint(ge=0),
-    timepoints: conint(ge=0),
+    z_slices: Annotated[int, Field(ge=0)],
+    timepoints: Annotated[int, Field(ge=0)],
     path: Path = Depends(imagepath_parameter),
-    channels: Optional[List[conint(ge=0)]] = Query(
+    channels: Optional[List[Annotated[int, Field(ge=0)]]] = Query(
         None, description="Only return histograms for these channels"
     ),
 ):

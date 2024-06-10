@@ -64,11 +64,6 @@ async def startup():
         logger.error(e)
         exit(-1)
 
-    # Check optimisation are enabled for external libs
-    from pydantic import compiled as pydantic_compiled
-    if not pydantic_compiled:
-        logger.warning(f"Pydantic is running in non compiled mode.")
-
     import pyvips
     pyvips_binary = pyvips.API_mode
     if not pyvips_binary:

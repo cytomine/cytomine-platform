@@ -36,7 +36,9 @@ REQUIRES_PYTHON = '>=3.8.0,<3.9.0'
 REQUIRED = [
     'uvicorn[standard]>=0.29.0,<0.30.0',
     'fastapi>=0.110.0,<0.111.0',
-    'pydantic>=1.8.2',
+    'pydantic>=2.2.0',
+    'pydantic-settings>=2.2.0',
+    'pydantic-extra-types>=2.2.0',
     'orjson>=3.10.3',
     'python-dotenv>=1.0.1',
     'python-multipart>=0.0.9',
