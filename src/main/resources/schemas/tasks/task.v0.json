@@ -137,7 +137,7 @@
         "properties": {
           "dependencies": {
             "type": "object",
-            "required": "matching",
+            "required": ["matching"],
             "properties": {
               "matching": {
                 "type": "array",
