@@ -117,7 +117,8 @@ RUN cd /usr/local/src && \
     meson build --libdir lib -Dintrospection=disabled --buildtype release && \
     cd build && \
     ninja && \
-    ninja install
+    ninja install && \
+    ldconfig
 
 # Run before_python() from plugins prerequisites
 RUN python plugins.py \
