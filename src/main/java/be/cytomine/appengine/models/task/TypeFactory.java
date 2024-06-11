@@ -1,12 +1,14 @@
 package be.cytomine.appengine.models.task;
 
 import be.cytomine.appengine.models.task.bool.BooleanType;
+import be.cytomine.appengine.models.task.enumeration.EnumerationType;
 import be.cytomine.appengine.models.task.integer.IntegerType;
 import be.cytomine.appengine.models.task.number.NumberType;
 import be.cytomine.appengine.models.task.string.StringType;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import be.cytomine.appengine.dto.inputs.task.types.enumeration.EnumerationTypeConstraint;
 import be.cytomine.appengine.dto.inputs.task.types.integer.IntegerTypeConstraint;
 import be.cytomine.appengine.dto.inputs.task.types.number.NumberTypeConstraint;
 import be.cytomine.appengine.dto.inputs.task.types.string.StringTypeConstraint;
@@ -33,6 +35,7 @@ public class TypeFactory {
             case "integer" -> createIntegerType(typeNode, typeId);
             case "number" -> createNumberType(typeNode, typeId);
             case "string" -> createStringType(typeNode, typeId);
+            case "enumeration" -> createEnumerationType(typeNode, typeId);
             default -> new Type();
         };
     }
@@ -80,6 +83,19 @@ public class TypeFactory {
             .map(StringTypeConstraint::getStringKey)
             .filter(typeNode::has)
             .forEach(key -> type.setConstraint(StringTypeConstraint.getConstraint(key), typeNode.get(key).asText()));
+
+        return type;
+    }
+
+    @NotNull
+    private static EnumerationType createEnumerationType(JsonNode typeNode, String typeId) {
+        EnumerationType type = new EnumerationType();
+        type.setId(typeId);
+
+        Arrays.stream(EnumerationTypeConstraint.values())
+            .map(EnumerationTypeConstraint::getStringKey)
+            .filter(typeNode::has)
+            .forEach(key -> type.setConstraint(EnumerationTypeConstraint.getConstraint(key), typeNode.get(key).toString()));
 
         return type;
     }

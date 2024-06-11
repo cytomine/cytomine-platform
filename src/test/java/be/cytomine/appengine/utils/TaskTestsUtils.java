@@ -15,6 +15,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import be.cytomine.appengine.dto.inputs.task.GenericParameterProvision;
 import be.cytomine.appengine.dto.inputs.task.TaskRunParameterValue;
 import be.cytomine.appengine.dto.inputs.task.types.bool.BooleanValue;
+import be.cytomine.appengine.dto.inputs.task.types.enumeration.EnumerationValue;
 import be.cytomine.appengine.dto.inputs.task.types.integer.IntegerValue;
 import be.cytomine.appengine.dto.inputs.task.types.string.StringValue;
 import be.cytomine.appengine.models.BaseEntity;
@@ -82,6 +83,14 @@ public class TaskTestsUtils {
                     stringValue.setValue((String) entity.get("value"));
                     parameterValues.add(stringValue);
                     break;
+
+                case "enumeration":
+                    EnumerationValue enumerationValue = new EnumerationValue();
+                    enumerationValue.setParam_name((String) entity.get("param_name"));
+                    enumerationValue.setTask_run_id(UUID.fromString((String) entity.get("task_run_id")));
+                    enumerationValue.setValue((String) entity.get("value"));
+                    parameterValues.add(enumerationValue);
+                    break;
             }
         }
 
@@ -113,7 +122,9 @@ public class TaskTestsUtils {
                 provision.setType(be.cytomine.appengine.dto.inputs.task.ParameterType.STRING);
                 provision.setValue(value);
                 break;
-            default:
+            case "EnumerationType":
+                provision.setType(be.cytomine.appengine.dto.inputs.task.ParameterType.ENUMERATION);
+                provision.setValue(value);
                 break;
         }
 
