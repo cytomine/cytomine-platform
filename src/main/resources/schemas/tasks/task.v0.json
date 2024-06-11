@@ -118,37 +118,16 @@
   "$defs": {
     "dependencies": {
       "derived_from": {
-        "type": "object",
-        "properties": {
-          "dependencies": {
-            "type": "object",
-            "required": ["derived_from"],
-            "properties": {
-              "derived_from": {
-                "type": "string",
-                "pattern": "^inputs/[a-zA-Z0-9_]+$"
-              }
-            }
-          }
-        }
+        "type": "string",
+        "pattern": "^inputs/[a-zA-Z0-9_]+$"
+
       },
       "matching": {
-        "type": "object",
-        "properties": {
-          "dependencies": {
-            "type": "object",
-            "required": ["matching"],
-            "properties": {
-              "matching": {
-                "type": "array",
-                "min_size": 1,
-                "items": {
-                  "type": "string",
-                  "pattern": "^(inputs|outputs)/[a-zA-Z0-9_]+$"
-                }
-              }
-            }
-          }
+        "type": "array",
+        "min_size": 1,
+        "items": {
+          "type": "string",
+          "pattern": "^(inputs|outputs)/[a-zA-Z0-9_]+$"
         }
       }
     },
@@ -478,7 +457,18 @@
           "type": "object",
           "allOf": [
             {"$ref": "#/$defs/io/base_parameter"},
-            {"$ref": "#/$defs/dependencies/matching"}
+            {
+              "type": "object",
+              "properties": {
+                "dependencies": {
+                  "type": "object",
+                  "properties": {
+                    "$ref": "#/$defs/dependencies/matching"
+                  },
+                  "unevaluatedProperties": true
+                }
+              }
+            }
           ],
           "required": ["type"],
           "properties": {
@@ -562,7 +552,18 @@
               {"$ref": "#/$defs/io/typed_parameter/array"}
             ]
           },
-          {"$ref": "#/$defs/dependencies/derived_from"}
+          {
+            "type": "object",
+            "properties": {
+              "dependencies": {
+                "type": "object",
+                "properties": {
+                  "$ref": "#/$defs/dependencies/derived_from"
+                },
+                "unevaluatedProperties": true
+              }
+            }
+          }
         ]
       }
     }
