@@ -61,7 +61,7 @@ def _serialize_colormap(cmap):
     '/colormaps', response_model=ColormapsList, tags=api_tags,
     response_class=FastJsonResponse
 )
-def list_colormaps(
+async def list_colormaps(
     with_inverted: bool = Query(
         False, description="Also list inverted colormaps"
     )
@@ -81,7 +81,7 @@ def list_colormaps(
     '/colormaps/{colormap_id}', response_model=Colormap, tags=api_tags,
     response_class=FastJsonResponse
 )
-def show_colormap(colormap_id: str):
+async def show_colormap(colormap_id: str):
     """
     Get a colormap
     """
@@ -92,7 +92,7 @@ def show_colormap(colormap_id: str):
 
 
 @router.get('/colormaps/{colormap_id}/representation{extension:path}', tags=api_tags)
-def show_colormap_representation(
+async def show_colormap_representation(
     colormap_id: str,
     width: Annotated[int, Field(gt=10, le=512)] = Query(
         100, description="Width of the graphic representation, in pixels."

@@ -164,7 +164,7 @@ def import_(filepath, body):
 
 
 @router.get('/file/{filepath:path}/export', tags=['Export'])
-def export_file(
+async def export_file(
         background: BackgroundTasks,
         path: Path = Depends(filepath_parameter),
         filename: Optional[str] = Query(None, description="Suggested filename for returned file")
@@ -207,7 +207,7 @@ def export_file(
 
 
 @router.get('/image/{filepath:path}/export', tags=['Export'])
-def export_upload(
+async def export_upload(
         background: BackgroundTasks,
         path: Path = Depends(imagepath_parameter),
         filename: Optional[str] = Query(None, description="Suggested filename for returned file")
@@ -250,7 +250,7 @@ def export_upload(
 
 
 @router.delete('/image/{filepath:path}', tags=['delete'])
-def delete(
+async def delete(
         path: Path = Depends(imagepath_parameter),
 ):
     """

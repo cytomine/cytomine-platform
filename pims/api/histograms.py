@@ -163,7 +163,7 @@ class HistogramConfig:
     tags=api_tags, response_model=Histogram,
     response_class=FastJsonResponse
 )
-def show_image_histogram(
+async def show_image_histogram(
     path: Path = Depends(imagepath_parameter),
     hist_config: HistogramConfig = Depends()
 ):
@@ -189,7 +189,7 @@ def show_image_histogram(
     tags=api_tags, response_model=HistogramInfo,
     response_class=FastJsonResponse
 )
-def show_image_histogram_bounds(
+async def show_image_histogram_bounds(
     path: Path = Depends(imagepath_parameter)
 ):
     """
@@ -208,7 +208,7 @@ def show_image_histogram_bounds(
     tags=api_tags, response_model=ChannelsHistogramCollection,
     response_class=FastJsonResponse
 )
-def show_channels_histogram(
+async def show_channels_histogram(
     path: Path = Depends(imagepath_parameter),
     hist_config: HistogramConfig = Depends(),
     channels: Optional[List[Annotated[int, Field(ge=0)]]] = Query(
@@ -255,7 +255,7 @@ def show_channels_histogram(
     tags=api_tags, response_model=ChannelsHistogramInfoCollection,
     response_class=FastJsonResponse
 )
-def show_channels_histogram_bounds(
+async def show_channels_histogram_bounds(
     path: Path = Depends(imagepath_parameter),
     channels: Optional[List[Annotated[int, Field(ge=0)]]] = Query(
         None, description="Only return histograms for these channels"
@@ -298,7 +298,7 @@ def show_channels_histogram_bounds(
     tags=api_tags, response_model=PlaneHistogramCollection,
     response_class=FastJsonResponse
 )
-def show_plane_histogram(
+async def show_plane_histogram(
     z_slices: Annotated[int, Field(ge=0)],
     timepoints: Annotated[int, Field(ge=0)],
     path: Path = Depends(imagepath_parameter),
@@ -348,7 +348,7 @@ def show_plane_histogram(
     tags=api_tags, response_model=PlaneHistogramInfoCollection,
     response_class=FastJsonResponse
 )
-def show_plane_histogram(
+async def show_plane_histogram(
     z_slices: Annotated[int, Field(ge=0)],
     timepoints: Annotated[int, Field(ge=0)],
     path: Path = Depends(imagepath_parameter),
@@ -389,7 +389,7 @@ def show_plane_histogram(
 
 
 @router.post('/image/{filepath:path}/histogram', tags=api_tags)
-def compute_histogram(
+async def compute_histogram(
     response: Response,
     background: BackgroundTasks,
     path: Path = Depends(imagepath_parameter),

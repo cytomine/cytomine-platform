@@ -79,7 +79,7 @@ def _serialize_usage(path):
     '/directory/{directorypath:path}/disk-usage', response_model=DiskUsage,
     tags=api_tags, response_class=FastJsonResponse
 )
-def show_path_usage(
+async def show_path_usage(
     directorypath: str,
     config: Settings = Depends(get_settings)
 ) -> DiskUsage:
@@ -98,7 +98,7 @@ def show_path_usage(
     '/disk-usage', response_model=DiskUsage, tags=api_tags,
     response_class=FastJsonResponse
 )
-def show_disk_usage(config: Settings = Depends(get_settings)) -> DiskUsage:
+async def show_disk_usage(config: Settings = Depends(get_settings)) -> DiskUsage:
     """
     PIMS disk usage
     """
@@ -118,7 +118,7 @@ class DiskUsageLegacy(BaseModel):
     '/storage/size.json', response_model=DiskUsageLegacy, tags=api_tags,
     response_class=FastJsonResponse
 )
-def show_disk_usage_v1(config: Settings = Depends(get_settings)):
+async def show_disk_usage_v1(config: Settings = Depends(get_settings)):
     """
     Get storage space (v1.x)
     """

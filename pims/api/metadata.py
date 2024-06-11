@@ -530,7 +530,7 @@ class ImageFullInfo(BaseModel):
     response_model=FileInfo,
     tags=api_tags
 )
-def show_file(
+async def show_file(
     path: Path = Depends(filepath_parameter),
 ):
     """
@@ -545,7 +545,7 @@ def show_file(
     tags=api_tags,
     response_class=FastJsonResponse
 )
-def show_info(
+async def show_info(
     path: Path = Depends(imagepath_parameter)
 ):
     """
@@ -571,7 +571,7 @@ def show_info(
     tags=api_tags,
     response_class=FastJsonResponse
 )
-def show_image(
+async def show_image(
     path: Path = Depends(imagepath_parameter)
 ):
     """
@@ -594,7 +594,7 @@ class ChannelsInfoCollection(CollectionSize):
     tags=api_tags,
     response_class=FastJsonResponse
 )
-def show_channels(path: Path = Depends(imagepath_parameter)):
+async def show_channels(path: Path = Depends(imagepath_parameter)):
     """
     Get image channel info
     """
@@ -611,7 +611,7 @@ def show_channels(path: Path = Depends(imagepath_parameter)):
     tags=api_tags,
     response_class=FastJsonResponse
 )
-def show_normalized_pyramid(
+async def show_normalized_pyramid(
     path: Path = Depends(imagepath_parameter)
 ):
     """
@@ -630,7 +630,7 @@ def show_normalized_pyramid(
     tags=api_tags,
     response_class=FastJsonResponse
 )
-def show_instrument(
+async def show_instrument(
     path: Path = Depends(imagepath_parameter)
 ):
     """
@@ -653,7 +653,7 @@ class AssociatedInfoCollection(CollectionSize):
     tags=api_tags + ['Associated'],
     response_class=FastJsonResponse
 )
-def show_associated(
+async def show_associated(
     path: Path = Depends(imagepath_parameter)
 ):
     """
@@ -725,7 +725,7 @@ class MetadataCollection(CollectionSize):
     response_model=MetadataCollection,
     tags=api_tags
 )
-def show_metadata(
+async def show_metadata(
     path: Path = Depends(imagepath_parameter)
 ):
     """
@@ -795,7 +795,7 @@ class MetadataAnnotationCollection(CollectionSize):
     response_model=MetadataAnnotationCollection,
     tags=api_tags
 )
-def show_metadata_annotations(
+async def show_metadata_annotations(
     path: Path = Depends(imagepath_parameter)
 ):
     """
@@ -821,7 +821,7 @@ class RepresentationInfoCollection(CollectionSize):
     tags=api_tags,
     response_class=FastJsonResponse
 )
-def list_representations(
+async def list_representations(
     path: Path = Depends(imagepath_parameter)
 ):
     """
@@ -835,7 +835,7 @@ def list_representations(
     response_model=RepresentationInfo,
     tags=api_tags
 )
-def show_representation(
+async def show_representation(
     representation: FileRole,
     path: Path = Depends(imagepath_parameter)
 ):

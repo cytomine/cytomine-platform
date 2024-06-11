@@ -28,7 +28,7 @@ class ServerInfo(BaseModel):
 
 
 @router.get('/info', response_model=ServerInfo, tags=['Server'])
-def show_status() -> ServerInfo:
+async def show_status() -> ServerInfo:
     """
     PIMS Server status.
     """

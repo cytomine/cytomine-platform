@@ -78,7 +78,7 @@ def _serialize_format(format):
     '/formats', response_model=FormatsList, tags=api_tags,
     response_class=FastJsonResponse
 )
-def list_formats():
+async def list_formats():
     """
     List all formats
     """
@@ -92,7 +92,7 @@ def list_formats():
     '/formats/{format_id}', response_model=Format, tags=api_tags,
     response_class=FastJsonResponse
 )
-def show_format(format_id: str):
+async def show_format(format_id: str):
     """
     Get a format
     """
