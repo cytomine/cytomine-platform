@@ -754,15 +754,8 @@ components:
       minLength: 1
 
     param-deps-derived-from:
-      type: "object"
-      properties:
-        dependencies:
-          type: "object"
-          required: ["derived_from"]
-          properties:
-            derived_from:
-              type: "string"
-              pattern: "^inputs/[a-zA-Z0-9_]+$"
+      type: "string"
+      pattern: "^inputs/[a-zA-Z0-9_]+$"
 
     base_parameter:
       type: object
@@ -1045,15 +1038,22 @@ components:
           type: boolean
 
     output_parameter:
-      oneOf:
-        - $ref: "#/components/schemas/typed_parameter_integer"
-        - $ref: "#/components/schemas/typed_parameter_boolean"
-        - $ref: "#/components/schemas/typed_parameter_enumeration"
-        - $ref: "#/components/schemas/typed_parameter_number"
-        - $ref: "#/components/schemas/typed_parameter_string"
-        - $ref: "#/components/schemas/typed_parameter_geometry"
-        - $ref: "#/components/schemas/typed_parameter_image"
-
+      allOf:
+        - oneOf:
+          - $ref: "#/components/schemas/typed_parameter_integer"
+          - $ref: "#/components/schemas/typed_parameter_boolean"
+          - $ref: "#/components/schemas/typed_parameter_enumeration"
+          - $ref: "#/components/schemas/typed_parameter_number"
+          - $ref: "#/components/schemas/typed_parameter_string"
+          - $ref: "#/components/schemas/typed_parameter_geometry"
+          - $ref: "#/components/schemas/typed_parameter_image"
+        - type: "object"
+          properties:
+            dependencies:
+              type: "object"
+              properties:
+                derived_from:
+                  $ref: "#/components/schemas/param-deps-derived-from"
 
     task_run_state:
       type: string
