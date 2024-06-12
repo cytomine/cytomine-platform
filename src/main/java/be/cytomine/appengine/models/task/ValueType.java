@@ -5,5 +5,6 @@ public enum ValueType {
     INTEGER,
     NUMBER,
     STRING,
-    ENUMERATION
+    ENUMERATION,
+    GEOMETRY
 }
