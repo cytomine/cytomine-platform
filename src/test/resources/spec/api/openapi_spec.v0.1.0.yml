@@ -757,6 +757,12 @@ components:
       type: "string"
       pattern: "^inputs/[a-zA-Z0-9_]+$"
 
+    param-deps-matching:
+      type: "array"
+      items:
+        type: string
+        pattern: "^(inputs|outputs)/[a-zA-Z0-9_]+$"
+
     base_parameter:
       type: object
       required:
@@ -912,6 +918,26 @@ components:
               - png
               - tiff
 
+    type_spec_array:
+      type: object
+      required: ["id"]
+      properties:
+        id:
+          type: string
+          enum: ["array"]
+        subType:
+          type: object
+          oneOf:
+            - $ref: "#/components/schemas/type_spec_integer"
+            - $ref: "#/components/schemas/type_spec_boolean"
+            - $ref: "#/components/schemas/type_spec_enumeration"
+            - $ref: "#/components/schemas/type_spec_string"
+            - $ref: "#/components/schemas/type_spec_number"
+            - $ref: "#/components/schemas/type_spec_geometry"
+            - $ref: "#/components/schemas/type_spec_image"
+            - $ref: "#/components/schemas/type_spec_array"
+
+
     typed_parameter_integer:
       allOf:
         - $ref: "#/components/schemas/base_parameter"
@@ -982,55 +1008,72 @@ components:
             type:
               $ref: "#/components/schemas/type_spec_image"
 
+    typed_parameter_array:
+      allOf:
+        - $ref: "#/components/schemas/base_parameter"
+        - type: object
+          properties:
+            dependencies:
+              type: object
+              properties:
+                matching:
+                  $ref: "#/components/schemas/param-deps-matching"
+        - type: object
+          required:
+            - type
+          properties:
+            type:
+              $ref: "#/components/schemas/type_spec_array"
+
     input_parameter:
       type: object
       allOf:
         - oneOf:
-            - allOf:
-              - $ref: "#/components/schemas/typed_parameter_integer"
-              - type: object
-                properties:
-                  default:
-                    description: Default integer value. If omitted, no default value
-                    type: integer
+          - allOf:
+            - $ref: "#/components/schemas/typed_parameter_integer"
+            - type: object
+              properties:
+                default:
+                  description: Default integer value. If omitted, no default value
+                  type: integer
         - oneOf:
-            - allOf:
-              - $ref: "#/components/schemas/typed_parameter_boolean"
-              - type: object
-                properties:
-                  default:
-                    description: Default boolean value. If omitted, no default value
-                    type: boolean
+          - allOf:
+            - $ref: "#/components/schemas/typed_parameter_boolean"
+            - type: object
+              properties:
+                default:
+                  description: Default boolean value. If omitted, no default value
+                  type: boolean
         - oneOf:
-            - allOf:
-              - $ref: "#/components/schemas/typed_parameter_enumeration"
-              - type: object
-                properties:
-                  default:
-                    description: Default enumeration value. If omitted, no default value
-                    type: string
+          - allOf:
+            - $ref: "#/components/schemas/typed_parameter_enumeration"
+            - type: object
+              properties:
+                default:
+                  description: Default enumeration value. If omitted, no default value
+                  type: string
         - oneOf:
-            - allOf:
-              - $ref: "#/components/schemas/typed_parameter_number"
-              - type: object
-                properties:
-                  default:
-                    description: Default number value. If omitted, no default value
-                    type: number
+          - allOf:
+            - $ref: "#/components/schemas/typed_parameter_number"
+            - type: object
+              properties:
+                default:
+                  description: Default number value. If omitted, no default value
+                  type: number
         - oneOf:
-            - allOf:
-              - $ref: "#/components/schemas/typed_parameter_string"
-              - type: object
-                properties:
-                  default:
-                    description: Default string value. If omitted, no default value
-                    type: string
-
+          - allOf:
+            - $ref: "#/components/schemas/typed_parameter_string"
+            - type: object
+              properties:
+                default:
+                  description: Default string value. If omitted, no default value
+                  type: string
         - oneOf:
           - $ref: "#/components/schemas/typed_parameter_geometry"
-
         - oneOf:
           - $ref: "#/components/schemas/typed_parameter_image"
+        - oneOf:
+          - $ref: "#/components/schemas/typed_parameter_array"
 
       properties:
         optional:
