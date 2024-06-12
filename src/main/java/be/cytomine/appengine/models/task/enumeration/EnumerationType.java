@@ -133,7 +133,7 @@ public class EnumerationType extends Type {
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode provisionedParameter = mapper.createObjectNode();
         provisionedParameter.put("param_name", provision.get("param_name").asText());
-        provisionedParameter.put("value", provision.get("value").asInt());
+        provisionedParameter.put("value", provision.get("value").asText());
         provisionedParameter.put("task_run_id", String.valueOf(run.getId()));
         return provisionedParameter;
     }
