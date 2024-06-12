@@ -1090,6 +1090,7 @@ components:
           - $ref: "#/components/schemas/typed_parameter_string"
           - $ref: "#/components/schemas/typed_parameter_geometry"
           - $ref: "#/components/schemas/typed_parameter_image"
+          - $ref: "#/components/schemas/typed_parameter_array"
         - type: "object"
           properties:
             dependencies:
