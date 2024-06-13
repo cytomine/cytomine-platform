@@ -6,12 +6,9 @@ formatters:
 
 handlers:
   console:
-    class: pims.logger.PimsHandler
+    class: logging.StreamHandler
     level: DEBUG
     formatter: basic
-    rich_tracebacks: True
-    markup: True
-    log_time_format: '[%x %H:%M:%S.%f]'
 
 loggers:
   pims:

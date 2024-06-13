@@ -33,7 +33,7 @@ NON_PLUGINS_MODULES = ["pims.formats.utils"]
 PLUGIN_GROUP = "pims.formats"
 
 logger = logging.getLogger("pims.app")
-logger.info("[green bold]Formats initialization...")
+logger.info("Formats initialization...")
 
 
 def custom_sort_key(item, dictionary):
@@ -99,8 +99,8 @@ def _discover_format_plugins() -> List[Union[str, EntryPoint]]:
         plugins = reorder_plugins(plugins, get_settings().checker_resolution_file)
 
     logger.info(
-        f"[green bold]Format plugins: found {len(plugins)} plugin(s)[/] "
-        f"[yellow]({', '.join(plugin_names)})"
+        f"Format plugins: found {len(plugins)} plugin(s) "
+        f"({', '.join(plugin_names)})"
     )
     return plugins
 
@@ -135,8 +135,8 @@ def _find_formats_in_module(mod: ModuleType) -> List[Type[AbstractFormat]]:
                     format.init()
 
                     logger.info(
-                        f"[green] * [yellow]{format.get_identifier()} "
-                        f"- {format.get_name()}[/] imported."
+                        f" * {format.get_identifier()} "
+                        f"- {format.get_name()} imported."
                     )
         except ImportError as e:
             logger.error(
@@ -161,7 +161,7 @@ def _get_all_formats() -> List[Type[AbstractFormat]]:
 
         module_name = plugin.module if entrypoint_plugin else plugin
         logger.info(
-            f"[green bold]Importing formats from " f"[yellow]{module_name}[/] plugin..."
+            f"Importing formats from " f"{module_name} plugin..."
         )
 
         if entrypoint_plugin:

@@ -203,7 +203,6 @@ def get_output_format(
 
 def extension_path_parameter(
     extension: OutputExtension = PathParam(
-        OutputExtension.NONE,
         description="Image response format. If not set, `Accept` header is used."
     )
 ):

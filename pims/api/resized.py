@@ -108,7 +108,7 @@ async def show_resized_with_body(
     """
     return await _show_resized(
         request, response,
-        path, **body.dict(),
+        path, **body.model_dump(serialize_as_any=True),
         extension=extension, headers=headers, config=config
     )
 

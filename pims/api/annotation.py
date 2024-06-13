@@ -73,7 +73,7 @@ async def show_mask(
     """
     return await _show_mask(
         request, response,
-        path, **body.dict(),
+        path, **body.model_dump(serialize_as_any=True),
         extension=extension, headers=headers, config=config
     )
 
@@ -149,7 +149,7 @@ async def show_crop(
     """
     return await _show_crop(
         request, response,
-        path, **body.dict(),
+        path, **body.model_dump(serialize_as_any=True),
         extension=extension, headers=headers, config=config
     )
 
@@ -219,7 +219,7 @@ async def show_drawing(
     """
     return await _show_drawing(
         request, response,
-        path, **body.dict(),
+        path, **body.model_dump(serialize_as_any=True),
         extension=extension, headers=headers, config=config
     )
 

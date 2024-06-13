@@ -16,12 +16,15 @@ import logging
 import os
 from functools import lru_cache
 
-from pydantic import BaseSettings, Extra
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 logger = logging.getLogger("pims.app")
 
 
 class ReadableSettings(BaseSettings):
+    model_config = SettingsConfigDict(extra="ignore")
+
+
     api_base_path: str = ""  # if set, must start with /.
 
     root: str
@@ -48,33 +51,31 @@ class ReadableSettings(BaseSettings):
     max_pixels_complete_histogram: int = 1024 * 1024
     max_length_complete_histogram: int = 1024
 
-    vips_allow_leak: bool = False
-    vips_cache_max_items: int = 5000
-    vips_cache_max_memory: int = 300  # in MB
-    vips_cache_max_files: int = 500
+    # Maximum number of operations to cache
+    vips_cache_max_items: int = 100
+    # Maximum memory in MB to use for this cache
+    vips_cache_max_memory: int = 50
+    # Maximum number of files to hold open
+    vips_cache_max_files: int = 100
 
     auto_delete_multi_file_format_archive: bool = True
     auto_delete_collection_archive: bool = True
     auto_delete_failed_upload: bool = True
 
-    class Config:
-        extra = Extra.ignore
-
 
 class Settings(ReadableSettings):
+    model_config = SettingsConfigDict(env_file="pims-config.env", env_file_encoding="utf-8")
+
+
     cytomine_public_key: str
     cytomine_private_key: str
 
     task_queue_user: str = "router"
     task_queue_password: str = "router"
 
-    class Config:
-        env_file = "pims-config.env"
-        env_file_encoding = "utf-8"
-
 
 @lru_cache()
 def get_settings():
     env_file = os.getenv("CONFIG_FILE", "pims-config.env")
-    logger.info(f"[green]Loading config from {env_file}")
+    logger.info(f"Loading config from {env_file}")
     return Settings(_env_file=env_file)

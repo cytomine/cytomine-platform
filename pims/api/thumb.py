@@ -103,7 +103,7 @@ async def show_thumb_with_body(
     thumbnail is extracted from the median focal plane at first timepoint.
     """
     return await _show_thumb(
-        request, response, path, **body.dict(), extension=extension,
+        request, response, path, **body.model_dump(serialize_as_any=True), extension=extension,
         headers=headers, config=config
     )
 
