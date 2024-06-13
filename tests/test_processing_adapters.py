@@ -34,7 +34,7 @@ def test_numpy_to_vips():
     assert img.height == 10
     assert img.bands == 1
 
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(ValueError):
         numpy_to_vips(np.arange(256, dtype=np.uint8).reshape((4, 4, 4, 4)))
 
 
