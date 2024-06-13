@@ -72,7 +72,7 @@ unittest:
     - job: build-docker-image-for-tests
       artifacts: false
   script:
-    - pip install pytest
+    - pip install pytest httpx
     - pytest ./tests --junit-xml=ci/test-reports/pytest_unit.xml
   artifacts:
     reports:
