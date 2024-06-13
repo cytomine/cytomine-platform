@@ -122,7 +122,7 @@ async def _show_tile(
     extension, headers, config,
     colormaps=None, c_reduction=ChannelReduction.ADD, z_reduction=None, t_reduction=None
 ):
-    in_image = path.get_spatial(cache=True)
+    in_image = await path.get_cached_spatial()
     check_representation_existence(in_image)
 
     if not normalized or in_image.is_pyramid_normalized:

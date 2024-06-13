@@ -16,6 +16,7 @@ from __future__ import annotations
 import logging
 import re
 from abc import ABC
+from copy import deepcopy
 from typing import Any, Dict, List, Optional, TYPE_CHECKING, Type
 
 from pims.cache import SimpleDataCache, cached_property
@@ -305,3 +306,9 @@ class AbstractFormat(ABC, SimpleDataCache):
     @cached_property
     def main_path(self):
         return self.path
+
+    def serialize(self):
+        _ = self.main_imd
+        _ = self.pyramid
+        _ = self.planes_info
+        return deepcopy(self)
