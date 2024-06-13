@@ -19,7 +19,7 @@ from enum import Enum
 from functools import partial, wraps
 from typing import Any, Callable, List, Optional, Tuple, Type
 
-import aioredis
+from redis import asyncio as aioredis
 from starlette.responses import Response
 
 from pims.api.utils.mimetype import VISUALISATION_MIMETYPES, get_output_format
