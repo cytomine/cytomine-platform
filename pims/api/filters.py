@@ -62,7 +62,7 @@ def _serialize_filter(imgfilter):
     '/filters', response_model=FiltersList, tags=api_tags,
     response_class=FastJsonResponse
 )
-def list_filters():
+async def list_filters():
     """
     List all filters
     """
@@ -74,7 +74,7 @@ def list_filters():
     '/filters/{filter_id}', response_model=Filter, tags=api_tags,
     response_class=FastJsonResponse
 )
-def show_filter(filter_id: str):
+async def show_filter(filter_id: str):
     """
     Get a filter
     """

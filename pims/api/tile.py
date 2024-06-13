@@ -78,7 +78,7 @@ async def show_tile_with_body(
     """
     return await _show_tile(
         request, response,
-        path, **body.dict(), normalized=False,
+        path, **body.model_dump(serialize_as_any=True), normalized=False,
         extension=extension, headers=headers, config=config
     )
 
@@ -106,7 +106,7 @@ async def show_tile_with_body(
     """
     return await _show_tile(
         request, response,
-        path, **body.dict(), normalized=True,
+        path, **body.model_dump(serialize_as_any=True), normalized=True,
         extension=extension, headers=headers, config=config
     )
 
@@ -225,31 +225,31 @@ async def _show_tile(
 def zoom_query_parameter(
     zoom: int = PathParam(...)
 ):
-    return TargetZoom(__root__=zoom).dict()['__root__']
+    return TargetZoom(zoom).model_dump()
 
 
 def level_query_parameter(
     level: int = PathParam(...)
 ):
-    return TargetLevel(__root__=level).dict()['__root__']
+    return TargetLevel(level).model_dump()
 
 
 def ti_query_parameter(
     ti: int = PathParam(...)
 ):
-    return TileIndex(__root__=ti).dict()['__root__']
+    return TileIndex(ti).model_dump()
 
 
 def tx_query_parameter(
     tx: int = PathParam(...)
 ):
-    return TileX(__root__=tx).dict()['__root__']
+    return TileX(tx).model_dump()
 
 
 def ty_query_parameter(
     ty: int = PathParam(...)
 ):
-    return TileY(__root__=ty).dict()['__root__']
+    return TileY(ty).model_dump()
 
 @router.get(
     '/image/{filepath:path}/tile/zoom/{zoom:int}/ti/{ti:int}{extension:path}', tags=tile_tags
@@ -423,8 +423,8 @@ async def show_tile_v1(
     """
     Get a tile using IMS V1.x specification.
     """
-    zoom = TargetZoom(__root__=z)
-    tx, ty = TileX(__root__=x), TileY(__root__=y)
+    zoom = TargetZoom(z)
+    tx, ty = TileX(x), TileY(y)
     tile = TargetZoomTileCoordinates(zoom=zoom, tx=tx, ty=ty)
     return await _show_tile(
         request, response,
@@ -456,13 +456,13 @@ async def show_tile_v2(
     """
     Get a tile using IMS V2.x specification.
     """
-    zoom = TargetZoom(__root__=z)
+    zoom = TargetZoom(z)
     if all(i is not None for i in (zoomify, tile_group, x, y)):
-        tx, ty = TileX(__root__=x), TileY(__root__=y)
+        tx, ty = TileX(x), TileY(y)
         tile = TargetZoomTileCoordinates(zoom=zoom, tx=tx, ty=ty)
         path = imagepath_parameter(zoomify, config)
     elif all(i is not None for i in (fif, z, tile_index)):
-        ti = TileIndex(__root__=tile_index)
+        ti = TileIndex(tile_index)
         tile = TargetZoomTileIndex(zoom=zoom, ti=ti)
         path = imagepath_parameter(fif, config)
     else:

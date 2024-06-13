@@ -16,7 +16,7 @@ import operator
 from typing import List, Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Query, Response
-from pydantic import BaseModel, Field, conint
+from pydantic import BaseModel, Field
 from starlette import status
 
 from pims.api.exceptions import BadRequestException, check_representation_existence
@@ -31,6 +31,7 @@ from pims.config import get_settings
 from pims.files.file import HISTOGRAM_STEM, Path
 from pims.processing.histograms.utils import argmax_nonzero, argmin_nonzero, build_histogram_file
 from pims.utils.iterables import ensure_list
+from typing_extensions import Annotated
 
 router = APIRouter(prefix=get_settings().api_base_path)
 api_tags = ['Histograms']
@@ -162,7 +163,7 @@ class HistogramConfig:
     tags=api_tags, response_model=Histogram,
     response_class=FastJsonResponse
 )
-def show_image_histogram(
+async def show_image_histogram(
     path: Path = Depends(imagepath_parameter),
     hist_config: HistogramConfig = Depends()
 ):
@@ -188,7 +189,7 @@ def show_image_histogram(
     tags=api_tags, response_model=HistogramInfo,
     response_class=FastJsonResponse
 )
-def show_image_histogram_bounds(
+async def show_image_histogram_bounds(
     path: Path = Depends(imagepath_parameter)
 ):
     """
@@ -207,10 +208,10 @@ def show_image_histogram_bounds(
     tags=api_tags, response_model=ChannelsHistogramCollection,
     response_class=FastJsonResponse
 )
-def show_channels_histogram(
+async def show_channels_histogram(
     path: Path = Depends(imagepath_parameter),
     hist_config: HistogramConfig = Depends(),
-    channels: Optional[List[conint(ge=0)]] = Query(
+    channels: Optional[List[Annotated[int, Field(ge=0)]]] = Query(
         None, description="Only return histograms for these channels"
     ),
 ):
@@ -254,9 +255,9 @@ def show_channels_histogram(
     tags=api_tags, response_model=ChannelsHistogramInfoCollection,
     response_class=FastJsonResponse
 )
-def show_channels_histogram_bounds(
+async def show_channels_histogram_bounds(
     path: Path = Depends(imagepath_parameter),
-    channels: Optional[List[conint(ge=0)]] = Query(
+    channels: Optional[List[Annotated[int, Field(ge=0)]]] = Query(
         None, description="Only return histograms for these channels"
     ),
 ):
@@ -297,12 +298,12 @@ def show_channels_histogram_bounds(
     tags=api_tags, response_model=PlaneHistogramCollection,
     response_class=FastJsonResponse
 )
-def show_plane_histogram(
-    z_slices: conint(ge=0),
-    timepoints: conint(ge=0),
+async def show_plane_histogram(
+    z_slices: Annotated[int, Field(ge=0)],
+    timepoints: Annotated[int, Field(ge=0)],
     path: Path = Depends(imagepath_parameter),
     hist_config: HistogramConfig = Depends(),
-    channels: Optional[List[conint(ge=0)]] = Query(
+    channels: Optional[List[Annotated[int, Field(ge=0)]]] = Query(
         None, description="Only return histograms for these channels"
     ),
 ):
@@ -347,11 +348,11 @@ def show_plane_histogram(
     tags=api_tags, response_model=PlaneHistogramInfoCollection,
     response_class=FastJsonResponse
 )
-def show_plane_histogram(
-    z_slices: conint(ge=0),
-    timepoints: conint(ge=0),
+async def show_plane_histogram(
+    z_slices: Annotated[int, Field(ge=0)],
+    timepoints: Annotated[int, Field(ge=0)],
     path: Path = Depends(imagepath_parameter),
-    channels: Optional[List[conint(ge=0)]] = Query(
+    channels: Optional[List[Annotated[int, Field(ge=0)]]] = Query(
         None, description="Only return histograms for these channels"
     ),
 ):
@@ -388,7 +389,7 @@ def show_plane_histogram(
 
 
 @router.post('/image/{filepath:path}/histogram', tags=api_tags)
-def compute_histogram(
+async def compute_histogram(
     response: Response,
     background: BackgroundTasks,
     path: Path = Depends(imagepath_parameter),

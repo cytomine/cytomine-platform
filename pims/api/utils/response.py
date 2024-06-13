@@ -16,10 +16,10 @@ from typing import Any, Optional, Union
 
 import orjson
 from cytomine.models import Model as CytomineModel
-from fastapi.encoders import DictIntStrAny, SetIntStr
 from fastapi.responses import ORJSONResponse
+from fastapi.types import IncEx
 from pint import Quantity
-from pydantic import BaseModel
+from pydantic import BaseModel, RootModel
 from starlette.background import BackgroundTask
 
 log = logging.getLogger("pims")
@@ -90,8 +90,8 @@ class FastJsonResponse(ORJSONResponse):
         headers: dict = None,
         media_type: str = None,
         background: BackgroundTask = None,
-        include: Optional[Union[SetIntStr, DictIntStrAny]] = None,
-        exclude: Optional[Union[SetIntStr, DictIntStrAny]] = None,
+        include: Optional[IncEx]  = None,
+        exclude: Optional[IncEx] = None,
         by_alias: bool = True,
         exclude_unset: bool = False,
         exclude_defaults: bool = False,
@@ -121,8 +121,8 @@ class FastJsonResponse(ORJSONResponse):
                 exclude_none=self.exclude_none,
                 exclude_defaults=self.exclude_defaults,
             )
-            if "__root__" in obj_dict:
-                obj_dict = obj_dict["__root__"]
+            if isinstance(o, RootModel):
+                obj_dict = obj_dict["root"]
             return obj_dict
         elif isinstance(o, CytomineModel):
             d = dict(

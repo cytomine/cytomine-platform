@@ -16,9 +16,10 @@ from enum import Enum
 from typing import List, Optional, Union
 
 from fastapi import Query
-from pydantic import BaseModel, Field, confloat, conint
+from pydantic import BaseModel, Field, RootModel
 
 from pims.utils.color import Color
+from typing_extensions import Annotated
 
 
 class BaseDependency:
@@ -30,33 +31,33 @@ class CollectionSize(BaseModel):
     size: int = Field(..., description='The collection size')
 
 
-class FormatId(BaseModel):
-    __root__: str = Field(..., description='Unique format identifier', example='VMS')
+class FormatId(RootModel):
+    root: str = Field(..., description='Unique format identifier', examples=['VMS'])
 
 
-class ZoomOrLevel(BaseModel):
-    __root__: conint(ge=0) = Field(..., example=0)
+class ZoomOrLevel(RootModel):
+    root: Annotated[int, Field(ge=0)] = Field(..., examples=[0])
 
 
-class SingleOrRangeChannelIndex(BaseModel):
+class SingleOrRangeChannelIndex(RootModel):
     """
     A single channel index or a range of indexes. **By default**, all channels are considered.
     """
-    __root__: Union[conint(ge=0), str]  # TODO: replace str by range pydantic model
+    root: Union[Annotated[int, Field(ge=0)], str]  # TODO: replace str by range pydantic model
 
 
-class SingleZSliceIndex(BaseModel):
+class SingleZSliceIndex(RootModel):
     """
     A single focal plane index. **By default**, the median focal plane is considered.
     """
-    __root__: conint(ge=0)
+    root: Annotated[int, Field(ge=0)]
 
 
-class SingleTimepointIndex(BaseModel):
+class SingleTimepointIndex(RootModel):
     """
     A single timepoint index. **By default**, the first timepoint considered.
     """
-    __root__: conint(ge=0)
+    root: Annotated[int, Field(ge=0)]
 
 
 class ChannelReduction(str, Enum):
@@ -79,10 +80,10 @@ class GenericReduction(str, Enum):
 class PlaneSelectionQueryParams(BaseDependency):
     def __init__(
         self,
-        channels: Optional[List[Union[conint(ge=0), str]]] = Query(None),
+        channels: Optional[List[Union[str, Annotated[int, Field(ge=0)]]]] = Query(None),
         # TODO: replace str by range pydantic model
-        z_slices: Optional[conint(ge=0)] = Query(None),
-        timepoints: Optional[conint(ge=0)] = Query(None),
+        z_slices: Optional[Annotated[int, Field(ge=0)]] = Query(None),
+        timepoints: Optional[Annotated[int, Field(ge=0)]] = Query(None),
         c_reduction: ChannelReduction = Query(ChannelReduction.ADD)
     ):
         self.channels = channels
@@ -98,19 +99,19 @@ class IntensitySelectionEnum(str, Enum):
     STRETCH_PLANE = 'STRETCH_PLANE'
 
 
-class IntensitySelection(BaseModel):
-    __root__: Union[
+class IntensitySelection(RootModel):
+    root: Union[
         IntensitySelectionEnum,
-        conint(ge=0),
-        List[Union[IntensitySelectionEnum, conint(ge=0)]],
+        Annotated[int, Field(ge=0)],
+        List[Union[IntensitySelectionEnum, Annotated[int, Field(ge=0)]]],
     ]
 
 
-class Gamma(BaseModel):
-    __root__: confloat(ge=0.0, le=10.0)
+class Gamma(RootModel):
+    root: Annotated[float, Field(ge=0.0, le=10.0)]
 
 
-class GammaList(BaseModel):
+class GammaList(RootModel):
     """
     Gamma performs a non-linear histogram adjustment.
     Pixel intensities in the original image are raised
@@ -122,10 +123,10 @@ class GammaList(BaseModel):
     If `gamma > 1`, medium-intensity objects become fainter
     while bright objects do not.
     """
-    __root__: Union[Gamma, List[Gamma]]
+    root: Union[Gamma, List[Gamma]]
 
 
-class Threshold(BaseModel):
+class Threshold(RootModel):
     """
     Threshold an image so that pixel intensities in the
     original image below the threshold (scaled to pixel type)
@@ -133,26 +134,26 @@ class Threshold(BaseModel):
     format supporting transparency, pixel intensities below
     the threshold are transparent.
     """
-    __root__: Optional[confloat(ge=0.0, le=1.0)]
+    root: Optional[Annotated[float, Field(ge=0.0, le=1.0)]] = None
 
 
-class FilterId(BaseModel):
+class FilterId(RootModel):
     """
     A unique case-insensitive identifier for an image filter
     """
-    __root__: str = Field(
-        ..., example='OTSU'
+    root: str = Field(
+        ..., examples=['OTSU']
     )
 
 
-class FilterIdList(BaseModel):
+class FilterIdList(RootModel):
     """
     An image filter is used to change the appearance of an image
     and helps at understanding the source image.
 
     Valid filter names can be found with the endpoint `/filters`.
     """
-    __root__: Union[FilterId, List[FilterId]]
+    root: Union[FilterId, List[FilterId]]
 
 
 class FilterType(str, Enum):
@@ -177,19 +178,19 @@ class ColormapEnum(str, Enum):
     DEFAULT_INVERTED = '!DEFAULT'
 
 
-class ColormapId(BaseModel):
+class ColormapId(RootModel):
     """
     A unique case-insensitive identifier for a colormap.
     Pre-defined colormap names can be found with the endpoint `/colormaps`.
     CSS named and hexadecimal colors are valid colormap names (monotonic linear colormap).
     Colormaps can be inverted by prepending the colormap name with `!`.
     """
-    __root__: Union[str, ColormapEnum] = Field(
+    root: Union[str, ColormapEnum] = Field(
         ..., examples=['JET', '!#f00', 'red']
     )
 
 
-class ColormapIdList(BaseModel):
+class ColormapIdList(RootModel):
     """
     A colormap is a function that maps the colors of the original image (source)
     to the colors of the response image. The usage of colormap produces
@@ -198,17 +199,17 @@ class ColormapIdList(BaseModel):
 
     Valid colormap names can be found with the endpoint `/colormaps`.
     """
-    __root__: Union[ColormapId, List[ColormapId]]
+    root: Union[ColormapId, List[ColormapId]]
 
 
-class ExistingColormapId(BaseModel):
+class ExistingColormapId(RootModel):
     """
     A unique case-insensitive identifier for a colormap.
     Pre-defined colormap names can be found with the endpoint `/colormaps`.
     CSS named and hexadecimal colors are valid colormap names (monotonic linear colormap).
     Colormaps can be inverted by prepending the colormap name with `!`.
     """
-    __root__: str = Field(
+    root: str = Field(
         ..., examples=['JET', '!#f00', 'red']
     )
 
@@ -224,80 +225,80 @@ class ImageIn(BaseModel):
     filters: Optional[FilterIdList] = None
     gammas: GammaList = 1.0
     threshold: Threshold = None
-
-    class Config:
-        __mi_doc = "Intensity in the original image used as minimum intensity (black) to create the response." \
-                   "As a consequence, original image intensities lower than this value will be black in the response." \
-                   "\n\n" \
-                   "Maximum allowed value depends on image pixel type and is equal to `2 * pow(pixel type)`.\n" \
-                   "Minimum intensity is closely related to the concepts of brightness and contrast." \
-                   "\n\n" \
-                   "Brightness is the visual perception of reflected light while contrast is the separation of the " \
-                   "lightest and darkest parts of an image. A minimum intensity increase leads to:\n" \
-                   "* a brightness decrease, which refers to an image's decreased luminance.\n" \
-                   "* a contrast increase, which darken shadows and lighten highlights.\n\n" \
-                   "Enumeration supported values:\n" \
-                   "* `AUTO_IMAGE` - If image pixel type uses 8 bits, `min_intensity=0`. " \
-                   "Otherwise, the behavior is `STRETCH_IMAGE`.\n" \
-                   "* `AUTO_PLANE` - If image pixel type uses 8 bits, `min_intensity=0`. " \
-                   "Otherwise, the behavior is `STRETCH_PLANE`.\n" \
-                   "* `STRETCH_IMAGE` - Set `min_intensity` to lowest intensity in the original image, " \
-                   "for each channel.\n" \
-                   "* `STRETCH_PLANE` - Set `min_intensity` to lowest intensity in the set of planes, for each channel."
-
-        __ma_doc = "Intensity in the original image used as maximum intensity (white) to create the response." \
-                   "As a consequence, original image intensities greater than this value will be white in the response." \
-                   "\n\n" \
-                   "Maximum allowed value depends on image pixel type and is equal to `2 * pow(pixel type)`.\n" \
-                   "Maximum intensity is closely related to the concepts of brightness and contrast." \
-                   "\n\n" \
-                   "Brightness is the visual perception of reflected light while contrast is the separation of the " \
-                   "lightest and darkest parts of an image. A maximum intensity increase leads to:\n" \
-                   "* a brightness decrease, which refers to an image's decreased luminance.\n" \
-                   "* a contrast decrease, which darken highlights and lighten shadows.\n\n" \
-                   "Enumeration supported values:\n" \
-                   "* `AUTO_IMAGE` - If image pixel type uses 8 bits, `max_intensity=255`. " \
-                   "Otherwise, the behavior is `STRETCH_IMAGE`.\n" \
-                   "* `AUTO_PLANE` - If image pixel type uses 8 bits, `max_intensity=255`. " \
-                   "Otherwise, the behavior is `STRETCH_PLANE`.\n" \
-                   "* `STRETCH_IMAGE` - Set `min_intensity` to greatest intensity in the original image, " \
-                   "for each channel.\n" \
-                   "* `STRETCH_PLANE` - Set `min_intensity` to greatest intensity in the set of planes, " \
-                   "for each channel."
-        fields = {
-            "min_intensities": {
-                "description": __mi_doc
-            },
-            "max_intensities": {
-                "description": __ma_doc
-            }
-        }
+    # TODO[pydantic]: The following keys were removed: `fields`.
+    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
+    # model_config = ConfigDict(__mi_doc="Intensity in the original image used as minimum intensity (black) to create the response." \
+    #                "As a consequence, original image intensities lower than this value will be black in the response." \
+    #                "\n\n" \
+    #                "Maximum allowed value depends on image pixel type and is equal to `2 * pow(pixel type)`.\n" \
+    #                "Minimum intensity is closely related to the concepts of brightness and contrast." \
+    #                "\n\n" \
+    #                "Brightness is the visual perception of reflected light while contrast is the separation of the " \
+    #                "lightest and darkest parts of an image. A minimum intensity increase leads to:\n" \
+    #                "* a brightness decrease, which refers to an image's decreased luminance.\n" \
+    #                "* a contrast increase, which darken shadows and lighten highlights.\n\n" \
+    #                "Enumeration supported values:\n" \
+    #                "* `AUTO_IMAGE` - If image pixel type uses 8 bits, `min_intensity=0`. " \
+    #                "Otherwise, the behavior is `STRETCH_IMAGE`.\n" \
+    #                "* `AUTO_PLANE` - If image pixel type uses 8 bits, `min_intensity=0`. " \
+    #                "Otherwise, the behavior is `STRETCH_PLANE`.\n" \
+    #                "* `STRETCH_IMAGE` - Set `min_intensity` to lowest intensity in the original image, " \
+    #                "for each channel.\n" \
+    #                "* `STRETCH_PLANE` - Set `min_intensity` to lowest intensity in the set of planes, for each channel.",
+    #     __ma_doc = "Intensity in the original image used as maximum intensity (white) to create the response." \
+    #                "As a consequence, original image intensities greater than this value will be white in the response." \
+    #                "\n\n" \
+    #                "Maximum allowed value depends on image pixel type and is equal to `2 * pow(pixel type)`.\n" \
+    #                "Maximum intensity is closely related to the concepts of brightness and contrast." \
+    #                "\n\n" \
+    #                "Brightness is the visual perception of reflected light while contrast is the separation of the " \
+    #                "lightest and darkest parts of an image. A maximum intensity increase leads to:\n" \
+    #                "* a brightness decrease, which refers to an image's decreased luminance.\n" \
+    #                "* a contrast decrease, which darken highlights and lighten shadows.\n\n" \
+    #                "Enumeration supported values:\n" \
+    #                "* `AUTO_IMAGE` - If image pixel type uses 8 bits, `max_intensity=255`. " \
+    #                "Otherwise, the behavior is `STRETCH_IMAGE`.\n" \
+    #                "* `AUTO_PLANE` - If image pixel type uses 8 bits, `max_intensity=255`. " \
+    #                "Otherwise, the behavior is `STRETCH_PLANE`.\n" \
+    #                "* `STRETCH_IMAGE` - Set `min_intensity` to greatest intensity in the original image, " \
+    #                "for each channel.\n" \
+    #                "* `STRETCH_PLANE` - Set `min_intensity` to greatest intensity in the set of planes, " \
+    #                "for each channel.",
+    #     #fields={
+    #     # "min_intensities": {
+    #     #     "description": __mi_doc
+    #     # },
+    #     # "max_intensities": {
+    #     #     "description": __ma_doc
+    #     # }
+    #     # }
+    # )
 
 
 class ImageOut(BaseModel):
-    height: Optional[Union[conint(gt=1), confloat(gt=0.0, le=1.0)]] = None
-    width: Optional[Union[conint(gt=1), confloat(gt=0.0, le=1.0)]] = None
-    length: Optional[Union[conint(gt=1), confloat(gt=0.0, le=1.0)]] = None
-
-    class Config:
-        fields = {
-            "height": {
-                "description": "Height of the thumbnail. Width is adjusted to preserve the "
-                               "aspect ratio. "
-                               "**Takes precedence over `width` and `length`.**"
-            },
-            "width": {
-                "description": "Width of the thumbnail. Height is adjusted to preserve the "
-                               "aspect ratio. "
-                               "**Takes precedence over `length`.**"
-            },
-            "length": {
-                "description": "Length of the largest side of the thumbnail. "
-                               "The other dimension is adjusted to preserve the aspect ratio. "
-                               "**Ignored if other size-related parameter such as `width` or "
-                               "`height` is present.** "
-            }
-        }
+    height: Optional[Union[Annotated[int, Field(gt=1)], Annotated[float, Field(gt=0.0, le=1.0)]]] = None
+    width: Optional[Union[Annotated[int, Field(gt=1)], Annotated[float, Field(gt=0.0, le=1.0)]]] = None
+    length: Optional[Union[Annotated[int, Field(gt=1)], Annotated[float, Field(gt=0.0, le=1.0)]]] = None
+    # TODO[pydantic]: The following keys were removed: `fields`.
+    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
+    # model_config = ConfigDict(fields={
+    #     "height": {
+    #         "description": "Height of the thumbnail. Width is adjusted to preserve the "
+    #                        "aspect ratio. "
+    #                        "**Takes precedence over `width` and `length`.**"
+    #     },
+    #     "width": {
+    #         "description": "Width of the thumbnail. Height is adjusted to preserve the "
+    #                        "aspect ratio. "
+    #                        "**Takes precedence over `length`.**"
+    #     },
+    #     "length": {
+    #         "description": "Length of the largest side of the thumbnail. "
+    #                        "The other dimension is adjusted to preserve the aspect ratio. "
+    #                        "**Ignored if other size-related parameter such as `width` or "
+    #                        "`height` is present.** "
+    #     }
+    # })
 
 
 class ImageInDisplay(ImageIn):
@@ -313,13 +314,13 @@ class ImageInDisplay(ImageIn):
 class ImageOpsDisplayQueryParams(BaseDependency):
     def __init__(
         self,
-        gammas: Optional[List[confloat(ge=0.0, le=10.0)]] = Query([1.0]),
-        threshold: Optional[confloat(ge=0.0, le=1.0)] = Query(None),
-        min_intensities: Optional[List[Union[IntensitySelectionEnum, conint(ge=0)]]] = Query(
+        gammas: Optional[List[Annotated[float, Field(ge=0.0, le=10.0)]]] = Query([1.0]),
+        threshold: Optional[Annotated[float, Field(ge=0.0, le=1.0)]] = Query(None),
+        min_intensities: Optional[List[Union[IntensitySelectionEnum, Annotated[int, Field(ge=0)]]]] = Query(
             [
                 IntensitySelectionEnum.AUTO_IMAGE]
         ),
-        max_intensities: Optional[List[Union[IntensitySelectionEnum, conint(ge=0)]]] = Query(
+        max_intensities: Optional[List[Union[IntensitySelectionEnum, Annotated[int, Field(ge=0)]]]] = Query(
             [
                 IntensitySelectionEnum.AUTO_IMAGE]
         ),
@@ -337,15 +338,15 @@ class ImageOpsDisplayQueryParams(BaseDependency):
 
 
 class ImageOutDisplay(ImageOut):
-    length: Optional[Union[conint(gt=1), confloat(gt=0.0, le=1.0)]] = 256
+    length: Optional[Union[Annotated[int, Field(gt=1)], Annotated[float, Field(gt=0.0, le=1.0)]]] = 256
 
 
 class ImageOutDisplayQueryParams(BaseDependency):
     def __init__(
         self,
-        height: Optional[Union[conint(gt=1), confloat(gt=0.0, le=1.0)]] = Query(None),
-        width: Optional[Union[conint(gt=1), confloat(gt=0.0, le=1.0)]] = Query(None),
-        length: Optional[Union[conint(gt=1), confloat(gt=0.0, le=1.0)]] = Query(256)
+        height: Optional[Union[Annotated[int, Field(gt=1)], Annotated[float, Field(gt=0.0, le=1.0)]]] = Query(None),
+        width: Optional[Union[Annotated[int, Field(gt=1)], Annotated[float, Field(gt=0.0, le=1.0)]]] = Query(None),
+        length: Optional[Union[Annotated[int, Field(gt=1)], Annotated[float, Field(gt=0.0, le=1.0)]]] = Query(256)
     ):
         self.length = length
         self.width = width
@@ -356,13 +357,13 @@ class BitDepthEnum(str, Enum):
     AUTO = 'AUTO'
 
 
-class BitDepth(BaseModel):
+class BitDepth(RootModel):
     """
     The target bit depth. It is a best-effort parameter as supported bit depths
     depend on target content type.
     * `AUTO` - Try to set target bit depth equal to the source bit depth.
     """
-    __root__: Union[BitDepthEnum, int] = Field(BitDepthEnum.AUTO)
+    root: Union[BitDepthEnum, int] = Field(BitDepthEnum.AUTO)
 
 
 class Colorspace(str, Enum):
@@ -391,10 +392,10 @@ class ImageInProcessing(ImageIn):
 class ImageOpsProcessingQueryParams(BaseDependency):
     def __init__(
         self,
-        gammas: Optional[List[confloat(ge=0.0, le=10.0)]] = Query([1.0]),
-        threshold: Optional[confloat(ge=0.0, le=1.0)] = Query(None),
-        min_intensities: Optional[List[Union[IntensitySelectionEnum, conint(ge=0)]]] = Query(None),
-        max_intensities: Optional[List[Union[IntensitySelectionEnum, conint(ge=0)]]] = Query(None),
+        gammas: Optional[List[Annotated[float, Field(ge=0.0, le=10.0)]]] = Query([1.0]),
+        threshold: Optional[Annotated[float, Field(ge=0.0, le=1.0)]] = Query(None),
+        min_intensities: Optional[List[Union[IntensitySelectionEnum, Annotated[int, Field(ge=0)]]]] = Query(None),
+        max_intensities: Optional[List[Union[IntensitySelectionEnum, Annotated[int, Field(ge=0)]]]] = Query(None),
         colormaps: Optional[List[Union[str, ColormapEnum]]] = Query([ColormapEnum.DEFAULT]),
         filters: Optional[List[str]] = Query(None),
         bits: Optional[Union[BitDepthEnum, int]] = Query(BitDepthEnum.AUTO),
@@ -411,31 +412,31 @@ class ImageOpsProcessingQueryParams(BaseDependency):
 
 
 class ImageOutProcessing(ImageOut):
-    zoom: Optional[conint(ge=0)] = None
-    level: Optional[conint(ge=0)] = None
-
-    class Config:
-        fields = {
-            "zoom": {
-                "description": "The zoom level to consider as thumbnail. Zoom 0 has the worst "
-                               "resolution (smallest image, top of the image pyramid). Maximum "
-                               "admissible zoom level depends on image. "
-                               "**Takes precedence over `height`, `width` and `length`.**"
-            },
-            "level": {
-                "description": "The tier level. Level 0 has the best resolution (largest image, "
-                               "basis of the image pyramid). Maximum admissible tier level "
-                               "depends on image. "
-                               "**Takes precedence over `zoom`, `height`, `width` and `length`.**"
-            }
-        }
+    zoom: Optional[Annotated[int, Field(ge=0)]] = None
+    level: Optional[Annotated[int, Field(ge=0)]] = None
+    # TODO[pydantic]: The following keys were removed: `fields`.
+    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
+    # model_config = ConfigDict(fields={
+    #     "zoom": {
+    #         "description": "The zoom level to consider as thumbnail. Zoom 0 has the worst "
+    #                        "resolution (smallest image, top of the image pyramid). Maximum "
+    #                        "admissible zoom level depends on image. "
+    #                        "**Takes precedence over `height`, `width` and `length`.**"
+    #     },
+    #     "level": {
+    #         "description": "The tier level. Level 0 has the best resolution (largest image, "
+    #                        "basis of the image pyramid). Maximum admissible tier level "
+    #                        "depends on image. "
+    #                        "**Takes precedence over `zoom`, `height`, `width` and `length`.**"
+    #     }
+    # })
 
 
 class ImageOutProcessingQueryParams(BaseDependency):
     def __init__(
         self,
-        zoom: Optional[conint(ge=0)] = Query(None),
-        level: Optional[conint(ge=0)] = Query(None)
+        zoom: Optional[Annotated[int, Field(ge=0)]] = Query(None),
+        level: Optional[Annotated[int, Field(ge=0)]] = Query(None)
     ):
         self.zoom = zoom
         self.level = level
@@ -477,18 +478,18 @@ class ReferenceTierIndex(BaseModel):
     )
 
 
-class RegionCoordinate(BaseModel):
+class RegionCoordinate(RootModel):
     """
     A coordinate in pixels in the reference tier.
     """
-    __root__: conint(ge=0) = Field(..., example=256)
+    root: Annotated[int, Field(ge=0)] = Field(..., examples=[256])
 
 
-class RegionLength(BaseModel):
+class RegionLength(RootModel):
     """
     A length in pixels in the reference tier.
     """
-    __root__: conint(ge=1) = Field(..., example=256)
+    root: Annotated[int, Field(ge=1)] = Field(..., examples=[256])
 
 
 class WindowRegion(ReferenceTierIndex):
@@ -502,7 +503,7 @@ class WindowRegion(ReferenceTierIndex):
     height: RegionLength
 
 
-class TileIndex(BaseModel):
+class TileIndex(RootModel):
     """
     The tile index is the position of the tile in the given image pyramid tier.
     It is computed as `n * n_x_tiles + m` where
@@ -510,21 +511,21 @@ class TileIndex(BaseModel):
     * `m` is the tile position along the horizontal axis at given tier (0 is left).
     * `n` is the tile position along the vertical axis at given tier (0 is top).
     """
-    __root__: conint(ge=0) = Field(...)
+    root: Annotated[int, Field(ge=0)] = Field(...)
 
 
-class TileX(BaseModel):
+class TileX(RootModel):
     """
     The tile position along the horizontal axis at given tier (0 is left).
     """
-    __root__: conint(ge=0) = Field(...)
+    root: Annotated[int, Field(ge=0)] = Field(...)
 
 
-class TileY(BaseModel):
+class TileY(RootModel):
     """
     The tile position along the vertical axis at given tier (0 is top).
     """
-    __root__: conint(ge=0) = Field(...)
+    root: Annotated[int, Field(ge=0)] = Field(...)
 
 
 class WindowTileCoord(ReferenceTierIndex):
@@ -540,25 +541,25 @@ class Annotation(BaseModel):
     geometry: str = Field(
         ...,
         description='A geometry described in Well-known text (WKT)',
-        example='POINT(10 10)',
+        examples=['POINT(10 10)'],
     )
     fill_color: Optional[Color] = Field(
         Color("white"),
         description='A color to fill the annotation',
-        example='#FF00FF'
+        examples=['#FF00FF']
     )
     stroke_color: Optional[Color] = Field(
         None,
         description='A color for the annotation stroke'
     )
-    stroke_width: Optional[conint(ge=0, le=10)] = Field(
+    stroke_width: Optional[Annotated[int, Field(ge=0, le=10)]] = Field(
         0,
         description='A width for the annotation stroke'
     )
 
 
-class Annotations(BaseModel):
-    __root__: Union[List[Annotation], Annotation]
+class Annotations(RootModel):
+    root: Union[List[Annotation], Annotation]
 
 
 class PointCross(str, Enum):
@@ -574,7 +575,7 @@ class PointCross(str, Enum):
     CIRCLE = 'CIRCLE'
 
 
-class PointEnvelopeLength(BaseModel):
+class PointEnvelopeLength(RootModel):
     """
     Point geometries have no area. An envelope must be specified to 
     extract some image data.
@@ -583,16 +584,16 @@ class PointEnvelopeLength(BaseModel):
     
     This parameter has no effect on non-point geometries.
     """
-    __root__: int = 100
+    root: int = 100
 
 
-class AnnotationBgTransparency(BaseModel):
+class AnnotationBgTransparency(RootModel):
     """
     The background transparency. 100 means transparent background. 
     When transparency is used, the target content type must be 
     an image format supporting transparency.
     """
-    __root__: conint(ge=0, le=100) = 0
+    root: Annotated[int, Field(ge=0, le=100)] = 0
 
 
 class AnnotationStyleMode(str, Enum):
@@ -603,9 +604,9 @@ class AnnotationStyleMode(str, Enum):
 
 class AnnotationStyle(BaseModel):
     mode: AnnotationStyleMode
-    point_envelope_length: Optional[PointEnvelopeLength]
+    point_envelope_length: Optional[PointEnvelopeLength] = None
     point_cross: Optional[PointCross] = PointCross.CROSS
-    background_transparency: Optional[AnnotationBgTransparency]
+    background_transparency: Optional[AnnotationBgTransparency] = None
 
 
 class WindowRequest(ImageInProcessing, ImageOutProcessing):
@@ -614,20 +615,20 @@ class WindowRequest(ImageInProcessing, ImageOutProcessing):
     annotation_style: Optional[AnnotationStyle] = None
 
 
-class AnnotationContextFactor(BaseModel):
+class AnnotationContextFactor(RootModel):
     """
     The context factor is the number by which the spatial region 
     is given by the rectangular envelope of all geometries is multiplied.
     """
-    __root__: float = 1
+    root: float = 1
 
 
-class AnnotationTrySquare(BaseModel):
+class AnnotationTrySquare(RootModel):
     """
     Try to adapt other parameters (such as input spatial region,
     context factor, target size) to return a square image.
     """
-    __root__: bool = False
+    root: bool = False
 
 
 class AnnotationCropRequest(ImageInProcessing, ImageOutProcessing):
@@ -649,22 +650,22 @@ class AnnotationDrawingRequest(ImageInDisplay, ImageOutProcessing):
     point_cross: Optional[PointCross] = PointCross.CROSS
 
 
-class TargetZoom(BaseModel):
+class TargetZoom(RootModel):
     """
     The zoom level to consider for the target.
     Zoom 0 has the worst resolution (smallest image, top of the image pyramid).
     Maximum admissible zoom level depends on image.
     """
-    __root__: conint(ge=0)
+    root: Annotated[int, Field(ge=0)]
 
 
-class TargetLevel(BaseModel):
+class TargetLevel(RootModel):
     """
     The tier level to consider for the target.
     Level 0 has the best resolution (largest image, basis of the image pyramid).
     Maximum admissible tier level depends on image.
     """
-    __root__: conint(ge=0)
+    root: Annotated[int, Field(ge=0)]
 
 
 class TargetZoomTileIndex(BaseModel):

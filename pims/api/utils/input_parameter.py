@@ -121,8 +121,8 @@ def parse_planes(
         return sorted(set((ensure_list(default))))
 
     for plane in planes_to_parse:
-        if type(plane) is int:
-            plane_indexes.append(plane)
+        if type(plane) is int or (type(plane) is str and plane.isdigit()):
+            plane_indexes.append(int(plane))
         elif is_range(plane):
             plane_indexes += [*parse_range(plane, 0, n_planes)]
         else:

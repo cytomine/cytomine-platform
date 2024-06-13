@@ -15,8 +15,8 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, List, Optional, Union
 
-from fastapi import APIRouter, Depends, Query
-from pydantic import BaseModel, Field, conint
+from fastapi import APIRouter, Depends, Path as PathParam
+from pydantic import BaseModel, Field, RootModel
 from starlette.requests import Request
 from starlette.responses import Response
 
@@ -39,6 +39,7 @@ from pims.files.file import FileRole, FileType, Path
 from pims.formats.utils.structures.metadata import MetadataType
 from pims.processing.image_response import AssociatedResponse
 from pims.utils.dtypes import dtype_to_bits
+from typing_extensions import Annotated
 
 router = APIRouter(prefix=get_settings().api_base_path)
 api_tags = ['Metadata']
@@ -54,15 +55,15 @@ class SingleFileInfo(BaseModel):
     filepath: str = Field(
         ...,
         description='The file path (filename with path, relative to the server root)',
-        example='/a/b/c/thefile.png',
+        examples=['/a/b/c/thefile.png'],
     )
     stem: str = Field(
         ...,
         description='The file stem (filename without extension)',
-        example='thefile',
+        examples=['thefile'],
     )
     extension: str = Field(
-        ..., description='The file extension', example='.png'
+        ..., description='The file extension', examples=['.png']
     )
     created_at: datetime = Field(..., description='The file creation date')
     size: int = Field(..., description='The file size, in bytes.')
@@ -81,8 +82,8 @@ class CollectionFileInfo(SingleFileInfo):
 CollectionFileInfo.update_forward_refs()
 
 
-class FileInfo(BaseModel):
-    __root__: Union[CollectionFileInfo, SingleFileInfo]
+class FileInfo(RootModel):
+    root: Union[CollectionFileInfo, SingleFileInfo]
 
     @classmethod
     def from_path(cls, path):
@@ -128,19 +129,19 @@ class ImageInfo(BaseModel):
     original_format: FormatId = Field(
         ..., description='The original image format identifier.'
     )
-    width: conint(ge=1) = Field(
+    width: Annotated[int, Field(ge=1)] = Field(
         ...,
         description='The (multidimensional) image width. It is the number of pixels along X axis.',
     )
-    height: conint(ge=1) = Field(
+    height: Annotated[int, Field(ge=1)] = Field(
         ...,
         description='The (multidimensional) image height. It is the number of pixels along Y axis.',
     )
-    depth: conint(ge=1) = Field(
+    depth: Annotated[int, Field(ge=1)] = Field(
         ...,
         description='The multidimensional image depth. It is the number of focal planes.',
     )
-    duration: conint(ge=1) = Field(
+    duration: Annotated[int, Field(ge=1)] = Field(
         ...,
         description='The multidimensional image duration. It is the number of frames.',
     )
@@ -162,7 +163,7 @@ class ImageInfo(BaseModel):
         description='The frequency at which consecutive timepoints are taken (T axis), expressed '
                     'in Hz.',
     )
-    n_channels: conint(ge=1) = Field(
+    n_channels: Annotated[int, Field(ge=1)] = Field(
         ...,
         description='The number of channels in the image.'
                     'Grayscale images have 1 channel. RGB images have 3 channels.'
@@ -202,11 +203,11 @@ class ImageInfo(BaseModel):
     pixel_type: PixelType = Field(
         ..., description='The type used to store each pixel in the image.'
     )
-    significant_bits: conint(ge=1) = Field(
+    significant_bits: Annotated[int, Field(ge=1)] = Field(
         ...,
         description='The number of bits within the type storing each pixel that are significant.',
     )
-    bits: conint(ge=1) = Field(
+    bits: Annotated[int, Field(ge=1)] = Field(
         ...,
         description='The number of bits used by the type storing each pixel.'
     )
@@ -242,18 +243,18 @@ class ImageInfo(BaseModel):
 class TierInfo(BaseModel):
     zoom: ZoomOrLevel = Field(..., description='The zoom at this tier')
     level: ZoomOrLevel = Field(..., description='The level at this tier')
-    width: conint(ge=1) = Field(..., description='The tier width')
-    height: conint(ge=1) = Field(..., description='The tier height')
-    tile_width: conint(ge=1) = Field(
-        ..., description='The width of a tile', example=256
+    width: Annotated[int, Field(ge=1)] = Field(..., description='The tier width')
+    height: Annotated[int, Field(ge=1)] = Field(..., description='The tier height')
+    tile_width: Annotated[int, Field(ge=1)] = Field(
+        ..., description='The width of a tile', examples=[256]
     )
-    tile_height: conint(ge=1) = Field(
-        ..., description='The height of a tile', example=256
+    tile_height: Annotated[int, Field(ge=1)] = Field(
+        ..., description='The height of a tile', examples=[256]
     )
     downsampling_factor: float = Field(
         ...,
         description='The factor by which the tier downsamples the basis of the pyramid.',
-        example=2.0,
+        examples=[2.0],
     )
     n_tiles: int = Field(..., description='The number of tiles at this tier')
     n_tx: int = Field(
@@ -286,7 +287,7 @@ class PyramidInfo(BaseModel):
     Information about an image pyramid.
     """
 
-    n_tiers: conint(ge=1) = Field(
+    n_tiers: Annotated[int, Field(ge=1)] = Field(
         ..., description='The number of tiers in the pyramid.'
     )
     tiers: List[TierInfo]
@@ -312,8 +313,8 @@ class FullRepresentationInfo(SimpleRepresentationInfo):
     pyramid: PyramidInfo
 
 
-class RepresentationInfo(BaseModel):
-    __root__: Union[FullRepresentationInfo, SimpleRepresentationInfo]
+class RepresentationInfo(RootModel):
+    root: Union[FullRepresentationInfo, SimpleRepresentationInfo]
 
     @classmethod
     def from_path(cls, path):
@@ -371,7 +372,7 @@ class InstrumentInfo(BaseModel):
 
 
 class ChannelsInfoItem(BaseModel):
-    index: conint(ge=0) = Field(..., description='Channel index.')
+    index: Annotated[int, Field(ge=0)] = Field(..., description='Channel index.')
     suggested_name: Optional[str] = Field(
         None,
         description='Suggested name for the channel inferred from other properties.',
@@ -400,12 +401,12 @@ class ChannelsInfoItem(BaseModel):
         )
 
 
-class ChannelsInfo(BaseModel):
+class ChannelsInfo(RootModel):
     """
     Information about channels in an image file.
     """
 
-    __root__: List[ChannelsInfoItem] = Field(
+    root: List[ChannelsInfoItem] = Field(
         ..., description='Information about channels in an image file.'
     )
 
@@ -419,15 +420,15 @@ class AssociatedInfoItem(BaseModel):
     Associated images are metadata image stored in the original image file.
     """
 
-    width: conint(ge=1) = Field(
+    width: Annotated[int, Field(ge=1)] = Field(
         ...,
         description='The associated image width. It is the number of pixels along X axis.',
     )
-    height: conint(ge=1) = Field(
+    height: Annotated[int, Field(ge=1)] = Field(
         ...,
         description='The associated image height. It is the number of pixels along Y axis.',
     )
-    n_channels: conint(ge=1) = Field(
+    n_channels: Annotated[int, Field(ge=1)] = Field(
         ...,
         description='The number of channels in the associated image.'
                     'Grayscale images have 1 channel. RGB images have 3 channels.',
@@ -453,12 +454,12 @@ class AssociatedInfoItem(BaseModel):
         )
 
 
-class AssociatedInfo(BaseModel):
+class AssociatedInfo(RootModel):
     """
     Information about all associated in an image file.
     """
 
-    __root__: List[AssociatedInfoItem] = Field(
+    root: List[AssociatedInfoItem] = Field(
         ..., description='Information about associated in an image file.'
     )
 
@@ -529,7 +530,7 @@ class ImageFullInfo(BaseModel):
     response_model=FileInfo,
     tags=api_tags
 )
-def show_file(
+async def show_file(
     path: Path = Depends(filepath_parameter),
 ):
     """
@@ -544,7 +545,7 @@ def show_file(
     tags=api_tags,
     response_class=FastJsonResponse
 )
-def show_info(
+async def show_info(
     path: Path = Depends(imagepath_parameter)
 ):
     """
@@ -570,7 +571,7 @@ def show_info(
     tags=api_tags,
     response_class=FastJsonResponse
 )
-def show_image(
+async def show_image(
     path: Path = Depends(imagepath_parameter)
 ):
     """
@@ -593,7 +594,7 @@ class ChannelsInfoCollection(CollectionSize):
     tags=api_tags,
     response_class=FastJsonResponse
 )
-def show_channels(path: Path = Depends(imagepath_parameter)):
+async def show_channels(path: Path = Depends(imagepath_parameter)):
     """
     Get image channel info
     """
@@ -610,7 +611,7 @@ def show_channels(path: Path = Depends(imagepath_parameter)):
     tags=api_tags,
     response_class=FastJsonResponse
 )
-def show_normalized_pyramid(
+async def show_normalized_pyramid(
     path: Path = Depends(imagepath_parameter)
 ):
     """
@@ -629,7 +630,7 @@ def show_normalized_pyramid(
     tags=api_tags,
     response_class=FastJsonResponse
 )
-def show_instrument(
+async def show_instrument(
     path: Path = Depends(imagepath_parameter)
 ):
     """
@@ -652,7 +653,7 @@ class AssociatedInfoCollection(CollectionSize):
     tags=api_tags + ['Associated'],
     response_class=FastJsonResponse
 )
-def show_associated(
+async def show_associated(
     path: Path = Depends(imagepath_parameter)
 ):
     """
@@ -671,7 +672,7 @@ async def show_associated_image(
     request: Request, response: Response,
     path: Path = Depends(imagepath_parameter),
     output: ImageOutDisplayQueryParams = Depends(),
-    associated_key: AssociatedName = Query(...),
+    associated_key: AssociatedName = PathParam(...),
     headers: ImageRequestHeaders = Depends(),
     config: Settings = Depends(get_settings)
 ):
@@ -683,7 +684,7 @@ async def show_associated_image(
 
 
 @cache_image_response(expire=cache_associated_ttl, vary=['config', 'request', 'response'])
-def _show_associated_image(
+async def _show_associated_image(
     request: Request, response: Response,  # required for @cache  # noqa
     path: Path,
     height, width, length,
@@ -724,7 +725,7 @@ class MetadataCollection(CollectionSize):
     response_model=MetadataCollection,
     tags=api_tags
 )
-def show_metadata(
+async def show_metadata(
     path: Path = Depends(imagepath_parameter)
 ):
     """
@@ -747,12 +748,12 @@ class MetadataAnnotation(BaseModel):
     geometry: str = Field(
         ...,
         description='A geometry described in Well-known text (WKT)',
-        example='POINT(10 10)',
+        examples=['POINT(10 10)'],
     )
     terms: List[str] = Field(
         ...,
         description='A list of terms (labels) associated to the annotation',
-        example='ROI'
+        examples=['ROI']
     )
     properties: dict = Field(
         ...,
@@ -794,7 +795,7 @@ class MetadataAnnotationCollection(CollectionSize):
     response_model=MetadataAnnotationCollection,
     tags=api_tags
 )
-def show_metadata_annotations(
+async def show_metadata_annotations(
     path: Path = Depends(imagepath_parameter)
 ):
     """
@@ -820,7 +821,7 @@ class RepresentationInfoCollection(CollectionSize):
     tags=api_tags,
     response_class=FastJsonResponse
 )
-def list_representations(
+async def list_representations(
     path: Path = Depends(imagepath_parameter)
 ):
     """
@@ -834,7 +835,7 @@ def list_representations(
     response_model=RepresentationInfo,
     tags=api_tags
 )
-def show_representation(
+async def show_representation(
     representation: FileRole,
     path: Path = Depends(imagepath_parameter)
 ):

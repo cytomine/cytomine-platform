@@ -15,6 +15,7 @@ import asyncio
 import csv
 import email
 import json
+from contextlib import AsyncExitStack
 from copy import deepcopy
 from enum import Enum
 from typing import (
@@ -23,16 +24,17 @@ from typing import (
 )
 
 from fastapi import params, routing
+from fastapi._compat import _regenerate_error_with_loc, get_missing_field_error, _normalize_errors, Undefined, \
+    ModelField, ErrorWrapper
 from fastapi.datastructures import Default, DefaultPlaceholder
 from fastapi.dependencies import utils
 from fastapi.dependencies.models import Dependant
 from fastapi.dependencies.utils import solve_dependencies
-from fastapi.encoders import DictIntStrAny, SetIntStr
-from fastapi.exceptions import HTTPException, RequestValidationError
+from fastapi.exceptions import HTTPException, RequestValidationError, FastAPIError
 from fastapi.routing import run_endpoint_function, serialize_response
-from pydantic.error_wrappers import ErrorWrapper
-from pydantic.errors import MissingError
-from pydantic.fields import ModelField, Undefined
+from fastapi.types import IncEx
+from fastapi.utils import is_body_allowed_for_status_code
+
 from starlette.datastructures import Headers, QueryParams
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
@@ -68,7 +70,7 @@ query_explode = False
 def request_params_to_args(
     required_params: Sequence[ModelField],
     received_params: Union[Mapping[str, Any], QueryParams, Headers],
-) -> Tuple[Dict[str, Any], List[ErrorWrapper]]:
+) -> Tuple[Dict[str, Any], List[Any]]:
     values = {}
     errors = []
     for field in required_params:
@@ -90,23 +92,19 @@ def request_params_to_args(
         else:
             value = received_params.get(field.alias)
 
+        loc = (field_info.in_.value, field.alias)
         if value is None:
             if field.required:
-                errors.append(
-                    ErrorWrapper(
-                        MissingError(), loc=(field_info.in_.value, field.alias)
-                    )
-                )
+                errors.append(get_missing_field_error(loc=loc))
             else:
                 values[field.name] = deepcopy(field.default)
             continue
-        v_, errors_ = field.validate(
-            value, values, loc=(field_info.in_.value, field.alias)
-        )
+        v_, errors_ = field.validate(value, values, loc=loc)
         if isinstance(errors_, ErrorWrapper):
             errors.append(errors_)
         elif isinstance(errors_, list):
-            errors.extend(errors_)
+            new_errors = _regenerate_error_with_loc(errors=errors_, loc_prefix=())
+            errors.extend(new_errors)
         else:
             values[field.name] = v_
     return values, errors
@@ -118,15 +116,14 @@ def request_params_to_args(
 # fastapi/routing.py#164
 # Tweak so that FastJsonResponse bypasses response validation & jsonable_encoder
 
-
 def get_request_handler(
     dependant: Dependant,
     body_field: Optional[ModelField] = None,
     status_code: Optional[int] = None,
     response_class: Union[Type[Response], DefaultPlaceholder] = Default(JSONResponse),
     response_field: Optional[ModelField] = None,
-    response_model_include: Optional[Union[SetIntStr, DictIntStrAny]] = None,
-    response_model_exclude: Optional[Union[SetIntStr, DictIntStrAny]] = None,
+    response_model_include: Optional[IncEx] = None,
+    response_model_exclude: Optional[IncEx] = None,
     response_model_by_alias: bool = True,
     response_model_exclude_unset: bool = False,
     response_model_exclude_defaults: bool = False,
@@ -142,86 +139,124 @@ def get_request_handler(
         actual_response_class = response_class
 
     async def app(request: Request) -> Response:
-        try:
-            body: Any = None
-            if body_field:
-                if is_body_form:
-                    body = await request.form()
-                else:
-                    body_bytes = await request.body()
-                    if body_bytes:
-                        json_body: Any = Undefined
-                        content_type_value = request.headers.get("content-type")
-                        if not content_type_value:
-                            json_body = await request.json()
-                        else:
-                            message = email.message.Message()
-                            message["content-type"] = content_type_value
-                            if message.get_content_maintype() == "application":
-                                subtype = message.get_content_subtype()
-                                if subtype == "json" or subtype.endswith("+json"):
-                                    json_body = await request.json()
-                        if json_body != Undefined:
-                            body = json_body
-                        else:
-                            body = body_bytes
-        except json.JSONDecodeError as e:
-            raise RequestValidationError([ErrorWrapper(e, ("body", e.pos))], body=e.doc)
-        except Exception as e:
-            raise HTTPException(
-                status_code=400, detail="There was an error parsing the body"
-            ) from e
-        solved_result = await solve_dependencies(
-            request=request,
-            dependant=dependant,
-            body=body,
-            dependency_overrides_provider=dependency_overrides_provider,
-        )
-        values, errors, background_tasks, sub_response, _ = solved_result
-        if errors:
-            raise RequestValidationError(errors, body=body)
-        else:
-            raw_response = await run_endpoint_function(
-                dependant=dependant, values=values, is_coroutine=is_coroutine
-            )
-
-            if isinstance(raw_response, Response):
-                if raw_response.background is None:
-                    raw_response.background = background_tasks
-                return raw_response
-
-            response_args: Dict[str, Any] = {"background": background_tasks}
-            # If status_code was set, use it, otherwise use the default from the
-            # response class, in the case of redirect it's 307
-            if status_code is not None:
-                response_args["status_code"] = status_code
-
-            if actual_response_class == FastJsonResponse:
-                # FastJsonResponse bypasses response validation and jsonable_encoder
-                response_data = raw_response
-                response_args["include"] = response_model_include
-                response_args["exclude"] = response_model_exclude
-                response_args["by_alias"] = response_model_by_alias
-                response_args["exclude_unset"] = response_model_exclude_unset
-                response_args["exclude_defaults"] = response_model_exclude_defaults
-                response_args["exclude_none"] = response_model_exclude_none
-            else:
-                response_data = await serialize_response(
-                    field=response_field,
-                    response_content=raw_response,
-                    include=response_model_include,
-                    exclude=response_model_exclude,
-                    by_alias=response_model_by_alias,
-                    exclude_unset=response_model_exclude_unset,
-                    exclude_defaults=response_model_exclude_defaults,
-                    exclude_none=response_model_exclude_none,
-                    is_coroutine=is_coroutine,
+        response: Union[Response, None] = None
+        async with AsyncExitStack() as file_stack:
+            try:
+                body: Any = None
+                if body_field:
+                    if is_body_form:
+                        body = await request.form()
+                        file_stack.push_async_callback(body.close)
+                    else:
+                        body_bytes = await request.body()
+                        if body_bytes:
+                            json_body: Any = Undefined
+                            content_type_value = request.headers.get("content-type")
+                            if not content_type_value:
+                                json_body = await request.json()
+                            else:
+                                message = email.message.Message()
+                                message["content-type"] = content_type_value
+                                if message.get_content_maintype() == "application":
+                                    subtype = message.get_content_subtype()
+                                    if subtype == "json" or subtype.endswith("+json"):
+                                        json_body = await request.json()
+                            if json_body != Undefined:
+                                body = json_body
+                            else:
+                                body = body_bytes
+            except json.JSONDecodeError as e:
+                validation_error = RequestValidationError(
+                    [
+                        {
+                            "type": "json_invalid",
+                            "loc": ("body", e.pos),
+                            "msg": "JSON decode error",
+                            "input": {},
+                            "ctx": {"error": e.msg},
+                        }
+                    ],
+                    body=e.doc,
                 )
-            response = actual_response_class(response_data, **response_args)
-            response.headers.raw.extend(sub_response.headers.raw)
-            if sub_response.status_code:
-                response.status_code = sub_response.status_code
-            return response
+                raise validation_error from e
+            except HTTPException:
+                # If a middleware raises an HTTPException, it should be raised again
+                raise
+            except Exception as e:
+                http_error = HTTPException(
+                    status_code=400, detail="There was an error parsing the body"
+                )
+                raise http_error from e
+            errors: List[Any] = []
+            async with AsyncExitStack() as async_exit_stack:
+                solved_result = await solve_dependencies(
+                    request=request,
+                    dependant=dependant,
+                    body=body,
+                    dependency_overrides_provider=dependency_overrides_provider,
+                    async_exit_stack=async_exit_stack,
+                )
+                values, errors, background_tasks, sub_response, _ = solved_result
+                if not errors:
+                    raw_response = await run_endpoint_function(
+                        dependant=dependant, values=values, is_coroutine=is_coroutine
+                    )
+                    if isinstance(raw_response, Response):
+                        if raw_response.background is None:
+                            raw_response.background = background_tasks
+                        response = raw_response
+                    else:
+                        response_args: Dict[str, Any] = {"background": background_tasks}
+                        # If status_code was set, use it, otherwise use the default from the
+                        # response class, in the case of redirect it's 307
+                        current_status_code = (
+                            status_code if status_code else sub_response.status_code
+                        )
+                        if current_status_code is not None:
+                            response_args["status_code"] = current_status_code
+                        if sub_response.status_code:
+                            response_args["status_code"] = sub_response.status_code
+
+                        ### ---- Custom adding ----
+                        if actual_response_class == FastJsonResponse:
+                            # FastJsonResponse bypasses response validation and jsonable_encoder
+                            content = raw_response
+                            response_args["include"] = response_model_include
+                            response_args["exclude"] = response_model_exclude
+                            response_args["by_alias"] = response_model_by_alias
+                            response_args["exclude_unset"] = response_model_exclude_unset
+                            response_args["exclude_defaults"] = response_model_exclude_defaults
+                            response_args["exclude_none"] = response_model_exclude_none
+                        else:
+                            content = await serialize_response(
+                                field=response_field,
+                                response_content=raw_response,
+                                include=response_model_include,
+                                exclude=response_model_exclude,
+                                by_alias=response_model_by_alias,
+                                exclude_unset=response_model_exclude_unset,
+                                exclude_defaults=response_model_exclude_defaults,
+                                exclude_none=response_model_exclude_none,
+                                is_coroutine=is_coroutine,
+                            )
+                        response = actual_response_class(content, **response_args)
+                        if not is_body_allowed_for_status_code(response.status_code):
+                            response.body = b""
+                        response.headers.raw.extend(sub_response.headers.raw)
+            if errors:
+                validation_error = RequestValidationError(
+                    _normalize_errors(errors), body=body
+                )
+                raise validation_error
+        if response is None:
+            raise FastAPIError(
+                "No response object was returned. There's a high chance that the "
+                "application code is raising an exception and a dependency with yield "
+                "has a block with a bare except, or a block with except Exception, "
+                "and is not raising the exception again. Read more about it in the "
+                "docs: https://fastapi.tiangolo.com/tutorial/dependencies/dependencies-with-yield/#dependencies-with-yield-and-except"
+            )
+        return response
 
     return app
 

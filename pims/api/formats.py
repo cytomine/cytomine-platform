@@ -29,7 +29,7 @@ api_tags = ['Formats']
 class Format(BaseModel):
     id: FormatId
     name: str = Field(
-        ..., description='Readable format name', example='Hamamatsu VMS'
+        ..., description='Readable format name', examples=['Hamamatsu VMS']
     )
     remarks: Optional[str] = Field(
         None, description='Readable end-user remarks about the format',
@@ -53,7 +53,7 @@ class Format(BaseModel):
     plugin: Optional[str] = Field(
         None,
         description='PIMS plugin providing this format, returned as a Python module.',
-        example='pims.formats.common',
+        examples=['pims.formats.common'],
     )
 
 
@@ -78,21 +78,21 @@ def _serialize_format(format):
     '/formats', response_model=FormatsList, tags=api_tags,
     response_class=FastJsonResponse
 )
-def list_formats():
+async def list_formats():
     """
     List all formats
     """
     
     formats = [_serialize_format(format) for format in FORMATS.values()] #list of formats
     correct_list = [format for format in formats if format.name != "Virtual Stack"] 
-    return response_list(sorted(correct_list, key=lambda x: x.id.__root__, reverse=False))
+    return response_list(sorted(correct_list, key=lambda x: x.id.root, reverse=False))
 
 
 @router.get(
     '/formats/{format_id}', response_model=Format, tags=api_tags,
     response_class=FastJsonResponse
 )
-def show_format(format_id: str):
+async def show_format(format_id: str):
     """
     Get a format
     """
