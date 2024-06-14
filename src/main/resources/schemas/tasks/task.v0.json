@@ -374,7 +374,7 @@
           "properties": {
             "type": {"$ref": "#/$defs/io/type_specs/integer"}
           },
-          "unevaluatedProperties": false
+          "unevaluatedProperties": true
         },
         "boolean": {
           "type": "object",
@@ -385,7 +385,7 @@
           "properties": {
             "type": {"$ref": "#/$defs/io/type_specs/boolean"}
           },
-          "unevaluatedProperties": false
+          "unevaluatedProperties": true
         },
         "number": {
           "type": "object",
@@ -396,7 +396,7 @@
           "properties": {
             "type": {"$ref": "#/$defs/io/type_specs/number"}
           },
-          "unevaluatedProperties": false
+          "unevaluatedProperties": true
         },
         "string": {
           "type": "object",
@@ -407,7 +407,7 @@
           "properties": {
             "type": {"$ref": "#/$defs/io/type_specs/string"}
           },
-          "unevaluatedProperties": false
+          "unevaluatedProperties": true
         },
         "enumeration": {
           "type": "object",
@@ -418,7 +418,7 @@
           "properties": {
             "type": {"$ref": "#/$defs/io/type_specs/enumeration"}
           },
-          "unevaluatedProperties": false
+          "unevaluatedProperties": true
         },
         "datetime": {
           "type": "object",
@@ -429,7 +429,7 @@
           "properties": {
             "type": {"$ref": "#/$defs/io/type_specs/datetime"}
           },
-          "unevaluatedProperties": false
+          "unevaluatedProperties": true
         },
         "geometry": {
           "type": "object",
@@ -440,7 +440,7 @@
           "properties": {
             "type": {"$ref": "#/$defs/io/type_specs/geometry"}
           },
-          "unevaluatedProperties": false
+          "unevaluatedProperties": true
         },
         "image": {
           "type": "object",
@@ -451,7 +451,7 @@
           "properties": {
             "type": {"$ref": "#/$defs/io/type_specs/image"}
           },
-          "unevaluatedProperties": false
+          "unevaluatedProperties": true
         },
         "array": {
           "type": "object",
@@ -464,8 +464,7 @@
                   "type": "object",
                   "properties": {
                     "$ref": "#/$defs/dependencies/matching"
-                  },
-                  "unevaluatedProperties": true
+                  }
                 }
               }
             }
@@ -474,7 +473,7 @@
           "properties": {
             "type": {"$ref": "#/$defs/io/type_specs/array"}
           },
-          "unevaluatedProperties": false
+          "unevaluatedProperties": true
         }
       },
       "input_parameter": {
@@ -533,7 +532,8 @@
             "type": "object",
             "properties": {
               "optional": {"$ref": "#/$defs/io/parameter/optional"}
-            }
+            },
+            "unevaluatedProperties": true
           }
         ]
       },
