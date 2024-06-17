@@ -91,7 +91,7 @@ async def _show_mask(
     height, width, length, zoom, level,
     extension, headers, config
 ):
-    in_image = path.get_spatial(cache=True)
+    in_image = await path.get_cached_spatial()
     check_representation_existence(in_image)
 
     annots = parse_annotations(
@@ -167,7 +167,7 @@ async def _show_crop(
     extension, headers, config,
     colormaps=None, c_reduction=ChannelReduction.ADD, z_reduction=None, t_reduction=None,
 ):
-    in_image = path.get_spatial(cache=True)
+    in_image = await path.get_cached_spatial()
     check_representation_existence(in_image)
 
     annots = parse_annotations(
@@ -236,7 +236,7 @@ async def _show_drawing(
     extension, headers, config,
     colormaps=None, c_reduction=ChannelReduction.ADD, z_reduction=None, t_reduction=None,
 ):
-    in_image = path.get_spatial(cache=True)
+    in_image = await path.get_cached_spatial()
     check_representation_existence(in_image)
 
     annots = parse_annotations(

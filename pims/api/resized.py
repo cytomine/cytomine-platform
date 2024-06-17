@@ -130,7 +130,7 @@ async def _show_resized(
     config: Settings,
     colormaps=None, c_reduction=ChannelReduction.ADD, z_reduction=None, t_reduction=None
 ):
-    in_image = path.get_spatial()
+    in_image = await path.get_cached_spatial()
     check_representation_existence(in_image)
 
     out_format, mimetype = get_output_format(extension, headers.accept, PROCESSING_MIMETYPES)

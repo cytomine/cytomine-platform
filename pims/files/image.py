@@ -22,7 +22,6 @@ from pims.api.exceptions import NoMatchingFormatProblem
 from pims.cache import cached_property
 from pims.files.file import Path
 from pims.formats.utils.factories import FormatFactory
-from pims.formats.utils.structures.pyramid import normalized_pyramid
 from pims.processing.adapters import RawImagePixels
 from pims.processing.region import Region, Tile
 
@@ -184,13 +183,13 @@ class Image(Path):
     def pyramid(self) -> Pyramid:
         return self._format.pyramid
 
-    @cached_property
+    @property
     def normalized_pyramid(self) -> Pyramid:
-        return normalized_pyramid(self.width, self.height)
+        return self._format.normalized_pyramid
 
-    @cached_property
+    @property
     def is_pyramid_normalized(self) -> bool:
-        return self.pyramid == self.normalized_pyramid
+        return self._format.is_pyramid_normalized
 
     @cached_property
     def histogram(self) -> Histogram:

@@ -21,12 +21,13 @@ from pathlib import Path as _Path
 from typing import Callable, List, TYPE_CHECKING, Union
 
 from pims.cache import IMAGE_CACHE
+from pims.cache.redis import PIMSCache, PickleCodec
+from pims.config import get_settings
 from pims.formats.utils.factories import (
     FormatFactory, SpatialReadableFormatFactory,
     SpectralReadableFormatFactory
 )
 from pims.utils.copy import SafelyCopiable
-from pims.api.exceptions import check_representation_existence
 
 if TYPE_CHECKING:
     from pims.files.image import Image
@@ -271,15 +272,10 @@ class Path(PlatformPath, _Path, SafelyCopiable):
         from pims.files.image import Image
         return Image(original, factory=FormatFactory(match_on_ext=True)) if original else None
 
-    def get_spatial(self, cache=False) -> Union[Image, None]:
+    def get_spatial(self) -> Union[Image, None]:
         processed_root = self.processed_root()
         if not processed_root.exists():
             return None
-
-        cache_key = str(processed_root / Path(SPATIAL_STEM))
-        cached = IMAGE_CACHE.get(cache_key)
-        if cached is not None:
-            return cached
 
         spatial = next(
             (child for child in self.processed_root().iterdir() if child.has_spatial_role()), None
@@ -291,9 +287,45 @@ class Path(PlatformPath, _Path, SafelyCopiable):
             image = Image(
                 spatial, factory=SpatialReadableFormatFactory(match_on_ext=True)
             )
-            if cache:
-                IMAGE_CACHE.put(cache_key, image)
             return image
+
+    async def get_cached_spatial(self) -> Union[Image, None]:
+        if not PIMSCache.is_enabled():
+            if get_settings().memory_lru_cache_image_metadata:
+                return self._get_memory_cached_spatial()
+            return self.get_spatial()
+
+        processed_root = self.processed_root()
+        if not processed_root.exists():
+            return None
+
+        cache_key = str(processed_root / Path(SPATIAL_STEM))
+        cached = await PIMSCache.get_backend().get(cache_key)
+        if cached is not None:
+            decoded = PickleCodec.decode(cached)
+            from pims.files.image import Image
+            return Image(f"{cache_key}.{decoded.get_identifier()}", format=decoded)
+
+        image = self.get_spatial()
+        await PIMSCache.get_backend().set(cache_key, PickleCodec.encode(image.format.serialize()))
+        return image
+
+
+    def _get_memory_cached_spatial(self) -> Union[Image, None]:
+        processed_root = self.processed_root()
+        if not processed_root.exists():
+            return None
+
+        cache_key = str(processed_root / Path(SPATIAL_STEM))
+        cached = IMAGE_CACHE.get(cache_key)
+        if cached is not None:
+            from pims.files.image import Image
+            return Image(f"{cache_key}.{cached.get_identifier()}", format=cached)
+
+        image = self.get_spatial()
+        IMAGE_CACHE.put(cache_key, image.format.serialize())
+        return image
+
 
     def get_spectral(self) -> Union[Image, None]:
         if not self.processed_root().exists():

@@ -27,7 +27,7 @@ apply_fastapi_tweaks()
 import time
 from fastapi import FastAPI, Request, APIRouter
 from pydantic import ValidationError
-from aioredis.exceptions import ConnectionError, TimeoutError
+from redis.exceptions import ConnectionError, TimeoutError
 
 from pims.utils.background_task import add_background_task
 from pims.cache import startup_cache

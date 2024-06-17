@@ -16,6 +16,7 @@ from __future__ import annotations
 import logging
 import re
 from abc import ABC
+from copy import deepcopy
 from typing import Any, Dict, List, Optional, TYPE_CHECKING, Type
 
 from pims.cache import SimpleDataCache, cached_property
@@ -27,7 +28,7 @@ from pims.formats.utils.reader import AbstractReader
 from pims.formats.utils.structures.annotations import ParsedMetadataAnnotation
 from pims.formats.utils.structures.metadata import ImageMetadata, MetadataStore
 from pims.formats.utils.structures.planes import PlanesInfo
-from pims.formats.utils.structures.pyramid import Pyramid
+from pims.formats.utils.structures.pyramid import Pyramid, normalized_pyramid
 
 if TYPE_CHECKING:
     from pims.files.file import Path
@@ -285,6 +286,14 @@ class AbstractFormat(ABC, SimpleDataCache):
         return self.parser.parse_pyramid()
 
     @cached_property
+    def normalized_pyramid(self) -> Pyramid:
+        return normalized_pyramid(self.main_imd.width, self.main_imd.height)
+
+    @cached_property
+    def is_pyramid_normalized(self) -> bool:
+        return self.pyramid == self.normalized_pyramid
+
+    @cached_property
     def planes_info(self) -> PlanesInfo:
         """
         Information about each plane.
@@ -305,3 +314,12 @@ class AbstractFormat(ABC, SimpleDataCache):
     @cached_property
     def main_path(self):
         return self.path
+
+    def serialize(self):
+        _ = self.main_imd
+        _ = self.full_imd
+        _ = self.pyramid
+        _ = self.normalized_pyramid
+        _ = self.is_pyramid_normalized
+        _ = self.planes_info
+        return deepcopy(self)

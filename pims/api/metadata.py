@@ -692,7 +692,7 @@ async def _show_associated_image(
     headers,
     config: Settings
 ):
-    in_image = path.get_spatial()
+    in_image = await path.get_cached_spatial()
     check_representation_existence(in_image)
 
     associated = getattr(in_image, f'associated_{associated_key.value}')
