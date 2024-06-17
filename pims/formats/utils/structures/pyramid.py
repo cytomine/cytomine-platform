@@ -249,7 +249,7 @@ class Pyramid:
                and all([a == b for (a, b) in zip(o.tiers, self.tiers)])
 
 
-@lru_cache(maxsize=4096)
+
 def normalized_pyramid(width: int, height: int) -> Pyramid:
     """
     Build a normalized pyramid, with normalized tiles, i.e.
