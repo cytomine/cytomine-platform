@@ -130,63 +130,63 @@ async def _show_resized(
     config: Settings,
     colormaps=None, c_reduction=ChannelReduction.ADD, z_reduction=None, t_reduction=None
 ):
-    in_image = await path.get_cached_spatial()
-    check_representation_existence(in_image)
+    with await path.get_cached_spatial() as in_image:
+        check_representation_existence(in_image)
 
-    out_format, mimetype = get_output_format(extension, headers.accept, PROCESSING_MIMETYPES)
-    check_zoom_validity(in_image.pyramid, zoom)
-    check_level_validity(in_image.pyramid, level)
-    req_size = get_thumb_output_dimensions(in_image, height, width, length, zoom, level)
-    out_size = safeguard_output_dimensions(headers.safe_mode, config.output_size_limit, *req_size)
-    out_width, out_height = out_size
+        out_format, mimetype = get_output_format(extension, headers.accept, PROCESSING_MIMETYPES)
+        check_zoom_validity(in_image.pyramid, zoom)
+        check_level_validity(in_image.pyramid, level)
+        req_size = get_thumb_output_dimensions(in_image, height, width, length, zoom, level)
+        out_size = safeguard_output_dimensions(headers.safe_mode, config.output_size_limit, *req_size)
+        out_width, out_height = out_size
 
-    channels = ensure_list(channels)
-    z_slices = ensure_list(z_slices)
-    timepoints = ensure_list(timepoints)
+        channels = ensure_list(channels)
+        z_slices = ensure_list(z_slices)
+        timepoints = ensure_list(timepoints)
 
-    channels = get_channel_indexes(in_image, channels)
-    check_reduction_validity(channels, c_reduction, 'channels')
-    z_slices = get_zslice_indexes(in_image, z_slices)
-    check_reduction_validity(z_slices, z_reduction, 'z_slices')
-    timepoints = get_timepoint_indexes(in_image, timepoints)
-    check_reduction_validity(timepoints, t_reduction, 'timepoints')
+        channels = get_channel_indexes(in_image, channels)
+        check_reduction_validity(channels, c_reduction, 'channels')
+        z_slices = get_zslice_indexes(in_image, z_slices)
+        check_reduction_validity(z_slices, z_reduction, 'z_slices')
+        timepoints = get_timepoint_indexes(in_image, timepoints)
+        check_reduction_validity(timepoints, t_reduction, 'timepoints')
 
-    min_intensities = ensure_list(min_intensities)
-    max_intensities = ensure_list(max_intensities)
-    colormaps = ensure_list(colormaps)
-    filters = ensure_list(filters)
-    gammas = ensure_list(gammas)
+        min_intensities = ensure_list(min_intensities)
+        max_intensities = ensure_list(max_intensities)
+        colormaps = ensure_list(colormaps)
+        filters = ensure_list(filters)
+        gammas = ensure_list(gammas)
 
-    array_parameters = ('min_intensities', 'max_intensities', 'colormaps', 'gammas')
-    check_array_size_parameters(
-        array_parameters, locals(), allowed=[0, 1, len(channels)], nullable=False
-    )
-    intensities = parse_intensity_bounds(
-        in_image, channels, z_slices, timepoints, min_intensities, max_intensities
-    )
-    min_intensities, max_intensities = intensities
-    colormaps = parse_colormap_ids(colormaps, ALL_COLORMAPS, channels, in_image.channels)
-    gammas = parse_gammas(channels, gammas)
+        array_parameters = ('min_intensities', 'max_intensities', 'colormaps', 'gammas')
+        check_array_size_parameters(
+            array_parameters, locals(), allowed=[0, 1, len(channels)], nullable=False
+        )
+        intensities = parse_intensity_bounds(
+            in_image, channels, z_slices, timepoints, min_intensities, max_intensities
+        )
+        min_intensities, max_intensities = intensities
+        colormaps = parse_colormap_ids(colormaps, ALL_COLORMAPS, channels, in_image.channels)
+        gammas = parse_gammas(channels, gammas)
 
-    channels, min_intensities, max_intensities, colormaps, gammas = remove_useless_channels(
-        channels, min_intensities, max_intensities, colormaps, gammas
-    )
+        channels, min_intensities, max_intensities, colormaps, gammas = remove_useless_channels(
+            channels, min_intensities, max_intensities, colormaps, gammas
+        )
 
-    array_parameters = ('filters',)
-    check_array_size_parameters(
-        array_parameters, locals(), allowed=[0, 1], nullable=False
-    )
-    filters = parse_filter_ids(filters, FILTERS)
+        array_parameters = ('filters',)
+        check_array_size_parameters(
+            array_parameters, locals(), allowed=[0, 1], nullable=False
+        )
+        filters = parse_filter_ids(filters, FILTERS)
 
-    out_bitdepth = parse_bitdepth(in_image, bits)
+        out_bitdepth = parse_bitdepth(in_image, bits)
 
-    return ResizedResponse(
-        in_image, channels, z_slices, timepoints,
-        out_format, out_width, out_height,
-        c_reduction, z_reduction, t_reduction,
-        gammas, filters, colormaps, min_intensities, max_intensities,
-        False, out_bitdepth, threshold, colorspace
-    ).http_response(
-        mimetype,
-        extra_headers=add_image_size_limit_header(dict(), *req_size, *out_size)
-    )
+        return ResizedResponse(
+            in_image, channels, z_slices, timepoints,
+            out_format, out_width, out_height,
+            c_reduction, z_reduction, t_reduction,
+            gammas, filters, colormaps, min_intensities, max_intensities,
+            False, out_bitdepth, threshold, colorspace
+        ).http_response(
+            mimetype,
+            extra_headers=add_image_size_limit_header(dict(), *req_size, *out_size)
+        )

@@ -516,3 +516,17 @@ class Image(Path):
                     return errors
 
         return errors
+
+    def __exit__(self, t, v, tb):
+        super().__exit__(t, v, tb)
+        self.close()
+
+
+    def close(self):
+        if hasattr(self, '_format') and self._format is not None:
+            self._format.close()
+            self._format._path = None
+            del self._format
+
+    def __del__(self):
+        self.close()

@@ -170,18 +170,18 @@ async def show_image_histogram(
     """
     Get histogram for full image where all planes (C,Z,T) are merged.
     """
-    in_image = await path.get_cached_spatial()
-    check_representation_existence(in_image)
+    with await path.get_cached_spatial() as in_image:
+        check_representation_existence(in_image)
 
-    n_bins = parse_n_bins(hist_config.n_bins, len(in_image.value_range))
-    htype = in_image.histogram_type()
-    return Histogram(
-        type=htype,
-        **histogram_formatter(
-            in_image.image_histogram(), in_image.image_bounds(),
-            n_bins, hist_config.full_range
+        n_bins = parse_n_bins(hist_config.n_bins, len(in_image.value_range))
+        htype = in_image.histogram_type()
+        return Histogram(
+            type=htype,
+            **histogram_formatter(
+                in_image.image_histogram(), in_image.image_bounds(),
+                n_bins, hist_config.full_range
+            )
         )
-    )
 
 
 @router.get(
@@ -195,12 +195,12 @@ async def show_image_histogram_bounds(
     """
     Get histogram info for full image where all planes (C,Z,T) are merged.
     """
-    in_image = await path.get_cached_spatial()
-    check_representation_existence(in_image)
+    with await path.get_cached_spatial() as in_image:
+        check_representation_existence(in_image)
 
-    htype = in_image.histogram_type()
-    mini, maxi = in_image.image_bounds()
-    return HistogramInfo(type=htype, minimum=mini, maximum=maxi)
+        htype = in_image.histogram_type()
+        mini, maxi = in_image.image_bounds()
+        return HistogramInfo(type=htype, minimum=mini, maximum=maxi)
 
 
 @router.get(
@@ -218,36 +218,36 @@ async def show_channels_histogram(
     """
     Get histograms per channel where all planes (Z,T) are merged.
     """
-    in_image = await path.get_cached_spatial()
-    check_representation_existence(in_image)
+    with await path.get_cached_spatial() as in_image:
+        check_representation_existence(in_image)
 
-    channels = ensure_list(channels)
-    channels = get_channel_indexes(in_image, channels)
+        channels = ensure_list(channels)
+        channels = get_channel_indexes(in_image, channels)
 
-    histograms = []
-    n_bins = parse_n_bins(hist_config.n_bins, len(in_image.value_range))
-    htype = in_image.histogram_type()
+        histograms = []
+        n_bins = parse_n_bins(hist_config.n_bins, len(in_image.value_range))
+        htype = in_image.histogram_type()
 
-    # hist_filter = operator.itemgetter(*channels)
-    # channels_bounds = hist_filter(in_image.channels_bounds())
-    # channels_histograms = hist_filter(in_image.channel_histogram()) TODO
-    for channel in channels:
-        histograms.append(
-            ChannelHistogram(
-                channel=channel,
-                concrete_channel=(channel // in_image.n_samples),
-                sample=(channel % in_image.n_samples),
-                type=htype,
-                color=in_image.channels[channel].hex_color,
-                **histogram_formatter(
-                    in_image.channel_histogram(channel),
-                    in_image.channel_bounds(channel),
-                    n_bins, hist_config.full_range
+        # hist_filter = operator.itemgetter(*channels)
+        # channels_bounds = hist_filter(in_image.channels_bounds())
+        # channels_histograms = hist_filter(in_image.channel_histogram()) TODO
+        for channel in channels:
+            histograms.append(
+                ChannelHistogram(
+                    channel=channel,
+                    concrete_channel=(channel // in_image.n_samples),
+                    sample=(channel % in_image.n_samples),
+                    type=htype,
+                    color=in_image.channels[channel].hex_color,
+                    **histogram_formatter(
+                        in_image.channel_histogram(channel),
+                        in_image.channel_bounds(channel),
+                        n_bins, hist_config.full_range
+                    )
                 )
             )
-        )
 
-    return response_list(histograms)
+        return response_list(histograms)
 
 
 @router.get(
@@ -264,33 +264,33 @@ async def show_channels_histogram_bounds(
     """
     Get histogram bounds per channel where all planes (Z,T) are merged.
     """
-    in_image = await path.get_cached_spatial()
-    check_representation_existence(in_image)
+    with await path.get_cached_spatial() as in_image:
+        check_representation_existence(in_image)
 
-    channels = ensure_list(channels)
-    channels = get_channel_indexes(in_image, channels)
+        channels = ensure_list(channels)
+        channels = get_channel_indexes(in_image, channels)
 
-    hist_info = []
-    htype = in_image.histogram_type()
-    hist_filter = operator.itemgetter(*channels)
-    channels_bounds = hist_filter(in_image.channels_bounds())
-    if len(channels) == 1:
-        channels_bounds = [channels_bounds]
+        hist_info = []
+        htype = in_image.histogram_type()
+        hist_filter = operator.itemgetter(*channels)
+        channels_bounds = hist_filter(in_image.channels_bounds())
+        if len(channels) == 1:
+            channels_bounds = [channels_bounds]
 
-    for channel, bounds in zip(channels, channels_bounds):
-        mini, maxi = bounds
-        hist_info.append(
-            ChannelHistogramInfo(
-                channel=channel,
-                concrete_channel=(channel // in_image.n_samples),
-                sample=(channel % in_image.n_samples),
-                type=htype,
-                color=in_image.channels[channel].hex_color,
-                minimum=mini, maximum=maxi
+        for channel, bounds in zip(channels, channels_bounds):
+            mini, maxi = bounds
+            hist_info.append(
+                ChannelHistogramInfo(
+                    channel=channel,
+                    concrete_channel=(channel // in_image.n_samples),
+                    sample=(channel % in_image.n_samples),
+                    type=htype,
+                    color=in_image.channels[channel].hex_color,
+                    minimum=mini, maximum=maxi
+                )
             )
-        )
 
-    return response_list(hist_info)
+        return response_list(hist_info)
 
 
 @router.get(
@@ -310,37 +310,37 @@ async def show_plane_histogram(
     """
     Get histogram per plane.
     """
-    in_image = await path.get_cached_spatial()
-    check_representation_existence(in_image)
+    with await path.get_cached_spatial() as in_image:
+        check_representation_existence(in_image)
 
-    channels = ensure_list(channels)
-    z_slices = ensure_list(z_slices)
-    timepoints = ensure_list(timepoints)
+        channels = ensure_list(channels)
+        z_slices = ensure_list(z_slices)
+        timepoints = ensure_list(timepoints)
 
-    channels = get_channel_indexes(in_image, channels)
-    z_slices = get_zslice_indexes(in_image, z_slices)
-    timepoints = get_timepoint_indexes(in_image, timepoints)
+        channels = get_channel_indexes(in_image, channels)
+        z_slices = get_zslice_indexes(in_image, z_slices)
+        timepoints = get_timepoint_indexes(in_image, timepoints)
 
-    histograms = []
-    n_bins = parse_n_bins(hist_config.n_bins, len(in_image.value_range))
-    htype = in_image.histogram_type()
-    for c, z, t in itertools.product(channels, z_slices, timepoints):
-        histograms.append(
-            PlaneHistogram(
-                channel=c,
-                concrete_channel=(c // in_image.n_samples),
-                sample=(c % in_image.n_samples),
-                z_slice=z, timepoint=t, type=htype,
-                color=in_image.channels[c].hex_color,
-                **histogram_formatter(
-                    in_image.plane_histogram(c, z, t),
-                    in_image.plane_bounds(c, z, t),
-                    n_bins, hist_config.full_range
+        histograms = []
+        n_bins = parse_n_bins(hist_config.n_bins, len(in_image.value_range))
+        htype = in_image.histogram_type()
+        for c, z, t in itertools.product(channels, z_slices, timepoints):
+            histograms.append(
+                PlaneHistogram(
+                    channel=c,
+                    concrete_channel=(c // in_image.n_samples),
+                    sample=(c % in_image.n_samples),
+                    z_slice=z, timepoint=t, type=htype,
+                    color=in_image.channels[c].hex_color,
+                    **histogram_formatter(
+                        in_image.plane_histogram(c, z, t),
+                        in_image.plane_bounds(c, z, t),
+                        n_bins, hist_config.full_range
+                    )
                 )
             )
-        )
 
-    return response_list(histograms)
+        return response_list(histograms)
 
 
 @router.get(
@@ -359,33 +359,33 @@ async def show_plane_histogram(
     """
     Get histogram per plane.
     """
-    in_image = await path.get_cached_spatial()
-    check_representation_existence(in_image)
+    with await path.get_cached_spatial() as in_image:
+        check_representation_existence(in_image)
 
-    channels = ensure_list(channels)
-    z_slices = ensure_list(z_slices)
-    timepoints = ensure_list(timepoints)
+        channels = ensure_list(channels)
+        z_slices = ensure_list(z_slices)
+        timepoints = ensure_list(timepoints)
 
-    channels = get_channel_indexes(in_image, channels)
-    z_slices = get_zslice_indexes(in_image, z_slices)
-    timepoints = get_timepoint_indexes(in_image, timepoints)
+        channels = get_channel_indexes(in_image, channels)
+        z_slices = get_zslice_indexes(in_image, z_slices)
+        timepoints = get_timepoint_indexes(in_image, timepoints)
 
-    hist_info = []
-    htype = in_image.histogram_type()
-    for c, z, t in itertools.product(channels, z_slices, timepoints):
-        mini, maxi = in_image.plane_bounds(c, z, t)
-        hist_info.append(
-            PlaneHistogramInfo(
-                channel=c,
-                concrete_channel=(c // in_image.n_samples),
-                sample=(c % in_image.n_samples),
-                z_slice=z, timepoint=t, type=htype,
-                color=in_image.channels[c].hex_color,
-                minimum=mini, maximum=maxi
+        hist_info = []
+        htype = in_image.histogram_type()
+        for c, z, t in itertools.product(channels, z_slices, timepoints):
+            mini, maxi = in_image.plane_bounds(c, z, t)
+            hist_info.append(
+                PlaneHistogramInfo(
+                    channel=c,
+                    concrete_channel=(c // in_image.n_samples),
+                    sample=(c % in_image.n_samples),
+                    z_slice=z, timepoint=t, type=htype,
+                    color=in_image.channels[c].hex_color,
+                    minimum=mini, maximum=maxi
+                )
             )
-        )
 
-    return response_list(hist_info)
+        return response_list(hist_info)
 
 
 @router.post('/image/{filepath:path}/histogram', tags=api_tags)
@@ -400,15 +400,15 @@ async def compute_histogram(
     """
     Ask for histogram computation
     """
-    in_image = await path.get_cached_spatial()
-    check_representation_existence(in_image)
+    with await path.get_cached_spatial() as in_image:
+        check_representation_existence(in_image)
 
-    hist_type = HistogramType.FAST  # TODO: allow to build complete histograms
-    hist_path = in_image.processed_root() / Path(HISTOGRAM_STEM)
+        hist_type = HistogramType.FAST  # TODO: allow to build complete histograms
+        hist_path = in_image.processed_root() / Path(HISTOGRAM_STEM)
 
-    if sync:
-        build_histogram_file(in_image, hist_path, hist_type, overwrite)
-        response.status_code = status.HTTP_201_CREATED
-    else:
-        background.add_task(build_histogram_file, in_image, hist_path, hist_type, overwrite)
-        response.status_code = status.HTTP_202_ACCEPTED
+        if sync:
+            build_histogram_file(in_image, hist_path, hist_type, overwrite)
+            response.status_code = status.HTTP_201_CREATED
+        else:
+            background.add_task(build_histogram_file, in_image, hist_path, hist_type, overwrite)
+            response.status_code = status.HTTP_202_ACCEPTED

@@ -692,26 +692,26 @@ async def _show_associated_image(
     headers,
     config: Settings
 ):
-    in_image = await path.get_cached_spatial()
-    check_representation_existence(in_image)
+    with await path.get_cached_spatial() as in_image:
+        check_representation_existence(in_image)
 
-    associated = getattr(in_image, f'associated_{associated_key.value}')
-    if not associated or not associated.exists:
-        raise NoAppropriateRepresentationProblem(path, associated_key)
+        associated = getattr(in_image, f'associated_{associated_key.value}')
+        if not associated or not associated.exists:
+            raise NoAppropriateRepresentationProblem(path, associated_key)
 
-    out_format, mimetype = get_output_format(
-        OutputExtension.NONE, headers.accept, VISUALISATION_MIMETYPES
-    )
-    req_size = get_thumb_output_dimensions(associated, height, width, length)
-    out_size = safeguard_output_dimensions(headers.safe_mode, config.output_size_limit, *req_size)
-    out_width, out_height = out_size
+        out_format, mimetype = get_output_format(
+            OutputExtension.NONE, headers.accept, VISUALISATION_MIMETYPES
+        )
+        req_size = get_thumb_output_dimensions(associated, height, width, length)
+        out_size = safeguard_output_dimensions(headers.safe_mode, config.output_size_limit, *req_size)
+        out_width, out_height = out_size
 
-    return AssociatedResponse(
-        in_image, associated_key, out_width, out_height, out_format
-    ).http_response(
-        mimetype,
-        extra_headers=add_image_size_limit_header(dict(), *req_size, *out_size)
-    )
+        return AssociatedResponse(
+            in_image, associated_key, out_width, out_height, out_format
+        ).http_response(
+            mimetype,
+            extra_headers=add_image_size_limit_header(dict(), *req_size, *out_size)
+        )
 
 
 # METADATA
