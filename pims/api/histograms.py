@@ -170,7 +170,7 @@ async def show_image_histogram(
     """
     Get histogram for full image where all planes (C,Z,T) are merged.
     """
-    in_image = path.get_spatial()
+    in_image = await path.get_cached_spatial()
     check_representation_existence(in_image)
 
     n_bins = parse_n_bins(hist_config.n_bins, len(in_image.value_range))
@@ -195,7 +195,7 @@ async def show_image_histogram_bounds(
     """
     Get histogram info for full image where all planes (C,Z,T) are merged.
     """
-    in_image = path.get_spatial()
+    in_image = await path.get_cached_spatial()
     check_representation_existence(in_image)
 
     htype = in_image.histogram_type()
@@ -218,7 +218,7 @@ async def show_channels_histogram(
     """
     Get histograms per channel where all planes (Z,T) are merged.
     """
-    in_image = path.get_spatial()
+    in_image = await path.get_cached_spatial()
     check_representation_existence(in_image)
 
     channels = ensure_list(channels)
@@ -264,7 +264,7 @@ async def show_channels_histogram_bounds(
     """
     Get histogram bounds per channel where all planes (Z,T) are merged.
     """
-    in_image = path.get_spatial()
+    in_image = await path.get_cached_spatial()
     check_representation_existence(in_image)
 
     channels = ensure_list(channels)
@@ -310,7 +310,7 @@ async def show_plane_histogram(
     """
     Get histogram per plane.
     """
-    in_image = path.get_spatial()
+    in_image = await path.get_cached_spatial()
     check_representation_existence(in_image)
 
     channels = ensure_list(channels)
@@ -359,7 +359,7 @@ async def show_plane_histogram(
     """
     Get histogram per plane.
     """
-    in_image = path.get_spatial()
+    in_image = await path.get_cached_spatial()
     check_representation_existence(in_image)
 
     channels = ensure_list(channels)
@@ -400,7 +400,7 @@ async def compute_histogram(
     """
     Ask for histogram computation
     """
-    in_image = path.get_spatial()
+    in_image = await path.get_cached_spatial()
     check_representation_existence(in_image)
 
     hist_type = HistogramType.FAST  # TODO: allow to build complete histograms
