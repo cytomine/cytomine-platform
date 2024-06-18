@@ -272,6 +272,25 @@ class Path(PlatformPath, _Path, SafelyCopiable):
         from pims.files.image import Image
         return Image(original, factory=FormatFactory(match_on_ext=True)) if original else None
 
+    async def get_cached_original(self) -> Union[Image, None]:
+        if not PIMSCache.is_enabled():
+            return self.get_original()
+
+        processed_root = self.processed_root()
+        if not processed_root.exists():
+            return None
+
+        cache_key = str(processed_root / Path(ORIGINAL_STEM))
+        cached = await PIMSCache.get_backend().get(cache_key)
+        if cached is not None:
+            decoded = PickleCodec.decode(cached)
+            from pims.files.image import Image
+            return Image(f"{cache_key}.{decoded.get_identifier()}", format=decoded)
+
+        image = self.get_original()
+        await PIMSCache.get_backend().set(cache_key, PickleCodec.encode(image.format.serialize()))
+        return image
+
     def get_spatial(self) -> Union[Image, None]:
         processed_root = self.processed_root()
         if not processed_root.exists():

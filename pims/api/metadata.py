@@ -551,16 +551,16 @@ async def show_info(
     """
     Get all image info
     """
-    original = path.get_original()
-    check_representation_existence(original)
-    data = dict()
-    data["image"] = ImageInfo.from_image(original)
-    data["instrument"] = InstrumentInfo.from_image(original)
-    data["associated"] = AssociatedInfo.from_image(original)
-    data["channels"] = ChannelsInfo.from_image(original)
-    data["representations"] = [RepresentationInfo.from_path(rpr) for rpr in
-                               original.get_representations()]
-    return data
+    with await path.get_cached_original() as original:
+        check_representation_existence(original)
+        data = dict()
+        data["image"] = ImageInfo.from_image(original)
+        data["instrument"] = InstrumentInfo.from_image(original)
+        data["associated"] = AssociatedInfo.from_image(original)
+        data["channels"] = ChannelsInfo.from_image(original)
+        data["representations"] = [RepresentationInfo.from_path(rpr) for rpr in
+                                   original.get_representations()]
+        return data
 
 
 # IMAGE
@@ -577,9 +577,9 @@ async def show_image(
     """
     Get standard image info
     """
-    original = path.get_original()
-    check_representation_existence(original)
-    return ImageInfo.from_image(original)
+    with await path.get_cached_original() as original:
+        check_representation_existence(original)
+        return ImageInfo.from_image(original)
 
 
 # CHANNELS
@@ -598,9 +598,9 @@ async def show_channels(path: Path = Depends(imagepath_parameter)):
     """
     Get image channel info
     """
-    original = path.get_original()
-    check_representation_existence(original)
-    return response_list(ChannelsInfo.from_image(original))
+    with await path.get_cached_original() as original:
+        check_representation_existence(original)
+        return response_list(ChannelsInfo.from_image(original))
 
 
 # PYRAMID
@@ -617,9 +617,9 @@ async def show_normalized_pyramid(
     """
     Get image normalized pyramid
     """
-    original = path.get_original()
-    check_representation_existence(original)
-    return PyramidInfo.from_pyramid(original.normalized_pyramid)
+    with await path.get_cached_original() as original:
+        check_representation_existence(original)
+        return PyramidInfo.from_pyramid(original.normalized_pyramid)
 
 
 # INSTRUMENT
@@ -636,9 +636,9 @@ async def show_instrument(
     """
     Get image instrument info
     """
-    original = path.get_original()
-    check_representation_existence(original)
-    return InstrumentInfo.from_image(original)
+    with await path.get_cached_original() as original:
+        check_representation_existence(original)
+        return InstrumentInfo.from_image(original)
 
 
 # ASSOCIATED
@@ -659,9 +659,9 @@ async def show_associated(
     """
     Get associated file info
     """
-    original = path.get_original()
-    check_representation_existence(original)
-    return response_list(AssociatedInfo.from_image(original))
+    with await path.get_cached_original() as original:
+        check_representation_existence(original)
+        return response_list(AssociatedInfo.from_image(original))
 
 
 @router.get(
@@ -731,11 +731,11 @@ async def show_metadata(
     """
     Get image metadata
     """
-    original = path.get_original()
-    check_representation_existence(original)
+    with await path.get_cached_original() as original:
+        check_representation_existence(original)
 
-    store = original.raw_metadata
-    return response_list([Metadata.from_metadata(md) for md in store.values()])
+        store = original.raw_metadata
+        return response_list([Metadata.from_metadata(md) for md in store.values()])
 
 
 # ANNOTATIONS
@@ -801,12 +801,12 @@ async def show_metadata_annotations(
     """
     Get image annotation metadata
     """
-    original = path.get_original()
-    check_representation_existence(original)
-    return response_list(
-        [MetadataAnnotation.from_metadata_annotation(a)
-         for a in original.annotations]
-    )
+    with await path.get_cached_original() as original:
+        check_representation_existence(original)
+        return response_list(
+            [MetadataAnnotation.from_metadata_annotation(a)
+             for a in original.annotations]
+        )
 
 
 # REPRESENTATIONS
