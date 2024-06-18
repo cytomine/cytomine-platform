@@ -15,7 +15,7 @@
 from abc import ABC
 
 import numpy as np
-from scipy import linalg
+from scipy import linalg  # noqa
 from skimage.color import (
     bex_from_rgb, combine_stains, hdx_from_rgb, hed_from_rgb, rgb_from_bex,
     rgb_from_hdx, rgb_from_hed, separate_stains
