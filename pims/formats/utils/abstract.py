@@ -83,6 +83,7 @@ class AbstractFormat(ABC, SimpleDataCache):
         super(AbstractFormat, self).__init__(existing_cache)
 
         self._enabled = False
+        self._closeable_cache_attributes = ('_tf', '_pil', '_pil_palette_converted')
 
         self.parser = self.parser_class(self)
         self.reader = self.reader_class(self) if self.reader_class else None
@@ -323,3 +324,21 @@ class AbstractFormat(ABC, SimpleDataCache):
         _ = self.is_pyramid_normalized
         _ = self.planes_info
         return deepcopy(self)
+
+    def close(self):
+        for attr in self._closeable_cache_attributes:
+            if self.is_in_cache(attr):
+                try:
+                    self.cache[attr].close()
+                except Exception:
+                    log.warning(f"Can't close attribute {attr} for format {self}")
+
+        self.clear_cache()
+
+        self.parser = None
+        self.reader = None
+        self.convertor = None
+        self.histogram_reader = None
+
+    def __del__(self):
+        self.close()

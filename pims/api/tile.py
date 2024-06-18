@@ -122,104 +122,104 @@ async def _show_tile(
     extension, headers, config,
     colormaps=None, c_reduction=ChannelReduction.ADD, z_reduction=None, t_reduction=None
 ):
-    in_image = await path.get_cached_spatial()
-    check_representation_existence(in_image)
+    with await path.get_cached_spatial() as in_image:
+        check_representation_existence(in_image)
 
-    if not normalized or in_image.is_pyramid_normalized:
-        pyramid = in_image.pyramid
-        is_window = False
-    else:
-        pyramid = in_image.normalized_pyramid
-        is_window = True
+        if not normalized or in_image.is_pyramid_normalized:
+            pyramid = in_image.pyramid
+            is_window = False
+        else:
+            pyramid = in_image.normalized_pyramid
+            is_window = True
 
-    if 'zoom' in tile:
-        reference_tier_index = tile['zoom']
-        tier_index_type = TierIndexType.ZOOM
-    else:
-        reference_tier_index = tile['level']
-        tier_index_type = TierIndexType.LEVEL
+        if 'zoom' in tile:
+            reference_tier_index = tile['zoom']
+            tier_index_type = TierIndexType.ZOOM
+        else:
+            reference_tier_index = tile['level']
+            tier_index_type = TierIndexType.LEVEL
 
-    if 'ti' in tile:
-        check_tileindex_validity(
-            pyramid, tile['ti'],
-            reference_tier_index, tier_index_type
+        if 'ti' in tile:
+            check_tileindex_validity(
+                pyramid, tile['ti'],
+                reference_tier_index, tier_index_type
+            )
+            tile_region = pyramid.get_tier_at(
+                reference_tier_index, tier_index_type
+            ).get_ti_tile(tile['ti'])
+        else:
+            check_tilecoord_validity(
+                pyramid, tile['tx'], tile['ty'],
+                reference_tier_index, tier_index_type
+            )
+            tile_region = pyramid.get_tier_at(
+                reference_tier_index, tier_index_type
+            ).get_txty_tile(tile['tx'], tile['ty'])
+
+        out_format, mimetype = get_output_format(extension, headers.accept, VISUALISATION_MIMETYPES)
+        req_size = tile_region.width, tile_region.height
+        out_size = safeguard_output_dimensions(headers.safe_mode, config.output_size_limit, *req_size)
+        out_width, out_height = out_size
+
+        channels = ensure_list(channels)
+        z_slices = ensure_list(z_slices)
+        timepoints = ensure_list(timepoints)
+
+        channels = get_channel_indexes(in_image, channels)
+        check_reduction_validity(channels, c_reduction, 'channels')
+        z_slices = get_zslice_indexes(in_image, z_slices)
+        check_reduction_validity(z_slices, z_reduction, 'z_slices')
+        timepoints = get_timepoint_indexes(in_image, timepoints)
+        check_reduction_validity(timepoints, t_reduction, 'timepoints')
+
+        min_intensities = ensure_list(min_intensities)
+        max_intensities = ensure_list(max_intensities)
+        colormaps = ensure_list(colormaps)
+        filters = ensure_list(filters)
+        gammas = ensure_list(gammas)
+
+        array_parameters = ('min_intensities', 'max_intensities', 'colormaps', 'gammas')
+        check_array_size_parameters(
+            array_parameters, locals(), allowed=[0, 1, len(channels)], nullable=False
         )
-        tile_region = pyramid.get_tier_at(
-            reference_tier_index, tier_index_type
-        ).get_ti_tile(tile['ti'])
-    else:
-        check_tilecoord_validity(
-            pyramid, tile['tx'], tile['ty'],
-            reference_tier_index, tier_index_type
+        intensities = parse_intensity_bounds(
+            in_image, channels, z_slices, timepoints, min_intensities, max_intensities
         )
-        tile_region = pyramid.get_tier_at(
-            reference_tier_index, tier_index_type
-        ).get_txty_tile(tile['tx'], tile['ty'])
+        min_intensities, max_intensities = intensities
+        colormaps = parse_colormap_ids(colormaps, ALL_COLORMAPS, channels, in_image.channels)
+        gammas = parse_gammas(channels, gammas)
 
-    out_format, mimetype = get_output_format(extension, headers.accept, VISUALISATION_MIMETYPES)
-    req_size = tile_region.width, tile_region.height
-    out_size = safeguard_output_dimensions(headers.safe_mode, config.output_size_limit, *req_size)
-    out_width, out_height = out_size
-
-    channels = ensure_list(channels)
-    z_slices = ensure_list(z_slices)
-    timepoints = ensure_list(timepoints)
-
-    channels = get_channel_indexes(in_image, channels)
-    check_reduction_validity(channels, c_reduction, 'channels')
-    z_slices = get_zslice_indexes(in_image, z_slices)
-    check_reduction_validity(z_slices, z_reduction, 'z_slices')
-    timepoints = get_timepoint_indexes(in_image, timepoints)
-    check_reduction_validity(timepoints, t_reduction, 'timepoints')
-
-    min_intensities = ensure_list(min_intensities)
-    max_intensities = ensure_list(max_intensities)
-    colormaps = ensure_list(colormaps)
-    filters = ensure_list(filters)
-    gammas = ensure_list(gammas)
-
-    array_parameters = ('min_intensities', 'max_intensities', 'colormaps', 'gammas')
-    check_array_size_parameters(
-        array_parameters, locals(), allowed=[0, 1, len(channels)], nullable=False
-    )
-    intensities = parse_intensity_bounds(
-        in_image, channels, z_slices, timepoints, min_intensities, max_intensities
-    )
-    min_intensities, max_intensities = intensities
-    colormaps = parse_colormap_ids(colormaps, ALL_COLORMAPS, channels, in_image.channels)
-    gammas = parse_gammas(channels, gammas)
-
-    channels, min_intensities, max_intensities, colormaps, gammas = remove_useless_channels(
-        channels, min_intensities, max_intensities, colormaps, gammas
-    )
-
-    array_parameters = ('filters',)
-    check_array_size_parameters(
-        array_parameters, locals(), allowed=[0, 1], nullable=False
-    )
-    filters = parse_filter_ids(filters, FILTERS)
-
-    if is_window:
-        tile = WindowResponse(
-            in_image, channels, z_slices, timepoints,
-            tile_region, out_format, out_width, out_height,
-            c_reduction, z_reduction, t_reduction,
-            gammas, filters, colormaps, min_intensities, max_intensities, log,
-            8, threshold, Colorspace.AUTO
-        )
-    else:
-        tile = TileResponse(
-            in_image, channels, z_slices, timepoints,
-            tile_region, out_format, out_width, out_height,
-            c_reduction, z_reduction, t_reduction,
-            gammas, filters, colormaps, min_intensities, max_intensities, log,
-            threshold
+        channels, min_intensities, max_intensities, colormaps, gammas = remove_useless_channels(
+            channels, min_intensities, max_intensities, colormaps, gammas
         )
 
-    return tile.http_response(
-        mimetype,
-        extra_headers=add_image_size_limit_header(dict(), *req_size, *out_size)
-    )
+        array_parameters = ('filters',)
+        check_array_size_parameters(
+            array_parameters, locals(), allowed=[0, 1], nullable=False
+        )
+        filters = parse_filter_ids(filters, FILTERS)
+
+        if is_window:
+            tile = WindowResponse(
+                in_image, channels, z_slices, timepoints,
+                tile_region, out_format, out_width, out_height,
+                c_reduction, z_reduction, t_reduction,
+                gammas, filters, colormaps, min_intensities, max_intensities, log,
+                8, threshold, Colorspace.AUTO
+            )
+        else:
+            tile = TileResponse(
+                in_image, channels, z_slices, timepoints,
+                tile_region, out_format, out_width, out_height,
+                c_reduction, z_reduction, t_reduction,
+                gammas, filters, colormaps, min_intensities, max_intensities, log,
+                threshold
+            )
+
+        return tile.http_response(
+            mimetype,
+            extra_headers=add_image_size_limit_header(dict(), *req_size, *out_size)
+        )
 
 
 def zoom_query_parameter(

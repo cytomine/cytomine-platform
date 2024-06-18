@@ -29,15 +29,15 @@ class Histogram(Path, HistogramReaderInterface):
 
         _format = None
         if format:
-            _format = format(self)
+            _format = format(Path(self))
         else:
             for possible_format in HISTOGRAM_FORMATS:
-                _format = possible_format.match(self)
+                _format = possible_format.match(Path(self))
                 if _format is not None:
                     break
 
         if _format is None:
-            raise NoMatchingFormatProblem(self)
+            raise NoMatchingFormatProblem(Path(self))
         else:
             self._format = _format
 

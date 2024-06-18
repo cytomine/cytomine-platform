@@ -13,14 +13,12 @@
 #  * limitations under the License.
 from __future__ import annotations
 
-from typing import Callable, Dict, Optional, Tuple, Type, Union
+from typing import Callable, Dict, Tuple, Type, Union
 
 import numpy as np
 from PIL import Image as PILImage
 from pyvips import Image as VIPSImage
 from pyvips.vimage import FORMAT_TO_TYPESTR
-
-from pims.utils.vips import dtype_to_vips_format, vips_format_to_dtype
 
 
 def numpy_to_vips(

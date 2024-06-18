@@ -206,7 +206,7 @@ def infer_channel_color(
 
     try:
         return Color(color_name)
-    except ColorError:
+    except PydanticCustomError:
         pass
 
     if channel_color_list is None:

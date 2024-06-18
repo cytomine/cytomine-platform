@@ -23,5 +23,5 @@ def to_unsigned_int(arr: np.ndarray) -> np.ndarray:
     """
     if arr.dtype is not np.uint8 or arr.dtype is not np.uint16:
         arr_min, arr_max = dtype_limits(arr, clip_negative=False)
-        arr, _ = _offset_array(arr, arr_min, arr_max)
+        arr = _offset_array(arr, arr_min, arr_max)
     return arr

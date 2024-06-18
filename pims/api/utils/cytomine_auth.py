@@ -15,10 +15,9 @@ import base64
 import hashlib
 import hmac
 
-from cytomine.models import Collection, Model
 from starlette.requests import Request
 
-from pims.api.exceptions import AuthenticationException, CytomineProblem
+from pims.api.exceptions import AuthenticationException
 from pims.config import get_settings
 
 

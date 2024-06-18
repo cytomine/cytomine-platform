@@ -127,7 +127,7 @@ class Archive(Path):
                     break
 
         if _format is None:
-            raise NoMatchingFormatProblem(self)
+            raise NoMatchingFormatProblem(Path(self))
         else:
             self._format = _format
 

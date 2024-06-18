@@ -16,6 +16,7 @@ import logging
 import sys
 
 from . import __api_version__, __version__
+
 logger = logging.getLogger("pims.app")
 logger.info("PIMS initialization...")
 logger.info("PIMS version: {} ; api version: {}".format(__version__, __api_version__))
@@ -25,7 +26,7 @@ from pims.fastapi_tweaks import apply_fastapi_tweaks
 apply_fastapi_tweaks()
 
 import time
-from fastapi import FastAPI, Request, APIRouter
+from fastapi import FastAPI, Request
 from pydantic import ValidationError
 from redis.exceptions import ConnectionError, TimeoutError
 

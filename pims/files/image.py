@@ -50,13 +50,13 @@ class Image(Path):
     ):
         super().__init__(*pathsegments)
 
-        _format = factory.match(self) if factory else format
+        _format = factory.match(Path(self)) if factory else format
         if _format is None:
-            raise NoMatchingFormatProblem(self)
+            raise NoMatchingFormatProblem(Path(self))
         else:
             if _format.path.absolute() != self.absolute():
                 # Paths mismatch: reload format
-                _format = _format.from_path(self)
+                _format = _format.from_path(Path(self))
             self._format = _format
 
     @property
@@ -516,3 +516,17 @@ class Image(Path):
                     return errors
 
         return errors
+
+    def __exit__(self, t, v, tb):
+        super().__exit__(t, v, tb)
+        self.close()
+
+
+    def close(self):
+        if hasattr(self, '_format') and self._format is not None:
+            self._format.close()
+            self._format._path = None
+            del self._format
+
+    def __del__(self):
+        self.close()

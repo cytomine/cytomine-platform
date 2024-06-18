@@ -12,7 +12,7 @@
 #  * See the License for the specific language governing permissions and
 #  * limitations under the License.
 import logging
-from typing import Any, Optional, Union
+from typing import Any, Optional
 
 import orjson
 from cytomine.models import Model as CytomineModel
