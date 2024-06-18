@@ -44,7 +44,7 @@ def stable_hash(data: bytes) -> str:
     Python `hash()` function CANNOT BE USED as it is salted by default, and thus do not produce the same value in
     different processes. See https://docs.python.org/3.8/reference/datamodel.html#object.__hash__
     """
-    return hashlib.md5(data).hexdigest()
+    return hashlib.md5(data, usedforsecurity=False).hexdigest()
 
 
 def _hashable_value(v: Any, separator: str = ":") -> str:
