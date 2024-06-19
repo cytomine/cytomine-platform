@@ -269,7 +269,7 @@ class Path(PlatformPath, _Path, SafelyCopiable):
             raise ValueError(f"Cached representation {representation} is not supported.")
 
         if not PIMSCache.is_enabled() and get_settings().cache_image_format_metadata:
-            return self.get_representation(representation)
+            return await self.get_representation(representation)
 
         processed_root = self.processed_root()
         if not processed_root.exists():
@@ -284,7 +284,7 @@ class Path(PlatformPath, _Path, SafelyCopiable):
             from pims.files.image import Image
             return Image(f"{stem_path}.{decoded.get_identifier()}", format=decoded)
 
-        image = self.get_representation(representation)
+        image = await self.get_representation(representation)
         await PIMSCache.get_backend().set(
             cache_key, PickleCodec.encode(image.format.serialize()), namespace=CACHE_KEY_PREFIX_IMAGE_FORMAT_METADATA
         )
