@@ -18,7 +18,7 @@ variables:
   IDENTITY_GEOMETRY_TASK_NAME: com.cytomine.dummy.identity.geometry-1.0.0.zip
   IDENTITY_IMAGE_TASK_NAME: com.cytomine.dummy.identity.image-1.0.0.zip
   SUB_INTEGER_TASK_NAME: com.cytomine.dummy.arithmetic.integer.subtraction-1.0.0.zip
-  IDENTITY_INTEGER_ARRAY_TASK: com.cytomine.dummy.identity.array.integer-0.1.0.zip
+  IDENTITY_INTEGER_ARRAY_TASK: com.cytomine.dummy.identity.array.integer-1.0.0.zip
   TEST_ARTIFACT_PATH: ./src/test/resources/artifacts
 
 
