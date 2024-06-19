@@ -28,10 +28,9 @@ from pims.config import get_settings
 from pims.files.archive import Archive, ArchiveError
 from pims.files.file import (
     EXTRACTED_DIR, HISTOGRAM_STEM, ORIGINAL_STEM, PROCESSED_DIR, Path,
-    SPATIAL_STEM, UPLOAD_DIR_PREFIX
+    SPATIAL_STEM, UPLOAD_DIR_PREFIX, Image
 )
 from pims.files.histogram import Histogram
-from pims.files.image import Image
 from pims.formats import AbstractFormat
 from pims.formats.utils.factories import (
     ImportableFormatFactory,

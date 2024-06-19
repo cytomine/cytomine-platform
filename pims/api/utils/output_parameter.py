@@ -17,7 +17,7 @@ from typing import Optional, Tuple, Union
 from pims.api.exceptions import BadRequestException, TooLargeOutputProblem
 from pims.api.utils.header import SafeMode
 from pims.api.utils.models import TierIndexType
-from pims.files.image import Image
+from pims.files.file import Image
 from pims.formats.utils.structures.pyramid import Pyramid
 from pims.processing.region import Region
 from pims.utils.math import get_rationed_resizing

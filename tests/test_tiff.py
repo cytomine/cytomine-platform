@@ -8,7 +8,7 @@ from pims.importer.importer import FileImporter
 from tests.utils.formats import info_test, thumb_test, resized_test, mask_test, crop_test, crop_null_annot_test, histogram_perimage_test
 from pims.files.file import (
     EXTRACTED_DIR, HISTOGRAM_STEM, ORIGINAL_STEM, PROCESSED_DIR, Path,
-    SPATIAL_STEM, UPLOAD_DIR_PREFIX
+    SPATIAL_STEM, UPLOAD_DIR_PREFIX, Image
 )
 from pims.formats.utils.factories import FormatFactory
 from pims.api.utils.models import HistogramType
@@ -64,7 +64,6 @@ def get_image(path, filename):
             original_filename = Path(f"{ORIGINAL_STEM}.PYRTIFF")
             fi.original_path = fi.processed_dir / original_filename
         try:
-            from pims.files.image import Image
             fi.histogram_path = fi.processed_dir/Path(HISTOGRAM_STEM) #/data/pims/upload1641567540187798/processed/histogram
             format = FormatFactory().match(fi.original_path)
             fi.original = Image(fi.original_path, format=format)

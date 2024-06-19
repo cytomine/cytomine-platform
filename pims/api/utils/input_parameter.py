@@ -19,7 +19,7 @@ from pims.api.exceptions import BadRequestException
 from pims.api.utils.models import ChannelReduction, GenericReduction, TierIndexType
 from pims.api.utils.output_parameter import Size, check_level_validity, check_zoom_validity
 from pims.api.utils.range_parameter import is_range, parse_range
-from pims.files.image import Image
+from pims.files.file import Image
 from pims.processing.region import Region
 from pims.utils.iterables import ensure_list
 

@@ -20,7 +20,7 @@ from shapely.geometry import GeometryCollection, LineString, Point
 from shapely.geometry.base import BaseGeometry
 
 from pims.api.utils.models import PointCross
-from pims.files.image import Image
+from pims.files.file import Image
 from pims.processing.region import Region
 from pims.utils.color import Color
 

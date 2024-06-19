@@ -28,8 +28,7 @@ from cytomine.models.collection import CollectionPartialUploadException
 
 from pims.api.utils.response import convert_quantity
 from pims.config import get_settings
-from pims.files.file import Path
-from pims.files.image import Image
+from pims.files.file import Path, Image
 from pims.formats import AbstractFormat
 from pims.utils.dtypes import dtype_to_bits
 from pims.utils.iterables import flatten
