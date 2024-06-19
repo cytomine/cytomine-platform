@@ -70,22 +70,22 @@ public class GeometryType extends Type {
     @Override
     public void validate(Object valueObject) throws TypeValidationException {
         if (!(valueObject instanceof String)) {
-            throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_VALIDATION_ERROR);
+            throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_TYPE_ERROR);
         }
 
         Geometry geometry;
         try {
             geometry = parse((String) valueObject);
         } catch (ParseException e) {
-            throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_VALIDATION_ERROR);
+            throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_GEOJSON_PROCESSING_ERROR);
         }
 
         if (!geometry.isValid()) {
-            throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_VALIDATION_ERROR);
+            throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_INVALID_GEOJSON);
         }
 
         if (!SUPPORTED_TYPES.contains(geometry.getGeometryType())) {
-            throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_VALIDATION_ERROR);
+            throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_UNSUPPORTED_GEOMETRY_TYPE);
         }
 
         // Validation for Circle and Rectangle
@@ -95,16 +95,16 @@ public class GeometryType extends Type {
         }
 
         if (!properties.containsKey("subType")) {
-            throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_VALIDATION_ERROR);
+            throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_GEOJSON_SUBTYPE_ERROR);
         }
 
         String subType = (String) properties.get("subType");
         if (!subType.equals("Circle") && !subType.equals("Rectangle")) {
-            throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_VALIDATION_ERROR);
+            throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_UNSUPPORTED_GEOMETRY_SUBTYPE);
         }
 
         if (subType.equals("Circle") && !properties.containsKey("radius")) {
-            throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_VALIDATION_ERROR);
+            throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_MISSING_RADIUS_ERROR);
         }
     }
 
