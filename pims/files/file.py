@@ -149,6 +149,17 @@ class Path(PlatformPath, _Path, SafelyCopiable):
         # https://github.com/python/cpython/blob/main/Lib/pathlib.py#L478
         return cls.__new__(cls, *tuple(self._parts))  # noqa
 
+    @classmethod
+    def from_filepath(cls, filepath: str):
+        return cls(get_settings().root, filepath)
+
+    @property
+    def public_filepath(self):
+        root = get_settings().root
+        if len(root) > 0 and root[-1] != "/":
+            root += "/"
+        return str(self).replace(root, "")
+
     @property
     def creation_datetime(self) -> datetime:
         return datetime.fromtimestamp(self.stat().st_ctime)

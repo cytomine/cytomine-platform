@@ -15,18 +15,15 @@ import os
 
 import pytest
 
-from pims.api.utils.parameter import filepath2path, path2filepath
 from pims.files.file import Path
 
 
 @pytest.mark.parametrize("filepath", ("/abc", "abc", "abc/foo"))
 def test_filepath2path(app, settings, filepath):
-    assert str(filepath2path(filepath, settings)) == os.path.join(settings.root, filepath)
+    assert str(Path.from_filepath(filepath)) == os.path.join(settings.root, filepath)
 
 
-@pytest.mark.parametrize("rootpath", ("/abc", "abc", "abc/foo/"))
+@pytest.mark.parametrize("rootpath", ("/abc", "abc", "abc/foo"))
 def test_path2filepath(app, settings, rootpath):
-    fake_settings = settings.copy()
-    fake_settings.root = rootpath
-    path = Path(rootpath) / "dir/file"
-    assert path2filepath(path, fake_settings) == "dir/file"
+    path = Path.from_filepath(rootpath)
+    assert path.public_filepath == rootpath

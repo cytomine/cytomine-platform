@@ -19,6 +19,7 @@ from fastapi import APIRouter, Depends, Path as PathParam
 from pydantic import BaseModel, Field, RootModel
 from starlette.requests import Request
 from starlette.responses import Response
+from typing_extensions import Annotated
 
 from pims.api.exceptions import NoAppropriateRepresentationProblem, check_representation_existence
 from pims.api.utils.header import ImageRequestHeaders, add_image_size_limit_header
@@ -31,7 +32,7 @@ from pims.api.utils.output_parameter import (
     get_thumb_output_dimensions,
     safeguard_output_dimensions
 )
-from pims.api.utils.parameter import filepath_parameter, imagepath_parameter, path2filepath
+from pims.api.utils.parameter import filepath_parameter, imagepath_parameter
 from pims.api.utils.response import FastJsonResponse, convert_quantity, response_list
 from pims.cache import cache_image_response
 from pims.config import Settings, get_settings
@@ -39,7 +40,6 @@ from pims.files.file import FileRole, FileType, Path
 from pims.formats.utils.structures.metadata import MetadataType
 from pims.processing.image_response import AssociatedResponse
 from pims.utils.dtypes import dtype_to_bits
-from typing_extensions import Annotated
 
 router = APIRouter(prefix=get_settings().api_base_path)
 api_tags = ['Metadata']
@@ -88,7 +88,7 @@ class FileInfo(RootModel):
     def from_path(cls, path):
         info = {
             "file_type": FileType.from_path(path),
-            "filepath": path2filepath(path),
+            "filepath": path.public_filepath,
             "stem": path.true_stem,
             "extension": path.extension,
             "created_at": path.creation_datetime,

@@ -427,7 +427,7 @@ async def show_tile_v1(
     tile = TargetZoomTileCoordinates(zoom=zoom, tx=tx, ty=ty)
     return await _show_tile(
         request, response,
-        imagepath_parameter(zoomify, config),
+        imagepath_parameter(zoomify),
         normalized=True,
         tile=tile.dict(),
         channels=None, z_slices=None, timepoints=None,
@@ -459,11 +459,11 @@ async def show_tile_v2(
     if all(i is not None for i in (zoomify, tile_group, x, y)):
         tx, ty = TileX(x), TileY(y)
         tile = TargetZoomTileCoordinates(zoom=zoom, tx=tx, ty=ty)
-        path = imagepath_parameter(zoomify, config)
+        path = imagepath_parameter(zoomify)
     elif all(i is not None for i in (fif, z, tile_index)):
         ti = TileIndex(tile_index)
         tile = TargetZoomTileIndex(zoom=zoom, ti=ti)
-        path = imagepath_parameter(fif, config)
+        path = imagepath_parameter(fif)
     else:
         raise BadRequestException(detail="Incoherent set of parameters.")
 
