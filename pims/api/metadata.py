@@ -330,6 +330,17 @@ class RepresentationInfo(RootModel):
             )
 
 
+async def _get_representation_info_list(path: Path) -> List[Union[FullRepresentationInfo, SimpleRepresentationInfo]]:
+    data = []
+    for representation in FileRole.representations():
+        try:
+            with await path.get_representation(representation, from_cache=True) as rpr:
+                    data.append(RepresentationInfo.from_path(rpr))
+        except AttributeError:
+            pass
+    return data
+
+
 class Microscope(BaseModel):
     model: Optional[str] = Field(None, description='The microscope model.')
 
@@ -557,8 +568,7 @@ async def show_info(
         data["instrument"] = InstrumentInfo.from_image(original)
         data["associated"] = AssociatedInfo.from_image(original)
         data["channels"] = ChannelsInfo.from_image(original)
-        data["representations"] = [RepresentationInfo.from_path(rpr) for rpr in
-                                   original.get_representations()]
+        data["representations"] = await _get_representation_info_list(original)
         return data
 
 
@@ -826,7 +836,7 @@ async def list_representations(
     """
     Get all image representation info
     """
-    return response_list([RepresentationInfo.from_path(rpr) for rpr in path.get_representations()])
+    return response_list(await _get_representation_info_list(path))
 
 
 @router.get(
@@ -841,5 +851,8 @@ async def show_representation(
     """
     Get image representation info
     """
-    rpr = path.get_representation(representation)
-    return RepresentationInfo.from_path(rpr)
+    try:
+        with await path.get_representation(representation, from_cache=True) as rpr:
+            return RepresentationInfo.from_path(rpr)
+    except AttributeError:
+        raise NoAppropriateRepresentationProblem(path, representation)

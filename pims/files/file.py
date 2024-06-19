@@ -77,6 +77,10 @@ class FileRole(str, Enum):
             role = cls.UPLOAD
         return role
 
+    @classmethod
+    def representations(cls) -> List[FileRole]:
+        return [FileRole.UPLOAD, FileRole.ORIGINAL, FileRole.SPATIAL, FileRole.SPECTRAL]
+
 
 class FileType(str, Enum):
     """
@@ -345,20 +349,13 @@ class Path(PlatformPath, _Path, SafelyCopiable):
         from pims.files.histogram import Histogram
         return Histogram(histogram) if histogram else None
 
-    def get_representations(self) -> List[Path]:
-        representations = [
-            self.get_upload(), self.get_original(), self.get_spatial(),
-            self.get_spectral()
-        ]
-        return [representation for representation in representations if representation is not None]
-
-    def get_representation(self, role: FileRole) -> Union[Path, Image, None]:
+    async def get_representation(self, role: FileRole, from_cache: bool = False) -> Union[Path, Image, None]:
         if role == FileRole.UPLOAD:
             return self.get_upload()
         elif role == FileRole.ORIGINAL:
-            return self.get_original()
+            return await self.get_cached_original() if from_cache else self.get_original()
         elif role == FileRole.SPATIAL:
-            return self.get_spatial()
+            return await self.get_cached_spatial() if from_cache else self.get_spatial()
         elif role == FileRole.SPECTRAL:
             return self.get_spectral()
         else:
