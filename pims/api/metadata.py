@@ -33,7 +33,7 @@ from pims.api.utils.output_parameter import (
 )
 from pims.api.utils.parameter import filepath_parameter, imagepath_parameter, path2filepath
 from pims.api.utils.response import FastJsonResponse, convert_quantity, response_list
-from pims.cache import cache_image_response
+from pims.cache import cache_image_response, cache_response
 from pims.config import Settings, get_settings
 from pims.files.file import FileRole, FileType, Path
 from pims.formats.utils.structures.metadata import MetadataType
@@ -736,7 +736,9 @@ class MetadataCollection(CollectionSize):
     tags=api_tags,
     response_class=FastJsonResponse
 )
+@cache_response(vary=['request', 'response'])
 async def show_metadata(
+    request: Request, response: Response,  # noqa
     path: Path = Depends(imagepath_parameter)
 ):
     """
@@ -746,8 +748,7 @@ async def show_metadata(
         check_representation_existence(original)
 
         store = original.raw_metadata
-        return response_list([Metadata.from_metadata(md) for md in store.values()])
-
+        return FastJsonResponse(response_list([Metadata.from_metadata(md) for md in store.values()]))
 
 # ANNOTATIONS
 

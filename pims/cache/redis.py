@@ -42,6 +42,7 @@ CACHE_KEY_PIMS_VERSION = "PIMS_VERSION"
 
 CACHE_KEY_PREFIX_IMAGE_FORMAT_METADATA = "pims-fmd"
 CACHE_KEY_PREFIX_IMAGE_RESPONSE = "pims-img"
+CACHE_KEY_PREFIX_RESPONSE = "pims-resp"
 
 MANAGE_CACHE_INTERVAL = 60 * 5 # in seconds
 
@@ -420,4 +421,16 @@ def cache_image_response(
         expire, vary, codec, key_builder,
         image_response_cache_control_builder,
         prefix=CACHE_KEY_PREFIX_IMAGE_RESPONSE
+    )
+
+
+def cache_response(
+    expire: int = None,
+    vary: Optional[List] = None,
+):
+    codec = PickleCodec
+    return cache_data(
+        expire, vary, codec,
+        cache_control_builder=image_response_cache_control_builder,
+        prefix=CACHE_KEY_PREFIX_RESPONSE
     )
