@@ -37,14 +37,30 @@ HEADER_PIMS_CACHE = "X-Pims-Cache"
 CACHE_KEY_PIMS_VERSION = "PIMS_VERSION"
 
 
+def stable_hash(data: bytes) -> str:
+    """
+    Compute a stable and deterministic hash of the given bytes.
+
+    Python `hash()` function CANNOT BE USED as it is salted by default, and thus do not produce the same value in
+    different processes. See https://docs.python.org/3.8/reference/datamodel.html#object.__hash__
+    """
+    return hashlib.md5(data, usedforsecurity=False).hexdigest()
+
+
+def _hashable_value(v: Any, separator: str = ":") -> str:
+    if type(v) == list:
+        v = ','.join(map(_hashable_value, v))
+    if isinstance(v, Enum):
+        v = v.value
+    elif type(v) == dict:
+        v = _hashable_dict(v, separator)
+
+    return str(v)
+
 def _hashable_dict(d: dict, separator: str = ":"):
     hashable = str()
     for k, v in d.items():
-        if isinstance(v, Enum):
-            v = v.value
-        elif type(v) == dict:
-            v = _hashable_dict(v, separator)
-        hashable += f"{separator}{k}={str(v)}"
+        hashable += f"{separator}{k}={_hashable_value(v, separator)}"
     return hashable
 
 
@@ -60,7 +76,7 @@ def all_kwargs_key_builder(
 
     hashable = f"{func.__module__}:{func.__name__}" \
                f"{_hashable_dict(copy_kwargs, ':')}"
-    hashed = hashlib.md5(hashable.encode()).hexdigest()
+    hashed = stable_hash(hashable.encode())
     cache_key = f"{prefix}:{hashed}"
     return cache_key
 
@@ -286,7 +302,7 @@ def cache_data(
                         cache_control_builder or default_cache_control_builder
                     response.headers[HEADER_CACHE_CONTROL] = \
                         cache_control_builder(ttl=ttl)
-                    etag = f"W/{hash(encoded)}"
+                    etag = f"W/{stable_hash(encoded)}"
                     response.headers[HEADER_ETAG] = etag
                     response.headers[HEADER_PIMS_CACHE] = "HIT"
                     if if_none_match == etag:
@@ -313,7 +329,7 @@ def cache_data(
                     cache_control_builder or default_cache_control_builder
                 response.headers[HEADER_CACHE_CONTROL] = \
                     cache_control_builder(ttl=expire)
-                etag = f"W/{hash(encoded)}"
+                etag = f"W/{stable_hash(encoded)}"
                 response.headers[HEADER_ETAG] = etag
                 response.headers[HEADER_PIMS_CACHE] = "MISS"
                 add_background_task(response, _save, cache_key, encoded, expire)
