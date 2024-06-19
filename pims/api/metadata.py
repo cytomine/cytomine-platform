@@ -538,7 +538,8 @@ class ImageFullInfo(BaseModel):
 @router.get(
     '/file/{filepath:path}/info',
     response_model=FileInfo,
-    tags=api_tags
+    tags=api_tags,
+    response_class=FastJsonResponse
 )
 async def show_file(
     path: Path = Depends(filepath_parameter),
@@ -732,7 +733,8 @@ class MetadataCollection(CollectionSize):
 @router.get(
     '/image/{filepath:path}/metadata',
     response_model=MetadataCollection,
-    tags=api_tags
+    tags=api_tags,
+    response_class=FastJsonResponse
 )
 async def show_metadata(
     path: Path = Depends(imagepath_parameter)
@@ -802,7 +804,8 @@ class MetadataAnnotationCollection(CollectionSize):
 @router.get(
     '/image/{filepath:path}/metadata/annotations',
     response_model=MetadataAnnotationCollection,
-    tags=api_tags
+    tags=api_tags,
+    response_class=FastJsonResponse
 )
 async def show_metadata_annotations(
     path: Path = Depends(imagepath_parameter)
@@ -842,7 +845,8 @@ async def list_representations(
 @router.get(
     '/image/{filepath:path}/info/representations/{representation}',
     response_model=RepresentationInfo,
-    tags=api_tags
+    tags=api_tags,
+    response_class=FastJsonResponse
 )
 async def show_representation(
     representation: FileRole,
