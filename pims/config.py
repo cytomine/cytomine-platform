@@ -46,11 +46,6 @@ class ReadableSettings(BaseSettings):
     # The max-age to set in HTTP Cache-Control for cached image responses.
     image_response_cache_control_max_age: int = 60 * 60 * 24
 
-    # This memory LRU cache is only helpful in development. It must never be used in production.
-    # If set and the actual pims-cache is disabled, it replaces it by an in-memory cache for image metadata.
-    memory_lru_cache_image_metadata: bool = False
-    memory_lru_cache_capacity: int = 50
-
     task_queue_enabled: bool = True
     task_queue_url: str = "rabbitmq:5672"
 
