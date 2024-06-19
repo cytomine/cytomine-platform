@@ -162,6 +162,9 @@ class RedisBackend:
         key = f"{namespace}:{key}" if namespace else key
         return await self.redis.exists(key)
 
+    async def close(self):
+        return await self.redis.aclose()
+
 
 class PIMSCache:
     _init = False
