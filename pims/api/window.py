@@ -55,7 +55,6 @@ from pims.utils.iterables import check_array_size_parameters, ensure_list
 
 router = APIRouter(prefix=get_settings().api_base_path)
 api_tags = ['Windows']
-cache_ttl = get_settings().cache_ttl_window
 
 
 @router.post('/image/{filepath:path}/window{extension:path}', tags=api_tags)
@@ -87,7 +86,6 @@ async def show_window_with_body(
 
 
 @cache_image_response(
-    expire=cache_ttl,
     vary=['config', 'request', 'response']
 )
 async def _show_window(

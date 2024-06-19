@@ -43,7 +43,6 @@ from typing_extensions import Annotated
 
 router = APIRouter(prefix=get_settings().api_base_path)
 api_tags = ['Metadata']
-cache_associated_ttl = get_settings().cache_ttl_thumb
 
 
 class SingleFileInfo(BaseModel):
@@ -683,7 +682,7 @@ async def show_associated_image(
     )
 
 
-@cache_image_response(expire=cache_associated_ttl, vary=['config', 'request', 'response'])
+@cache_image_response(vary=['config', 'request', 'response'])
 async def _show_associated_image(
     request: Request, response: Response,  # required for @cache  # noqa
     path: Path,

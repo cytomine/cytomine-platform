@@ -43,7 +43,6 @@ from pims.utils.iterables import ensure_list
 
 router = APIRouter(prefix=get_settings().api_base_path)
 api_tags = ['Annotations']
-cache_ttl = get_settings().cache_ttl_window
 
 
 @router.post('/image/{filepath:path}/annotation/mask{extension:path}', tags=api_tags)
@@ -79,7 +78,6 @@ async def show_mask(
 
 
 @cache_image_response(
-    expire=cache_ttl,
     vary=['config', 'request', 'response'],
     supported_mimetypes=PROCESSING_MIMETYPES
 )

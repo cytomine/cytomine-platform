@@ -20,8 +20,7 @@ from enum import Enum
 from pathlib import Path as _Path
 from typing import Callable, List, TYPE_CHECKING, Union
 
-from pims.cache import IMAGE_CACHE
-from pims.cache.redis import PIMSCache, PickleCodec
+from pims.cache.redis import PIMSCache, PickleCodec, CACHE_KEY_PREFIX_IMAGE_FORMAT_METADATA, stable_hash
 from pims.config import get_settings
 from pims.formats.utils.factories import (
     FormatFactory, SpatialReadableFormatFactory,
@@ -261,6 +260,32 @@ class Path(PlatformPath, _Path, SafelyCopiable):
         )
         return upload
 
+    async def _get_cached_representation(self, representation: FileRole) -> Union[Image, None]:
+        if representation not in (FileRole.ORIGINAL, FileRole.SPATIAL):
+            raise ValueError(f"Cached representation {representation} is not supported.")
+
+        if not PIMSCache.is_enabled() and get_settings().cache_image_format_metadata:
+            return self.get_representation(representation)
+
+        processed_root = self.processed_root()
+        if not processed_root.exists():
+            return None
+
+        stem = ORIGINAL_STEM if representation == FileRole.ORIGINAL else SPATIAL_STEM
+        stem_path = str(processed_root / Path(stem))
+        cache_key = stable_hash(stem_path.encode())
+        cached = await PIMSCache.get_backend().get(cache_key, namespace=CACHE_KEY_PREFIX_IMAGE_FORMAT_METADATA)
+        if cached is not None:
+            decoded = PickleCodec.decode(cached)
+            from pims.files.image import Image
+            return Image(f"{stem_path}.{decoded.get_identifier()}", format=decoded)
+
+        image = self.get_representation(representation)
+        await PIMSCache.get_backend().set(
+            cache_key, PickleCodec.encode(image.format.serialize()), namespace=CACHE_KEY_PREFIX_IMAGE_FORMAT_METADATA
+        )
+        return image
+
     def get_original(self) -> Union[Image, None]:
         if not self.processed_root().exists():
             return None
@@ -273,23 +298,7 @@ class Path(PlatformPath, _Path, SafelyCopiable):
         return Image(original, factory=FormatFactory(match_on_ext=True)) if original else None
 
     async def get_cached_original(self) -> Union[Image, None]:
-        if not PIMSCache.is_enabled():
-            return self.get_original()
-
-        processed_root = self.processed_root()
-        if not processed_root.exists():
-            return None
-
-        cache_key = str(processed_root / Path(ORIGINAL_STEM))
-        cached = await PIMSCache.get_backend().get(cache_key)
-        if cached is not None:
-            decoded = PickleCodec.decode(cached)
-            from pims.files.image import Image
-            return Image(f"{cache_key}.{decoded.get_identifier()}", format=decoded)
-
-        image = self.get_original()
-        await PIMSCache.get_backend().set(cache_key, PickleCodec.encode(image.format.serialize()))
-        return image
+        return await self._get_cached_representation(FileRole.ORIGINAL)
 
     def get_spatial(self) -> Union[Image, None]:
         processed_root = self.processed_root()
@@ -309,42 +318,7 @@ class Path(PlatformPath, _Path, SafelyCopiable):
             return image
 
     async def get_cached_spatial(self) -> Union[Image, None]:
-        if not PIMSCache.is_enabled():
-            if get_settings().memory_lru_cache_image_metadata:
-                return self._get_memory_cached_spatial()
-            return self.get_spatial()
-
-        processed_root = self.processed_root()
-        if not processed_root.exists():
-            return None
-
-        cache_key = str(processed_root / Path(SPATIAL_STEM))
-        cached = await PIMSCache.get_backend().get(cache_key)
-        if cached is not None:
-            decoded = PickleCodec.decode(cached)
-            from pims.files.image import Image
-            return Image(f"{cache_key}.{decoded.get_identifier()}", format=decoded)
-
-        image = self.get_spatial()
-        await PIMSCache.get_backend().set(cache_key, PickleCodec.encode(image.format.serialize()))
-        return image
-
-
-    def _get_memory_cached_spatial(self) -> Union[Image, None]:
-        processed_root = self.processed_root()
-        if not processed_root.exists():
-            return None
-
-        cache_key = str(processed_root / Path(SPATIAL_STEM))
-        cached = IMAGE_CACHE.get(cache_key)
-        if cached is not None:
-            from pims.files.image import Image
-            return Image(f"{cache_key}.{cached.get_identifier()}", format=cached)
-
-        image = self.get_spatial()
-        IMAGE_CACHE.put(cache_key, image.format.serialize())
-        return image
-
+        return await self._get_cached_representation(FileRole.SPATIAL)
 
     def get_spectral(self) -> Union[Image, None]:
         if not self.processed_root().exists():
@@ -378,7 +352,7 @@ class Path(PlatformPath, _Path, SafelyCopiable):
         ]
         return [representation for representation in representations if representation is not None]
 
-    def get_representation(self, role: FileRole) -> Union[Path, None]:
+    def get_representation(self, role: FileRole) -> Union[Path, Image, None]:
         if role == FileRole.UPLOAD:
             return self.get_upload()
         elif role == FileRole.ORIGINAL:

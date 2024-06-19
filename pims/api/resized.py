@@ -49,7 +49,6 @@ from pims.utils.iterables import check_array_size_parameters, ensure_list
 
 router = APIRouter(prefix=get_settings().api_base_path)
 api_tags = ['Resized']
-cache_ttl = get_settings().cache_ttl_resized
 
 
 @router.get('/image/{filepath:path}/resized{extension:path}', tags=api_tags)
@@ -114,7 +113,6 @@ async def show_resized_with_body(
 
 
 @cache_image_response(
-    expire=cache_ttl,
     vary=['config', 'request', 'response'],
     supported_mimetypes=PROCESSING_MIMETYPES
 )

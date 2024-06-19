@@ -14,6 +14,7 @@
 
 import hashlib
 import inspect
+import logging
 import pickle
 from enum import Enum
 from functools import partial, wraps
@@ -36,6 +37,11 @@ HEADER_IF_NONE_MATCH = "If-None-Match"
 HEADER_PIMS_CACHE = "X-Pims-Cache"
 CACHE_KEY_PIMS_VERSION = "PIMS_VERSION"
 
+CACHE_KEY_PREFIX_IMAGE_FORMAT_METADATA = "pims-fmd"
+CACHE_KEY_PREFIX_IMAGE_RESPONSE = "pims-img"
+
+
+log = logging.getLogger("pims.app")
 
 def stable_hash(data: bytes) -> str:
     """
@@ -44,7 +50,7 @@ def stable_hash(data: bytes) -> str:
     Python `hash()` function CANNOT BE USED as it is salted by default, and thus do not produce the same value in
     different processes. See https://docs.python.org/3.8/reference/datamodel.html#object.__hash__
     """
-    return hashlib.md5(data, usedforsecurity=False).hexdigest()
+    return hashlib.md5(data).hexdigest()
 
 
 def _hashable_value(v: Any, separator: str = ":") -> str:
@@ -130,14 +136,17 @@ class RedisBackend:
     def __init__(self, redis_url: str):
         self.redis = aioredis.from_url(redis_url, socket_connect_timeout=10)
 
-    async def get_with_ttl(self, key: str) -> Tuple[int, str]:
+    async def get_with_ttl(self, key: str, namespace: str = None) -> Tuple[int, str]:
         async with self.redis.pipeline(transaction=True) as pipe:
+            key = f"{namespace}:{key}" if namespace else key
             return await (pipe.ttl(key).get(key).execute())
 
-    async def get(self, key) -> str:
+    async def get(self, key, namespace: str = None) -> str:
+        key = f"{namespace}:{key}" if namespace else key
         return await self.redis.get(key)
 
-    async def set(self, key: str, value: str, expire: int = None):
+    async def set(self, key: str, value: str, expire: int = None, namespace: str = None):
+        key = f"{namespace}:{key}" if namespace else key
         return await self.redis.set(key, value, ex=expire)
 
     async def clear(self, namespace: str = None, key: str = None) -> int:
@@ -149,31 +158,32 @@ class RedisBackend:
         elif key:
             return await self.redis.delete(key)
 
-    async def exists(self, key) -> bool:
+    async def exists(self, key: str, namespace: str = None) -> bool:
+        key = f"{namespace}:{key}" if namespace else key
         return await self.redis.exists(key)
 
 
 class PIMSCache:
+    _init = False
     _enabled = False
     _backend = None
-    _prefix = None
-    _expire = None
-    _init = False
-    _codec = None
-    _key_builder = None
+    _default_prefix = None
+    _default_expire = None
+    _default_codec = None
+    _default_key_builder = None
 
     @classmethod
     async def init(
-        cls, backend, prefix: str = "", expire: int = None
+        cls, backend, default_prefix: str = "", default_expire: int = None
     ):
         if cls._init:
             return
         cls._init = True
         cls._backend = backend
-        cls._prefix = prefix
-        cls._expire = expire
-        cls._codec = PickleCodec
-        cls._key_builder = all_kwargs_key_builder
+        cls._default_prefix = default_prefix
+        cls._default_expire = default_expire
+        cls._default_codec = PickleCodec
+        cls._default_key_builder = all_kwargs_key_builder
 
         try:
             await cls._backend.get(CACHE_KEY_PIMS_VERSION)
@@ -196,24 +206,24 @@ class PIMSCache:
         return cls._enabled
 
     @classmethod
-    def get_prefix(cls):
-        return cls._prefix
+    def get_default_prefix(cls):
+        return cls._default_prefix
 
     @classmethod
-    def get_expire(cls):
-        return cls._expire
+    def get_default_expire(cls):
+        return cls._default_expire
 
     @classmethod
-    def get_codec(cls):
-        return cls._codec
+    def get_default_codec(cls):
+        return cls._default_codec
 
     @classmethod
-    def get_key_builder(cls):
-        return cls._key_builder
+    def get_default_key_builder(cls):
+        return cls._default_key_builder
 
     @classmethod
     async def clear(cls, namespace: str = None, key: str = None):
-        namespace = cls._prefix + ":" + namespace if namespace else None
+        namespace = cls._default_prefix + ":" + namespace if namespace else None
         return await cls._backend.clear(namespace, key)
 
 
@@ -223,7 +233,7 @@ async def startup_cache(pims_version):
         return
 
     await PIMSCache.init(
-        RedisBackend(settings.cache_url), prefix="pims-cache",
+        RedisBackend(settings.cache_url), default_prefix="pims-cache",
     )
 
     # Flush the cache if persistent and PIMS version has changed.
@@ -232,8 +242,17 @@ async def startup_cache(pims_version):
     if cached_version is not None:
         cached_version = cached_version.decode('utf-8')
     if cached_version != pims_version:
-        await cache.clear(PIMSCache.get_prefix())
+        log.info("PIMS version changed. Clearing PIMS cache.")
+        await cache.clear()
         await cache.set(CACHE_KEY_PIMS_VERSION, pims_version)
+
+    if not settings.cache_image_responses:
+        log.info("[DEBUG MODE ONLY] Caching image responses is disabled. Clearing related keys.")
+        await cache.clear(CACHE_KEY_PREFIX_IMAGE_RESPONSE)
+
+    if not settings.cache_image_format_metadata:
+        log.info("[DEBUG MODE ONLY] Caching image format metadata is disabled. Clearing related keys.")
+        await cache.clear(CACHE_KEY_PREFIX_IMAGE_FORMAT_METADATA)
 
 
 def default_cache_control_builder(ttl=0):
@@ -250,12 +269,17 @@ def default_cache_control_builder(ttl=0):
     return ','.join(params)
 
 
+def image_response_cache_control_builder(ttl=0):
+    return default_cache_control_builder(ttl=get_settings().image_response_cache_control_max_age)
+
+
 def cache_data(
     expire: int = None,
     vary: Optional[List] = None,
     codec: Type[Codec] = None,
     key_builder: Callable = None,
-    cache_control_builder: Callable = None
+    cache_control_builder: Callable = None,
+    prefix: str = None
 ):
     def wrapper(func: Callable):
         @wraps(func)
@@ -265,6 +289,7 @@ def cache_data(
             nonlocal codec
             nonlocal key_builder
             nonlocal cache_control_builder
+            nonlocal prefix
             signature = inspect.signature(func)
             bound_args = signature.bind_partial(*args, **kwargs)
             bound_args.apply_defaults()
@@ -276,13 +301,13 @@ def cache_data(
                     (request and request.headers.get(HEADER_CACHE_CONTROL) == "no-store"):
                 return await exec_func_async(func, *args, **kwargs)
 
-            expire = expire or PIMSCache.get_expire()
-            codec = codec or PIMSCache.get_codec()
-            key_builder = key_builder or PIMSCache.get_key_builder()
-            backend = PIMSCache.get_backend()
-            prefix = PIMSCache.get_prefix()
-
+            expire = expire or PIMSCache.get_default_expire()
+            codec = codec or PIMSCache.get_default_codec()
+            key_builder = key_builder or PIMSCache.get_default_key_builder()
+            prefix = prefix or PIMSCache.get_default_prefix()
             cache_key = key_builder(func, all_kwargs, vary, prefix)
+
+            backend = PIMSCache.get_backend()
             ttl, encoded = await backend.get_with_ttl(cache_key)
             if not request:
                 if encoded is not None:
@@ -291,7 +316,7 @@ def cache_data(
                 encoded = codec.encode(data)
                 await backend.set(
                     cache_key, encoded,
-                    expire or PIMSCache.get_expire()
+                    expire or PIMSCache.get_default_expire()
                 )
                 return data
 
@@ -362,4 +387,8 @@ def cache_image_response(
         _image_response_key_builder, supported_mimetypes=supported_mimetypes
     )
     codec = PickleCodec
-    return cache_data(expire, vary, codec, key_builder)
+    return cache_data(
+        expire, vary, codec, key_builder,
+        image_response_cache_control_builder,
+        prefix=CACHE_KEY_PREFIX_IMAGE_RESPONSE
+    )
