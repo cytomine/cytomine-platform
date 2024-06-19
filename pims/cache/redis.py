@@ -11,7 +11,7 @@
 #  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  * See the License for the specific language governing permissions and
 #  * limitations under the License.
-
+import gc
 import hashlib
 import inspect
 import logging
@@ -20,6 +20,7 @@ from enum import Enum
 from functools import partial, wraps
 from typing import Any, Callable, List, Optional, Tuple, Type
 
+from fastapi_utils.tasks import repeat_every
 from redis import asyncio as aioredis
 from starlette.responses import Response
 
@@ -27,6 +28,8 @@ from pims.api.utils.mimetype import VISUALISATION_MIMETYPES, get_output_format
 from pims.config import get_settings
 from pims.utils.background_task import add_background_task
 from pims.utils.concurrency import exec_func_async
+
+from .. import __version__
 
 # Note: Parts of this implementation are inspired from
 # https://github.com/long2ice/fastapi-cache
@@ -39,6 +42,8 @@ CACHE_KEY_PIMS_VERSION = "PIMS_VERSION"
 
 CACHE_KEY_PREFIX_IMAGE_FORMAT_METADATA = "pims-fmd"
 CACHE_KEY_PREFIX_IMAGE_RESPONSE = "pims-img"
+
+MANAGE_CACHE_INTERVAL = 60 * 5 # in seconds
 
 
 log = logging.getLogger("pims.app")
@@ -256,6 +261,27 @@ async def startup_cache(pims_version):
     if not settings.cache_image_format_metadata:
         log.info("[DEBUG MODE ONLY] Caching image format metadata is disabled. Clearing related keys.")
         await cache.clear(CACHE_KEY_PREFIX_IMAGE_FORMAT_METADATA)
+
+
+@repeat_every(seconds=MANAGE_CACHE_INTERVAL, wait_first=MANAGE_CACHE_INTERVAL)
+async def manage_cache() -> None:
+    # As cache as an LRU policy, we need to periodically update the cache key with the PIMS VERSION
+    gc.collect()
+    settings = get_settings()
+    if not settings.cache_enabled:
+        return
+
+    cache = PIMSCache.get_cache()
+    await cache.set(CACHE_KEY_PIMS_VERSION, __version__)
+
+
+async def shutdown_cache() -> None:
+    settings = get_settings()
+    if not settings.cache_enabled:
+        return
+
+    await PIMSCache.get_backend().close()
+    log.info("Gracefully shutdown pims cache.")
 
 
 def default_cache_control_builder(ttl=0):
