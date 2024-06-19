@@ -38,8 +38,8 @@ Feature: [URS00003-TASK] Provision a task run
       | com.cytomine.dummy.identity.geometry              | 1.0.0        | /task/id/runs                |
       | com.cytomine.dummy.identity.image                 | 1.0.0        | /task/namespace/version/runs |
       | com.cytomine.dummy.identity.image                 | 1.0.0        | /task/id/runs                |
-      | com.cytomine.dummy.identity.array.integer         | 1.0.0        | /task/namespace/version/runs |
-      | com.cytomine.dummy.identity.array.integer         | 1.0.0        | /task/id/runs                |
+      | com.cytomine.dummy.identity.array.integer         | 0.1.0        | /task/namespace/version/runs |
+      | com.cytomine.dummy.identity.array.integer         | 0.1.0        | /task/id/runs                |
 
   Scenario Outline: successful provisioning of a task run with one input parameter using provisioning endpoint
   See "src/main/resources/spec/api/openapi_spec_v0.1.0.yml" file, in particular the paths:
