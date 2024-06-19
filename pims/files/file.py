@@ -18,7 +18,7 @@ import shutil
 from datetime import datetime
 from enum import Enum
 from pathlib import Path as _Path
-from typing import Callable, List, TYPE_CHECKING, Union, Optional, Tuple
+from typing import Callable, List, Union, Optional, Tuple, Type
 
 import numpy as np
 from pint import Quantity
@@ -34,16 +34,16 @@ from pims.formats.utils.factories import (
     FormatFactory, SpatialReadableFormatFactory,
     SpectralReadableFormatFactory
 )
+from pims.formats.utils.histogram import HistogramReaderInterface, PlaneIndex
 from pims.formats.utils.structures.annotations import ParsedMetadataAnnotation
 from pims.formats.utils.structures.metadata import ImageChannel, ImageObjective, ImageMicroscope, ImageAssociated, \
     MetadataStore
 from pims.formats.utils.structures.pyramid import Pyramid
 from pims.processing.adapters import RawImagePixels
+from pims.processing.histograms import HISTOGRAM_FORMATS
+from pims.processing.histograms.format import HistogramFormat
 from pims.processing.region import Tile, Region
 from pims.utils.copy import SafelyCopiable
-
-if TYPE_CHECKING:
-    from pims.files.histogram import Histogram
 
 PROCESSED_DIR = "processed"
 EXTRACTED_DIR = "extracted"
@@ -351,7 +351,6 @@ class Path(PlatformPath, _Path, SafelyCopiable):
             None
         )
 
-        from pims.files.histogram import Histogram
         return Histogram(histogram) if histogram else None
 
     def get_representations(self) -> List[Path]:
@@ -914,3 +913,59 @@ class Image(Path):
 
     def __del__(self):
         self.close()
+
+
+class Histogram(Path, HistogramReaderInterface):
+    def __init__(self, *pathsegments, format: Type[HistogramFormat] = None):
+        super().__init__(*pathsegments)
+
+        _format = None
+        if format:
+            _format = format(Path(self))
+        else:
+            for possible_format in HISTOGRAM_FORMATS:
+                _format = possible_format.match(Path(self))
+                if _format is not None:
+                    break
+
+        if _format is None:
+            raise NoMatchingFormatProblem(Path(self))
+        else:
+            self._format = _format
+
+    def type(self) -> HistogramType:
+        return self._format.type()
+
+    def image_bounds(self) -> Tuple[int, int]:
+        """Intensity bounds on the whole image (all planes merged)."""
+        return self._format.image_bounds()
+
+    def image_histogram(self, squeeze: bool = True) -> np.ndarray:
+        """Intensity histogram on the whole image (all planes merged)."""
+        return self._format.image_histogram()
+
+    def channels_bounds(self) -> List[Tuple[int, int]]:
+        """Intensity bounds for every channels."""
+        return self._format.channels_bounds()
+
+    def channel_bounds(self, c: int) -> Tuple[int, int]:
+        """Intensity bounds for a channel."""
+        return self._format.channel_bounds(c)
+
+    def channel_histogram(self, c: PlaneIndex, squeeze: bool = True) -> np.ndarray:
+        """Intensity histogram(s) for one of several channel(s)"""
+        return self._format.channel_histogram(c)
+
+    def planes_bounds(self) -> List[Tuple[int, int]]:
+        """Intensity bounds for every planes."""
+        return self._format.planes_bounds()
+
+    def plane_bounds(self, c: int, z: int, t: int) -> Tuple[int, int]:
+        """Intensity bounds for a plane."""
+        return self._format.plane_bounds(c, z, t)
+
+    def plane_histogram(
+        self, c: PlaneIndex, z: PlaneIndex, t: PlaneIndex, squeeze: bool = True
+    ) -> np.ndarray:
+        """Intensity histogram(s) for one or several plane(s)."""
+        return self._format.plane_histogram(c, z, t)

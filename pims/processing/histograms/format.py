@@ -14,7 +14,7 @@
 from __future__ import annotations
 
 from abc import ABC
-from typing import List, Tuple, Union
+from typing import List, Tuple, Union, TYPE_CHECKING
 
 import numpy as np
 import zarr as zarr
@@ -22,8 +22,10 @@ from zarr.errors import _BaseZarrError as ZarrError  # noqa
 
 from pims.api.utils.models import HistogramType
 from pims.cache import cached_property
-from pims.files.file import Path
 from pims.formats.utils.histogram import HistogramReaderInterface, PlaneIndex
+
+if TYPE_CHECKING:
+    from pims.files.file import Path
 
 ZHF_PER_PLANE = "plane"
 ZHF_PER_CHANNEL = "channel"
