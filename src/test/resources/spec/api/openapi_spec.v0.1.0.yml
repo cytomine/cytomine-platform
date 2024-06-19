@@ -220,7 +220,7 @@ paths:
       responses: *post-task-run-responses
 
   
-  /task-runs/{run_id}/input-provisions/{param_name}/{+indexes}:
+  /task-runs/{run_id}/input-provisions/{param_name}/{indexes}:
     put:
       summary: Single array item provisioning   
       operationId: provisionSingleArrayItem
@@ -238,6 +238,13 @@ paths:
           schema:
             $ref: "#/components/schemas/param_name_type"
           description: name of the parameter
+        - in: path
+          name: indexes
+          required: true
+          description: dynamic indexes
+          schema:      
+            type: string
+            format: "[1-9][0-9]*(?:/[1-9][0-9]*)*"
       requestBody:
         description: parameters to provision and their primitive (or collection of primitive) values
         content:
@@ -687,7 +694,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/generic_error'
   
-  /task-runs/{run_id}/inputs/{param_name}/{+indexes}:
+  /task-runs/{run_id}/inputs/{param_name}/{indexes}:
     get:
       summary: Get task run input array items 
       operationId: getTaskRunInputArrayItems
@@ -705,6 +712,13 @@ paths:
           schema:
             $ref: "#/components/schemas/param_name_type"
           description: name of the parameter
+        - in: path
+          name: indexes
+          required: true
+          description: dynamic indexes
+          schema:      
+            type: string
+            format: "[1-9][0-9]*(?:/[1-9][0-9]*)*"
       responses:
         '200':
           description: task run inputs
@@ -731,7 +745,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/generic_error'
 
-  /task-runs/{run_id}/outputs/{param_name}/{+indexes}:
+  /task-runs/{run_id}/outputs/{param_name}/{indexes}:
     get:
       summary: Get task run output array items
       operationId: getTaskRunOutputArrayItems
@@ -749,6 +763,14 @@ paths:
           schema:
             $ref: "#/components/schemas/param_name_type"
           description: name of the parameter
+        - in: path
+          name: indexes
+          required: true
+          description: dynamic indexes
+          schema:      
+            type: string
+            format: "[1-9][0-9]*(?:/[1-9][0-9]*)*"
+
       responses:
         '200':
           description: task run outputs
