@@ -52,7 +52,6 @@ from pims.utils.iterables import check_array_size_parameters, ensure_list
 router = APIRouter(prefix=get_settings().api_base_path)
 tile_tags = ['Tiles']
 norm_tile_tags = ['Normalized tiles']
-cache_ttl = get_settings().cache_ttl_tile
 
 
 @router.post('/image/{filepath:path}/tile{extension:path}', tags=tile_tags)
@@ -111,7 +110,7 @@ async def show_tile_with_body(
     )
 
 
-@cache_image_response(expire=cache_ttl, vary=['config', 'request', 'response'])
+@cache_image_response()
 async def _show_tile(
     request: Request, response: Response,  # required for @cache  # noqa
     path: Path,

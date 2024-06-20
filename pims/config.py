@@ -36,17 +36,17 @@ class ReadableSettings(BaseSettings):
     output_size_limit: int = 10000
     internal_url_core: str = "http://cytomine.local"
 
+    # Must be TRUE in production.
     cache_enabled: bool = True
     cache_url: str = "redis://pims-cache:6379"
-    cache_ttl_thumb: int = 60 * 60 * 24 * 15
-    cache_ttl_resized: int = 60 * 60 * 24 * 15
-    cache_ttl_tile: int = 60 * 60 * 24
-    cache_ttl_window: int = 60 * 60 * 24
-
-    # This memory LRU cache is only helpful in development. It must never be used in production.
-    # If set and the actual pims-cache is disabled, it replaces it by an in-memory cache for image metadata.
-    memory_lru_cache_image_metadata: bool = False
-    memory_lru_cache_capacity: int = 50
+    # Must be TRUE in production. Helpful in dev or debug to disable caching of image metadata without disabling the cache.
+    cache_image_format_metadata: bool = True
+    # Must be TRUE in production. Helpful in dev or debug to disable caching of image responses without disabling the cache.
+    cache_image_responses: bool = True
+    # Must be TRUE in production.
+    cache_responses: bool = True
+    # The max-age to set in HTTP Cache-Control for cached image responses.
+    image_response_cache_control_max_age: int = 60 * 60 * 24
 
     task_queue_enabled: bool = True
     task_queue_url: str = "rabbitmq:5672"
