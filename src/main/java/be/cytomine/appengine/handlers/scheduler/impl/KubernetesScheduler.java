@@ -108,7 +108,7 @@ public class KubernetesScheduler implements SchedulerHandler {
         String outputFolder = labels.get("outputFolder");
 
         // Post container commands
-        String installDeps = "apk --no-cache add curl zip";
+        String installDeps = "apk update && apk --no-cache add curl zip";
         String sendOutputs = "curl -X POST -F 'outputs=@outputs.zip' " + url + "/outputs.zip";
         String zipOutputs = "zip -rj outputs.zip " + outputFolder;
         String and = " && ";
@@ -184,7 +184,7 @@ public class KubernetesScheduler implements SchedulerHandler {
 
         // Pre container commands
         String url = baseUrl + runId;
-        String installDeps = "apk --no-cache add curl zip";
+        String installDeps = "apk update && apk --no-cache add curl zip";
         String fetchInputs = "curl -L -o inputs.zip " + url + "/inputs.zip";
         String unzipInputs = "unzip -o inputs.zip -d " + task.getInputFolder();
         String and = " && ";
