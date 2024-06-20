@@ -305,7 +305,7 @@ def image_response_cache_control_builder(ttl=0):
 
 def cache_data(
     expire: int = None,
-    vary: Optional[List] = None,
+    ignored_variable_parameters: Optional[List] = None,
     codec: Type[Codec] = None,
     key_builder: Callable = None,
     cache_control_builder: Callable = None,
@@ -315,7 +315,7 @@ def cache_data(
         @wraps(func)
         async def inner(*args, **kwargs):
             nonlocal expire
-            nonlocal vary
+            nonlocal ignored_variable_parameters
             nonlocal codec
             nonlocal key_builder
             nonlocal cache_control_builder
@@ -335,7 +335,7 @@ def cache_data(
             codec = codec or PIMSCache.get_default_codec()
             key_builder = key_builder or PIMSCache.get_default_key_builder()
             prefix = prefix or PIMSCache.get_default_prefix()
-            cache_key = key_builder(func, all_kwargs, vary, prefix)
+            cache_key = key_builder(func, all_kwargs, ignored_variable_parameters, prefix)
 
             backend = PIMSCache.get_backend()
             ttl, encoded = await backend.get_with_ttl(cache_key)
@@ -408,9 +408,21 @@ def cache_data(
 
 def cache_image_response(
     expire: int = None,
-    vary: Optional[List] = None,
+    ignored_variable_parameters: Optional[List] = None,
     supported_mimetypes=None
 ):
+    """
+    Cache an image response. An image response is expected to be an instance of
+    `from starlette.responses import Response`.
+
+    `ignored_variable_parameters`is an optional list of parameters of the decorated function that shouldn't
+    be used for cache key.
+    """
+
+    if ignored_variable_parameters is None:
+        ignored_variable_parameters = []
+    ignored_variable_parameters += ['config', 'request', 'response']
+
     if supported_mimetypes is None:
         supported_mimetypes = VISUALISATION_MIMETYPES
     key_builder = partial(
@@ -418,7 +430,7 @@ def cache_image_response(
     )
     codec = PickleCodec
     return cache_data(
-        expire, vary, codec, key_builder,
+        expire, ignored_variable_parameters, codec, key_builder,
         image_response_cache_control_builder,
         prefix=CACHE_KEY_PREFIX_IMAGE_RESPONSE
     )
@@ -426,11 +438,15 @@ def cache_image_response(
 
 def cache_response(
     expire: int = None,
-    vary: Optional[List] = None,
+    ignored_variable_parameters: Optional[List] = None,
 ):
+    if ignored_variable_parameters is None:
+        ignored_variable_parameters = []
+    ignored_variable_parameters += ['config', 'request', 'response']
+
     codec = PickleCodec
     return cache_data(
-        expire, vary, codec,
+        expire, ignored_variable_parameters, codec,
         cache_control_builder=image_response_cache_control_builder,
         prefix=CACHE_KEY_PREFIX_RESPONSE
     )

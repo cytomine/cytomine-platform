@@ -693,7 +693,7 @@ async def show_associated_image(
     )
 
 
-@cache_image_response(vary=['config', 'request', 'response'])
+@cache_image_response()
 async def _show_associated_image(
     request: Request, response: Response,  # required for @cache  # noqa
     path: Path,
@@ -736,7 +736,7 @@ class MetadataCollection(CollectionSize):
     tags=api_tags,
     response_class=FastJsonResponse
 )
-@cache_response(vary=['request', 'response'])
+@cache_response()
 async def show_metadata(
     request: Request, response: Response,  # noqa
     path: Path = Depends(imagepath_parameter)
