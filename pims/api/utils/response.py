@@ -113,7 +113,7 @@ class FastJsonResponse(ORJSONResponse):
 
     def default(self, o: Any):
         if isinstance(o, BaseModel):
-            obj_dict = o.dict(
+            obj_dict = o.model_dump(
                 include=self.include,  # type: ignore # in Pydantic
                 exclude=self.exclude,  # type: ignore # in Pydantic
                 by_alias=self.by_alias,
