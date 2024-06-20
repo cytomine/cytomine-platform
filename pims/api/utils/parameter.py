@@ -21,7 +21,7 @@ from pims.files.file import Path
 def filepath_parameter(
     filepath: str = PathParam(
         ..., description="The file path, relative to server base path.",
-        example='123/my-file.ext'
+        examples=['123/my-file.ext']
     ),
 ):
     path = Path.from_filepath(filepath)
@@ -33,7 +33,7 @@ def filepath_parameter(
 def imagepath_parameter(
     filepath: str = PathParam(
         ..., description="The file path, relative to server base path.",
-        example='123/my-file.ext'
+        examples=['123/my-file.ext']
     )
 ):
     path = Path.from_filepath(filepath)

@@ -78,7 +78,7 @@ class CollectionFileInfo(SingleFileInfo):
     )
 
 
-CollectionFileInfo.update_forward_refs()
+CollectionFileInfo.model_rebuild()
 
 
 class FileInfo(RootModel):
