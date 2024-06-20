@@ -1,19 +1,21 @@
-from PIL import Image
+import io
 import os
 import urllib.request
-from fastapi import APIRouter
-from pims.formats import FORMATS
-import io
-from pims.importer.importer import FileImporter
-from tests.utils.formats import info_test, thumb_test, resized_test, mask_test, crop_test, crop_null_annot_test, histogram_perimage_test
+
+import pytest
+from PIL import Image as PILImage
+
+from pims.api.utils.models import HistogramType
 from pims.files.file import (
-    EXTRACTED_DIR, HISTOGRAM_STEM, ORIGINAL_STEM, PROCESSED_DIR, Path,
-    SPATIAL_STEM, UPLOAD_DIR_PREFIX, Image
+    HISTOGRAM_STEM, ORIGINAL_STEM, Path,
+    SPATIAL_STEM, Image
 )
 from pims.formats.utils.factories import FormatFactory
-from pims.api.utils.models import HistogramType
+from pims.importer.importer import FileImporter
 from pims.processing.histograms.utils import build_histogram_file
-import pytest
+from tests.utils.formats import thumb_test, resized_test, mask_test, crop_test, crop_null_annot_test, \
+    histogram_perimage_test
+
 
 def get_image(path, filename):
     filepath = os.path.join(path, filename)
@@ -106,7 +108,7 @@ def test_tiff_norm_tile(client, image_path_tiff):
     response = client.get(f"/image/upload_test_tiff/{filename}/normalized-tile/zoom/3/ti/15", headers={"accept": "image/png"})
     assert response.status_code == 200
 
-    img_response = Image.open(io.BytesIO(response.content))
+    img_response = PILImage.open(io.BytesIO(response.content))
     width_resp, height_resp = img_response.size
 
     assert width_resp == 256
