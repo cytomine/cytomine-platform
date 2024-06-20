@@ -556,7 +556,9 @@ async def show_file(
     tags=api_tags,
     response_class=FastJsonResponse
 )
+@cache_response()
 async def show_info(
+    request: Request, response: Response , # noqa
     path: Path = Depends(imagepath_parameter)
 ):
     """
@@ -570,7 +572,7 @@ async def show_info(
         data["associated"] = AssociatedInfo.from_image(original)
         data["channels"] = ChannelsInfo.from_image(original)
         data["representations"] = await _get_representation_info_list(original)
-        return data
+        return FastJsonResponse(data)
 
 
 # IMAGE
@@ -581,7 +583,9 @@ async def show_info(
     tags=api_tags,
     response_class=FastJsonResponse
 )
+@cache_response()
 async def show_image(
+    request: Request, response: Response,  # noqa
     path: Path = Depends(imagepath_parameter)
 ):
     """
@@ -589,7 +593,7 @@ async def show_image(
     """
     with await path.get_cached_original() as original:
         check_representation_existence(original)
-        return ImageInfo.from_image(original)
+        return FastJsonResponse(ImageInfo.from_image(original))
 
 
 # CHANNELS
@@ -604,13 +608,17 @@ class ChannelsInfoCollection(CollectionSize):
     tags=api_tags,
     response_class=FastJsonResponse
 )
-async def show_channels(path: Path = Depends(imagepath_parameter)):
+@cache_response()
+async def show_channels(
+    request: Request, response: Response,  # noqa
+    path: Path = Depends(imagepath_parameter)
+):
     """
     Get image channel info
     """
     with await path.get_cached_original() as original:
         check_representation_existence(original)
-        return response_list(ChannelsInfo.from_image(original))
+        return FastJsonResponse(response_list(ChannelsInfo.from_image(original)))
 
 
 # PYRAMID
@@ -621,7 +629,9 @@ async def show_channels(path: Path = Depends(imagepath_parameter)):
     tags=api_tags,
     response_class=FastJsonResponse
 )
+@cache_response()
 async def show_normalized_pyramid(
+    request: Request, response: Response,  # noqa
     path: Path = Depends(imagepath_parameter)
 ):
     """
@@ -629,7 +639,7 @@ async def show_normalized_pyramid(
     """
     with await path.get_cached_original() as original:
         check_representation_existence(original)
-        return PyramidInfo.from_pyramid(original.normalized_pyramid)
+        return FastJsonResponse(PyramidInfo.from_pyramid(original.normalized_pyramid))
 
 
 # INSTRUMENT
@@ -640,7 +650,9 @@ async def show_normalized_pyramid(
     tags=api_tags,
     response_class=FastJsonResponse
 )
+@cache_response()
 async def show_instrument(
+    request: Request, response: Response,  # noqa
     path: Path = Depends(imagepath_parameter)
 ):
     """
@@ -648,7 +660,7 @@ async def show_instrument(
     """
     with await path.get_cached_original() as original:
         check_representation_existence(original)
-        return InstrumentInfo.from_image(original)
+        return FastJsonResponse(InstrumentInfo.from_image(original))
 
 
 # ASSOCIATED
@@ -663,7 +675,9 @@ class AssociatedInfoCollection(CollectionSize):
     tags=api_tags + ['Associated'],
     response_class=FastJsonResponse
 )
+@cache_response()
 async def show_associated(
+    request: Request, response: Response,  # noqa
     path: Path = Depends(imagepath_parameter)
 ):
     """
@@ -671,7 +685,7 @@ async def show_associated(
     """
     with await path.get_cached_original() as original:
         check_representation_existence(original)
-        return response_list(AssociatedInfo.from_image(original))
+        return FastJsonResponse(response_list(AssociatedInfo.from_image(original)))
 
 
 @router.get(
@@ -808,7 +822,9 @@ class MetadataAnnotationCollection(CollectionSize):
     tags=api_tags,
     response_class=FastJsonResponse
 )
+@cache_response()
 async def show_metadata_annotations(
+    request: Request, response: Response,  # noqa
     path: Path = Depends(imagepath_parameter)
 ):
     """
@@ -816,10 +832,10 @@ async def show_metadata_annotations(
     """
     with await path.get_cached_original() as original:
         check_representation_existence(original)
-        return response_list(
+        return FastJsonResponse(response_list(
             [MetadataAnnotation.from_metadata_annotation(a)
              for a in original.annotations]
-        )
+        ))
 
 
 # REPRESENTATIONS
