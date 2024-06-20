@@ -27,7 +27,7 @@ from pims.api.exceptions import NoMatchingFormatProblem
 from pims.api.utils.models import HistogramType
 from pims.cache import cached_property
 
-from pims.cache.redis import PIMSCache, PickleCodec, CACHE_KEY_PREFIX_IMAGE_FORMAT_METADATA, stable_hash
+from pims.cache.redis import PIMSCache, PickleCodec, CACHE_KEY_NAMESPACE_IMAGE_FORMAT_METADATA, stable_hash
 from pims.config import get_settings
 from pims.formats import AbstractFormat
 from pims.formats.utils.factories import (
@@ -89,6 +89,10 @@ class FileRole(str, Enum):
         if path.has_upload_role():
             role = cls.UPLOAD
         return role
+
+    @classmethod
+    def representations(cls) -> List[FileRole]:
+        return [FileRole.UPLOAD, FileRole.ORIGINAL, FileRole.SPATIAL, FileRole.SPECTRAL]
 
 
 class FileType(str, Enum):
@@ -288,8 +292,8 @@ class Path(PlatformPath, _Path, SafelyCopiable):
         if representation not in (FileRole.ORIGINAL, FileRole.SPATIAL):
             raise ValueError(f"Cached representation {representation} is not supported.")
 
-        if not PIMSCache.is_enabled() and get_settings().cache_image_format_metadata:
-            return self.get_representation(representation)
+        if not PIMSCache.is_enabled() or PIMSCache.is_disabled_namespace(CACHE_KEY_NAMESPACE_IMAGE_FORMAT_METADATA):
+            return await self.get_representation(representation)
 
         processed_root = self.processed_root()
         if not processed_root.exists():
@@ -298,14 +302,14 @@ class Path(PlatformPath, _Path, SafelyCopiable):
         stem = ORIGINAL_STEM if representation == FileRole.ORIGINAL else SPATIAL_STEM
         stem_path = str(processed_root / Path(stem))
         cache_key = stable_hash(stem_path.encode())
-        cached = await PIMSCache.get_backend().get(cache_key, namespace=CACHE_KEY_PREFIX_IMAGE_FORMAT_METADATA)
+        cached = await PIMSCache.get_backend().get(cache_key, namespace=CACHE_KEY_NAMESPACE_IMAGE_FORMAT_METADATA)
         if cached is not None:
             decoded = PickleCodec.decode(cached)
             return Image(f"{stem_path}.{decoded.get_identifier()}", format=decoded)
 
-        image = self.get_representation(representation)
+        image = await self.get_representation(representation)
         await PIMSCache.get_backend().set(
-            cache_key, PickleCodec.encode(image.format.serialize()), namespace=CACHE_KEY_PREFIX_IMAGE_FORMAT_METADATA
+            cache_key, PickleCodec.encode(image.format.serialize()), namespace=CACHE_KEY_NAMESPACE_IMAGE_FORMAT_METADATA
         )
         return image
 
@@ -364,20 +368,13 @@ class Path(PlatformPath, _Path, SafelyCopiable):
 
         return Histogram(histogram) if histogram else None
 
-    def get_representations(self) -> List[Path]:
-        representations = [
-            self.get_upload(), self.get_original(), self.get_spatial(),
-            self.get_spectral()
-        ]
-        return [representation for representation in representations if representation is not None]
-
-    def get_representation(self, role: FileRole) -> Union[Path, Image, None]:
+    async def get_representation(self, role: FileRole, from_cache: bool = False) -> Union[Path, Image, None]:
         if role == FileRole.UPLOAD:
             return self.get_upload()
         elif role == FileRole.ORIGINAL:
-            return self.get_original()
+            return await self.get_cached_original() if from_cache else self.get_original()
         elif role == FileRole.SPATIAL:
-            return self.get_spatial()
+            return await self.get_cached_spatial() if from_cache else self.get_spatial()
         elif role == FileRole.SPECTRAL:
             return self.get_spectral()
         else:

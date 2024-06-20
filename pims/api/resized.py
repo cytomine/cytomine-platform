@@ -113,7 +113,6 @@ async def show_resized_with_body(
 
 
 @cache_image_response(
-    vary=['config', 'request', 'response'],
     supported_mimetypes=PROCESSING_MIMETYPES
 )
 async def _show_resized(

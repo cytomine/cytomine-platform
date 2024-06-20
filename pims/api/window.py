@@ -85,9 +85,7 @@ async def show_window_with_body(
     )
 
 
-@cache_image_response(
-    vary=['config', 'request', 'response']
-)
+@cache_image_response()
 async def _show_window(
     request: Request, response: Response,  # required for @cache  # noqa
     path: Path,

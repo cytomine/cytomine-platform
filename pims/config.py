@@ -43,6 +43,8 @@ class ReadableSettings(BaseSettings):
     cache_image_format_metadata: bool = True
     # Must be TRUE in production. Helpful in dev or debug to disable caching of image responses without disabling the cache.
     cache_image_responses: bool = True
+    # Must be TRUE in production.
+    cache_responses: bool = True
     # The max-age to set in HTTP Cache-Control for cached image responses.
     image_response_cache_control_max_age: int = 60 * 60 * 24
 

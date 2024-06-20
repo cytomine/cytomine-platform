@@ -34,7 +34,7 @@ from pims.api.utils.output_parameter import (
 )
 from pims.api.utils.parameter import filepath_parameter, imagepath_parameter
 from pims.api.utils.response import FastJsonResponse, convert_quantity, response_list
-from pims.cache import cache_image_response
+from pims.cache import cache_image_response, cache_response
 from pims.config import Settings, get_settings
 from pims.files.file import FileRole, FileType, Path
 from pims.formats.utils.structures.metadata import MetadataType
@@ -330,6 +330,17 @@ class RepresentationInfo(RootModel):
             )
 
 
+async def _get_representation_info_list(path: Path) -> List[Union[FullRepresentationInfo, SimpleRepresentationInfo]]:
+    data = []
+    for representation in FileRole.representations():
+        try:
+            with await path.get_representation(representation, from_cache=True) as rpr:
+                    data.append(RepresentationInfo.from_path(rpr))
+        except AttributeError:
+            pass
+    return data
+
+
 class Microscope(BaseModel):
     model: Optional[str] = Field(None, description='The microscope model.')
 
@@ -527,7 +538,8 @@ class ImageFullInfo(BaseModel):
 @router.get(
     '/file/{filepath:path}/info',
     response_model=FileInfo,
-    tags=api_tags
+    tags=api_tags,
+    response_class=FastJsonResponse
 )
 async def show_file(
     path: Path = Depends(filepath_parameter),
@@ -544,7 +556,9 @@ async def show_file(
     tags=api_tags,
     response_class=FastJsonResponse
 )
+@cache_response()
 async def show_info(
+    request: Request, response: Response , # noqa
     path: Path = Depends(imagepath_parameter)
 ):
     """
@@ -557,9 +571,8 @@ async def show_info(
         data["instrument"] = InstrumentInfo.from_image(original)
         data["associated"] = AssociatedInfo.from_image(original)
         data["channels"] = ChannelsInfo.from_image(original)
-        data["representations"] = [RepresentationInfo.from_path(rpr) for rpr in
-                                   original.get_representations()]
-        return data
+        data["representations"] = await _get_representation_info_list(original)
+        return FastJsonResponse(data)
 
 
 # IMAGE
@@ -570,7 +583,9 @@ async def show_info(
     tags=api_tags,
     response_class=FastJsonResponse
 )
+@cache_response()
 async def show_image(
+    request: Request, response: Response,  # noqa
     path: Path = Depends(imagepath_parameter)
 ):
     """
@@ -578,7 +593,7 @@ async def show_image(
     """
     with await path.get_cached_original() as original:
         check_representation_existence(original)
-        return ImageInfo.from_image(original)
+        return FastJsonResponse(ImageInfo.from_image(original))
 
 
 # CHANNELS
@@ -593,13 +608,17 @@ class ChannelsInfoCollection(CollectionSize):
     tags=api_tags,
     response_class=FastJsonResponse
 )
-async def show_channels(path: Path = Depends(imagepath_parameter)):
+@cache_response()
+async def show_channels(
+    request: Request, response: Response,  # noqa
+    path: Path = Depends(imagepath_parameter)
+):
     """
     Get image channel info
     """
     with await path.get_cached_original() as original:
         check_representation_existence(original)
-        return response_list(ChannelsInfo.from_image(original))
+        return FastJsonResponse(response_list(ChannelsInfo.from_image(original)))
 
 
 # PYRAMID
@@ -610,7 +629,9 @@ async def show_channels(path: Path = Depends(imagepath_parameter)):
     tags=api_tags,
     response_class=FastJsonResponse
 )
+@cache_response()
 async def show_normalized_pyramid(
+    request: Request, response: Response,  # noqa
     path: Path = Depends(imagepath_parameter)
 ):
     """
@@ -618,7 +639,7 @@ async def show_normalized_pyramid(
     """
     with await path.get_cached_original() as original:
         check_representation_existence(original)
-        return PyramidInfo.from_pyramid(original.normalized_pyramid)
+        return FastJsonResponse(PyramidInfo.from_pyramid(original.normalized_pyramid))
 
 
 # INSTRUMENT
@@ -629,7 +650,9 @@ async def show_normalized_pyramid(
     tags=api_tags,
     response_class=FastJsonResponse
 )
+@cache_response()
 async def show_instrument(
+    request: Request, response: Response,  # noqa
     path: Path = Depends(imagepath_parameter)
 ):
     """
@@ -637,7 +660,7 @@ async def show_instrument(
     """
     with await path.get_cached_original() as original:
         check_representation_existence(original)
-        return InstrumentInfo.from_image(original)
+        return FastJsonResponse(InstrumentInfo.from_image(original))
 
 
 # ASSOCIATED
@@ -652,7 +675,9 @@ class AssociatedInfoCollection(CollectionSize):
     tags=api_tags + ['Associated'],
     response_class=FastJsonResponse
 )
+@cache_response()
 async def show_associated(
+    request: Request, response: Response,  # noqa
     path: Path = Depends(imagepath_parameter)
 ):
     """
@@ -660,7 +685,7 @@ async def show_associated(
     """
     with await path.get_cached_original() as original:
         check_representation_existence(original)
-        return response_list(AssociatedInfo.from_image(original))
+        return FastJsonResponse(response_list(AssociatedInfo.from_image(original)))
 
 
 @router.get(
@@ -682,7 +707,7 @@ async def show_associated_image(
     )
 
 
-@cache_image_response(vary=['config', 'request', 'response'])
+@cache_image_response()
 async def _show_associated_image(
     request: Request, response: Response,  # required for @cache  # noqa
     path: Path,
@@ -722,9 +747,12 @@ class MetadataCollection(CollectionSize):
 @router.get(
     '/image/{filepath:path}/metadata',
     response_model=MetadataCollection,
-    tags=api_tags
+    tags=api_tags,
+    response_class=FastJsonResponse
 )
+@cache_response()
 async def show_metadata(
+    request: Request, response: Response,  # noqa
     path: Path = Depends(imagepath_parameter)
 ):
     """
@@ -734,8 +762,7 @@ async def show_metadata(
         check_representation_existence(original)
 
         store = original.raw_metadata
-        return response_list([Metadata.from_metadata(md) for md in store.values()])
-
+        return FastJsonResponse(response_list([Metadata.from_metadata(md) for md in store.values()]))
 
 # ANNOTATIONS
 
@@ -792,9 +819,12 @@ class MetadataAnnotationCollection(CollectionSize):
 @router.get(
     '/image/{filepath:path}/metadata/annotations',
     response_model=MetadataAnnotationCollection,
-    tags=api_tags
+    tags=api_tags,
+    response_class=FastJsonResponse
 )
+@cache_response()
 async def show_metadata_annotations(
+    request: Request, response: Response,  # noqa
     path: Path = Depends(imagepath_parameter)
 ):
     """
@@ -802,10 +832,10 @@ async def show_metadata_annotations(
     """
     with await path.get_cached_original() as original:
         check_representation_existence(original)
-        return response_list(
+        return FastJsonResponse(response_list(
             [MetadataAnnotation.from_metadata_annotation(a)
              for a in original.annotations]
-        )
+        ))
 
 
 # REPRESENTATIONS
@@ -826,13 +856,14 @@ async def list_representations(
     """
     Get all image representation info
     """
-    return response_list([RepresentationInfo.from_path(rpr) for rpr in path.get_representations()])
+    return response_list(await _get_representation_info_list(path))
 
 
 @router.get(
     '/image/{filepath:path}/info/representations/{representation}',
     response_model=RepresentationInfo,
-    tags=api_tags
+    tags=api_tags,
+    response_class=FastJsonResponse
 )
 async def show_representation(
     representation: FileRole,
@@ -841,5 +872,8 @@ async def show_representation(
     """
     Get image representation info
     """
-    rpr = path.get_representation(representation)
-    return RepresentationInfo.from_path(rpr)
+    try:
+        with await path.get_representation(representation, from_cache=True) as rpr:
+            return RepresentationInfo.from_path(rpr)
+    except AttributeError:
+        raise NoAppropriateRepresentationProblem(path, representation)

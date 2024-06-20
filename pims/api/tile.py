@@ -110,7 +110,7 @@ async def show_tile_with_body(
     )
 
 
-@cache_image_response(vary=['config', 'request', 'response'])
+@cache_image_response()
 async def _show_tile(
     request: Request, response: Response,  # required for @cache  # noqa
     path: Path,

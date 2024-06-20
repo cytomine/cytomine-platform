@@ -16,7 +16,7 @@ import logging
 import sys
 
 from . import __api_version__, __version__
-from .cache.redis import PIMSCache
+from .cache.redis import shutdown_cache, manage_cache
 
 logger = logging.getLogger("pims.app")
 logger.info("PIMS initialization...")
@@ -85,6 +85,7 @@ async def startup():
         try:
             logger.info(f" Try to reach cache ... ")
             await startup_cache(__version__)
+            await manage_cache()
             logger.info(f"Cache is ready!")
         except ConnectionError:
             sys.exit(
@@ -99,9 +100,8 @@ async def startup():
 
 @app.on_event("shutdown")
 async def shutdown() -> None:
-    if PIMSCache.is_enabled():
-        await PIMSCache.get_backend().close()
-        logger.info("Gracefully shutdown pims cache.")
+    await shutdown_cache()
+
 
 def _log(request_, response_, duration_):
     args = dict(request_.query_params)

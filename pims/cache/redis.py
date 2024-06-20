@@ -11,7 +11,7 @@
 #  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  * See the License for the specific language governing permissions and
 #  * limitations under the License.
-
+import gc
 import hashlib
 import inspect
 import logging
@@ -20,6 +20,7 @@ from enum import Enum
 from functools import partial, wraps
 from typing import Any, Callable, List, Optional, Tuple, Type
 
+from fastapi_utils.tasks import repeat_every
 from redis import asyncio as aioredis
 from starlette.responses import Response
 
@@ -27,6 +28,8 @@ from pims.api.utils.mimetype import VISUALISATION_MIMETYPES, get_output_format
 from pims.config import get_settings
 from pims.utils.background_task import add_background_task
 from pims.utils.concurrency import exec_func_async
+
+from .. import __version__
 
 # Note: Parts of this implementation are inspired from
 # https://github.com/long2ice/fastapi-cache
@@ -37,8 +40,11 @@ HEADER_IF_NONE_MATCH = "If-None-Match"
 HEADER_PIMS_CACHE = "X-Pims-Cache"
 CACHE_KEY_PIMS_VERSION = "PIMS_VERSION"
 
-CACHE_KEY_PREFIX_IMAGE_FORMAT_METADATA = "pims-fmd"
-CACHE_KEY_PREFIX_IMAGE_RESPONSE = "pims-img"
+CACHE_KEY_NAMESPACE_IMAGE_FORMAT_METADATA = "pims-fmd"
+CACHE_KEY_NAMESPACE_IMAGE_RESPONSE = "pims-img"
+CACHE_KEY_NAMESPACE_RESPONSE = "pims-resp"
+
+MANAGE_CACHE_INTERVAL = 60 * 5 # in seconds
 
 
 log = logging.getLogger("pims.app")
@@ -71,7 +77,7 @@ def _hashable_dict(d: dict, separator: str = ":"):
 
 
 def all_kwargs_key_builder(
-    func, kwargs, excluded_parameters, prefix
+    func, kwargs, excluded_parameters, namespace
 ):
     copy_kwargs = kwargs.copy()
     if excluded_parameters is None:
@@ -83,12 +89,12 @@ def all_kwargs_key_builder(
     hashable = f"{func.__module__}:{func.__name__}" \
                f"{_hashable_dict(copy_kwargs, ':')}"
     hashed = stable_hash(hashable.encode())
-    cache_key = f"{prefix}:{hashed}"
+    cache_key = f"{namespace}:{hashed}"
     return cache_key
 
 
 def _image_response_key_builder(
-    func, kwargs, excluded_parameters, prefix, supported_mimetypes
+    func, kwargs, excluded_parameters, namespace, supported_mimetypes
 ):
     copy_kwargs = kwargs.copy()
     headers = copy_kwargs.get('headers')
@@ -108,7 +114,7 @@ def _image_response_key_builder(
         del copy_kwargs['headers']
 
     return all_kwargs_key_builder(
-        func, copy_kwargs, excluded_parameters, prefix
+        func, copy_kwargs, excluded_parameters, namespace
     )
 
 
@@ -170,23 +176,23 @@ class PIMSCache:
     _init = False
     _enabled = False
     _backend = None
-    _default_prefix = None
     _default_expire = None
     _default_codec = None
     _default_key_builder = None
+    _disabled_namespaces = None
 
     @classmethod
     async def init(
-        cls, backend, default_prefix: str = "", default_expire: int = None
+        cls, backend, default_expire: int = None, disabled_namespaces: List[str] = None
     ):
         if cls._init:
             return
         cls._init = True
         cls._backend = backend
-        cls._default_prefix = default_prefix
         cls._default_expire = default_expire
         cls._default_codec = PickleCodec
         cls._default_key_builder = all_kwargs_key_builder
+        cls._disabled_namespaces = disabled_namespaces if disabled_namespaces is not None else []
 
         try:
             await cls._backend.get(CACHE_KEY_PIMS_VERSION)
@@ -209,10 +215,6 @@ class PIMSCache:
         return cls._enabled
 
     @classmethod
-    def get_default_prefix(cls):
-        return cls._default_prefix
-
-    @classmethod
     def get_default_expire(cls):
         return cls._default_expire
 
@@ -225,8 +227,15 @@ class PIMSCache:
         return cls._default_key_builder
 
     @classmethod
+    def get_disabled_namespaces(cls):
+        return cls._disabled_namespaces
+
+    @classmethod
+    def is_disabled_namespace(cls, namespace):
+        return  namespace in cls._disabled_namespaces
+
+    @classmethod
     async def clear(cls, namespace: str = None, key: str = None):
-        namespace = cls._default_prefix + ":" + namespace if namespace else None
         return await cls._backend.clear(namespace, key)
 
 
@@ -235,8 +244,15 @@ async def startup_cache(pims_version):
     if not settings.cache_enabled:
         return
 
+    namespaces = {
+        CACHE_KEY_NAMESPACE_IMAGE_FORMAT_METADATA: settings.cache_image_format_metadata,
+        CACHE_KEY_NAMESPACE_IMAGE_RESPONSE: settings.cache_image_responses,
+        CACHE_KEY_NAMESPACE_RESPONSE: settings.cache_responses
+    }
+    disabled_namespaces = [k for k, v in namespaces.items() if v is False]
+
     await PIMSCache.init(
-        RedisBackend(settings.cache_url), default_prefix="pims-cache",
+        RedisBackend(settings.cache_url), disabled_namespaces=disabled_namespaces
     )
 
     # Flush the cache if persistent and PIMS version has changed.
@@ -249,13 +265,30 @@ async def startup_cache(pims_version):
         await cache.clear()
         await cache.set(CACHE_KEY_PIMS_VERSION, pims_version)
 
-    if not settings.cache_image_responses:
-        log.info("[DEBUG MODE ONLY] Caching image responses is disabled. Clearing related keys.")
-        await cache.clear(CACHE_KEY_PREFIX_IMAGE_RESPONSE)
+    for disabled_namespace in PIMSCache.get_disabled_namespaces():
+        log.info(f"[DEBUG MODE ONLY] Disabled namespace: {disabled_namespace}. Clearing related keys from cache.")
+        await cache.clear(disabled_namespace)
 
-    if not settings.cache_image_format_metadata:
-        log.info("[DEBUG MODE ONLY] Caching image format metadata is disabled. Clearing related keys.")
-        await cache.clear(CACHE_KEY_PREFIX_IMAGE_FORMAT_METADATA)
+
+@repeat_every(seconds=MANAGE_CACHE_INTERVAL, wait_first=MANAGE_CACHE_INTERVAL)
+async def manage_cache() -> None:
+    # As cache as an LRU policy, we need to periodically update the cache key with the PIMS VERSION
+    gc.collect()
+    settings = get_settings()
+    if not settings.cache_enabled:
+        return
+
+    cache = PIMSCache.get_cache()
+    await cache.set(CACHE_KEY_PIMS_VERSION, __version__)
+
+
+async def shutdown_cache() -> None:
+    settings = get_settings()
+    if not settings.cache_enabled:
+        return
+
+    await PIMSCache.get_backend().close()
+    log.info("Gracefully shutdown pims cache.")
 
 
 def default_cache_control_builder(ttl=0):
@@ -278,21 +311,21 @@ def image_response_cache_control_builder(ttl=0):
 
 def cache_data(
     expire: int = None,
-    vary: Optional[List] = None,
+    ignored_variable_parameters: Optional[List] = None,
     codec: Type[Codec] = None,
     key_builder: Callable = None,
     cache_control_builder: Callable = None,
-    prefix: str = None
+    namespace: str = None
 ):
     def wrapper(func: Callable):
         @wraps(func)
         async def inner(*args, **kwargs):
             nonlocal expire
-            nonlocal vary
+            nonlocal ignored_variable_parameters
             nonlocal codec
             nonlocal key_builder
             nonlocal cache_control_builder
-            nonlocal prefix
+            nonlocal namespace
             signature = inspect.signature(func)
             bound_args = signature.bind_partial(*args, **kwargs)
             bound_args.apply_defaults()
@@ -300,21 +333,27 @@ def cache_data(
             request = all_kwargs.pop("request", None)
             response = all_kwargs.pop("response", None)
 
+            # --- CACHE BYPASS ---
             if not PIMSCache.is_enabled() or \
-                    (request and request.headers.get(HEADER_CACHE_CONTROL) == "no-store"):
+                    (request and request.headers.get(HEADER_CACHE_CONTROL) == "no-store") or \
+                    PIMSCache.is_disabled_namespace(namespace):
                 return await exec_func_async(func, *args, **kwargs)
 
+            # --- CACHE USED ---
             expire = expire or PIMSCache.get_default_expire()
             codec = codec or PIMSCache.get_default_codec()
             key_builder = key_builder or PIMSCache.get_default_key_builder()
-            prefix = prefix or PIMSCache.get_default_prefix()
-            cache_key = key_builder(func, all_kwargs, vary, prefix)
+            cache_key = key_builder(func, all_kwargs, ignored_variable_parameters, namespace)
 
             backend = PIMSCache.get_backend()
             ttl, encoded = await backend.get_with_ttl(cache_key)
+            # ------- NON REQUEST DATA -------
             if not request:
+                # CACHE HIT
                 if encoded is not None:
                     return codec.decode(encoded)
+
+                # CACHE MISS
                 data = await exec_func_async(func, *args, **kwargs)
                 encoded = codec.encode(data)
                 await backend.set(
@@ -323,7 +362,9 @@ def cache_data(
                 )
                 return data
 
+            # ------- REQUEST DATA ------
             if_none_match = request.headers.get(HEADER_IF_NONE_MATCH.lower())
+            # CACHE HIT
             if encoded is not None:
                 if response:
                     cache_control_builder = \
@@ -346,6 +387,7 @@ def cache_data(
                         response.headers.get(HEADER_PIMS_CACHE)
                 return decoded
 
+            # CACHE MISS
             data = await exec_func_async(func, *args, **kwargs)
             encoded = codec.encode(data)
 
@@ -381,9 +423,21 @@ def cache_data(
 
 def cache_image_response(
     expire: int = None,
-    vary: Optional[List] = None,
+    ignored_variable_parameters: Optional[List] = None,
     supported_mimetypes=None
 ):
+    """
+    Cache an image response. An image response is expected to be an instance of
+    `from starlette.responses import Response`.
+
+    `ignored_variable_parameters`is an optional list of parameters of the decorated function that shouldn't
+    be used for cache key.
+    """
+
+    if ignored_variable_parameters is None:
+        ignored_variable_parameters = []
+    ignored_variable_parameters += ['config', 'request', 'response']
+
     if supported_mimetypes is None:
         supported_mimetypes = VISUALISATION_MIMETYPES
     key_builder = partial(
@@ -391,7 +445,23 @@ def cache_image_response(
     )
     codec = PickleCodec
     return cache_data(
-        expire, vary, codec, key_builder,
+        expire, ignored_variable_parameters, codec, key_builder,
         image_response_cache_control_builder,
-        prefix=CACHE_KEY_PREFIX_IMAGE_RESPONSE
+        namespace=CACHE_KEY_NAMESPACE_IMAGE_RESPONSE
+    )
+
+
+def cache_response(
+    expire: int = None,
+    ignored_variable_parameters: Optional[List] = None,
+):
+    if ignored_variable_parameters is None:
+        ignored_variable_parameters = []
+    ignored_variable_parameters += ['config', 'request', 'response']
+
+    codec = PickleCodec
+    return cache_data(
+        expire, ignored_variable_parameters, codec,
+        cache_control_builder=image_response_cache_control_builder,
+        namespace=CACHE_KEY_NAMESPACE_RESPONSE
     )

@@ -78,7 +78,6 @@ async def show_mask(
 
 
 @cache_image_response(
-    vary=['config', 'request', 'response'],
     supported_mimetypes=PROCESSING_MIMETYPES
 )
 async def _show_mask(
