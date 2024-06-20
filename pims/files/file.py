@@ -20,7 +20,7 @@ from enum import Enum
 from pathlib import Path as _Path
 from typing import Callable, List, TYPE_CHECKING, Union
 
-from pims.cache.redis import PIMSCache, PickleCodec, CACHE_KEY_PREFIX_IMAGE_FORMAT_METADATA, stable_hash
+from pims.cache.redis import PIMSCache, PickleCodec, CACHE_KEY_NAMESPACE_IMAGE_FORMAT_METADATA, stable_hash
 from pims.config import get_settings
 from pims.formats.utils.factories import (
     FormatFactory, SpatialReadableFormatFactory,
@@ -268,7 +268,7 @@ class Path(PlatformPath, _Path, SafelyCopiable):
         if representation not in (FileRole.ORIGINAL, FileRole.SPATIAL):
             raise ValueError(f"Cached representation {representation} is not supported.")
 
-        if not PIMSCache.is_enabled() and get_settings().cache_image_format_metadata:
+        if not PIMSCache.is_enabled() or PIMSCache.is_disabled_namespace(CACHE_KEY_NAMESPACE_IMAGE_FORMAT_METADATA):
             return await self.get_representation(representation)
 
         processed_root = self.processed_root()
@@ -278,7 +278,7 @@ class Path(PlatformPath, _Path, SafelyCopiable):
         stem = ORIGINAL_STEM if representation == FileRole.ORIGINAL else SPATIAL_STEM
         stem_path = str(processed_root / Path(stem))
         cache_key = stable_hash(stem_path.encode())
-        cached = await PIMSCache.get_backend().get(cache_key, namespace=CACHE_KEY_PREFIX_IMAGE_FORMAT_METADATA)
+        cached = await PIMSCache.get_backend().get(cache_key, namespace=CACHE_KEY_NAMESPACE_IMAGE_FORMAT_METADATA)
         if cached is not None:
             decoded = PickleCodec.decode(cached)
             from pims.files.image import Image
@@ -286,7 +286,7 @@ class Path(PlatformPath, _Path, SafelyCopiable):
 
         image = await self.get_representation(representation)
         await PIMSCache.get_backend().set(
-            cache_key, PickleCodec.encode(image.format.serialize()), namespace=CACHE_KEY_PREFIX_IMAGE_FORMAT_METADATA
+            cache_key, PickleCodec.encode(image.format.serialize()), namespace=CACHE_KEY_NAMESPACE_IMAGE_FORMAT_METADATA
         )
         return image
 

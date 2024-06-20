@@ -40,9 +40,9 @@ HEADER_IF_NONE_MATCH = "If-None-Match"
 HEADER_PIMS_CACHE = "X-Pims-Cache"
 CACHE_KEY_PIMS_VERSION = "PIMS_VERSION"
 
-CACHE_KEY_PREFIX_IMAGE_FORMAT_METADATA = "pims-fmd"
-CACHE_KEY_PREFIX_IMAGE_RESPONSE = "pims-img"
-CACHE_KEY_PREFIX_RESPONSE = "pims-resp"
+CACHE_KEY_NAMESPACE_IMAGE_FORMAT_METADATA = "pims-fmd"
+CACHE_KEY_NAMESPACE_IMAGE_RESPONSE = "pims-img"
+CACHE_KEY_NAMESPACE_RESPONSE = "pims-resp"
 
 MANAGE_CACHE_INTERVAL = 60 * 5 # in seconds
 
@@ -77,7 +77,7 @@ def _hashable_dict(d: dict, separator: str = ":"):
 
 
 def all_kwargs_key_builder(
-    func, kwargs, excluded_parameters, prefix
+    func, kwargs, excluded_parameters, namespace
 ):
     copy_kwargs = kwargs.copy()
     if excluded_parameters is None:
@@ -89,12 +89,12 @@ def all_kwargs_key_builder(
     hashable = f"{func.__module__}:{func.__name__}" \
                f"{_hashable_dict(copy_kwargs, ':')}"
     hashed = stable_hash(hashable.encode())
-    cache_key = f"{prefix}:{hashed}"
+    cache_key = f"{namespace}:{hashed}"
     return cache_key
 
 
 def _image_response_key_builder(
-    func, kwargs, excluded_parameters, prefix, supported_mimetypes
+    func, kwargs, excluded_parameters, namespace, supported_mimetypes
 ):
     copy_kwargs = kwargs.copy()
     headers = copy_kwargs.get('headers')
@@ -114,7 +114,7 @@ def _image_response_key_builder(
         del copy_kwargs['headers']
 
     return all_kwargs_key_builder(
-        func, copy_kwargs, excluded_parameters, prefix
+        func, copy_kwargs, excluded_parameters, namespace
     )
 
 
@@ -176,23 +176,23 @@ class PIMSCache:
     _init = False
     _enabled = False
     _backend = None
-    _default_prefix = None
     _default_expire = None
     _default_codec = None
     _default_key_builder = None
+    _disabled_namespaces = None
 
     @classmethod
     async def init(
-        cls, backend, default_prefix: str = "", default_expire: int = None
+        cls, backend, default_expire: int = None, disabled_namespaces: List[str] = None
     ):
         if cls._init:
             return
         cls._init = True
         cls._backend = backend
-        cls._default_prefix = default_prefix
         cls._default_expire = default_expire
         cls._default_codec = PickleCodec
         cls._default_key_builder = all_kwargs_key_builder
+        cls._disabled_namespaces = disabled_namespaces if disabled_namespaces is not None else []
 
         try:
             await cls._backend.get(CACHE_KEY_PIMS_VERSION)
@@ -215,10 +215,6 @@ class PIMSCache:
         return cls._enabled
 
     @classmethod
-    def get_default_prefix(cls):
-        return cls._default_prefix
-
-    @classmethod
     def get_default_expire(cls):
         return cls._default_expire
 
@@ -231,8 +227,15 @@ class PIMSCache:
         return cls._default_key_builder
 
     @classmethod
+    def get_disabled_namespaces(cls):
+        return cls._disabled_namespaces
+
+    @classmethod
+    def is_disabled_namespace(cls, namespace):
+        return  namespace in cls._disabled_namespaces
+
+    @classmethod
     async def clear(cls, namespace: str = None, key: str = None):
-        namespace = cls._default_prefix + ":" + namespace if namespace else None
         return await cls._backend.clear(namespace, key)
 
 
@@ -241,8 +244,15 @@ async def startup_cache(pims_version):
     if not settings.cache_enabled:
         return
 
+    namespaces = {
+        CACHE_KEY_NAMESPACE_IMAGE_FORMAT_METADATA: settings.cache_image_format_metadata,
+        CACHE_KEY_NAMESPACE_IMAGE_RESPONSE: settings.cache_image_responses,
+        CACHE_KEY_NAMESPACE_RESPONSE: settings.cache_responses
+    }
+    disabled_namespaces = [k for k, v in namespaces.items() if v is False]
+
     await PIMSCache.init(
-        RedisBackend(settings.cache_url), default_prefix="pims-cache",
+        RedisBackend(settings.cache_url), disabled_namespaces=disabled_namespaces
     )
 
     # Flush the cache if persistent and PIMS version has changed.
@@ -255,13 +265,9 @@ async def startup_cache(pims_version):
         await cache.clear()
         await cache.set(CACHE_KEY_PIMS_VERSION, pims_version)
 
-    if not settings.cache_image_responses:
-        log.info("[DEBUG MODE ONLY] Caching image responses is disabled. Clearing related keys.")
-        await cache.clear(CACHE_KEY_PREFIX_IMAGE_RESPONSE)
-
-    if not settings.cache_image_format_metadata:
-        log.info("[DEBUG MODE ONLY] Caching image format metadata is disabled. Clearing related keys.")
-        await cache.clear(CACHE_KEY_PREFIX_IMAGE_FORMAT_METADATA)
+    for disabled_namespace in PIMSCache.get_disabled_namespaces():
+        log.info(f"[DEBUG MODE ONLY] Disabled namespace: {disabled_namespace}. Clearing related keys from cache.")
+        await cache.clear(disabled_namespace)
 
 
 @repeat_every(seconds=MANAGE_CACHE_INTERVAL, wait_first=MANAGE_CACHE_INTERVAL)
@@ -309,7 +315,7 @@ def cache_data(
     codec: Type[Codec] = None,
     key_builder: Callable = None,
     cache_control_builder: Callable = None,
-    prefix: str = None
+    namespace: str = None
 ):
     def wrapper(func: Callable):
         @wraps(func)
@@ -319,7 +325,7 @@ def cache_data(
             nonlocal codec
             nonlocal key_builder
             nonlocal cache_control_builder
-            nonlocal prefix
+            nonlocal namespace
             signature = inspect.signature(func)
             bound_args = signature.bind_partial(*args, **kwargs)
             bound_args.apply_defaults()
@@ -327,21 +333,27 @@ def cache_data(
             request = all_kwargs.pop("request", None)
             response = all_kwargs.pop("response", None)
 
+            # --- CACHE BYPASS ---
             if not PIMSCache.is_enabled() or \
-                    (request and request.headers.get(HEADER_CACHE_CONTROL) == "no-store"):
+                    (request and request.headers.get(HEADER_CACHE_CONTROL) == "no-store") or \
+                    PIMSCache.is_disabled_namespace(namespace):
                 return await exec_func_async(func, *args, **kwargs)
 
+            # --- CACHE USED ---
             expire = expire or PIMSCache.get_default_expire()
             codec = codec or PIMSCache.get_default_codec()
             key_builder = key_builder or PIMSCache.get_default_key_builder()
-            prefix = prefix or PIMSCache.get_default_prefix()
-            cache_key = key_builder(func, all_kwargs, ignored_variable_parameters, prefix)
+            cache_key = key_builder(func, all_kwargs, ignored_variable_parameters, namespace)
 
             backend = PIMSCache.get_backend()
             ttl, encoded = await backend.get_with_ttl(cache_key)
+            # ------- NON REQUEST DATA -------
             if not request:
+                # CACHE HIT
                 if encoded is not None:
                     return codec.decode(encoded)
+
+                # CACHE MISS
                 data = await exec_func_async(func, *args, **kwargs)
                 encoded = codec.encode(data)
                 await backend.set(
@@ -350,7 +362,9 @@ def cache_data(
                 )
                 return data
 
+            # ------- REQUEST DATA ------
             if_none_match = request.headers.get(HEADER_IF_NONE_MATCH.lower())
+            # CACHE HIT
             if encoded is not None:
                 if response:
                     cache_control_builder = \
@@ -373,6 +387,7 @@ def cache_data(
                         response.headers.get(HEADER_PIMS_CACHE)
                 return decoded
 
+            # CACHE MISS
             data = await exec_func_async(func, *args, **kwargs)
             encoded = codec.encode(data)
 
@@ -432,7 +447,7 @@ def cache_image_response(
     return cache_data(
         expire, ignored_variable_parameters, codec, key_builder,
         image_response_cache_control_builder,
-        prefix=CACHE_KEY_PREFIX_IMAGE_RESPONSE
+        namespace=CACHE_KEY_NAMESPACE_IMAGE_RESPONSE
     )
 
 
@@ -448,5 +463,5 @@ def cache_response(
     return cache_data(
         expire, ignored_variable_parameters, codec,
         cache_control_builder=image_response_cache_control_builder,
-        prefix=CACHE_KEY_PREFIX_RESPONSE
+        namespace=CACHE_KEY_NAMESPACE_RESPONSE
     )
