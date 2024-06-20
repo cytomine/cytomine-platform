@@ -289,6 +289,8 @@ def connexion_to_core(
 
     public_key, signature = parse_authorization_header(request.headers)
     cytomine_auth = (INTERNAL_URL_CORE, config.cytomine_public_key, config.cytomine_private_key)
+
+    cytomine_logger.info(f"Trying to connect to core API with URL: {INTERNAL_URL_CORE} ...")
     with Cytomine(*cytomine_auth, configure_logging=False) as c:
         if not c.current_user:
             raise AuthenticationException("PIMS authentication to Cytomine failed.")
