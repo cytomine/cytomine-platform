@@ -14,7 +14,7 @@
 from typing import Dict, Iterable, List, Optional
 
 from shapely.affinity import affine_transform
-from shapely.errors import WKTReadingError
+from shapely.errors import ShapelyError
 from shapely.validation import explain_validity, make_valid
 from shapely.wkt import loads as wkt_loads
 
@@ -116,7 +116,7 @@ def parse_annotation(
 
     try:
         geom = wkt_loads(geometry)
-    except WKTReadingError:
+    except ShapelyError:
         raise InvalidGeometryException(geometry, "WKT reading error")
 
     if origin == 'LEFT_BOTTOM':
@@ -129,7 +129,7 @@ def parse_annotation(
         raise InvalidGeometryException(geometry, explain_validity(geom))
     parsed = {'geometry': geom}
 
-    if geom.type == 'Point' and point_envelope_length is not None:
+    if geom.geom_type == 'Point' and point_envelope_length is not None:
         parsed['point_envelope_length'] = point_envelope_length
 
     if 'fill_color' not in ignore_fields:
@@ -167,5 +167,5 @@ def is_wkt(value: str) -> bool:
     try:
         wkt_loads(str(value))
         return True
-    except WKTReadingError:
+    except ShapelyError:
         return False
