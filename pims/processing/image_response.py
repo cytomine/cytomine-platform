@@ -22,7 +22,7 @@ from pims.api.utils.models import (
     AnnotationStyleMode, AssociatedName, ChannelReduction,
     Colorspace, GenericReduction, PointCross
 )
-from pims.files.image import Image
+from pims.files.file import Image
 from pims.filters import AbstractFilter
 from pims.processing.adapters import RawImagePixels
 from pims.processing.annotations import ParsedAnnotations

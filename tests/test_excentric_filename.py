@@ -1,7 +1,11 @@
-from PIL import Image
-import os
-import urllib.request
 import io
+import os
+import subprocess
+import urllib.request
+
+import pytest
+from PIL import Image as PILImage
+
 from tests.utils.formats import (
     thumb_test,
     resized_test,
@@ -10,8 +14,6 @@ from tests.utils.formats import (
     crop_null_annot_test,
     histogram_perimage_test,
 )
-import pytest
-import subprocess
 
 
 def get_image(path, filename, root):
@@ -86,7 +88,7 @@ def test_norm_tile(client, image_path_excentric_filename):
     )
     assert response.status_code == 200
 
-    img_response = Image.open(io.BytesIO(response.content))
+    img_response = PILImage.open(io.BytesIO(response.content))
     width_resp, height_resp = img_response.size
 
     assert width_resp == 256

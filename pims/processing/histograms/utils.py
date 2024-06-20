@@ -23,8 +23,7 @@ from skimage.exposure import histogram
 from pims.api.utils.models import Colorspace, HistogramType
 from pims.api.utils.output_parameter import get_thumb_output_dimensions
 from pims.config import get_settings
-from pims.files.file import Path
-from pims.files.histogram import Histogram
+from pims.files.file import Path, Histogram
 from pims.processing.histograms import ZarrHistogramFormat
 from pims.processing.histograms.format import (
     ZHF_ATTR_FORMAT, ZHF_ATTR_TYPE, ZHF_BOUNDS, ZHF_HIST, ZHF_PER_CHANNEL, ZHF_PER_IMAGE,

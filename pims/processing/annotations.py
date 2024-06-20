@@ -20,7 +20,7 @@ from shapely.geometry import GeometryCollection, LineString, Point
 from shapely.geometry.base import BaseGeometry
 
 from pims.api.utils.models import PointCross
-from pims.files.image import Image
+from pims.files.file import Image
 from pims.processing.region import Region
 from pims.utils.color import Color
 
@@ -41,7 +41,7 @@ class ParsedAnnotation:
         self.stroke_width = stroke_width
 
         self.custom_bounds = None
-        if self.geometry.type == 'Point' and point_envelope_length is not None:
+        if self.geometry.geom_type == 'Point' and point_envelope_length is not None:
             pt = self.geometry
             length = point_envelope_length / 2
             self.custom_bounds = (

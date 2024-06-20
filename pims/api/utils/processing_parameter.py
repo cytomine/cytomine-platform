@@ -16,7 +16,7 @@ from typing import Iterable, List, Optional, Tuple, Type, Union
 
 from pims.api.exceptions import ColormapNotFoundProblem, FilterNotFoundProblem
 from pims.api.utils.models import BitDepthEnum, ColormapEnum, ColormapId, IntensitySelectionEnum
-from pims.files.image import Image
+from pims.files.file import Image
 from pims.filters import AbstractFilter, FiltersById
 from pims.formats.utils.structures.metadata import ImageChannel
 from pims.processing.colormaps import BLACK_COLORMAP, ColorColormap, Colormap, ColormapsByName

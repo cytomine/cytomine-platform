@@ -59,7 +59,7 @@ async def startup():
     try:
         settings = get_settings()
         logger.info("PIMS is starting with config:")
-        for k, v in settings.dict().items():
+        for k, v in settings.model_dump().items():
             logger.info(f"* {k}: {v}")
     except ValidationError as e:
         logger.error("Impossible to read or parse some PIMS settings:")

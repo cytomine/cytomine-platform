@@ -24,7 +24,7 @@ from pydicom.multival import MultiValue
 from pydicom.uid import ImplicitVRLittleEndian
 from pyvips import GValue
 from shapely.affinity import affine_transform
-from shapely.errors import WKTReadingError
+from shapely.errors import ShapelyError
 from shapely.wkt import loads as wkt_loads
 
 from pims.cache import cached_property
@@ -210,7 +210,7 @@ class DicomParser(AbstractParser):
                             parsed.add_property("severity", severity.value)
 
                         parsed_annots.append(parsed)
-                except WKTReadingError:
+                except ShapelyError:
                     pass
 
         return parsed_annots
