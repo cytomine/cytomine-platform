@@ -104,6 +104,12 @@ default:
   tags:
     - docker
 
+gemnasium-dependency_scanning:
+  variables:
+    CI_DEBUG_TRACE: "true"
+  tags:
+    - saas-linux-large-amd64
+    - docker
 
 lint-dockerfiles:
   stage: prepare
