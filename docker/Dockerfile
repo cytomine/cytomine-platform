@@ -2,8 +2,8 @@
 ARG APP_ENGINE_VERSION
 ARG APP_ENGINE_REVISION
 ARG ENTRYPOINT_SCRIPTS_VERSION=1.4.0
-ARG GRADLE_VERSION=8.5.0-jdk17-alpine
-ARG GRADLE_DEV_VERSION=8.5.0-jdk17-jammy
+ARG GRADLE_VERSION=7.6.4-jdk17-alpine
+ARG GRADLE_DEV_VERSION=7.6.4-jdk17-jammy
 ARG OPENJDK_VERSION=17-slim-bullseye
 
 #######################################################################################
@@ -43,7 +43,7 @@ RUN sed -i -- "s/version: ce-0.0.0/version: ${APP_ENGINE_VERSION}/g" /app/src/ma
 
 #######################################################################################
 ## Stage: entrypoint script. Use a multi-stage because COPY --from cannot interpolate variables
-FROM cytomine/entrypoint-scripts:${ENTRYPOINT_SCRIPTS_VERSION} as entrypoint-scripts
+FROM cytomine/entrypoint-scripts:${ENTRYPOINT_SCRIPTS_VERSION} AS entrypoint-scripts
 
 #######################################################################################
 ## Stage: App-Engine development image
@@ -52,7 +52,7 @@ FROM gradle:${GRADLE_DEV_VERSION} AS dev-server
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
       gettext=0.21-4ubuntu4 \
-      openssh-server=1:8.9p1-3ubuntu0.7 \
+      openssh-server=1:8.9p1-3ubuntu0.10 \
       rsync=3.2.7-0ubuntu0.22.04.2
 
 ENV GRADLE_USER_HOME=/opt/gradle/.gradle
@@ -68,7 +68,7 @@ ENTRYPOINT ["cytomine-entrypoint.sh"]
 
 #######################################################################################
 ## Stage: Cytomine core image
-FROM openjdk:${OPENJDK_VERSION} as production
+FROM openjdk:${OPENJDK_VERSION} AS production
 
 ARG APP_ENGINE_VERSION
 ARG APP_ENGINE_REVISION
@@ -87,8 +87,8 @@ LABEL org.opencontainers.image.authors="dev@cytomine.com" \
       org.opencontainers.image.deps.gradle.version="${GRADLE_VERSION}" \
       org.opencontainers.image.deps.entrypoint.scripts.version="${ENTRYPOINT_SCRIPTS_VERSION}"
 
-ENV DEBIAN_FRONTEND noninteractive
-ENV LANG C.UTF-8
+ENV DEBIAN_FRONTEND=noninteractive
+ENV LANG=C.UTF-8
 
 # base librairies and configuration
 COPY --from=jar-builder /app/build/libs/cytomine-app-engine.jar /app/cytomine-app-engine.jar
