@@ -104,11 +104,6 @@ default:
   tags:
     - docker
 
-gemnasium-maven-dependency_scanning:
-  variables:
-    SECURE_LOG_LEVEL: debug
-  tags:
-    - docker
 
 lint-dockerfiles:
   stage: prepare
