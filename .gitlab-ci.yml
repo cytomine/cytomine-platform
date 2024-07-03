@@ -108,7 +108,6 @@ gemnasium-maven-dependency_scanning:
   variables:
     CI_DEBUG_TRACE: "true"
   tags:
-    - saas-linux-large-amd64
     - docker
 
 lint-dockerfiles:
