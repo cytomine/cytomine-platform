@@ -106,7 +106,7 @@ default:
 
 gemnasium-maven-dependency_scanning:
   variables:
-    CI_DEBUG_TRACE: "true"
+    SECURE_LOG_LEVEL: debug
   tags:
     - docker
 
