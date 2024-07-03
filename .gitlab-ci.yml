@@ -104,7 +104,7 @@ default:
   tags:
     - docker
 
-gemnasium-dependency_scanning:
+gemnasium-maven-dependency_scanning:
   variables:
     CI_DEBUG_TRACE: "true"
   tags:
