@@ -12,44 +12,56 @@
   ],
   "type": "object",
   "properties": {
-    "$schema": {},
+    "$schema": {
+      "description": "Base JSON schema reference",
+      "type": "string",
+      "format": "uri"
+    },
     "name": {
       "type": "string",
       "minLength": 3,
       "maxLength": 30,
-      "pattern": "^[a-zA-Z0-9_\\s\\-]+$"
+      "pattern": "^[a-zA-Z0-9_\\s\\-]+$",
+      "description": "The name of the task."
     },
     "version": {
-      "$ref": "#/$defs/types/semver"
+      "$ref": "#/$defs/types/semver",
+      "description": "The version of the task, following the Semantic Versioning specification."
     },
     "namespace": {
       "type": "string",
-      "pattern": "^[a-zA-Z0-9_]*(\\.[a-zA-Z0-9_-]+)+$"
+      "pattern": "^[a-zA-Z0-9_]*(\\.[a-zA-Z0-9_-]+)+$",
+      "description": "The namespace of the task, must follow the reverse domain name notation and must uniquely identify the task."
     },
     "description": {
       "type": "string",
       "default": "",
-      "maxLength": 2048
+      "maxLength": 2048,
+      "description": "A brief description of the task."
     },
     "authors": {
       "type": "array",
       "minItems": 1,
       "items": {
         "$ref": "#/$defs/contact"
-      }
+      },
+      "description": "Lists the authors of the task. At least one author must be specified."
     },
     "external": {
       "type": "object",
+      "description": "Lists external references (source code, scientific articles,...).",
       "properties": {
         "source_code": {
           "type": "string",
-          "format": "uri"
+          "format": "uri",
+          "description": "An external reference to a source code."
         },
         "doi": {
           "type": "array",
           "items": {
             "type": "string",
-            "format": "uri"
+            "format": "uri",
+            "description": "An external reference to a Digital Object Identifier, referencing for instance a scientific pulibcation that served as a basis for the task ideation."
           }
         }
       }
@@ -59,38 +71,41 @@
       "properties": {
         "input_folder": {
           "$ref": "#/$defs/types/path",
-          "default": "/inputs"
+          "default": "/inputs",
+          "description": "The folder (within the task container) where the App Engine must provide the input files."
         },
         "output_folder": {
           "$ref": "#/$defs/types/path",
-          "default": "/outputs"
+          "default": "/outputs",
+          "description": "The folder (within the task container) where the output files will be written by the task."
         },
         "resources": {
           "type": "object",
           "properties": {
             "ram": {
               "$ref": "#/$defs/types/memory",
-              "default": "1GiB"
+              "default": "1GiB",
+              "description": "The minimum amount of RAM that the task requires."
             },
             "vram": {
               "$ref": "#/$defs/types/memory",
-              "default": "8GiB"
+              "default": "8GiB",
+              "description": "The minimum amount of GPU VRAM that the task requires."
             },
-            "gpu": {
+            "gpus": {
               "type": "integer",
-              "default": 0
+              "default": 0,
+              "description": "The number of GPUs that the task requires."
             },
-            "cores": {
+            "cpus": {
               "type": "integer",
-              "default": 1
-            },
-            "threads": {
-              "type": "integer",
-              "default": 1
+              "default": 1,
+              "description": "The number of CPU cores that the task requires."
             },
             "internet": {
               "type": "boolean",
-              "default": false
+              "default": false,
+              "description": "Whether the task requires internet access."
             }
           }
         }
@@ -103,7 +118,8 @@
           "$ref": "#/$defs/io/input_parameter"
         }
       },
-      "additionalProperties": false
+      "additionalProperties": false,
+      "description": "The input parameters that the task requires."
     },
     "outputs": {
       "type": "object",
@@ -112,7 +128,8 @@
           "$ref": "#/$defs/io/output_parameter"
         }
       },
-      "additionalProperties": false
+      "additionalProperties": false,
+      "description": "The output parameters that the task produces."
     }
   },
   "$defs": {
@@ -155,20 +172,26 @@
       "type": "object",
       "properties": {
         "first_name": {
-          "type": "string"
+          "type": "string",
+          "description": "This person's first name."
         },
         "last_name": {
-          "type": "string"
+          "type": "string",
+          "description": "This person's last name."
         },
         "organization": {
-          "type": "string"
+          "type": "string",
+          "description": "This person's organization name."
         },
         "email": {
           "type": "string",
-          "format": "email"
+          "format": "email",
+          "description": "This person's email address."
         },
         "is_contact": {
-          "type": "boolean"
+          "type": "boolean",
+          "default": false,
+          "description": "Whether this person is the main contact for the task."
         }
       },
       "required": ["first_name" , "last_name" , "organization" , "email" , "is_contact"]
