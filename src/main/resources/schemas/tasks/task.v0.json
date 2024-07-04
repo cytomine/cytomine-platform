@@ -159,7 +159,7 @@
       },
       "memory": {
         "type": "string",
-        "pattern": "^(?:0|[1-9]\\d*)(?:\\.\\d+)?\\s*(?:(?:[KMGTPEZY]i?)?B|(?:[kmgtpezy]i?)?b)?$"
+        "pattern": "^(?:0|[1-9]\\d*)(?:\\.\\d+)?\\s*(?:Ki|Mi|Gi|Ti|Pi|Ei|Zi|Yi|k|M|G|T|P|E|Z|Y|R|Q)?(?:B|Byte|byte|b|bit)$"
       },
       "enum_item": {
         "type": "string",
