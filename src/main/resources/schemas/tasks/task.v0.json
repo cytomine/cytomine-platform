@@ -214,7 +214,10 @@
             "type": "string",
             "minLength": 1
           },
-          "description": {"$ref": "#/$defs/io/parameter/description"}
+          "description": {
+            "$ref": "#/$defs/io/parameter/description",
+            "description": "A text description of the parameter."
+          }
         }
       },
       "type_specs": {
@@ -324,7 +327,18 @@
           ]
         },
         "geometry": {
-          "const": "geometry"
+          "oneOf":[
+            {
+              "const": "geometry"
+            },
+            {
+              "type": "object",
+              "required": ["id"],
+              "properties": {
+                "id": {"const": "geometry"}
+              }
+            }
+          ]
         },
         "image": {
           "oneOf": [
