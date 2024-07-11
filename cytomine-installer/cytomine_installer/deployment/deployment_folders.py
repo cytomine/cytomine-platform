@@ -172,7 +172,7 @@ class ServerFolder(Deployable):
             )
             if os.path.exists(src_service_configs_path):
                 config_files = list_relative_files(src_service_configs_path)
-                for config_file in config_files:
+                for config_file in sorted(config_files):
                     source_file = os.path.join(
                         self._configs_folder, service, config_file
                     )
