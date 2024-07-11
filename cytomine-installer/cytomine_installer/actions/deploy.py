@@ -1,18 +1,18 @@
-from distutils.dir_util import copy_tree
 import os
 import pathlib
 import shutil
-from tempfile import TemporaryDirectory
 import zipfile
+from argparse import ArgumentParser
 from datetime import datetime
-from argparse import ArgumentParser, Namespace
+from datetime import UTC
+from distutils.dir_util import copy_tree
+from tempfile import TemporaryDirectory
+
 from cytomine_installer.deployment.installer_config import InstallerConfig
 
-from cytomine_installer.util import delete_dir_content
-
-from .errors import InvalidTargetDirectoryError
-from .base import AbstractAction
 from ..deployment.deployment_folders import DeploymentFolder
+from .base import AbstractAction
+from .errors import InvalidTargetDirectoryError
 
 
 class DeployAction(AbstractAction):
@@ -139,7 +139,7 @@ class DeployAction(AbstractAction):
             # zip current files
             if namespace.do_zip:
                 if namespace.zip_filename is None:
-                    zip_filename = datetime.utcnow().strftime("%Y%m%d%H%M%S")
+                    zip_filename = datetime.now(UTC).strftime("%Y%m%d%H%M%S")
                     zip_filename = f"backup_{zip_filename}.zip"
                 else:
                     zip_filename = namespace.zip_filename
