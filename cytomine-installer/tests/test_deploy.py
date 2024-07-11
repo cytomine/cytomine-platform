@@ -141,8 +141,6 @@ class TestDeploy(TestDeploymentGeneric):
         output_ref_path = os.path.join(tests_path, "files", "ce_template_and_yml", "out")
         with TemporaryDirectory() as tmpdir:
             parser.call(["deploy", "-s", deploy_file_path, "-t", tmpdir])
-            # redirect output to this process stdout
-            print(subprocess.check_output(["ls", "-lRa", tmpdir]).decode("utf-8"))
             self.assertSameDirectories(tmpdir, output_ref_path)
 
     def testDeploySingleServerTemplateOnlyAndAuto(self):

@@ -26,6 +26,8 @@ def parse_dotenv(path):
 
 
 class FileSystemTestCase(TestCase):
+    maxDiff = None
+
     def assertIsFile(self, path):
         if not pathlib.Path(path).resolve().is_file():
             raise AssertionError(f"file does not exist: {path}")
@@ -46,9 +48,9 @@ class FileSystemTestCase(TestCase):
         ) as file2:
             yml1 = yaml.load(file1, Loader=yaml.Loader)
             yml2 = yaml.load(file2, Loader=yaml.Loader)
-            if yml1 is not None and yml2 is not None: 
+            if yml1 is not None and yml2 is not None:
                 self.assertDictEqual(yml1, yml2)
-            else: 
+            else:
                 self.assertEqual(yml1, yml2)
 
     def assertSameDotenvFileContent(self, path1, path2):
