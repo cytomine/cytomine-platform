@@ -1,8 +1,8 @@
 ARG IMAGE_VERSION
 ARG IMAGE_REVISION
-ARG PYTHON_VERSION=3.12
+ARG PYTHON_VERSION=3.12.4-slim-bookworm
 
-FROM python:${PYTHON_VERSION}-rc-slim-bullseye
+FROM python:${PYTHON_VERSION}
 
 RUN apt-get upgrade \
     && apt-get install -y --no-install-recommends openssl \
