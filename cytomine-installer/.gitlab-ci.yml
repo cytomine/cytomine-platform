@@ -34,7 +34,7 @@ include:
       unittest-job-name: unittest-python-3.11
       target: ./tests
       python-image-tag:	${PYTHON_IMAGE_TAG_TESTONLY_3_11}
-  - component: $CI_SERVER_FQDN/cm/rnd/cicd/component-docker/build-docker-image@0.7.0
+  - component: $CI_SERVER_FQDN/cm/rnd/cicd/component-docker/build-docker-image@0.8.0
     inputs:
       docker-image-name: 'cytomine/installer'
       dockerfile-path: 'docker/Dockerfile'
