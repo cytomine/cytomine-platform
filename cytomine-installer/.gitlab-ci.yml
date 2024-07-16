@@ -7,8 +7,8 @@ stages:
 variables:
   DOCKER_IMAGE_NAME: 'cytomine/installer'
   PYTHON_IMAGE_TAG: 3.12.4-slim-bookworm
-  PYTHON_IMAGE_TAG_TESTONLY_3.11: 3.11.9-slim-bookworm
-  PYTHON_IMAGE_TAG_TESTONLY_3.10: 3.10.9-slim-buster
+  PYTHON_IMAGE_TAG_TESTONLY_3_11: 3.11.9-slim-bookworm
+  PYTHON_IMAGE_TAG_TESTONLY_3_10: 3.10.9-slim-buster
 
 
 include:
@@ -27,12 +27,12 @@ include:
     inputs:
       unittest-job-name: unittest-python-3.11
       target: ./tests
-      python-image-tag:	${PYTHON_IMAGE_TAG_TESTONLY_3.11}
+      python-image-tag:	${PYTHON_IMAGE_TAG_TESTONLY_3_11}
   - component: $CI_SERVER_FQDN/cm/rnd/cicd/component-python/unittest@0.3.0
     inputs:
       unittest-job-name: unittest-python-3.10
       target: ./tests
-      python-image-tag:	${PYTHON_IMAGE_TAG_TESTONLY_3.10}
+      python-image-tag:	${PYTHON_IMAGE_TAG_TESTONLY_3_10}
 
 default:
   tags:
@@ -55,6 +55,7 @@ make-version-name:
   artifacts:
     reports:
       dotenv: .env
+
 
 .install-test-dependencies: &install-test-dependencies
   before_script:
