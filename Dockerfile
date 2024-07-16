@@ -50,7 +50,7 @@ COPY --from=dev-tools-builder /docker-entrypoint-cytomine.d/ /docker-entrypoint-
 COPY --from=entrypoint-scripts --chmod=774 /cytomine-entrypoint.sh /usr/local/bin/
 
 RUN mkdir /opt/keycloak/data/import
-COPY configs/kc_config.json /opt/keycloak/data/import
+COPY docker/kc_config.json /opt/keycloak/data/import
 
 ENV KC_DB=postgres
 ENV KC_HOSTNAME_DEBUG=true
@@ -68,6 +68,37 @@ RUN dnf install --installroot /mnt/rootfs findutils gettext --releasever 9 --set
 # startup scripts
 RUN mkdir /docker-entrypoint-cytomine.d/
 COPY --from=entrypoint-scripts --chmod=774 /envsubst-on-templates-and-move.sh /docker-entrypoint-cytomine.d/500-envsubst-on-templates-and-move.sh
+
+#######################################################################################
+## Stage: Cytomine IAM image
+FROM quay.io/keycloak/keycloak:${KEYCLOAK_VERSION} AS ci
+
+ARG ENTRYPOINT_SCRIPTS_VERSION
+ARG KEYCLOAK_VERSION
+ARG IMAGE_VERSION
+ARG IMAGE_REVISION
+
+LABEL org.opencontainers.image.authors="dev@cytomine.com" \
+      org.opencontainers.image.url="https://www.cytomine.com/" \
+      org.opencontainers.image.documentation="https://doc.cytomine.org/" \
+      org.opencontainers.image.source="https://github.com/cytomine/Cytomine-IAM" \
+      org.opencontainers.image.vendor="Cytomine Corporation SA" \
+      org.opencontainers.image.version="${IMAGE_VERSION}" \
+      org.opencontainers.image.revision="${IMAGE_REVISION}" \
+      org.opencontainers.image.deps.keycloak.version="${KEYCLOAK_VERSION}" \
+      org.opencontainers.image.deps.ubi.version="${UBI_VERSION}" \
+      org.opencontainers.image.deps.entrypoint.scripts.version="${ENTRYPOINT_SCRIPTS_VERSION}"
+
+COPY --from=builder /opt/keycloak/ /opt/keycloak/
+COPY --from=prod-tools-builder /mnt/rootfs /
+COPY --from=prod-tools-builder /docker-entrypoint-cytomine.d/ /docker-entrypoint-cytomine.d/
+COPY --from=entrypoint-scripts --chmod=774 /cytomine-entrypoint.sh /usr/local/bin/
+
+RUN mkdir /opt/keycloak/data/import
+COPY docker/kc_config.json /opt/keycloak/data/import
+
+ENTRYPOINT ["cytomine-entrypoint.sh", "/opt/keycloak/bin/kc.sh"]
+CMD ["start-dev" , "--import-realm" , "--http-port=8100"]
 
 #######################################################################################
 ## Stage: Cytomine IAM image
@@ -95,7 +126,7 @@ COPY --from=prod-tools-builder /docker-entrypoint-cytomine.d/ /docker-entrypoint
 COPY --from=entrypoint-scripts --chmod=774 /cytomine-entrypoint.sh /usr/local/bin/
 
 RUN mkdir /opt/keycloak/data/import
-COPY configs/kc_config.json /opt/keycloak/data/import
+COPY docker/kc_config.json /opt/keycloak/data/import
 
 ENV KC_DB=postgres
 
