@@ -1,0 +1,3 @@
+-r requirements.txt
+pylint==3.2.5
+pre-commit==3.7.1
