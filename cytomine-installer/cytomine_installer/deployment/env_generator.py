@@ -74,9 +74,7 @@ class EnvValueGenerator(ABC):
       standardized_field["type"] = field
     elif isinstance(field, dict) and "type" in field:
       if "freeze" in field and not isinstance(field["freeze"], bool):
-        raise InvalidAutoGenerationData(
-          self, "invalid type for 'freeze' parameter"
-        )
+        raise InvalidAutoGenerationData(self, "invalid type for 'freeze' parameter")
       standardized_field = field
     else:
       raise UnrecognizedGenerationField(self)
@@ -91,18 +89,12 @@ class EnvValueGenerator(ABC):
 
 class InvalidAutoGenerationData(ValueError):
   def __init__(self, generator: EnvValueGenerator, desc, *args):
-    super().__init__(
-      f"invalid field content for generation method '{generator.method_key}': {desc}",
-      *args,
-    )
+    super().__init__(f"invalid field content for generation method '{generator.method_key}': {desc}", *args)
 
 
 class UnrecognizedGenerationField(ValueError):
   def __init__(self, generator: EnvValueGenerator, *args) -> None:
-    super().__init__(
-      f"field does not match generation method '{generator.method_key}' convention ",
-      *args,
-    )
+    super().__init__(f"field does not match generation method '{generator.method_key}' convention ", *args)
 
 
 class RandomUUIDGenerator(EnvValueGenerator):
@@ -141,7 +133,6 @@ class OpenSSLGenerator(EnvValueGenerator):
     length = field.get(self.FIELD_LENGTH)
     if length is not None and not (isinstance(length, int) and length > 0):
       raise InvalidAutoGenerationData(self, "length should be an integer > 0")
-
     return self
 
 
@@ -176,21 +167,12 @@ class SecretGenerator(EnvValueGenerator):
       raise InvalidAutoGenerationData(self, "length should be an integer >= 0")
     whitelist = field.get(self.FIELD_WHITELIST)
     if whitelist is not None and not (isinstance(whitelist, str) and length > 0):
-      raise InvalidAutoGenerationData(
-        self,
-        "characters whitelist must be a string with one or more characters",
-      )
+      raise InvalidAutoGenerationData(self, "characters whitelist must be a string with one or more characters")
     blacklist = field.get(self.FIELD_BLACKLIST)
     if blacklist is not None and not (isinstance(blacklist, str) and length > 0):
-      raise InvalidAutoGenerationData(
-        self,
-        "characters blacklist must be a string with one or more characters",
-      )
+      raise InvalidAutoGenerationData(self, "characters blacklist must be a string with one or more characters")
     if blacklist is not None and whitelist is not None:
-      raise InvalidAutoGenerationData(
-        self,
-        "characters blacklist and whitelist cannot be set at the same time",
-      )
+      raise InvalidAutoGenerationData(self, "characters blacklist and whitelist cannot be set at the same time")
     return self
 
   @property

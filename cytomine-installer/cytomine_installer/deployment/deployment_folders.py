@@ -103,12 +103,8 @@ class ServerFolder(Deployable):
   def source_files(self):
     """List (existing) source files"""
     files = list()
-    files.append(
-      os.path.relpath(self._docker_compose_file.filepath, self._directory)
-    )
-    config_files = list_relative_files(
-      os.path.join(self._directory, self._configs_folder)
-    )
+    files.append(os.path.relpath(self._docker_compose_file.filepath, self._directory))
+    config_files = list_relative_files(os.path.join(self._directory, self._configs_folder))
     for config_file in config_files:
       files.append(os.path.join(self._configs_folder, config_file))
     return files
@@ -158,35 +154,22 @@ class ServerFolder(Deployable):
         if not env_store.has_namespace(service):
           continue
         service_envs = env_store.get_namespace_envs(service)
-        env_filepath = write_dotenv(
-          target_envs, service_envs, filename=f"{service}.env"
-        )
-        override_file.set_service_env_file(
-          service, os.path.relpath(env_filepath, target_directory)
-        )
+        env_filepath = write_dotenv(target_envs, service_envs, filename=f"{service}.env")
+        override_file.set_service_env_file(service, os.path.relpath(env_filepath, target_directory))
 
     # configs
     for service in self._docker_compose_file.services:
-      src_service_configs_path = os.path.join(
-        self._directory, self._configs_folder, service
-      )
+      src_service_configs_path = os.path.join(self._directory, self._configs_folder, service)
       if os.path.exists(src_service_configs_path):
         config_files = list_relative_files(src_service_configs_path)
         for config_file in sorted(config_files):
-          source_file = os.path.join(
-            self._configs_folder, service, config_file
-          )
+          source_file = os.path.join(self._configs_folder, service, config_file)
           target_file = os.path.join(self._configs_mount_point, config_file)
-          override_file.add_service_volume(
-            service, f"./{source_file}:{target_file}"
-          )
+          override_file.add_service_volume(service, f"./{source_file}:{target_file}")
 
     src_config_dir = os.path.join(self._directory, self._configs_folder)
     if os.path.exists(src_config_dir):
-      shutil.copytree(
-        src_config_dir,
-        os.path.join(target_directory, self._configs_folder),
-      )
+      shutil.copytree(src_config_dir, os.path.join(target_directory, self._configs_folder),)
 
     # save override
     override_file.write_to(target_directory, DOCKER_COMPOSE_OVERRIDE_FILENAME)
@@ -269,12 +252,8 @@ class DeploymentFolder(Deployable):
       file_must_exists=False,
     )
 
-    if not os.path.isfile(self._working_config.filepath) and not os.path.isfile(
-      self._template_config.filepath
-    ):
-      raise FileNotFoundError(
-        f"either {self._working_config.filepath} or {self._template_config.filepath} should exist, none found"
-      )
+    if not os.path.isfile(self._working_config.filepath) and not os.path.isfile(self._template_config.filepath):
+      raise FileNotFoundError(f"either {self._working_config.filepath} or {self._template_config.filepath} should exist, none found")
 
     # merge .template and .yml
     merge_policy = MergeEnvStorePolicy.PRESERVE
@@ -300,21 +279,22 @@ class DeploymentFolder(Deployable):
     self._single_server = DOCKER_COMPOSE_FILENAME in subfiles
 
     if not self._single_server:
-      raise InvalidServerConfigurationError(
-        f"cannot find {DOCKER_COMPOSE_FILENAME} at the root of the install folder"
-      )
+      raise InvalidServerConfigurationError(f"cannot find {DOCKER_COMPOSE_FILENAME} at the"
+                                            "root of the install folder")
 
     nb_servers_in_envs = len(self._merge_config.servers)
     if self._single_server and nb_servers_in_envs > 1:
       raise InvalidServerConfigurationError(
-        f"it appears to be a single-server configuration ({DOCKER_COMPOSE_FILENAME} found in root directory) but several server entries have been found in cytomine.yml"
+        f"it appears to be a single-server configuration ({DOCKER_COMPOSE_FILENAME} found"
+        " in root directory) but several server entries have been found in cytomine.yml"
       )
     elif not self._single_server:
       envs_servers = set(self._merge_config.servers)
       folder_servers = self._subdirs
       if not envs_servers.issubset(folder_servers):
         raise InvalidServerConfigurationError(
-          f"it appears to be a multi-server configuration ({DOCKER_COMPOSE_FILENAME} not found in root directory) but some server entries in cytomine.yml have no matching server folder"
+          f"it appears to be a multi-server configuration ({DOCKER_COMPOSE_FILENAME} not"
+          " found in root directory) but some server entries in cytomine.yml have no matching server folder"
         )
 
     server_folder_common_params = {

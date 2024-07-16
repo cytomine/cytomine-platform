@@ -18,9 +18,7 @@ class InvalidServerConfigurationError(InstallerError):
 
 class MissingConfigFileError(InvalidServerConfigurationError):
   def __init__(self, path, filename="cytomine.yml", *args: object) -> None:
-    super().__init__(
-      f"missing cytomine configuration '{filename}' in '{path}'", *args
-    )
+    super().__init__(f"missing cytomine configuration '{filename}' in '{path}'", *args)
 
 
 class NoDockerComposeYamlFileError(InvalidServerConfigurationError):
@@ -30,17 +28,13 @@ class NoDockerComposeYamlFileError(InvalidServerConfigurationError):
 
 class MissingConfigFileError(InvalidServerConfigurationError):
   def __init__(self, path, filename="cytomine.yml", *args: object) -> None:
-    super().__init__(
-      f"missing cytomine configuration '{filename}' in '{path}'", *args
-    )
+    super().__init__(f"missing cytomine configuration '{filename}' in '{path}'", *args)
 
 
 class UnknownConfigSection(InstallerError):
   def __init__(self, section, *args: object) -> None:
     available_values = ", ".join(list(map(lambda v: v.value, ConfigSectionEnum)))
-    super().__init__(
-      f"unknown section '{section}', expects one of {{{available_values}}}", *args
-    )
+    super().__init__(f"unknown section '{section}', expects one of {{{available_values}}}", *args)
 
 
 class UnknownServiceError(InstallerError):
@@ -50,7 +44,4 @@ class UnknownServiceError(InstallerError):
 
 class InvalidGlobalValue(InstallerError):
   def __init__(self, ns, key, value, *args: object) -> None:
-    super().__init__(
-      f"invalid value '{value}' for '{key}' in namespace '{ns}', expecting a global variable reference like '$GLOBAL_NAMESPACE.$VAR_NAME'",
-      *args,
-    )
+    super().__init__(f"invalid value '{value}' for '{key}' in namespace '{ns}', expecting a global variable reference like '$GLOBAL_NAMESPACE.$VAR_NAME'", *args)

@@ -18,74 +18,17 @@ from .errors import InvalidTargetDirectoryError
 class DeployAction(AbstractAction):
   def _fill_in_subparser(self, sub_parser: ArgumentParser):
     """Fill the given sub_parser with the program arguments"""
-    sub_parser.add_argument(
-      "-s",
-      "--source_directory",
-      dest="source_directory",
-      default=os.getcwd(),
-      help="path to the source directory",
-    )
-    sub_parser.add_argument(
-      "-t",
-      "--target_directory",
-      dest="target_directory",
-      help="path to the target directory (by default, the target is the source directory)",
-    )
-    sub_parser.add_argument(
-      "-z",
-      "--do_zip",
-      dest="do_zip",
-      action="store_true",
-      help="whether or not the current state of the deployment configuration should be"
-      "saved into a zip file before being overwritten with the new configuration",
-    )
-    sub_parser.add_argument(
-      "--zip-filename",
-      dest="zip_filename",
-      help="when do_zip=True, specify the name of the zip file. By default a name will be generated based on datetime",
-    )
-    sub_parser.add_argument(
-      "--envs-folder-name",
-      dest="envs_folder",
-      default="envs",
-      help="name of the environment variables folder",
-    )
-    sub_parser.add_argument(
-      "--configs-folder-name",
-      dest="configs_folder",
-      default="configs",
-      help="name of the configs folder",
-    )
-    sub_parser.add_argument(
-      "--configs-mount-point",
-      dest="configs_mount_point",
-      default="/cm_configs",
-      help="mount point for config files in the container",
-    )
-    sub_parser.add_argument(
-      "--working-config-filename",
-      dest="working_config_filename",
-      default="cytomine.yml",
-      help="name of the working yaml config file",
-    )
-    sub_parser.add_argument(
-      "--template-config-filename",
-      dest="template_config_filename",
-      default="cytomine.template",
-      help="name of the template yaml config file",
-    )
-    sub_parser.add_argument(
-      "--overwrite",
-      dest="overwrite",
-      action="store_true",
-      help="to clear content of the target_directory before generating the deployment files (only used if a target directory different from the source directory is specified)",
-    )
-    sub_parser.add_argument(
-      "--installer_config",
-      dest="installer_config",
-      default="installer_config.yml",
-      help="name of the installer yaml configuration file",
-    )
+    sub_parser.add_argument("-s", "--source_directory", dest="source_directory", default=os.getcwd(), help="path to the source directory")
+    sub_parser.add_argument("-t", "--target_directory", dest="target_directory", help="path to the target directory (by default, the target is the source directory)")
+    sub_parser.add_argument("-z", "--do_zip", dest="do_zip", action="store_true", help="whether or not the current state of the deployment configuration should be" "saved into a zip file before being overwritten with the new configuration")
+    sub_parser.add_argument("--zip-filename", dest="zip_filename", help="when do_zip=True, specify the name of the zip file. By default a name will be generated based on datetime")
+    sub_parser.add_argument("--envs-folder-name", dest="envs_folder", default="envs", help="name of the environment variables folder")
+    sub_parser.add_argument("--configs-folder-name", dest="configs_folder", default="configs", help="name of the configs folder")
+    sub_parser.add_argument("--configs-mount-point", dest="configs_mount_point", default="/cm_configs", help="mount point for config files in the container")
+    sub_parser.add_argument("--working-config-filename", dest="working_config_filename", default="cytomine.yml", help="name of the working yaml config file")
+    sub_parser.add_argument("--template-config-filename", dest="template_config_filename", default="cytomine.template", help="name of the template yaml config file")
+    sub_parser.add_argument("--overwrite", dest="overwrite", action="store_true", help="to clear content of the target_directory before generating the deployment files (only used if a target directory different from the source directory is specified)")
+    sub_parser.add_argument("--installer_config", dest="installer_config", default="installer_config.yml", help="name of the installer yaml configuration file")
     sub_parser.set_defaults(do_zip=False, overwrite=False)
 
   def run(self, namespace):

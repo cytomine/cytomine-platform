@@ -164,14 +164,9 @@ class EnvStore(BaseEnvStore):
     output_dict = defaultdict(lambda: defaultdict(dict))
     for ns in self.namespaces:
       for key in self._store[ns].keys():
-        init_type, init_value = (
-          self._initial_type[ns][key],
-          self._initial_value[ns][key],
-        )
+        init_type, init_value = (self._initial_type[ns][key], self._initial_value[ns][key],)
         if self._check_is_type_auto_and_frozen(init_type, init_value):
-          output_dict[ns][EnvValueTypeEnum.CONSTANT.value][
-            key
-          ] = self.get_env(ns, key)
+          output_dict[ns][EnvValueTypeEnum.CONSTANT.value][key] = self.get_env(ns, key)
         else:
           output_dict[ns][init_type.value][key] = self._initial_value[ns][key]
     if len(output_dict) == 0:
@@ -203,9 +198,7 @@ class EnvStore(BaseEnvStore):
   ):
     """Merge logic for a single env entry"""
     if ref_store is None and other_initial_type == EnvValueTypeEnum.GLOBAL:
-      raise ValueError(
-        f"'{EnvValueTypeEnum.GLOBAL.value}' is not supported in this section, namespace {other_ns}"
-      )
+      raise ValueError(f"'{EnvValueTypeEnum.GLOBAL.value}' is not supported in this section, namespace {other_ns}")
 
     # skip overwrite if
     store_has_env = self.has_env(other_ns, other_key)
@@ -218,11 +211,8 @@ class EnvStore(BaseEnvStore):
       and (
         not merge_trie.has(merge_prefix + [other_ns, other_key])
         or (
-          self._check_is_type_auto_and_frozen(
-            other_initial_type, other_initial_value
-          )
-          and self._initial_type[other_ns][other_key]
-          == EnvValueTypeEnum.CONSTANT
+          self._check_is_type_auto_and_frozen(other_initial_type, other_initial_value)
+          and self._initial_type[other_ns][other_key] == EnvValueTypeEnum.CONSTANT
         )
       )
     ):
