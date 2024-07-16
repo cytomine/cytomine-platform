@@ -1,6 +1,7 @@
 stages:
   - prepare
   - test
+  - build
   - release
 
 
