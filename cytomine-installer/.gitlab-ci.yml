@@ -18,9 +18,15 @@ include:
       python-image-tag:	${PYTHON_IMAGE_TAG}
   - component: $CI_SERVER_FQDN/cm/rnd/cicd/component-python/unittest@0.3.0
     inputs:
+      unittest-job-name: unitest3.12
       target: ./tests
       python-image-tag:	${PYTHON_IMAGE_TAG}
 
+  - component: $CI_SERVER_FQDN/cm/rnd/cicd/component-python/unittest@0.3.0
+    inputs:
+      unittest-job-name: unitest3.12
+      target: ./tests
+      python-image-tag:	${PYTHON_IMAGE_TAG}
 
 default:
   tags:
@@ -44,10 +50,18 @@ make-version-name:
     reports:
       dotenv: .env
 
-
-unittest:
+.install-test-dependencies: &install-test-dependencies
   before_script:
     - python -m pip install -r requirements.txt
+
+unittest3.12:
+  *install-test-dependencies
+
+unittest3.11:
+  *install-test-dependencies
+
+unittest3.10:
+  *install-test-dependencies
 
 
 docker-image:
