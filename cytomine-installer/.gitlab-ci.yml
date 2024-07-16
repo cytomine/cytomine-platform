@@ -10,11 +10,15 @@ variables:
 
 
 include:
-  - component: $CI_SERVER_FQDN/cm/rnd/cicd/component-python/linter@0.1.0
+  - component: $CI_SERVER_FQDN/cm/rnd/cicd/component-python/linter@0.3.0
     inputs:
       targets: ./cytomine_installer ./tests
       pylintrc-path: pylintrc
       pylint-version:	3.2.5
+      python-image-tag:	${PYTHON_IMAGE_TAG}
+  - component: $CI_SERVER_FQDN/cm/rnd/cicd/component-python/unittest@0.3.0
+    inputs:
+      targets: ./tests
       python-image-tag:	${PYTHON_IMAGE_TAG}
 
 
@@ -42,11 +46,8 @@ make-version-name:
 
 
 unittest:
-  stage: test
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/python:${PYTHON_IMAGE_TAG}
-  script:
+  before_script:
     - python -m pip install -r requirements.txt
-    - python -m unittest discover tests/
 
 
 docker-image:
