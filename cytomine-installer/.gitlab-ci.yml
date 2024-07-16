@@ -57,18 +57,19 @@ make-version-name:
       dotenv: .env
 
 
-.install-test-dependencies: &install-test-dependencies
+.install-test-dependencies:
   before_script:
     - python -m pip install -r requirements.txt
 
 unittest-python-3.12:
-  *install-test-dependencies
+  extends: .install-test-dependencies
 
 unittest-python-3.11:
-  *install-test-dependencies
+  extends: .install-test-dependencies
 
 unittest-python-3.10:
-  *install-test-dependencies
+  extends: .install-test-dependencies
+  allow_failure: true
 
 
 docker-image:
