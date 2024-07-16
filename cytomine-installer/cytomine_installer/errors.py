@@ -1,3 +1,3 @@
 class InstallerError(Exception):
-    # base class for installer errors
-    pass
+  # base class for installer errors
+  pass
