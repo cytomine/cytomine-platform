@@ -1,7 +1,12 @@
 stages:
   - prepare
   - test
-  - publish
+  - release
+
+
+default:
+  tags:
+    - docker
 
 
 variables:
@@ -28,11 +33,10 @@ include:
       unittest-job-name: unittest-python-3.11
       target: ./tests
       python-image-tag:	${PYTHON_IMAGE_TAG_TESTONLY_3_11}
-
-default:
-  tags:
-    - docker
-
+  - component: $CI_SERVER_FQDN/cm/rnd/cicd/component-docker/build-docker-image@0.1.0
+    inputs:
+      docker-image-name: 'cytomine/installer'
+      dockerfile-path: 'docker/Dockerfile'
 
 make-version-name:
   stage: prepare
@@ -62,6 +66,18 @@ unittest-python-3.12:
 unittest-python-3.11:
   extends: .install-test-dependencies
 
+
+build-docker-image:
+  variables:
+    DOCKER_TAG: $CI_COMMIT_SHA
+  before_script:
+    - sed -i -- "s/__version__ = \"v0.0.0\"/__version__ = \"${CI_COMMIT_TAG}\"/g" pims/__version__.py
+    - |
+      export DOCKER_BUILD_ARGS=(
+        --build-arg IMAGE_VERSION=${DOCKER_TAG}
+        --build-arg IMAGE_REVISION=${CI_COMMIT_SHORT_SHA}
+        --build-arg PYTHON_VERSION=${PYTHON_VERSION}
+      )
 
 
 docker-image:
