@@ -3,13 +3,25 @@ stages:
   - test
   - publish
 
+
 variables:
   DOCKER_IMAGE_NAME: 'cytomine/installer'
-  PYTHON_VERSION: '3.12'
+  PYTHON_IMAGE_TAG: 3.12.4-slim-bookworm
+
+
+include:
+  - component: $CI_SERVER_FQDN/cm/rnd/cicd/component-python/linter@0.1.0
+    inputs:
+      targets: ./cytomine_installer ./tests
+      pylintrc-path: pylintrc
+      pylint-version:	3.2.5
+      python-image-tag:	${PYTHON_IMAGE_TAG}
+
 
 default:
   tags:
     - docker
+
 
 make-version-name:
   stage: prepare
@@ -28,20 +40,14 @@ make-version-name:
     reports:
       dotenv: .env
 
-format-black:
-  stage: prepare
-  image:
-    name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/cytopia/black
-    entrypoint: ["/bin/ash", "-c"]
-  script:
-    - python3 -m black --check --diff cytomine_installer
 
 unittest:
   stage: test
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/python:${PYTHON_VERSION}-rc-slim-bullseye
+  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/python:${PYTHON_IMAGE_TAG}
   script:
     - python -m pip install -r requirements.txt
     - python -m unittest discover tests/
+
 
 docker-image:
   stage: publish
