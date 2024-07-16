@@ -20,17 +20,17 @@ include:
       python-image-tag:	${PYTHON_IMAGE_TAG}
   - component: $CI_SERVER_FQDN/cm/rnd/cicd/component-python/unittest@0.3.0
     inputs:
-      unittest-job-name: unitest-python-3.12
+      unittest-job-name: unittest-python-3.12
       target: ./tests
       python-image-tag:	${PYTHON_IMAGE_TAG}
   - component: $CI_SERVER_FQDN/cm/rnd/cicd/component-python/unittest@0.3.0
     inputs:
-      unittest-job-name: unitest-python-3.11
+      unittest-job-name: unittest-python-3.11
       target: ./tests
       python-image-tag:	${PYTHON_IMAGE_TAG_TESTONLY_3.11}
   - component: $CI_SERVER_FQDN/cm/rnd/cicd/component-python/unittest@0.3.0
     inputs:
-      unittest-job-name: unitest-python-3.10
+      unittest-job-name: unittest-python-3.10
       target: ./tests
       python-image-tag:	${PYTHON_IMAGE_TAG_TESTONLY_3.10}
 
@@ -60,13 +60,13 @@ make-version-name:
   before_script:
     - python -m pip install -r requirements.txt
 
-unittest3.12:
+unittest-python-3.12:
   *install-test-dependencies
 
-unittest3.11:
+unittest-python-3.11:
   *install-test-dependencies
 
-unittest3.10:
+unittest-python-3.10:
   *install-test-dependencies
 
 
