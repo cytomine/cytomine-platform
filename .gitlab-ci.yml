@@ -48,6 +48,7 @@ build-push-docker-image:
     - echo "Build the docker image ${DOCKER_IMAGE_NAME}:${IMAGE_VERSION}"
     - |
       docker build \
+        --target ci \
         --build-arg NGINX_VERSION=${NGINX_VERSION} \
         --build-arg IMAGE_VERSION=${IMAGE_VERSION} \
         --build-arg IMAGE_REVISION=${CI_COMMIT_SHORT_SHA} \
