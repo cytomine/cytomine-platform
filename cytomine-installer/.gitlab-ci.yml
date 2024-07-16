@@ -28,11 +28,6 @@ include:
       unittest-job-name: unittest-python-3.11
       target: ./tests
       python-image-tag:	${PYTHON_IMAGE_TAG_TESTONLY_3_11}
-  - component: $CI_SERVER_FQDN/cm/rnd/cicd/component-python/unittest@0.3.0
-    inputs:
-      unittest-job-name: unittest-python-3.10
-      target: ./tests
-      python-image-tag:	${PYTHON_IMAGE_TAG_TESTONLY_3_10}
 
 default:
   tags:
@@ -67,9 +62,6 @@ unittest-python-3.12:
 unittest-python-3.11:
   extends: .install-test-dependencies
 
-unittest-python-3.10:
-  extends: .install-test-dependencies
-  allow_failure: true
 
 
 docker-image:
