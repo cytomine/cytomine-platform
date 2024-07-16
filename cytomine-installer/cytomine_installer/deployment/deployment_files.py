@@ -1,19 +1,15 @@
-import enum
 import json
 import os
-import yaml
 from collections import defaultdict
+
+import yaml
 
 from cytomine_installer.deployment.util.trie import Trie
 
-from .errors import (
-  MissingConfigFileError,
-  NoDockerComposeYamlFileError,
-  UnknownConfigSection,
-  UnknownServiceError,
-)
 from .enums import ConfigSectionEnum
 from .env_store import DictExportable, EnvStore, MergeEnvStorePolicy
+from .errors import (MissingConfigFileError, NoDockerComposeYamlFileError,
+                     UnknownConfigSection, UnknownServiceError)
 
 DOCKER_COMPOSE_FILENAME = "docker-compose.yml"
 DOCKER_COMPOSE_OVERRIDE_FILENAME = "docker-compose.override.yml"
@@ -54,8 +50,8 @@ class ConfigFile(DictExportable):
     for section in raw_config.keys():
       try:
         ConfigSectionEnum(section)
-      except ValueError:
-        raise UnknownConfigSection(section)
+      except ValueError as e:
+        raise UnknownConfigSection(section) from e
 
     global_section = raw_config.get(ConfigSectionEnum.GLOBAL.value)
     if global_section is not None:
@@ -90,6 +86,10 @@ class ConfigFile(DictExportable):
   def servers(self):
     return list(self._servers_env_stores.keys())
 
+  @property
+  def servers_env_stores(self):
+    return self._servers_env_stores
+
   def services(self, server: str):
     """Returns the list of services for a given server"""
     if server not in self._servers_env_stores:
@@ -106,9 +106,9 @@ class ConfigFile(DictExportable):
     return self._servers_env_stores.get(server, None)
 
   def export_dict(self):
-    target_dict = dict()
+    target_dict = {}
     target_dict[ConfigSectionEnum.GLOBAL.value] = self._global_envs.export_dict()
-    target_dict[ConfigSectionEnum.SERVICES.value] = dict()
+    target_dict[ConfigSectionEnum.SERVICES.value] = {}
     for server, env_store in self._servers_env_stores.items():
       target_dict[ConfigSectionEnum.SERVICES.value][
         server
@@ -121,8 +121,8 @@ class ConfigFile(DictExportable):
 
   @staticmethod
   def merge(
-    config_file1,
-    config_file2,
+    config_file1: "ConfigFile",
+    config_file2: "ConfigFile",
     merge_policy: MergeEnvStorePolicy = MergeEnvStorePolicy.PRESERVE,
     update_allow_list: list = None,
   ):
@@ -133,8 +133,11 @@ class ConfigFile(DictExportable):
     update_allow_list: list
       A list containing the keys to update (supports wildcard)
     """
+    #
+    # pylint: disable=protected-access
+    #
     if update_allow_list is None:
-      update_allow_list = list()
+      update_allow_list = []
 
     merge_trie = Trie()
     for item_to_update in update_allow_list:
@@ -142,33 +145,33 @@ class ConfigFile(DictExportable):
 
     new_config_file = ConfigFile()
     new_config_file._global_envs = EnvStore.merge(
-      config_file1._global_envs,
-      config_file2._global_envs,
+      config_file1.global_envs,
+      config_file2.global_envs,
       merge_policy=merge_policy,
       merge_trie=merge_trie,
       merge_prefix=[ConfigSectionEnum.GLOBAL.value],
     )
     # merge existing servers
-    for server_name1, env_store1 in config_file1._servers_env_stores.items():
-      env_store2 = config_file2._servers_env_stores.get(server_name1, EnvStore())
-      new_config_file._servers_env_stores[server_name1] = EnvStore.merge(
+    for server_name1, env_store1 in config_file1.servers_env_stores.items():
+      env_store2 = config_file2.servers_env_stores.get(server_name1, EnvStore())
+      new_config_file.servers_env_stores[server_name1] = EnvStore.merge(
         env_store1,
         env_store2,
         merge_policy=merge_policy,
-        ref_store=new_config_file._global_envs,
+        ref_store=new_config_file.global_envs,
         merge_trie=merge_trie,
         merge_prefix=[ConfigSectionEnum.SERVICES.value, server_name1],
       )
     # add new servers from config file 2
-    new_servers = set(config_file2._servers_env_stores.keys()).difference(
-      config_file1._servers_env_stores.keys()
+    new_servers = set(config_file2.servers_env_stores.keys()).difference(
+      config_file1.servers_env_stores.keys()
     )
     for server_name2 in new_servers:
-      env_store2 = config_file2._servers_env_stores[server_name2]
+      env_store2 = config_file2.servers_env_stores[server_name2]
       env_store2 = EnvStore.merge(
-        env_store2, EnvStore(), ref_store=new_config_file._global_envs
+        env_store2, EnvStore(), ref_store=new_config_file.global_envs
       )  # deep copy
-      new_config_file._servers_env_stores[server_name2] = env_store2
+      new_config_file.servers_env_stores[server_name2] = env_store2
     return new_config_file
 
 
@@ -210,7 +213,7 @@ class EditableDockerCompose:
   """
 
   def __init__(self, version="3.9") -> None:
-    self._compose = dict()
+    self._compose = {}
     self._compose["services"] = {}
     if version is not None:
       self._compose["version"] = version
@@ -231,7 +234,7 @@ class EditableDockerCompose:
   def add_service_volume(self, service, mapping):
     service_dict = self._get_service_dict(service)
     if "volumes" not in service_dict:
-      self._compose["services"][service]["volumes"] = list()
+      self._compose["services"][service]["volumes"] = []
     self._compose["services"][service]["volumes"].append(mapping)
 
   def clear_service_volumes(self, service):

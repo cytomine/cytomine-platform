@@ -1,20 +1,17 @@
 import os
-import yaml
 from tempfile import TemporaryDirectory
 from unittest import TestCase
 
-from cytomine_installer.deployment.env_store import UnknownValueTypeError
+import yaml
+
 from cytomine_installer.deployment.deployment_files import (
-  DockerComposeFile,
-  ConfigFile,
-  EditableDockerCompose,
-  UnknownConfigSection,
-)
+    ConfigFile, DockerComposeFile, EditableDockerCompose, UnknownConfigSection)
+from cytomine_installer.deployment.env_store import UnknownValueTypeError
 from tests.util import UUID_PATTERN
 
 
 class TestDockerComposeFile(TestCase):
-  def testValidFile(self):
+  def test_valid_file(self):
     tests_path = os.path.dirname(__file__)
     dc_path = os.path.join(tests_path, "files")
     dc_filename = "docker_compose.valid.yml"
@@ -33,7 +30,7 @@ class TestDockerComposeFile(TestCase):
 
 
 class TestConfigFile(TestCase):
-  def testMinimalFile(self):
+  def test_minimal_file(self):
     tests_path = os.path.dirname(__file__)
     ce_path = os.path.join(tests_path, "files")
     ce_filename = "cytomine.mini.yml"
@@ -74,21 +71,21 @@ class TestConfigFile(TestCase):
       config_file.global_envs.get_env("namespace2", "KEY1"),
     )
 
-  def testFileWithInvalidValueType(self):
+  def test_file_with_invalid_value_type(self):
     tests_path = os.path.dirname(__file__)
     ce_path = os.path.join(tests_path, "files")
     ce_filename = "cytomine.unknown-value-type.yml"
     with self.assertRaises(UnknownValueTypeError):
       ConfigFile(ce_path, filename=ce_filename)
 
-  def testFileWithInvalidTopLevelSection(self):
+  def test_file_with_invalid_top_level_section(self):
     tests_path = os.path.dirname(__file__)
     ce_path = os.path.join(tests_path, "files")
     ce_filename = "cytomine.invalid-top-level-sections.yml"
     with self.assertRaises(UnknownConfigSection):
       ConfigFile(ce_path, filename=ce_filename)
 
-  def testMerge(self):
+  def test_merge(self):
     tests_path = os.path.dirname(__file__)
     ce_path = os.path.join(tests_path, "files")
     ce_filename1 = "cytomine.mini.2.yml"
@@ -104,7 +101,7 @@ class TestConfigFile(TestCase):
 
 
 class TestEditableDockerCompose(TestCase):
-  def testEmpty(self):
+  def test_empty(self):
     dc_version = "3.8"
     edc = EditableDockerCompose(dc_version)
 
@@ -117,7 +114,7 @@ class TestEditableDockerCompose(TestCase):
 
     self.assertDictEqual({"version": dc_version, "services": {}}, edc_content)
 
-  def testWithEnvFileInOneService(self):
+  def test_with_env_file_in_one_service(self):
     dc_version = "3.8"
     edc = EditableDockerCompose(dc_version)
     service = "myservice"
@@ -136,7 +133,7 @@ class TestEditableDockerCompose(TestCase):
       edc_content,
     )
 
-  def testWithVolumes(self):
+  def test_with_volumes(self):
     dc_version = "3.8"
     edc = EditableDockerCompose(dc_version)
     service = "myservice"

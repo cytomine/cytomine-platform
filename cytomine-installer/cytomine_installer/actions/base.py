@@ -1,13 +1,12 @@
+import logging
 from abc import ABC, abstractmethod
 from argparse import ArgumentParser
-import logging
 
 
 class AbstractAction(ABC):
   @abstractmethod
   def _fill_in_subparser(self, sub_parser: ArgumentParser):
     """Fill the given sub_parser with the program arguments"""
-    pass
 
   @abstractmethod
   def run(self, namespace):
@@ -17,7 +16,6 @@ class AbstractAction(ABC):
     namespace: Namespace
       Command line arguments of the action (including local/global scope information)
     """
-    pass
 
   def fill_in_subparser(self, action_name: str, main_parser: ArgumentParser):
     sub_parser = main_parser.add_parser(action_name)

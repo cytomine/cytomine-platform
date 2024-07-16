@@ -1,24 +1,28 @@
+#
+# pylint: disable=too-many-public-methods
+#
+
 import contextlib
 import io
 import os
-import subprocess
-from distutils.dir_util import copy_tree
-from pathlib import Path
-from tempfile import TemporaryDirectory
 import unittest
 import zipfile
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
 import yaml
+from setuptools._distutils.dir_util import copy_tree
 
 from cytomine_installer import parser
 from cytomine_installer.actions.errors import InvalidTargetDirectoryError
-from cytomine_installer.deployment.deployment_folders import InvalidServerConfigurationError
+from cytomine_installer.deployment.deployment_folders import \
+    InvalidServerConfigurationError
 from cytomine_installer.util import list_relative_files
 from tests.util import UUID_PATTERN, TestDeploymentGeneric
 
 
 class TestDeploy(TestDeploymentGeneric):
-  def testDeployInNonEmptyDirectory(self):
+  def test_deploy_in_non_empty_directory(self):
     tests_path = os.path.dirname(__file__)
     deploy_file_path = os.path.join(
       tests_path, "files", "fake_single_server_no_auto", "in"
@@ -37,7 +41,7 @@ class TestDeploy(TestDeploymentGeneric):
 
       self.assertIn("error:", stream.getvalue())
 
-  def testDeployInNonEmptyDirectoryWithOverwrite(self):
+  def test_deploy_in_non_empty_directory_with_overwrite(self):
     tests_path = os.path.dirname(__file__)
     deploy_file_path = os.path.join(
       tests_path, "files", "fake_single_server_no_auto", "in"
@@ -53,9 +57,9 @@ class TestDeploy(TestDeploymentGeneric):
 
       parser.call(["deploy", "-s", deploy_file_path, "-t", tmpdir, "--overwrite"])
 
-      self.assertSameDirectories(tmpdir, output_ref_path)
+      self.assert_same_directories(tmpdir, output_ref_path)
 
-  def testFakeSingleServerNoZip(self):
+  def test_fake_single_server_no_zip(self):
     tests_path = os.path.dirname(__file__)
     deploy_file_path = os.path.join(
       tests_path, "files", "fake_single_server_no_auto", "in"
@@ -66,12 +70,12 @@ class TestDeploy(TestDeploymentGeneric):
     with TemporaryDirectory() as tmpdir:
       parser.call(["deploy", "-s", deploy_file_path, "-t", tmpdir])
 
-      self.assertSameDirectories(tmpdir, output_ref_path)
+      self.assert_same_directories(tmpdir, output_ref_path)
       self.assertListEqual(
         [f for f in os.listdir(tmpdir) if f.endswith(".zip")], []
       )
 
-  def testDeployFakeSingleServerWithZip(self):
+  def test_deploy_fake_single_server_with_zip(self):
     tests_path = os.path.dirname(__file__)
     deploy_file_path = os.path.join(
       tests_path, "files", "fake_single_server_no_auto", "in"
@@ -82,7 +86,7 @@ class TestDeploy(TestDeploymentGeneric):
     with TemporaryDirectory() as tmpdir:
       parser.call(["deploy", "-s", deploy_file_path, "-t", tmpdir, "-z"])
 
-      self.assertSameDirectories(tmpdir, output_ref_path)
+      self.assert_same_directories(tmpdir, output_ref_path)
       zip_files = [f for f in os.listdir(tmpdir) if f.endswith(".zip")]
       self.assertTrue(len(zip_files), 1)
       zip_file = zip_files[0]
@@ -95,55 +99,55 @@ class TestDeploy(TestDeploymentGeneric):
           sorted(list_relative_files(deploy_file_path)),
         )
 
-  def testDeploySingleServerTemplateOnly(self):
+  def test_deploy_single_server_template_only(self):
     tests_path = os.path.dirname(__file__)
     deploy_file_path = os.path.join(tests_path, "files", "fake_single_server_template_only", "in")
     output_ref_path = os.path.join(tests_path, "files", "fake_single_server_template_only", "out")
     with TemporaryDirectory() as tmpdir:
       parser.call(["deploy", "-s", deploy_file_path, "-t", tmpdir])
-      self.assertSameDirectories(tmpdir, output_ref_path)
+      self.assert_same_directories(tmpdir, output_ref_path)
 
-  def testDeploySingleServerTemplateAndConfig(self):
+  def test_deploy_single_server_template_and_config(self):
     tests_path = os.path.dirname(__file__)
     deploy_file_path = os.path.join(tests_path, "files", "fake_single_server_template_and_config", "in")
     output_ref_path = os.path.join(tests_path, "files", "fake_single_server_template_and_config", "out")
     with TemporaryDirectory() as tmpdir:
       parser.call(["deploy", "-s", deploy_file_path, "-t", tmpdir])
-      self.assertSameDirectories(tmpdir, output_ref_path)
+      self.assert_same_directories(tmpdir, output_ref_path)
 
-  def testDeploySingleServerEmptyTemplate(self):
+  def test_deploy_single_server_empty_template(self):
     tests_path = os.path.dirname(__file__)
     deploy_file_path = os.path.join(tests_path, "files", "fake_single_server_empty_template", "in")
     output_ref_path = os.path.join(tests_path, "files", "fake_single_server_empty_template", "out")
     with TemporaryDirectory() as tmpdir:
       parser.call(["deploy", "-s", deploy_file_path, "-t", tmpdir])
-      self.assertSameDirectories(tmpdir, output_ref_path)
+      self.assert_same_directories(tmpdir, output_ref_path)
 
-  def testDeploySingleServerEmptyTemplateAndEmptyYml(self):
+  def test_deploy_single_server_empty_template_and_empty_yml(self):
     tests_path = os.path.dirname(__file__)
     deploy_file_path = os.path.join(tests_path, "files", "fake_single_server_empty_template_and_yml", "in")
     output_ref_path = os.path.join(tests_path, "files", "fake_single_server_empty_template_and_yml", "out")
     with TemporaryDirectory() as tmpdir:
       parser.call(["deploy", "-s", deploy_file_path, "-t", tmpdir])
-      self.assertSameDirectories(tmpdir, output_ref_path)
+      self.assert_same_directories(tmpdir, output_ref_path)
 
-  def testDeploySingleServerTemplateChanged(self):
+  def test_deploy_single_server_template_changed(self):
     tests_path = os.path.dirname(__file__)
     deploy_file_path = os.path.join(tests_path, "files", "fake_single_server_template_changed", "in")
     output_ref_path = os.path.join(tests_path, "files", "fake_single_server_template_changed", "out")
     with TemporaryDirectory() as tmpdir:
       parser.call(["deploy", "-s", deploy_file_path, "-t", tmpdir])
-      self.assertSameDirectories(tmpdir, output_ref_path)
+      self.assert_same_directories(tmpdir, output_ref_path)
 
-  def testDeployCommunityEditionTemplateAndYml(self):
+  def test_deploy_community_edition_template_and_yml(self):
     tests_path = os.path.dirname(__file__)
     deploy_file_path = os.path.join(tests_path, "files", "ce_template_and_yml", "in")
     output_ref_path = os.path.join(tests_path, "files", "ce_template_and_yml", "out")
     with TemporaryDirectory() as tmpdir:
       parser.call(["deploy", "-s", deploy_file_path, "-t", tmpdir])
-      self.assertSameDirectories(tmpdir, output_ref_path)
+      self.assert_same_directories(tmpdir, output_ref_path)
 
-  def testDeploySingleServerTemplateOnlyAndAuto(self):
+  def test_deploy_single_server_template_only_and_auto(self):
     tests_path = os.path.dirname(__file__)
     deploy_file_path = os.path.join(tests_path, "files", "fake_single_server_template_only_with_auto", "in")
     output_ref_path = os.path.join(tests_path, "files", "fake_single_server_template_only_with_auto", "out")
@@ -161,7 +165,7 @@ class TestDeploy(TestDeploymentGeneric):
         self.assertRegex(yml_content["global"]["ns1"]["constant"]["VAR1"], UUID_PATTERN)
         self.assertEqual(yml_content["global"]["ns1"]["constant"]["VAR1"], var_value)
 
-      self.assertSameYamlFileContent(
+      self.assert_same_yaml_file_content(
         os.path.join(tmpdir, "cytomine.template"),
         os.path.join(output_ref_path, "cytomine.template")
       )
@@ -170,48 +174,48 @@ class TestDeploy(TestDeploymentGeneric):
         yml_content = yaml.load(file, Loader=yaml.Loader)
         self.assertRegex(yml_content["global"]["ns1"]["auto"]["VAR1"], "random_uuid")
 
-  def testDeploySingleServerMultilineEnv(self):
+  def test_deploy_single_server_multiline_env(self):
     tests_path = os.path.dirname(__file__)
     deploy_file_path = os.path.join(tests_path, "files", "fake_single_server_multiline_env", "in")
     output_ref_path = os.path.join(tests_path, "files", "fake_single_server_multiline_env", "out")
     with TemporaryDirectory() as tmpdir:
       parser.call(["deploy", "-s", deploy_file_path, "-t", tmpdir])
-      self.assertSameDirectories(tmpdir, output_ref_path)
+      self.assert_same_directories(tmpdir, output_ref_path)
 
-  def testDeploySingleServerNoConfigNoTemplate(self):
+  def test_deploy_single_server_no_config_no_template(self):
     tests_path = os.path.dirname(__file__)
     deploy_file_path = os.path.join(tests_path, "files", "fake_single_server_no_config_no_template", "in")
     output_ref_path = os.path.join(tests_path, "files", "fake_single_server_no_config_no_template", "out")
     with TemporaryDirectory() as tmpdir:
       parser.call(["deploy", "-s", deploy_file_path, "-t", tmpdir])
-      self.assertSameDirectories(tmpdir, output_ref_path)
+      self.assert_same_directories(tmpdir, output_ref_path)
 
-  def testDeploySingleServerWithInstallerConfig(self):
+  def test_deploy_single_server_with_installer_config(self):
     tests_path = os.path.dirname(__file__)
     deploy_file_path = os.path.join(tests_path, "files", "fake_single_server_with_installer_config", "in")
     output_ref_path = os.path.join(tests_path, "files", "fake_single_server_with_installer_config", "out")
     with TemporaryDirectory() as tmpdir:
       parser.call(["deploy", "-s", deploy_file_path, "-t", tmpdir])
-      self.assertSameDirectories(tmpdir, output_ref_path)
+      self.assert_same_directories(tmpdir, output_ref_path)
 
-  def testDeploySingleServerWithInstallerConfigAndUpdate(self):
+  def test_deploy_single_server_with_installer_config_and_update(self):
     tests_path = os.path.dirname(__file__)
     deploy_file_path = os.path.join(tests_path, "files", "fake_single_server_with_installer_config_and_update", "in")
     output_ref_path = os.path.join(tests_path, "files", "fake_single_server_with_installer_config_and_update", "out")
     with TemporaryDirectory() as tmpdir:
       parser.call(["deploy", "-s", deploy_file_path, "-t", tmpdir])
-      self.assertSameDirectories(tmpdir, output_ref_path, ignored={"cytomine.yml"})
+      self.assert_same_directories(tmpdir, output_ref_path, ignored={"cytomine.yml"})
 
-  def testDeploySingleServerWithBoolean(self):
+  def test_deploy_single_server_with_boolean(self):
     tests_path = os.path.dirname(__file__)
     deploy_file_path = os.path.join(tests_path, "files", "fake_single_server_with_boolean", "in")
     output_ref_path = os.path.join(tests_path, "files", "fake_single_server_with_boolean", "out")
     with TemporaryDirectory() as tmpdir:
       parser.call(["deploy", "-s", deploy_file_path, "-t", tmpdir])
-      self.assertSameDirectories(tmpdir, output_ref_path, ignored={"cytomine.yml"})
+      self.assert_same_directories(tmpdir, output_ref_path, ignored={"cytomine.yml"})
 
   @unittest.skip("implement later")
-  def testMultiServer(self):
+  def test_multi_server(self):
     tests_path = os.path.dirname(__file__)
     deploy_file_path = os.path.join(tests_path, "files", "fake_multi_server", "in")
     output_ref_path = os.path.join(tests_path, "files", "fake_multi_server", "out")
@@ -228,11 +232,11 @@ class TestDeploy(TestDeploymentGeneric):
         ]
       )
 
-      self.assertSameDirectories(tmpdir, output_ref_path)
+      self.assert_same_directories(tmpdir, output_ref_path)
       self.check_zip(deploy_file_path, tmpdir)
 
   @unittest.skip("implement later")
-  def testMultiServerMissingFolder(self):
+  def test_multi_server_missing_folder(self):
     tests_path = os.path.dirname(__file__)
     deploy_file_path = os.path.join(
       tests_path, "files", "fake_multi_server_missing_folder"
@@ -256,7 +260,7 @@ class TestDeploy(TestDeploymentGeneric):
 
     self.assertIn("error:", stream.getvalue())
 
-  def testDeploySingleServerInPlace(self):
+  def test_deploy_single_server_in_place(self):
     tests_path = os.path.dirname(__file__)
     deploy_ref = os.path.join(tests_path, "files", "fake_single_server")
     deploy_ref_in = os.path.join(deploy_ref, "in")
@@ -269,7 +273,7 @@ class TestDeploy(TestDeploymentGeneric):
 
       self.check_single_server_deployment(deploy_ref_out, tmpdir)
 
-  def testDeploySingleServerInPlaceWithZip(self):
+  def test_deploy_single_server_in_place_with_zip(self):
     tests_path = os.path.dirname(__file__)
     deploy_ref = os.path.join(tests_path, "files", "fake_single_server")
     deploy_ref_in = os.path.join(deploy_ref, "in")
@@ -287,7 +291,7 @@ class TestDeploy(TestDeploymentGeneric):
       parser.call(["deploy", "-s", tmpdir], raise_boostrapper_errors=True)
       self.check_zip(deploy_ref_in, tmpdir)
 
-  def testDeploySingleServerInPlaceWithUnrelatedFiles(self):
+  def test_deploy_single_server_in_place_with_unrelated_files(self):
     tests_path = os.path.dirname(__file__)
     deploy_ref = os.path.join(
       tests_path, "files", "fake_single_server_with_unrelated_files"
@@ -307,5 +311,5 @@ class TestDeploy(TestDeploymentGeneric):
         raise_boostrapper_errors=True,
       )
 
-      self.assertIsFile(os.path.join(tmpdir, "myfile.txt"))
+      self.assert_is_file(os.path.join(tmpdir, "myfile.txt"))
       self.check_single_server_deployment(deploy_ref_out, tmpdir)

@@ -1,20 +1,18 @@
-
-
-
 import os
 from unittest import TestCase
 
-from cytomine_installer.deployment.installer_config import InstallerConfig, UpdatePolicy
+from cytomine_installer.deployment.installer_config import (InstallerConfig,
+                                                            UpdatePolicy)
 
 
 class TestInstallerConfig(TestCase):
-  def testDefaultConfig(self):
+  def test_default_config(self):
     config = InstallerConfig()
 
     self.assertEqual(config.update_policy, UpdatePolicy.UPDATE_NEW_ONLY)
-    self.assertListEqual(config.update_allow_list, list())
+    self.assertListEqual(config.update_allow_list, [])
 
-  def testFakeConfig(self):
+  def test_fake_config(self):
     tests_path = os.path.dirname(__file__)
     test_files_path = os.path.join(tests_path, "files")
     config = InstallerConfig(os.path.join(test_files_path, "fake_installer_config.yml"))

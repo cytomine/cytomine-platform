@@ -1,18 +1,13 @@
 from unittest import TestCase
+
 from cytomine_installer.deployment.env_generator import (
-  RandomUUIDGenerator,
-  OpenSSLGenerator,
-  SecretGenerator,
-)
-from cytomine_installer.deployment.env_generator import (
-  UnrecognizedGenerationField,
-  InvalidAutoGenerationData,
-)
+    InvalidAutoGenerationData, OpenSSLGenerator, RandomUUIDGenerator,
+    SecretGenerator, UnrecognizedGenerationField)
 from tests.util import UUID_PATTERN
 
 
 class TestUUIDGenerator(TestCase):
-  def testValidate(self):
+  def test_validate(self):
     generator = RandomUUIDGenerator()
 
     with self.assertRaises(UnrecognizedGenerationField):
@@ -23,17 +18,17 @@ class TestUUIDGenerator(TestCase):
 
     self.assertEqual(generator, generator.validate("random_uuid"))
 
-  def testMethodKey(self):
+  def test_method_key(self):
     generator = RandomUUIDGenerator()
     self.assertEqual("random_uuid", generator.method_key)
 
-  def testResolve(self):
+  def test_resolve(self):
     generator = RandomUUIDGenerator()
     self.assertRegex(generator.resolve("random_uuid"), UUID_PATTERN)
 
 
 class TestOpensslGenerator(TestCase):
-  def testValidate(self):
+  def test_validate(self):
     generator = OpenSSLGenerator()
 
     with self.assertRaises(UnrecognizedGenerationField):
@@ -53,19 +48,19 @@ class TestOpensslGenerator(TestCase):
       generator, generator.validate({"type": "openssl", "length": 10})
     )
 
-  def testMethodKey(self):
+  def test_method_key(self):
     generator = OpenSSLGenerator()
     self.assertEqual("openssl", generator.method_key)
 
-  def testResolve(self):
+  def test_resolve(self):
     generator = OpenSSLGenerator()
     field = {"type": "openssl", "length": 10}
     # not sure how 'length' affects final string length
-    self.assertRegex(generator.resolve(field), rf".+")
+    self.assertRegex(generator.resolve(field), r".+")
 
 
 class TestSercretGenerator(TestCase):
-  def testValidate(self):
+  def test_validate(self):
     generator = SecretGenerator()
     with self.assertRaises(UnrecognizedGenerationField):
       generator.validate("aa")
@@ -81,11 +76,11 @@ class TestSercretGenerator(TestCase):
       generator, generator.validate({"type": "secret", "length": 10})
     )
 
-  def testMethodKey(self):
+  def test_method_key(self):
     generator = SecretGenerator()
     self.assertEqual("secret", generator.method_key)
 
-  def testResolve(self):
+  def test_resolve(self):
     generator = SecretGenerator()
     self.assertEqual(len(generator.resolve({"type": "secret", "length": 1})), 1)
     self.assertEqual(len(generator.resolve({"type": "secret", "length": 10})), 10)

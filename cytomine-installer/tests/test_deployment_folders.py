@@ -1,23 +1,17 @@
 import os
 import shutil
-from tempfile import TemporaryDirectory
 import unittest
+from tempfile import TemporaryDirectory
+
 from cytomine_installer.deployment.deployment_files import ConfigFile
 from cytomine_installer.deployment.deployment_folders import (
-  DeploymentFolder,
-  InvalidServerConfigurationError,
-  ServerFolder,
-)
-from cytomine_installer.deployment.errors import (
-  MissingConfigFileError,
-  NoDockerComposeYamlFileError,
-)
+    DeploymentFolder, InvalidServerConfigurationError, ServerFolder)
 from cytomine_installer.util import list_relative_files
 from tests.util import FileSystemTestCase, TestDeploymentGeneric
 
 
 class TestServerFolder(FileSystemTestCase):
-  def testListSourceFiles(self):
+  def test_list_source_files(self):
     tests_path = os.path.dirname(__file__)
     deploy_path = os.path.join(tests_path, "files", "fake_single_server", "in")
     envs_file = ConfigFile(deploy_path)
@@ -31,7 +25,7 @@ class TestServerFolder(FileSystemTestCase):
       },
     )
 
-  def testGeneratedFiles(self):
+  def test_generated_files(self):
     tests_path = os.path.dirname(__file__)
     deploy_path = os.path.join(tests_path, "files", "fake_single_server", "in")
     envs_file = ConfigFile(deploy_path)
@@ -41,7 +35,7 @@ class TestServerFolder(FileSystemTestCase):
       {"envs/core.env", "envs/ims.env", ".env", "docker-compose.override.yml"},
     )
 
-  def testTargetFiles(self):
+  def test_target_files(self):
     tests_path = os.path.dirname(__file__)
     deploy_path = os.path.join(tests_path, "files", "fake_single_server", "in")
     envs_file = ConfigFile(deploy_path)
@@ -51,7 +45,7 @@ class TestServerFolder(FileSystemTestCase):
       set(server_folder.source_files).union(server_folder.generated_files),
     )
 
-  def testFilesFunctionsOneServiceWithoutEnvs(self):
+  def test_files_functions_one_service_without_envs(self):
     tests_path = os.path.dirname(__file__)
     deploy_path = os.path.join(tests_path, "files", "fake_multi_server", "in")
     server_path = os.path.join(deploy_path, "server-core")
@@ -71,7 +65,7 @@ class TestServerFolder(FileSystemTestCase):
       },
     )
 
-  def testCleanValid(self):
+  def test_clean_valid(self):
     tests_path = os.path.dirname(__file__)
     deploy_path = os.path.join(tests_path, "files", "fake_multi_server", "in")
     server_path = os.path.join(deploy_path, "server-core")
@@ -94,7 +88,7 @@ class TestServerFolder(FileSystemTestCase):
 
 
 class TestDeploymentFolder(TestDeploymentGeneric):
-  def testSingleServerDeployment(self):
+  def test_single_server_deployment(self):
     tests_path = os.path.dirname(__file__)
     deploy_path = os.path.join(tests_path, "files", "fake_single_server", "in")
     output_ref_path = os.path.join(tests_path, "files", "fake_single_server", "out")
@@ -104,16 +98,16 @@ class TestDeploymentFolder(TestDeploymentGeneric):
       self.check_single_server_deployment(output_ref_path, tmpdir)
 
   @unittest.skip("implement later")
-  def testMultiServerConfiguration(self):
+  def test_multi_server_configuration(self):
     tests_path = os.path.dirname(__file__)
     deploy_path = os.path.join(tests_path, "files", "fake_multi_server", "in")
     output_ref_path = os.path.join(tests_path, "files", "fake_multi_server", "out")
     deployment_folder = DeploymentFolder(directory=deploy_path)
     with TemporaryDirectory() as tmpdir:
       deployment_folder.deploy_files(tmpdir)
-      self.assertSameDirectories(output_ref_path, tmpdir)
+      self.assert_same_directories(output_ref_path, tmpdir)
 
-  def testMultiServerMissingServerFolder(self):
+  def test_multi_server_missing_server_folder(self):
     tests_path = os.path.dirname(__file__)
     deploy_path = os.path.join(
       tests_path, "files", "fake_multi_server_missing_folder"
@@ -121,13 +115,13 @@ class TestDeploymentFolder(TestDeploymentGeneric):
     with self.assertRaises(InvalidServerConfigurationError):
       DeploymentFolder(directory=deploy_path)
 
-  def testNoCytomineYml(self):
+  def test_no_cytomine_yml(self):
     tests_path = os.path.dirname(__file__)
     deploy_path = os.path.join(tests_path, "files", "fake_no_cytomine_yml")
     with self.assertRaises(FileNotFoundError):
       DeploymentFolder(directory=deploy_path)
 
-  def testNoDockerComposeFile(self):
+  def test_no_docker_compose_file(self):
     tests_path = os.path.dirname(__file__)
     deploy_path = os.path.join(tests_path, "files", "fake_no_docker_compose_yml")
     with self.assertRaises(InvalidServerConfigurationError):

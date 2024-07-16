@@ -7,7 +7,7 @@ from cytomine_installer.util import delete_dir_content, list_relative_files, wri
 
 
 class TestUtil(TestCase):
-  def testWriteDotenv(self):
+  def test_write_dotenv(self):
     envs = {"VAR1": "value1", "VAR2": "value2"}
     with TemporaryDirectory() as tmpdir:
       write_dotenv(tmpdir, envs)
@@ -19,7 +19,7 @@ class TestUtil(TestCase):
 
     self.assertDictEqual(envs, parsed_envs)
 
-  def testWriteDotenvAlphabetical(self):
+  def test_write_dotenv_alphabetical(self):
     envs = {
       "C _TEST": "value1",
       "P_TEST": "value2",
@@ -38,46 +38,46 @@ class TestUtil(TestCase):
 
     self.assertListEqual(sorted_envs, parsed_envs)
 
-  def testListRelativeFilesInvalidPath(self):
+  def test_list_relative_files_invalid_path(self):
     with TemporaryDirectory() as tmpdir:
       self.assertEqual(len(list_relative_files(os.path.join(tmpdir, "aa"))), 0)
 
-  def testListRelativeFilesEmptyPath(self):
+  def test_list_relative_files_empty_path(self):
     with TemporaryDirectory() as tmpdir:
       self.assertEqual(len(list_relative_files(tmpdir)), 0)
 
-  def testListRelativeFilesOneFile(self):
+  def test_list_relative_files_one_file(self):
     with TemporaryDirectory() as tmpdir:
-      with open(os.path.join(tmpdir, "file1.txt"), "w"):
+      with open(os.path.join(tmpdir, "file1.txt"), "w", encoding="utf8"):
         pass
       relative = list_relative_files(tmpdir)
       self.assertEqual(len(relative), 1)
       self.assertEqual(relative[0], "file1.txt")
 
-  def testListRelativeFilesSeveralFiles(self):
+  def test_list_relative_files_several_files(self):
     with TemporaryDirectory() as tmpdir:
       files = ["file1.txt", "file2.txt"]
       for file in files:
-        with open(os.path.join(tmpdir, file), "w"):
+        with open(os.path.join(tmpdir, file), "w", encoding="utf8"):
           pass
       relative = list_relative_files(tmpdir)
       self.assertEqual(len(relative), 2)
       self.assertListEqual(sorted(files), sorted(relative))
 
-  def testListRelativeFilesSeveralFilesAndFolders(self):
+  def test_list_relative_files_several_files_and_folders(self):
     with TemporaryDirectory() as tmpdir:
       dirs = ["dir1", "dir2"]
       for dirname in dirs:
         os.makedirs(os.path.join(tmpdir, dirname))
       files = ["dir1/file1.txt", "file2.txt"]
       for file in files:
-        with open(os.path.join(tmpdir, file), "w"):
+        with open(os.path.join(tmpdir, file), "w", encoding="utf8"):
           pass
       relative = list_relative_files(tmpdir)
       self.assertEqual(len(relative), 2)
       self.assertListEqual(sorted(files), sorted(relative))
 
-  def testDeleteDirContent(self):
+  def test_delete_dir_content(self):
     with TemporaryDirectory() as tmpdir:
       # create fake files and folders
       Path(os.path.join(tmpdir, "file.txt")).touch()

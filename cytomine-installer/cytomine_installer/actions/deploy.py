@@ -3,10 +3,10 @@ import pathlib
 import shutil
 import zipfile
 from argparse import ArgumentParser
-from datetime import datetime
-from datetime import UTC
-from distutils.dir_util import copy_tree
+from datetime import UTC, datetime
 from tempfile import TemporaryDirectory
+
+from setuptools._distutils.dir_util import copy_tree
 
 from cytomine_installer.deployment.installer_config import InstallerConfig
 
@@ -18,6 +18,9 @@ from .errors import InvalidTargetDirectoryError
 class DeployAction(AbstractAction):
   def _fill_in_subparser(self, sub_parser: ArgumentParser):
     """Fill the given sub_parser with the program arguments"""
+    #
+    # pylint: disable=line-too-long
+    #
     sub_parser.add_argument("-s", "--source_directory", dest="source_directory", default=os.getcwd(), help="path to the source directory")
     sub_parser.add_argument("-t", "--target_directory", dest="target_directory", help="path to the target directory (by default, the target is the source directory)")
     sub_parser.add_argument("-z", "--do_zip", dest="do_zip", action="store_true", help="whether or not the current state of the deployment configuration should be" "saved into a zip file before being overwritten with the new configuration")
@@ -59,14 +62,10 @@ class DeployAction(AbstractAction):
       raise InvalidTargetDirectoryError(namespace.target_directory)
 
     if namespace.source_directory == namespace.target_directory:
-      self.get_logger().info(
-        f"deploy files in-place in '{namespace.source_directory}'"
-      )
+      self.get_logger().info("deploy files in-place in '%s'", namespace.source_directory)
     else:
       os.makedirs(namespace.target_directory, exist_ok=True)
-      self.get_logger().info(
-        f"deploy files from '{namespace.source_directory}' to '{namespace.target_directory}'"
-      )
+      self.get_logger().info("deploy files from '%s' to '%s'", namespace.source_directory, namespace.target_directory)
 
     deployment_folder = DeploymentFolder(
       directory=namespace.source_directory,
@@ -87,14 +86,10 @@ class DeployAction(AbstractAction):
         else:
           zip_filename = namespace.zip_filename
         zip_filepath = os.path.join(namespace.target_directory, zip_filename)
-        self.get_logger().info(f"zipping source files into '{zip_filepath}'...")
-        with zipfile.ZipFile(
-          zip_filepath, "w", zipfile.ZIP_DEFLATED
-        ) as zip_archive:
+        self.get_logger().info("zipping source files into '%s'...", zip_filepath)
+        with zipfile.ZipFile(zip_filepath, "w", zipfile.ZIP_DEFLATED) as zip_archive:
           for file in deployment_folder.source_files:
-            zip_archive.write(
-              os.path.join(namespace.source_directory, file), file
-            )
+            zip_archive.write(os.path.join(namespace.source_directory, file), file)
 
       self.get_logger().info("generate deployment files...")
       self.deploy_and_move(
@@ -134,13 +129,11 @@ class DeployAction(AbstractAction):
     if not os.path.exists(source_path):
       if skip_missing_source:
         return
-      raise FileNotFoundError(
-        f"cannot find source file or folder '{source_path}'"
-      )
+      raise FileNotFoundError(f"cannot find source file or folder '{source_path}'")
     if os.path.exists(target_path):
-      self.get_logger().debug(f"> '{relpath}' (replace)")
+      self.get_logger().debug("> '%s' (replace)", relpath)
     else:
-      self.get_logger().debug(f"> '{relpath}' (create)")
+      self.get_logger().debug("> '%s' (create)", relpath)
     if delete_target_before:
       pathlib.Path(target_path).unlink(missing_ok=True)
     os.makedirs(os.path.dirname(target_path), exist_ok=True)

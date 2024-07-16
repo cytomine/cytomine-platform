@@ -1,5 +1,5 @@
-from .enums import ConfigSectionEnum
 from ..errors import InstallerError
+from .enums import ConfigSectionEnum
 
 
 class KeyAlreadyExistsError(InstallerError):
@@ -16,18 +16,13 @@ class InvalidServerConfigurationError(InstallerError):
   pass
 
 
-class MissingConfigFileError(InvalidServerConfigurationError):
-  def __init__(self, path, filename="cytomine.yml", *args: object) -> None:
-    super().__init__(f"missing cytomine configuration '{filename}' in '{path}'", *args)
-
-
 class NoDockerComposeYamlFileError(InvalidServerConfigurationError):
   def __init__(self, path, *args: object) -> None:
     super().__init__(f"no docker-compose.yml file found in '{path}'", *args)
 
 
 class MissingConfigFileError(InvalidServerConfigurationError):
-  def __init__(self, path, filename="cytomine.yml", *args: object) -> None:
+  def __init__(self, path, *args: object, filename="cytomine.yml") -> None:
     super().__init__(f"missing cytomine configuration '{filename}' in '{path}'", *args)
 
 
@@ -44,4 +39,5 @@ class UnknownServiceError(InstallerError):
 
 class InvalidGlobalValue(InstallerError):
   def __init__(self, ns, key, value, *args: object) -> None:
-    super().__init__(f"invalid value '{value}' for '{key}' in namespace '{ns}', expecting a global variable reference like '$GLOBAL_NAMESPACE.$VAR_NAME'", *args)
+    super().__init__(f"invalid value '{value}' for '{key}' in namespace '{ns}', expecting a"
+                     " global variable reference like '$GLOBAL_NAMESPACE.$VAR_NAME'", *args)

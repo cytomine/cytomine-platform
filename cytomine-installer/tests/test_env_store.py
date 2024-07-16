@@ -1,6 +1,7 @@
-from cytomine_installer.deployment.env_store import EnvStore, KeyAlreadyExistsError
 from unittest import TestCase
 
+from cytomine_installer.deployment.env_store import (EnvStore,
+                                                     KeyAlreadyExistsError)
 from tests.util import UUID_PATTERN
 
 
@@ -46,7 +47,7 @@ class TestEnvStore(TestCase):
   def setUp(self):
     self._global, _ = phony_namespaces_and_global()
 
-  def testValidEnvStoreWithConstantOnly(self):
+  def test_valid_env_store_with_constant_only(self):
     namespaces = phony_namespaces_constant()
 
     env_store = EnvStore()
@@ -69,14 +70,14 @@ class TestEnvStore(TestCase):
       namespaces["ns1"]["constant"], env_store.get_namespace_envs("ns1")
     )
 
-  def testEnvVarAlreadyExists(self):
+  def test_env_var_already_exists(self):
     namespace = {"global": {"VAR1": "base.VAR1"}, "constant": {"VAR1": "cst_value"}}
 
     with self.assertRaises(KeyAlreadyExistsError):
       env_store = EnvStore()
       env_store.add_namespace("ns1", namespace, store=self._global)
 
-  def testValidEnvStoreWithGlobal(self):
+  def test_valid_env_store_with_global(self):
     _, namespaces = phony_namespaces_and_global()
 
     env_store = EnvStore()
@@ -97,7 +98,7 @@ class TestEnvStore(TestCase):
       env_store.get_namespace_envs("ns1"),
     )
 
-  def testValidEnvStoreWithAuto(self):
+  def test_valid_env_store_with_auto(self):
     _, namespaces = phony_namespaces_all()
 
     env_store = EnvStore()
@@ -109,7 +110,7 @@ class TestEnvStore(TestCase):
     self.assertRegex(env_store.get_env("ns2", "VARAUTO3"), UUID_PATTERN)
     self.assertRegex(env_store.get_env("ns2", "VARAUTO4"), r".+")
 
-  def testExportDict(self):
+  def test_export_dict(self):
     _, namespaces = phony_namespaces_all()
 
     env_store = EnvStore()
@@ -131,7 +132,7 @@ class TestEnvStore(TestCase):
           self.assertIn(k, generated_dict[ns]["auto"])
           self.assertEqual(generated_dict[ns]["auto"][k], v)
 
-  def testFreezeOmittedInAutogenerate(self):
+  def test_freeze_omitted_in_autogenerate(self):
     namespaces = {"ns1": {"auto": {"VAR1": {"type": "openssl"}}}}
     env_store = EnvStore()
     for ns, entries in namespaces.items():
@@ -141,7 +142,7 @@ class TestEnvStore(TestCase):
 
     self.assertRegex(generated_dict["ns1"]["constant"]["VAR1"], r".+")
 
-  def testMergeSameNamespaceNewVar(self):
+  def test_merge_same_namespace_new_var(self):
     nss1 = {"ns1": {"auto": {"VAR1": {"type": "openssl"}}}}
     nss2 = {"ns1": {"auto": {"VAR2": {"type": "openssl"}}}}
     env_store1 = EnvStore()
@@ -159,7 +160,7 @@ class TestEnvStore(TestCase):
     self.assertRegex(generated_dict3["ns1"]["constant"]["VAR2"], r".+")
 
 
-  def testMergeSameNamespaceSameVar(self):
+  def test_merge_same_namespace_same_var(self):
     nss1 = {"ns1": {"constant": {"VAR1": "varvalue"}}}
     nss2 = {"ns1": {"constant": {"VAR1": "varvalue2"}}}
     env_store1 = EnvStore()

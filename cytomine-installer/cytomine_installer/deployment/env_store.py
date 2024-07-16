@@ -1,13 +1,13 @@
-from abc import ABC, abstractmethod
 import enum
-from collections import defaultdict
 import json
-import logging
+from abc import ABC, abstractmethod
+from collections import defaultdict
 
 from cytomine_installer.deployment.util.trie import Trie
 
-from .errors import InvalidGlobalValue, KeyAlreadyExistsError, UnknownValueTypeError
 from .env_generator import EnvValueGeneratorFactory
+from .errors import (InvalidGlobalValue, KeyAlreadyExistsError,
+                     UnknownValueTypeError)
 
 
 class EnvValueTypeEnum(enum.Enum):
@@ -29,29 +29,29 @@ class DictExportable(ABC):
   @abstractmethod
   def export_dict(self):
     """Generates an dictionary for env store export"""
-    pass
+    raise NotImplementedError()
 
 
 class BaseEnvStore(DictExportable):
   @abstractmethod
   def get_env(self, namespace: str, key: str):
     """Get a value stored in the EnvStore"""
-    pass
+    raise NotImplementedError()
 
   @abstractmethod
   def has_env(self, namespace: str, key: str):
     """Check if a namespace has a key"""
-    pass
+    raise NotImplementedError()
 
   @abstractmethod
   def get_namespace_envs(self, namespace: str):
     """Get all values of a given namespace as a flat dictionary"""
-    pass
+    raise NotImplementedError()
 
   @abstractmethod
   def has_namespace(self, ns: str):
     """Checks whether a namespace exists or not"""
-    pass
+    raise NotImplementedError()
 
 
 class EnvStore(BaseEnvStore):
@@ -88,8 +88,8 @@ class EnvStore(BaseEnvStore):
     elif _type == EnvValueTypeEnum.GLOBAL:
       try:
         other_ns, other_key = value.split(".")
-      except ValueError:
-        raise InvalidGlobalValue(ns, key, value)
+      except ValueError as e:
+        raise InvalidGlobalValue(ns, key, value) from e
       self._store[ns][key] = lambda: other_store.get_env(other_ns, other_key)
     elif _type == EnvValueTypeEnum.AUTOGENERATE:
       gen_factory = EnvValueGeneratorFactory()
@@ -119,17 +119,15 @@ class EnvStore(BaseEnvStore):
     for value_type in entries.keys():
       try:
         EnvValueTypeEnum(value_type)
-      except ValueError:
-        raise UnknownValueTypeError(value_type)
+      except ValueError as e:
+        raise UnknownValueTypeError(value_type) from e
 
     if (
       EnvValueTypeEnum.GLOBAL.value in entries
       and len(entries[EnvValueTypeEnum.GLOBAL.value]) > 0
       and store is None
     ):
-      raise ValueError(
-        f"'{EnvValueTypeEnum.GLOBAL.value}' is not supported in this section, namespace {ns}"
-      )
+      raise ValueError(f"'{EnvValueTypeEnum.GLOBAL.value}' is not supported in this section, namespace {ns}")
 
     for value_type in EnvValueTypeEnum:
       for k, v in entries.get(value_type.value, {}).items():
@@ -139,16 +137,16 @@ class EnvStore(BaseEnvStore):
   def namespaces(self):
     return list(self._store.keys())
 
-  def get_env(self, ns: str, key: str):
+  def get_env(self, namespace: str, key: str):
     """Resolves variables"""
-    if ns not in self._store:
-      raise ValueError(f"unknown namespace '{ns}'")
-    if key not in self._store[ns]:
-      raise ValueError(f"unknown key '{key}' in namespace '{ns}'")
+    if namespace not in self._store:
+      raise ValueError(f"unknown namespace '{namespace}'")
+    if key not in self._store[namespace]:
+      raise ValueError(f"unknown key '{key}' in namespace '{namespace}'")
     # resolve once
-    if key not in self._resolved_value[ns]:
-      self._resolved_value[ns][key] = self._store[ns][key]()
-    return self._resolved_value[ns][key]
+    if key not in self._resolved_value[namespace]:
+      self._resolved_value[namespace][key] = self._store[namespace][key]()
+    return self._resolved_value[namespace][key]
 
   @classmethod
   def _check_is_type_auto_and_frozen(cls, _type, value):
@@ -171,16 +169,15 @@ class EnvStore(BaseEnvStore):
           output_dict[ns][init_type.value][key] = self._initial_value[ns][key]
     if len(output_dict) == 0:
       return None
-    else:
-      # https://stackoverflow.com/a/32303615
-      # convert to plain dict
-      return json.loads(json.dumps(output_dict))
+    # https://stackoverflow.com/a/32303615
+    # convert to plain dict
+    return json.loads(json.dumps(output_dict))
 
-  def get_namespace_envs(self, ns: str):
+  def get_namespace_envs(self, namespace: str):
     """Resolves variables"""
-    if ns not in self._store:
-      raise ValueError(f"unknown namespace '{ns}'")
-    return {key: self.get_env(ns, key) for key in self._store[ns].keys()}
+    if namespace not in self._store:
+      raise ValueError(f"unknown namespace '{namespace}'")
+    return {key: self.get_env(namespace, key) for key in self._store[namespace].keys()}
 
   def has_namespace(self, ns: str):
     return ns in self._store
@@ -229,7 +226,7 @@ class EnvStore(BaseEnvStore):
 
   def _merge_inplace(
     self,
-    to_merge,
+    to_merge: "EnvStore",
     merge_policy: MergeEnvStorePolicy = MergeEnvStorePolicy.PRESERVE,
     ref_store=None,
     merge_trie: Trie = None,
@@ -248,8 +245,12 @@ class EnvStore(BaseEnvStore):
     merge_trie: Trie
       A set containing the keys that should be updated when policy is ALLOW_LIST, default is 'set()'
     merge_prefix: list
-      The prefix list to which attach namespace and env name for checking if a value should be inserted when policy is ALLOW_LIST
+      The prefix list to which attach namespace and env name for checking
+      if a value should be inserted when policy is ALLOW_LIST
     """
+    #
+    # pylint: disable=protected-access
+    #
     for other_ns, other_ns_entries in to_merge._store.items():
       for other_key, _ in other_ns_entries.items():
         other_initial_type = to_merge._initial_type[other_ns][other_key]
@@ -267,8 +268,8 @@ class EnvStore(BaseEnvStore):
 
   @staticmethod
   def merge(
-    env_store1,
-    env_store2,
+    env_store1: "EnvStore",
+    env_store2: "EnvStore",
     merge_policy: MergeEnvStorePolicy = MergeEnvStorePolicy.PRESERVE,
     ref_store=None,
     merge_trie: Trie = None,
@@ -281,18 +282,23 @@ class EnvStore(BaseEnvStore):
     env_store1: EnvStore
     env_store2: EnvStore
     merge_policy: MergeEnvStorePolicy
-      Defines how merging is performed. With PRESERVE, keys of the env_store1 have precedence over keys of env_store2
+      Defines how merging is performed. With PRESERVE, keys of the env_store1
+      have precedence over keys of env_store2
     ref_store: EnvStore
       The store in which to look for global variables
     merge_trie: Trie
       A set containing the keys that should be updated when policy is ALLOW_LIST, default is 'set()'
     merge_prefix: list
-      The prefix list to which attach namespace and env name for checking if a value should be inserted when policy is ALLOW_LIST
+      The prefix list to which attach namespace and env name for checking if a
+      value should be inserted when policy is ALLOW_LIST
     Returns
     -------
     env_store: EnvStore
       Merged env store
     """
+    #
+    # pylint: disable=protected-access
+    #
     new_env_store = EnvStore()
     new_env_store._merge_inplace(
       env_store1, merge_policy=merge_policy, ref_store=ref_store

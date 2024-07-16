@@ -1,8 +1,8 @@
-from abc import ABC, abstractmethod
+import secrets
+import string
 import subprocess
 import uuid
-import string
-import secrets
+from abc import ABC, abstractmethod
 
 
 class EnvValueGenerator(ABC):
@@ -11,12 +11,12 @@ class EnvValueGenerator(ABC):
   @property
   @abstractmethod
   def method_key(self):
-    pass
+    raise NotImplementedError()
 
   @property
   @abstractmethod
   def accept_string_field(self):
-    pass
+    raise NotImplementedError()
 
   @abstractmethod
   def _resolve(self, field):
@@ -31,7 +31,7 @@ class EnvValueGenerator(ABC):
     value: str
       The auto-generated value
     """
-    pass
+    raise NotImplementedError()
 
   def resolve(self, field):
     """
@@ -69,7 +69,7 @@ class EnvValueGenerator(ABC):
     UnrecognizedGenerationField:
       When the content of the field does not match the generation method
     """
-    standardized_field = dict()
+    standardized_field = {}
     if isinstance(field, str) and self.accept_string_field:
       standardized_field["type"] = field
     elif isinstance(field, dict) and "type" in field:
@@ -84,6 +84,7 @@ class EnvValueGenerator(ABC):
 
   def _validate(self, field: dict):
     # to implement custom checks on the content of a field
+    # pylint: disable=unused-argument
     return self
 
 
@@ -188,9 +189,9 @@ class SecretGenerator(EnvValueGenerator):
     return self._base_alphabet
 
 
-class EnvValueGeneratorFactory(object):
+class EnvValueGeneratorFactory():
   def make_generator(self, field):
-    """ """
+    """A factory for EnvValueGenerator"""
     generators = [RandomUUIDGenerator(), OpenSSLGenerator(), SecretGenerator()]
 
     for generator in generators:

@@ -28,21 +28,21 @@ def parse_dotenv(path):
 class FileSystemTestCase(TestCase):
   maxDiff = None
 
-  def assertIsFile(self, path):
+  def assert_is_file(self, path):
     if not pathlib.Path(path).resolve().is_file():
       raise AssertionError(f"file does not exist: {path}")
 
-  def assertSameTextFileContent(self, path1, path2):
-    self.assertIsFile(path1)
-    self.assertIsFile(path2)
+  def assert_same_text_file_content(self, path1, path2):
+    self.assert_is_file(path1)
+    self.assert_is_file(path2)
     with open(path1, "r", encoding="utf8") as file1, open(
       path2, "r", encoding="utf8"
     ) as file2:
       self.assertEqual(file1.read(), file2.read())
 
-  def assertSameYamlFileContent(self, path1, path2):
-    self.assertIsFile(path1)
-    self.assertIsFile(path2)
+  def assert_same_yaml_file_content(self, path1, path2):
+    self.assert_is_file(path1)
+    self.assert_is_file(path2)
     with open(path1, "r", encoding="utf8") as file1, open(
       path2, "r", encoding="utf8"
     ) as file2:
@@ -53,14 +53,14 @@ class FileSystemTestCase(TestCase):
       else:
         self.assertEqual(yml1, yml2)
 
-  def assertSameDotenvFileContent(self, path1, path2):
-    self.assertIsFile(path1)
-    self.assertIsFile(path2)
+  def assert_same_dotenv_file_content(self, path1, path2):
+    self.assert_is_file(path1)
+    self.assert_is_file(path2)
     dotenv1 = parse_dotenv(path1)
     dotenv2 = parse_dotenv(path2)
     self.assertDictEqual(dotenv1, dotenv2)
 
-  def assertSameDirectories(self, gen_path, ref_path, ignored: set=None):
+  def assert_same_directories(self, gen_path, ref_path, ignored: set=None):
     if ignored is None:
       ignored = set()
     ref_rel_files = list_relative_files(ref_path)
@@ -69,15 +69,15 @@ class FileSystemTestCase(TestCase):
         continue
       ref_filepath = os.path.join(ref_path, out_rel_file)
       gen_filepath = os.path.join(gen_path, out_rel_file)
-      self.assertIsFile(gen_filepath)
+      self.assert_is_file(gen_filepath)
 
       if out_rel_file.endswith("yml") or out_rel_file.endswith("template"):
         ### Check *.yml files
-        self.assertSameYamlFileContent(gen_filepath, ref_filepath)
+        self.assert_same_yaml_file_content(gen_filepath, ref_filepath)
       elif out_rel_file.endswith(".env"):
-        self.assertSameDotenvFileContent(gen_filepath, ref_filepath)
+        self.assert_same_dotenv_file_content(gen_filepath, ref_filepath)
       else:
-        self.assertSameTextFileContent(gen_filepath, ref_filepath)
+        self.assert_same_text_file_content(gen_filepath, ref_filepath)
 
 
 class TestDeploymentGeneric(FileSystemTestCase):
@@ -87,7 +87,7 @@ class TestDeploymentGeneric(FileSystemTestCase):
     for out_rel_file in out_rel_files:
       reference_filepath = os.path.join(output_ref_path, out_rel_file)
       generated_filepath = os.path.join(output_gen_path, out_rel_file)
-      self.assertIsFile(generated_filepath)
+      self.assert_is_file(generated_filepath)
 
       if os.path.basename(out_rel_file) == "cytomine.yml":
         ### Check Cytomine.yml file
@@ -119,7 +119,7 @@ class TestDeploymentGeneric(FileSystemTestCase):
         self.assertDictEqual(generated_content, reference_content)
       elif out_rel_file.endswith("yml"):
         ### Check other *.yml files
-        self.assertSameYamlFileContent(generated_filepath, reference_filepath)
+        self.assert_same_yaml_file_content(generated_filepath, reference_filepath)
       elif out_rel_file.endswith(".env") and "ims" in os.path.basename(
         out_rel_file
       ):
@@ -132,9 +132,9 @@ class TestDeploymentGeneric(FileSystemTestCase):
         self.assertDictEqual(generated_dotenv, reference_dotenv)
       elif out_rel_file.endswith(".env"):
         ### Check .env file
-        self.assertSameDotenvFileContent(generated_filepath, reference_filepath)
+        self.assert_same_dotenv_file_content(generated_filepath, reference_filepath)
       else:  # check configuration files
-        self.assertSameTextFileContent(generated_filepath, reference_filepath)
+        self.assert_same_text_file_content(generated_filepath, reference_filepath)
 
   def check_zip(self, out_ref_path, zip_dir):
     # check there is indeed a zip

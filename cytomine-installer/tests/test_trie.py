@@ -1,12 +1,10 @@
-
-
-
 from unittest import TestCase
+
 from cytomine_installer.deployment.util.trie import Trie
 
 
 class TestTrie(TestCase):
-  def testTrieEmpty(self):
+  def test_trie_empty(self):
     trie = Trie()
     self.assertFalse(trie.has([]))
     self.assertFalse(trie.has(None))
@@ -14,7 +12,7 @@ class TestTrie(TestCase):
     self.assertFalse(trie.has([""]))
     self.assertFalse(trie.has(["*"]))
 
-  def testTrieNoWildcard(self):
+  def test_trie_no_wildcard(self):
     trie = Trie()
     trie.insert(["global", "namespace", "foo"])
     self.assertTrue(trie.has(["global", "namespace", "foo"]))
@@ -26,7 +24,7 @@ class TestTrie(TestCase):
     self.assertFalse(trie.has([""]))
     self.assertFalse(trie.has(["un", "rela", "ted"]))
 
-  def testTrieWildcardEnd(self):
+  def test_trie_wildcard_end(self):
     trie = Trie()
     trie.insert(["global", "*"])
     self.assertTrue(trie.has(["global", "ns"]))
@@ -34,7 +32,7 @@ class TestTrie(TestCase):
     self.assertFalse(trie.has(["services", "namespace", "foo"]))
     self.assertFalse(trie.has(["global"]))
 
-  def testTrieWildcardInnerself(self):
+  def test_trie_wildcard_innerself(self):
     trie = Trie()
     trie.insert(["global", "*", "VALUE"])
     self.assertTrue(trie.has(["global", "word", "VALUE"]))
@@ -43,7 +41,7 @@ class TestTrie(TestCase):
     self.assertFalse(trie.has(["services", "namespace", "foo"]))
     self.assertFalse(trie.has(["global", "word"]))
 
-  def testTrieInsertAfterWild(self):
+  def test_trie_insert_after_wild(self):
     trie = Trie()
     trie.insert(["global", "*"])
     trie.insert(["global", "word", "VALUE"])
@@ -52,7 +50,7 @@ class TestTrie(TestCase):
     self.assertFalse(trie.has(["services", "namespace", "foo"]))
     self.assertFalse(trie.has(["global"]))
 
-  def testTrieInsertBeforeWild(self):
+  def test_trie_insert_before_wild(self):
     trie = Trie()
     trie.insert(["global", "word", "VALUE"])
     trie.insert(["global", "*"])
@@ -69,4 +67,3 @@ class TestTrie(TestCase):
     self.assertTrue(trie2.has(["global", "word", "VALUE"]))
     self.assertTrue(trie2.has(["global", "word", "VALUE2"]))
     self.assertFalse(trie2.has(["global", "word", "VALUE3"]))
-

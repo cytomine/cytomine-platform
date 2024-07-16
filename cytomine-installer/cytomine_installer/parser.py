@@ -11,9 +11,11 @@ def _recursive_parser_register(subparsers, actions: dict):
   Parameters
   ----------
   subparsers: ArgumentParser
-    A subparser action object (i.e. obtained with the `parser.add_subparsers` methods) where to register actions from 'actions'
+    A subparser action object (i.e. obtained with the `parser.add_subparsers`
+    methods) where to register actions from 'actions'
   actions: dict
-    An action dictionary: maps action or actions group key (string) with an Action or an action dictionary respectively.
+    An action dictionary: maps action or actions group key (string) with an
+    Action or an action dictionary respectively.
   """
   for name_or_scope, action_or_group in actions.items():
     if isinstance(action_or_group, AbstractAction):
@@ -33,7 +35,8 @@ def make_parser():
   """Build and return the parser"""
   main_parser = ArgumentParser(
     prog="cytoboot",
-    description="Cytomine installer, a tool for generating docker-compose-based deployment configuration of cytomine.",
+    description="Cytomine installer, a tool for generating docker-compose"
+                "-based deployment configuration of cytomine.",
   )
 
   root_subparsers = main_parser.add_subparsers()

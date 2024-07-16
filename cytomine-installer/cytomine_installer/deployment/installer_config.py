@@ -1,6 +1,6 @@
-from enum import Enum
-import logging
 import os
+from enum import Enum
+
 import yaml
 
 
@@ -13,11 +13,11 @@ class UpdatePolicy(Enum):
   # TODO: UPDATE_ALL = "update_all"
 
 
-class InstallerConfig(object):
+class InstallerConfig():
   def __init__(self, filepath="installer_config.yml"):
     # read file config, if any
     self._filepath = filepath
-    file_config = dict()
+    file_config = {}
     if os.path.isfile(filepath):
       with open(filepath, "r", encoding="utf8") as file:
         file_config = yaml.load(file, Loader=yaml.Loader)
