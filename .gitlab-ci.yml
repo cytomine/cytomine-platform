@@ -113,7 +113,6 @@ download-task-integer-subtraction:
       - ${TEST_ARTIFACT_PATH}/${SUB_INTEGER_TASK_NAME}
 
 
-
 lint-dockerfiles:
   stage: test
   image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/hadolint/hadolint:latest-alpine
