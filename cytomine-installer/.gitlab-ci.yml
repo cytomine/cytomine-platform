@@ -36,7 +36,7 @@ include:
     inputs:
       docker-image-name: 'cytomine/installer'
       dockerfile-path: './docker/Dockerfile'
-  - component: $CI_SERVER_FQDN/cm/rnd/cicd/component-docker/push-to-docker-registry@2.0.0
+  - component: $CI_SERVER_FQDN/cm/rnd/cicd/component-docker/push-image-to-registry@2.0.0
 
 
 .install-test-dependencies:
