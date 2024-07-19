@@ -63,3 +63,7 @@ build-docker-image:
     - _ARGS="${_ARGS} --build-arg PYTHON_VERSION=$(echo ${PYTHON_IMAGE_TAG} | awk -F'-' '{print $1}')"
     - export DOCKER_BUILD_ARGS="$ARGS"
 
+
+push-image-to-registry:
+  rules:
+    - if: $CI_COMMIT_TAG
