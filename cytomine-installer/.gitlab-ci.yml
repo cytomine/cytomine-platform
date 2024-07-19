@@ -37,7 +37,8 @@ include:
       docker-image-name: 'cytomine/installer'
       dockerfile-path: './docker/Dockerfile'
   - component: $CI_SERVER_FQDN/cm/rnd/cicd/component-docker/push-image-to-registry@2.0.0
-
+    inputs:
+      push-latest-tag: "true"
 
 .install-test-dependencies:
   before_script:
