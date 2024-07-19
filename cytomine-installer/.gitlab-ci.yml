@@ -1,5 +1,4 @@
 stages:
-  - prepare
   - test
   - build
   - release
@@ -34,27 +33,11 @@ include:
       unittest-job-name: unittest-python-3.11
       target: ./tests
       python-image-tag:	${PYTHON_IMAGE_TAG_TESTONLY_3_11}
-  - component: $CI_SERVER_FQDN/cm/rnd/cicd/component-docker/build-docker-image@1.0.0
+  - component: $CI_SERVER_FQDN/cm/rnd/cicd/component-docker/build-docker-image@2.0.0
     inputs:
       docker-image-name: 'cytomine/installer'
-      dockerfile-path: 'docker/Dockerfile'
-
-make-version-name:
-  stage: prepare
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/bash:5.2.15-alpine3.16
-  script:
-    # The
-    - | # If no tag has been pushed ($CI_COMMIT_TAG is empty), name it as the branch
-      if [ -z $CI_COMMIT_TAG ]; then
-        echo "IMAGE_VERSION=$CI_COMMIT_BRANCH" > .env
-      else
-        # Else use the tag
-        echo "IMAGE_VERSION=$CI_COMMIT_TAG" > .env
-      fi
-    - cat .env
-  artifacts:
-    reports:
-      dotenv: .env
+      dockerfile-path: './docker/Dockerfile'
+  - component: $CI_SERVER_FQDN/cm/rnd/cicd/component-docker/push-to-docker-registry@2.0.0
 
 
 .install-test-dependencies:
@@ -69,43 +52,15 @@ unittest-python-3.11:
 
 
 build-docker-image:
+  rules:
+    - if: $CI_COMMIT_TAG
   variables:
-    DOCKER_TAG: $CI_COMMIT_SHA
+    DOCKER_TAG: $CI_COMMIT_TAG
   before_script:
-    - sed -i -- "s/__version__ = \"v0.0.0\"/__version__ = \"${CI_COMMIT_TAG}\"/g" cytomine_installer/__version__.py
-    - export DOCKER_BUILD_ARGS=""
-    - DOCKER_BUILD_ARGS="${DOCKER_BUILD_ARGS} --build-arg IMAGE_VERSION=${DOCKER_TAG}"
-    - DOCKER_BUILD_ARGS="${DOCKER_BUILD_ARGS} --build-arg IMAGE_REVISION=${CI_COMMIT_SHORT_SHA}"
-    - DOCKER_BUILD_ARGS="${DOCKER_BUILD_ARGS} --build-arg PYTHON_VERSION=$(echo ${PYTHON_IMAGE_TAG} | awk -F'-' '{print $1}')"
-
-
-# docker-image:
-#   stage: publish
-#   image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:latest
-#   needs:
-#     - job: make-version-name
-#       artifacts: true
-#   rules:
-#     - if: $CI_COMMIT_TAG
-#   script:
-#     # Use credential helper (see https://docs.docker.com/engine/reference/commandline/login/#credentials-store)
-#     - mkdir -p $HOME/.docker && echo $DOCKER_HUB_AUTH_CONFIG > $HOME/.docker/config.json
-#     - echo "Registry credentials configured at $HOME/.docker/config.json"
-
-#     - echo "Build the docker image ${DOCKER_IMAGE_NAME}:${IMAGE_VERSION}"
-
-#     - |
-#       docker build \
-#         --build-arg IMAGE_VERSION=${IMAGE_VERSION} \
-#         --build-arg IMAGE_REVISION=${CI_COMMIT_SHORT_SHA} \
-#         --build-arg PYTHON_VERSION=${PYTHON_VERSION} \
-#         -f docker/Dockerfile \
-#         -t ${DOCKER_IMAGE_NAME}:${IMAGE_VERSION} \
-#         -t ${DOCKER_IMAGE_NAME}:latest \
-#         .
-
-#     - echo "Pushing docker image ${DOCKER_IMAGE_NAME}:${IMAGE_VERSION} and ${DOCKER_IMAGE_NAME}:latest"
-#     - docker push ${DOCKER_IMAGE_NAME}:${IMAGE_VERSION}
-#     - docker push ${DOCKER_IMAGE_NAME}:latest
-#     - echo "Successfully pushed docker image ${DOCKER_IMAGE_NAME}:${IMAGE_VERSION} and ${DOCKER_IMAGE_NAME}:latest"
+    - sed -i -- "s/__version__ = \"v0.0.0\"/__version__ = \"${DOCKER_TAG}\"/g" cytomine_installer/__version__.py
+    - export _ARGS=""
+    - _ARGS="${_ARGS} --build-arg IMAGE_VERSION=${DOCKER_TAG}"
+    - _ARGS="${_ARGS} --build-arg IMAGE_REVISION=${CI_COMMIT_SHORT_SHA}"
+    - _ARGS="${_ARGS} --build-arg PYTHON_VERSION=$(echo ${PYTHON_IMAGE_TAG} | awk -F'-' '{print $1}')"
+    - export DOCKER_BUILD_ARGS="$ARGS"
 
