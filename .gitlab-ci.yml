@@ -1,7 +1,12 @@
 stages:
-- prepare
 - test
 - build
+- release
+
+
+default:
+  tags:
+    - docker
 
 
 variables:
@@ -56,6 +61,13 @@ include:
       source-filepath: ${APPENGINE_TASKS_PATH}/${SUB_INTEGER_TASK_NAME}
       target-directory: ${TEST_ARTIFACT_PATH}
       job-name: download-task-integer-subtraction
+  - component: $CI_SERVER_FQDN/cm/rnd/cicd/component-docker/build-docker-image@2.0.0
+    inputs:
+      docker-image-name: ${CI_REGISTRY_IMAGE}
+      dockerfile-path: docker/Dockerfile
+  - component: $CI_SERVER_FQDN/cm/rnd/cicd/component-docker/push-image-to-registry@2.0.0
+    inputs:
+      push-latest-tag: "true"
 
 
 download-task-integer-addition:
@@ -100,13 +112,9 @@ download-task-integer-subtraction:
       - ${TEST_ARTIFACT_PATH}/${SUB_INTEGER_TASK_NAME}
 
 
-default:
-  tags:
-    - docker
-
 
 lint-dockerfiles:
-  stage: prepare
+  stage: test
   image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/hadolint/hadolint:latest-alpine
   # Uncomment to silent some warnings if needed
   #variables:
@@ -120,25 +128,6 @@ lint-dockerfiles:
     # If the Dockerfile has not been changed, this job can be skipped
     - when: never
       allow_failure: true
-
-
-make-version-name:
-  stage: prepare
-  # regex check does not work with /bin/sh because of parenthesis so we need /bin/bash here
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/bash:5.2.15-alpine3.16
-  script:
-    # TODO: reuse the tag regexp common job/rule
-    - | # If no tag has been pushed ($CI_COMMIT_TAG is empty), name it as SNAPSHOT
-      if [ -z ${CI_COMMIT_TAG} ]; then
-        echo "CM_VERSION=${CI_COMMIT_BRANCH}" > .env
-      else
-        # Else use the tag
-        echo "CM_VERSION=${CI_COMMIT_TAG}" > .env
-      fi
-    - cat .env
-  artifacts:
-    reports:
-      dotenv: .env
 
 
 validate-descriptor-schema:
@@ -241,35 +230,22 @@ tests-storage-registry:
     paths:
       - build/reports/tests/cucumber/*.html
 
-
-build-push-docker-image:
-  stage: build
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:latest
+build-docker-image:
+  rules:
+    - if: $CI_COMMIT_TAG
   variables:
     OPENJDK_VERSION: 17-slim-bullseye
     GRADLE_VERSION: 8.5.0-jdk17-alpine
     ENTRYPOINT_SCRIPTS_VERSION: 1.3.2
-    DOCKER_IMAGE_NAME: cytomine/app-engine
+    DOCKER_TAG: ${CI_COMMIT_TAG}
+  before_script:
+    - ARGS="${ARGS} --build-arg APP_ENGINE_VERSION=${CI_COMMIT_TAG}"
+    - ARGS="${ARGS} --build-arg APP_ENGINE_REVISION=${CI_COMMIT_SHORT_SHA}"
+    - ARGS="${ARGS} --build-arg ENTRYPOINT_SCRIPTS_VERSION=${ENTRYPOINT_SCRIPTS_VERSION}"
+    - ARGS="${ARGS} --build-arg GRADLE_VERSION=${GRADLE_VERSION}"
+    - ARGS="${ARGS} --build-arg OPENJDK_VERSION=${OPENJDK_VERSION}"
+
+push-image-to-registry:
   rules:
-    # - if: $CI_COMMIT_TAG
-    - when: never  # disable waiting for actual OS release
-  script:
-    # Use credential helper (see https://docs.docker.com/engine/reference/commandline/login/#credentials-store)
-    - mkdir -p $HOME/.docker && echo $DOCKER_HUB_AUTH_CONFIG > $HOME/.docker/config.json
-    - echo "Registry credentials configured at $HOME/.docker/config.json"
+    - if: $CI_COMMIT_TAG
 
-    - echo "Build the docker image ${DOCKER_IMAGE_NAME}:${CM_VERSION}"
-    - |
-      docker build \
-        --build-arg APP_ENGINE_VERSION=${CM_VERSION} \
-        --build-arg APP_ENGINE_REVISION=${CI_COMMIT_SHORT_SHA} \
-        --build-arg ENTRYPOINT_SCRIPTS_VERSION=${ENTRYPOINT_SCRIPTS_VERSION} \
-        --build-arg GRADLE_VERSION=${GRADLE_VERSION} \
-        --build-arg OPENJDK_VERSION=${OPENJDK_VERSION} \
-        -t ${DOCKER_IMAGE_NAME}:${CM_VERSION} \
-        -f docker/Dockerfile \
-        .
-
-    - echo "Pushing docker image ${DOCKER_IMAGE_NAME}:${CM_VERSION}"
-    - docker push ${DOCKER_IMAGE_NAME}:${CM_VERSION}
-    - echo "Successfully pushed docker image ${DOCKER_IMAGE_NAME}:${CM_VERSION}"
