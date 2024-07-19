@@ -10,7 +10,6 @@ default:
 
 
 variables:
-  DOCKER_IMAGE_NAME: 'cytomine/installer'
   PYTHON_IMAGE_TAG: 3.12.4-slim-bookworm
   PYTHON_IMAGE_TAG_TESTONLY_3_11: 3.11.9-slim-bookworm
   PYTHON_IMAGE_TAG_TESTONLY_3_10: 3.10.9-slim-buster
