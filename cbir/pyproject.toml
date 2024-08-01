@@ -7,6 +7,10 @@ line_length = 79
 ignore_missing_imports = true
 plugins = ["pydantic.mypy"]
 
+[tool.pylint]
+disable = ["redefined-outer-name"]
+output-format = "colorized"
+
 [tool.poetry]
 name = "cytomine-cbir"
 version = "0.1.0"
