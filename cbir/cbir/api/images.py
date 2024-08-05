@@ -1,45 +1,62 @@
-#  Copyright 2023 Cytomine ULiège
-#
-#  Licensed under the Apache License, Version 2.0 (the "License");
-#  you may not use this file except in compliance with the License.
-#  You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under the License is distributed on an "AS IS" BASIS,
-#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#  See the License for the specific language governing permissions and
-#  limitations under the License.
-
-"""Image indexing and retrieval"""
+"""Image API"""
 
 import json
 from io import BytesIO
+from pathlib import Path
 
 from fastapi import (
     APIRouter,
     File,
     Form,
     HTTPException,
+    Query,
     Request,
     Response,
     UploadFile,
 )
+from fastapi.responses import JSONResponse
 from PIL import Image
 from torchvision import transforms
 
 router = APIRouter()
 
 
-@router.post("/images/index")
-async def index_image(request: Request, image: UploadFile = File()) -> None:
-    """Index the given image."""
+@router.post("/images")
+async def index_image(
+    request: Request,
+    image: UploadFile,
+    storage_name: str = Query(alias="storage"),
+    index_name: str = Query(default="index", alias="index"),
+) -> JSONResponse:
+    """
+    Index the given image into the specified storage and index.
+
+    Args:
+        request (Request): The incoming HTTP request.
+        image (UploadFile): The image file to be indexed.
+        storage_name (str): The name of the storage where the index is stored.
+        index_name (str): The name of the index where the image features will be added.
+
+    Returns:
+        JSONResponse: A JSON response containing the ID of the newly indexed image.
+    """
 
     if image.filename is None:
         raise HTTPException(status_code=404, detail="Image filename not found")
 
+    if not storage_name:
+        raise HTTPException(status_code=404, detail="Storage is required")
+
     database = request.app.state.database
+
+    base_path = Path(database.settings.data_path)
+    storage_path = base_path / storage_name
+    if not storage_path.is_dir():
+        raise HTTPException(
+            status_code=404,
+            detail=f"Storage '{storage_name}' not found.",
+        )
+
     model = request.app.state.model
 
     content = await image.read()
@@ -51,14 +68,22 @@ async def index_image(request: Request, image: UploadFile = File()) -> None:
         ]
     )
 
-    database.index_image(
+    ids = database.index_image(
         model,
         features_extraction(Image.open(BytesIO(content))),
         image.filename,
     )
 
+    return JSONResponse(
+        content={
+            "ids": ids,
+            "storage": storage_name,
+            "index": index_name,
+        }
+    )
 
-@router.delete("/images/remove")
+
+@router.delete("/images/{filename}")
 def remove_image(request: Request, filename: str) -> None:
     """Remove an indexed image."""
 

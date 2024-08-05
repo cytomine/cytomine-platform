@@ -66,13 +66,11 @@ class Database:
         index = faiss.index_gpu_to_cpu(self.index) if self.gpu else self.index
         faiss.write_index(index, self.database_path)
 
-    def add(self, images: torch.Tensor, names: List[str]) -> None:
+    def add(self, images: torch.Tensor, names: List[str]) -> List[int]:
         """Index images."""
         last_id = int(self.redis.get("last_id").decode("utf-8"))
-        self.index.add_with_ids(
-            images,
-            numpy.arange(last_id, last_id + images.shape[0]),
-        )
+        ids = numpy.arange(last_id, last_id + images.shape[0])
+        self.index.add_with_ids(images, ids)
 
         for name in names:
             self.redis.set(str(last_id), name)
@@ -80,6 +78,8 @@ class Database:
             last_id += 1
 
         self.redis.set("last_id", last_id)
+
+        return ids.tolist()
 
     def remove(self, name: str) -> None:
         """Remove an image from the index database."""

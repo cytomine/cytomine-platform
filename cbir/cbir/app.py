@@ -21,7 +21,7 @@ import torch
 from fastapi import FastAPI
 
 from cbir import __version__
-from cbir.api import image, storages
+from cbir.api import images, storages
 from cbir.config import DatabaseSetting, ModelSetting
 from cbir.models.model import Model
 from cbir.models.resnet import Resnet
@@ -70,5 +70,5 @@ app = FastAPI(
         "url": "https://www.apache.org/licenses/LICENSE-2.0.html",
     },
 )
-app.include_router(router=image.router, prefix="/api")
+app.include_router(router=images.router, prefix="/api")
 app.include_router(router=storages.router, prefix="/api")
