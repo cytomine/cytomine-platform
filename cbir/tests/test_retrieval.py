@@ -16,18 +16,18 @@
 
 import os
 
-from fastapi.testclient import TestClient
 import pytest
+from fastapi.testclient import TestClient
 
 from cbir.app import app
-from cbir.config import DatabaseSetting
+from cbir.config import get_settings
 
 
 @pytest.mark.skip(reason="Skip this test as it is not refactor yet.")
 def test_index_image() -> None:
     """Test image indexing."""
 
-    database_settings = DatabaseSetting.get_settings()
+    settings = get_settings()
     storage_name = "test_storage"
     index_name = "test_index"
 
@@ -39,7 +39,7 @@ def test_index_image() -> None:
         )
 
     assert response.status_code == 200, response.json()
-    assert os.path.isfile(database_settings.get_database_path()) is True
+    assert os.path.isfile(settings.get_database_path()) is True
 
 
 @pytest.mark.skip(reason="Skip this test as it is not refactor yet.")

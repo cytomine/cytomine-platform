@@ -22,7 +22,7 @@ import numpy
 import torch
 from redis import Redis  # type: ignore
 
-from cbir.config import DatabaseSetting
+from cbir.config import Settings
 from cbir.models.model import Model
 
 
@@ -31,7 +31,7 @@ class Database:
 
     def __init__(
         self,
-        settings: DatabaseSetting,
+        settings: Settings,
         n_features: int,
         gpu: bool = False,
     ) -> None:

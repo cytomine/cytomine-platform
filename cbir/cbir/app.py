@@ -22,13 +22,13 @@ from fastapi import FastAPI
 
 from cbir import __version__
 from cbir.api import images, storages
-from cbir.config import DatabaseSetting, ModelSetting
+from cbir.config import Settings, get_settings
 from cbir.models.model import Model
 from cbir.models.resnet import Resnet
 from cbir.retrieval.database import Database
 
 
-def load_model(settings: ModelSetting) -> Model:
+def load_model(settings: Settings) -> Model:
     """Load the weights of the model."""
 
     state = torch.load(settings.weights, map_location=settings.device)
@@ -40,7 +40,7 @@ def load_model(settings: ModelSetting) -> Model:
     return model
 
 
-def init_database(model: Model, settings: DatabaseSetting) -> Database:
+def init_database(model: Model, settings: Settings) -> Database:
     """Initialise the database."""
     return Database(settings, model.n_features, gpu=model.device.type == "cuda")
 
@@ -50,11 +50,9 @@ async def lifespan(local_app: FastAPI) -> AsyncGenerator[None, None]:
     """Lifespan of the app."""
 
     # Initialisation
-    local_app.state.model = load_model(ModelSetting.get_settings())
-    local_app.state.database = init_database(
-        local_app.state.model,
-        DatabaseSetting.get_settings(),
-    )
+    settings = get_settings()
+    local_app.state.model = load_model(settings)
+    local_app.state.database = init_database(local_app.state.model, settings)
 
     yield
 
