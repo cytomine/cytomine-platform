@@ -1,59 +1,183 @@
-#  Copyright 2023 Cytomine ULiège
-#
-#  Licensed under the Apache License, Version 2.0 (the "License");
-#  you may not use this file except in compliance with the License.
-#  You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under the License is distributed on an "AS IS" BASIS,
-#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#  See the License for the specific language governing permissions and
-#  limitations under the License.
-
 """API tests"""
 
-import os
-
-import pytest
 from fastapi.testclient import TestClient
 
-from cbir.app import app
-from cbir.config import get_settings
 
+def test_index_image(client: TestClient) -> None:
+    """
+    Test 'POST /api/images' endpoint.
 
-@pytest.mark.skip(reason="Skip this test as it is not refactor yet.")
-def test_index_image() -> None:
-    """Test image indexing."""
+    Args:
+        client: A test client instance used to send requests to the application.
+    """
 
-    settings = get_settings()
     storage_name = "test_storage"
     index_name = "test_index"
 
-    with TestClient(app) as client, open("tests/data/image.png", "rb") as image:
+    response = client.post("/api/storages", json={"name": storage_name})
+    assert response.status_code == 200
+
+    with open("tests/data/image.png", "rb") as image:
         response = client.post(
             "/api/images",
             files={"image": image},
             params={"storage": storage_name, "index": index_name},
         )
 
-    assert response.status_code == 200, response.json()
-    assert os.path.isfile(settings.get_database_path()) is True
+    assert response.status_code == 200
+    assert response.json() == {
+        "ids": [0],
+        "storage": storage_name,
+        "index": index_name,
+    }
 
 
-@pytest.mark.skip(reason="Skip this test as it is not refactor yet.")
-def test_retrieve_one_image() -> None:
-    """Test image retrieval for one image."""
+def test_index_image_with_same_filename(client: TestClient) -> None:
+    """
+    Test 'POST /api/images' endpoint with the same filename.
+
+    Args:
+        client: A test client instance used to send requests to the application.
+    """
+
+    storage_name = "test_storage"
+    index_name = "test_index"
+
+    response = client.post("/api/storages", json={"name": storage_name})
+    assert response.status_code == 200
 
     with open("tests/data/image.png", "rb") as image:
-        files = {"image": image.read()}
+        response = client.post(
+            "/api/images",
+            files={"image": image},
+            params={"storage": storage_name, "index": index_name},
+        )
+    assert response.status_code == 200
 
-    with TestClient(app) as client:
+    with open("tests/data/image.png", "rb") as image:
+        response = client.post(
+            "/api/images",
+            files={"image": image},
+            params={"storage": storage_name, "index": index_name},
+        )
+
+    assert response.status_code == 409
+    assert response.json() == {"detail": "Image filename already exist!"}
+
+
+def test_index_image_with_no_storage(client: TestClient) -> None:
+    """
+    Test 'POST /api/images' endpoint with no storage.
+
+    Args:
+        client: A test client instance used to send requests to the application.
+    """
+
+    index_name = "test_index"
+    with open("tests/data/image.png", "rb") as image:
+        response = client.post(
+            "/api/images",
+            files={"image": image},
+            params={"storage": "", "index": index_name},
+        )
+
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Storage is required"}
+
+
+def test_remove_image_not_found(client: TestClient) -> None:
+    """
+    Test 'DELETE /api/images/{filename}' endpoint where the image does not exist.
+
+    Args:
+        client: A test client instance used to send requests to the application.
+    """
+
+    filename = "notfound.png"
+    storage_name = "test_storage"
+    index_name = "test_index"
+    response = client.delete(
+        f"/api/images/{filename}",
+        params={
+            "storage": storage_name,
+            "index": index_name,
+        },
+    )
+
+    assert response.status_code == 404, response.json()
+    assert response.json() == {"detail": f"{filename} not found"}
+
+
+def test_remove_image(client: TestClient) -> None:
+    """
+    Test 'DELETE /api/images/{filename}' endpoint.
+
+    Args:
+        client: A test client instance used to send requests to the application.
+    """
+
+    filename = "image.png"
+    storage_name = "test_storage"
+    index_name = "test_index"
+
+    response = client.post("/api/storages", json={"name": storage_name})
+    assert response.status_code == 200
+
+    with open(f"tests/data/{filename}", "rb") as image:
+        response = client.post(
+            "/api/images",
+            files={"image": image},
+            params={"storage": storage_name, "index": index_name},
+        )
+    assert response.status_code == 200
+
+    response = client.delete(
+        f"/api/images/{filename}",
+        params={
+            "storage": storage_name,
+            "index": index_name,
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "id": 0,
+        "storage": storage_name,
+        "index": index_name,
+    }
+
+
+def test_retrieve_one_image(client: TestClient) -> None:
+    """
+    Test 'POST /api/images/retrieve' for one neighbour.
+
+    Args:
+        client: A test client instance used to send requests to the application.
+    """
+
+    storage_name = "test_storage"
+    index_name = "test_index"
+
+    response = client.post("/api/storages", json={"name": storage_name})
+    assert response.status_code == 200
+
+    with open("tests/data/image.png", "rb") as image:
+        response = client.post(
+            "/api/images",
+            files={"image": image},
+            params={"storage": storage_name, "index": index_name},
+        )
+    assert response.status_code == 200
+
+    with open("tests/data/image.png", "rb") as image:
         response = client.post(
             "/api/images/retrieve",
-            data={"nrt_neigh": "1"},
-            files=files,
+            files={"image": image},
+            params={
+                "nrt_neigh": "1",
+                "storage": storage_name,
+                "index": index_name,
+            },
         )
 
     data = response.json()
@@ -67,34 +191,25 @@ def test_retrieve_one_image() -> None:
     assert len(data["filenames"]) == 1
 
 
-def test_remove_image_not_found() -> None:
-    """Test remove an image that do not exist in the database."""
+def test_retrieve_image(client: TestClient) -> None:
+    """
+    Test 'POST /api/images/retrieve' for several neighbours.
 
-    filename = "notfound.png"
-    with TestClient(app) as client:
-        response = client.delete(f"/api/images/{filename}")
+    Args:
+        client: A test client instance used to send requests to the application.
+    """
 
-    assert response.status_code == 404, response.json()
-
-
-@pytest.mark.skip(reason="Skip this test as it is not refactor yet.")
-def test_remove_image() -> None:
-    """Test remove an image from the database."""
-
-    filename = "image.png"
-    with TestClient(app) as client:
-        response = client.delete(f"/api/images/{filename}")
-
-    assert response.status_code == 200
-
-
-def test_retrieve_image() -> None:
-    """Test image retrieval."""
-
-    with TestClient(app) as client, open("tests/data/image.png", "rb") as image:
+    nrt_neigh = 10
+    storage_name = "test_storage"
+    index_name = "test_index"
+    with open("tests/data/image.png", "rb") as image:
         response = client.post(
             "/api/images/retrieve",
-            data={"nrt_neigh": "10"},
+            params={
+                "nrt_neigh": nrt_neigh,
+                "storage": storage_name,
+                "index": index_name,
+            },
             files={"image": image},
         )
 

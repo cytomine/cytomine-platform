@@ -3,21 +3,28 @@
 import shutil
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse
 
 from cbir.api.utils.models import Storage
+from cbir.config import Settings, get_settings
 
 router = APIRouter()
 
 
 @router.get("/storages")
-async def get_storages(request: Request) -> JSONResponse:
-    """Get all storages."""
+def get_storages(settings: Settings = Depends(get_settings)) -> JSONResponse:
+    """
+    Get all storages.
 
-    settings = request.app.state.database.settings
+    Args:
+        settings (Settings): The database settings.
+
+    Returns:
+        JSONResponse: A JSON response containing the list of storage names.
+    """
+
     base_path = Path(settings.data_path)
-
     if not base_path.is_dir():
         raise HTTPException(
             status_code=404,
@@ -30,10 +37,21 @@ async def get_storages(request: Request) -> JSONResponse:
 
 
 @router.post("/storages")
-async def create_storage(request: Request, body: Storage) -> JSONResponse:
-    """Create a new storage."""
+async def create_storage(
+    body: Storage,
+    settings: Settings = Depends(get_settings),
+) -> JSONResponse:
+    """
+    Create a new storage.
 
-    settings = request.app.state.database.settings
+    Args:
+        body (Storage): The body of the request.
+        settings (Settings): The database settings.
+
+    Returns:
+        JSONResponse: A JSON response containing the message of the creation.
+    """
+
     base_path = Path(settings.data_path)
     storage_path = base_path / body.name
 
@@ -55,10 +73,21 @@ async def create_storage(request: Request, body: Storage) -> JSONResponse:
 
 
 @router.get("/storages/{name}")
-async def get_storage(request: Request, name: str) -> JSONResponse:
-    """Get a specific storage."""
+async def get_storage(
+    name: str,
+    settings: Settings = Depends(get_settings),
+) -> JSONResponse:
+    """
+    Get a specific storage.
 
-    settings = request.app.state.database.settings
+    Args:
+        name (str): The name of the storage.
+        settings (Settings): The database settings.
+
+    Returns:
+        JSONResponse: A JSON response containing the name of the storage.
+    """
+
     base_path = Path(settings.data_path)
     storage_path = base_path / name
 
@@ -72,10 +101,21 @@ async def get_storage(request: Request, name: str) -> JSONResponse:
 
 
 @router.delete("/storages/{name}")
-async def delete_storage(request: Request, name: str) -> JSONResponse:
-    """Delete a specific storage and its content."""
+async def delete_storage(
+    name: str,
+    settings: Settings = Depends(get_settings),
+) -> JSONResponse:
+    """
+    Delete a specific storage and its content.
 
-    settings = request.app.state.database.settings
+    Args:
+        name (str): The name of the storage to delete.
+        settings (Settings): The database settings.
+
+    Returns:
+        JSONResponse: A JSON response containing the message of the deletion.
+    """
+
     base_path = Path(settings.data_path)
     storage_path = base_path / name
 

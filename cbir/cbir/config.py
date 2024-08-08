@@ -14,8 +14,6 @@
 
 """Environment parameters"""
 
-import os
-
 import torch
 from pydantic_settings import BaseSettings
 
@@ -37,10 +35,6 @@ class Settings(BaseSettings):
     extractor: str = "resnet"
     n_features: int = 128
     weights: str = f"/weights/{extractor}"
-
-    def get_database_path(self) -> str:
-        """Get the database path."""
-        return os.path.join(self.data_path, self.filename)
 
 
 def get_settings() -> Settings:

@@ -9,6 +9,7 @@ plugins = ["pydantic.mypy"]
 
 [tool.pylint]
 disable = ["redefined-outer-name"]
+max-args = 6
 output-format = "colorized"
 
 [tool.poetry]
