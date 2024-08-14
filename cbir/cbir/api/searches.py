@@ -37,7 +37,7 @@ async def retrieve_image(
         retrieval (ImageRetrieval): The image retrieval object.
 
     Returns:
-        JSONResponse: A JSON containing the list of filenames and their distances.
+        JSONResponse: A JSON containing the list of similarities.
     """
 
     if not storage_name:
@@ -46,14 +46,13 @@ async def retrieve_image(
     model = request.app.state.model
     content = await image.read()
 
-    filenames, distances = retrieval.search(model, content, nrt_neigh)
+    similarities = retrieval.search(model, content, nrt_neigh)
 
     return JSONResponse(
         content={
             "query": image.filename,
             "storage": storage_name,
             "index": index_name,
-            "filenames": filenames,
-            "distances": distances,
+            "similarities": similarities,
         }
     )

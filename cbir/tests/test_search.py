@@ -39,12 +39,9 @@ def test_search_one_image(client: TestClient) -> None:
     data = response.json()
 
     assert response.status_code == 200
-    assert "distances" in data
-    assert "filenames" in data
-    assert isinstance(data["distances"], list)
-    assert isinstance(data["filenames"], list)
-    assert len(data["distances"]) == 1
-    assert len(data["filenames"]) == 1
+    assert "similarities" in data
+    assert isinstance(data["similarities"], list)
+    assert len(data["similarities"]) == 1
 
 
 def test_search_images(client: TestClient) -> None:
@@ -72,7 +69,5 @@ def test_search_images(client: TestClient) -> None:
     data = response.json()
 
     assert response.status_code == 200
-    assert "distances" in data
-    assert "filenames" in data
-    assert isinstance(data["distances"], list)
-    assert isinstance(data["filenames"], list)
+    assert "similarities" in data
+    assert isinstance(data["similarities"], list)

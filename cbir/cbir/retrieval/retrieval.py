@@ -91,7 +91,7 @@ class ImageRetrieval:
         model: Model,
         image: bytes,
         nrt_neigh: int,
-    ) -> Tuple[List[str], List[float]]:
+    ) -> List[Tuple[str, float]]:
         """
         Search for similar images.
 
@@ -101,7 +101,7 @@ class ImageRetrieval:
             nrt_neigh (int): The number of nearest neighbours to search.
 
         Returns:
-            Tuple[List[str], List[float]]: the list of filenames and their distances.
+            List[Tuple[str, float]]: The list of filename and distance pairs.
         """
 
         features_extraction = transforms.Compose(
@@ -124,4 +124,4 @@ class ImageRetrieval:
         labels, distances = self.indexer.search(outputs, nrt_neigh)
         filenames = [self.store.get(str(l)) or "" for l in labels]
 
-        return filenames, distances
+        return list(zip(filenames, distances))
