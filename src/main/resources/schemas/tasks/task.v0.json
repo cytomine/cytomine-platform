@@ -284,8 +284,8 @@
               "required": ["id"],
               "properties": {
                 "id": {"const": "string"},
-                "min-length": {"type": "string", "default": 0},
-                "max-length": {"type": "string"}
+                "min_length": {"type": "integer", "default": 0},
+                "max_length": {"type": "integer"}
               }
             }
           ]
