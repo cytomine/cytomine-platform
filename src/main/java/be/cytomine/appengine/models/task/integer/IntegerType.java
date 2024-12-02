@@ -53,6 +53,10 @@ public class IntegerType extends Type {
 
     @Override
     public void validate(Object valueObject) throws TypeValidationException {
+        if (valueObject == null) {
+            return;
+        }
+
         Integer value = (Integer) valueObject;
         if (this.hasConstraint(IntegerTypeConstraint.GREATER_THAN) && value <= this.getGt())
             throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_GT_VALIDATION_ERROR);

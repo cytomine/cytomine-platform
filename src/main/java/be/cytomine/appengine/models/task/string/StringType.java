@@ -56,6 +56,10 @@ public class StringType extends Type {
 
     @Override
     public void validate(Object valueObject) throws TypeValidationException {
+        if (valueObject == null) {
+            return;
+        }
+
         String value = (String) valueObject;
 
         if (this.hasConstraint(StringTypeConstraint.MIN_LENGTH) && value.length() < this.getMinLength()) {

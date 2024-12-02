@@ -77,6 +77,10 @@ public class NumberType extends Type {
 
     @Override
     public void validate(Object valueObject) throws TypeValidationException {
+        if (valueObject == null) {
+            return;
+        }
+
         Double value = (Double) valueObject;
 
         if (this.hasConstraint(NumberTypeConstraint.GREATER_THAN) && value <= this.getGt()) {

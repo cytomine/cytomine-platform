@@ -62,6 +62,10 @@ public class EnumerationType extends Type {
 
     @Override
     public void validate(Object valueObject) throws TypeValidationException {
+        if (valueObject == null) {
+            return;
+        }
+
         if (!(valueObject instanceof String)) {
             throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_VALIDATION_ERROR);
         }

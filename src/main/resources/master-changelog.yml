@@ -8,6 +8,9 @@ databaseChangeLog:
   - include:
       file: migrations/integer_provision_to_provision.sql
       relativeToChangelogFile: false
+  - include:
+      file: migrations/remove-input-default-value-constraint.sql
+      relativeToChangelogFile: false
 #  - includeAll:
 #      path: migrations/
 #      relativeToChangelogFile: false
