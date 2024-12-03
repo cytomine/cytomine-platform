@@ -2,6 +2,7 @@ package be.cytomine.appengine.models.task;
 
 import be.cytomine.appengine.models.task.bool.BooleanType;
 import be.cytomine.appengine.models.task.enumeration.EnumerationType;
+import be.cytomine.appengine.models.task.geometry.GeometryType;
 import be.cytomine.appengine.models.task.integer.IntegerType;
 import be.cytomine.appengine.models.task.number.NumberType;
 import be.cytomine.appengine.models.task.string.StringType;
@@ -36,6 +37,7 @@ public class TypeFactory {
             case "number" -> createNumberType(typeNode, typeId);
             case "string" -> createStringType(typeNode, typeId);
             case "enumeration" -> createEnumerationType(typeNode, typeId);
+            case "geometry" -> createGeometryType(typeId);
             default -> new Type();
         };
     }
@@ -96,6 +98,14 @@ public class TypeFactory {
             .map(EnumerationTypeConstraint::getStringKey)
             .filter(typeNode::has)
             .forEach(key -> type.setConstraint(EnumerationTypeConstraint.getConstraint(key), typeNode.get(key).toString()));
+
+        return type;
+    }
+
+    @NotNull
+    private static GeometryType createGeometryType(String typeId) {
+        GeometryType type = new GeometryType();
+        type.setId(typeId);
 
         return type;
     }

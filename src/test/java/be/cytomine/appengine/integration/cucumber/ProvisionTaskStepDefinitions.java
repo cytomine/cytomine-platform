@@ -11,6 +11,8 @@ import be.cytomine.appengine.models.task.bool.BooleanPersistence;
 import be.cytomine.appengine.models.task.bool.BooleanType;
 import be.cytomine.appengine.models.task.enumeration.EnumerationPersistence;
 import be.cytomine.appengine.models.task.enumeration.EnumerationType;
+import be.cytomine.appengine.models.task.geometry.GeometryPersistence;
+import be.cytomine.appengine.models.task.geometry.GeometryType;
 import be.cytomine.appengine.models.task.integer.IntegerPersistence;
 import be.cytomine.appengine.models.task.integer.IntegerType;
 import be.cytomine.appengine.models.task.number.NumberPersistence;
@@ -25,6 +27,7 @@ import be.cytomine.appengine.openapi.model.TaskRun;
 import be.cytomine.appengine.repositories.TypePersistenceRepository;
 import be.cytomine.appengine.repositories.bool.BooleanPersistenceRepository;
 import be.cytomine.appengine.repositories.enumeration.EnumerationPersistenceRepository;
+import be.cytomine.appengine.repositories.geometry.GeometryPersistenceRepository;
 import be.cytomine.appengine.repositories.integer.IntegerPersistenceRepository;
 import be.cytomine.appengine.repositories.number.NumberPersistenceRepository;
 import be.cytomine.appengine.repositories.string.StringPersistenceRepository;
@@ -82,6 +85,9 @@ public class ProvisionTaskStepDefinitions {
 
     @Autowired
     private EnumerationPersistenceRepository enumerationProvisionRepository;
+
+    @Autowired
+    private GeometryPersistenceRepository geometryProvisionRepository;
 
     @Autowired
     private IntegerPersistenceRepository integerProvisionRepository;
@@ -195,6 +201,8 @@ public class ProvisionTaskStepDefinitions {
                     return !(((StringType) input.getType()).getId().equals(type) && input.getName().equals(paramName));
                 case "EnumerationType":
                     return !(((EnumerationType) input.getType()).getId().equals(type) && input.getName().equals(paramName));
+                case "GeometryType":
+                    return !(((GeometryType) input.getType()).getId().equals(type) && input.getName().equals(paramName));
                 default:
                     return false;
             }
@@ -256,6 +264,11 @@ public class ProvisionTaskStepDefinitions {
                 provision = new EnumerationPersistence();
                 provision.setValueType(ValueType.ENUMERATION);
                 ((EnumerationPersistence) provision).setValue(initialValue);
+                break;
+            case "GeometryType":
+                provision = new GeometryPersistence();
+                provision.setValueType(ValueType.GEOMETRY);
+                ((GeometryPersistence) provision).setValue(initialValue);
                 break;
         }
 
@@ -345,6 +358,9 @@ public class ProvisionTaskStepDefinitions {
                 break;
             case "EnumerationType":
                 provision = enumerationProvisionRepository.findEnumerationPersistenceByParameterNameAndRunIdAndParameterType(parameterName, persistedRun.getId() , ParameterType.INPUT);
+                break;
+            case "GeometryType":
+                provision = geometryProvisionRepository.findGeometryPersistenceByParameterNameAndRunIdAndParameterType(parameterName, persistedRun.getId() , ParameterType.INPUT);
                 break;
         }
 
@@ -547,6 +563,8 @@ public class ProvisionTaskStepDefinitions {
                             return ((StringType) input.getType()).getId().equals(type) && input.getName().equals(paramName);
                         case "enumeration":
                             return ((EnumerationType) input.getType()).getId().equals(type) && input.getName().equals(paramName);
+                        case "geometry":
+                            return ((GeometryType) input.getType()).getId().equals(type) && input.getName().equals(paramName);
                         default:
                             return false;
                     }
@@ -593,6 +611,10 @@ public class ProvisionTaskStepDefinitions {
             case "EnumerationType":
                 provision = enumerationProvisionRepository.findEnumerationPersistenceByParameterNameAndRunIdAndParameterType(parameterName, persistedRun.getId() , ParameterType.INPUT);
                 Assertions.assertEquals(((EnumerationPersistence) provision).getValue(), newValue);
+                break;
+            case "GeometryType":
+                provision = geometryProvisionRepository.findGeometryPersistenceByParameterNameAndRunIdAndParameterType(parameterName, persistedRun.getId() , ParameterType.INPUT);
+                Assertions.assertEquals(((GeometryPersistence) provision).getValue(), newValue);
                 break;
         }
 
