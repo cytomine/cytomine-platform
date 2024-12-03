@@ -1,0 +1,24 @@
+name: Validation
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "src/test/resources/spec/api/openapi_spec.v0.1.0.yml"
+
+jobs:
+  validate-openapi:
+    runs-on: ubuntu-latest
+
+    container:
+      image: redocly/cli:1.10.6
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Validate OpenAPI specifications
+        env:
+          OPENAPI_PATH: src/test/resources/spec/api/openapi_spec.v0.1.0.yml
+        run: redocly lint ${{ env.OPENAPI_PATH }}
