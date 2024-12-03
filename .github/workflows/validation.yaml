@@ -5,9 +5,39 @@ on:
     branches:
       - main
     paths:
+      - "src/main/resources/schemas/tasks/task.v0.json"
       - "src/test/resources/spec/api/openapi_spec.v0.1.0.yml"
 
 jobs:
+  validate-json-schema:
+    runs-on: ubuntu-latest
+
+    container:
+      image: node:16-alpine3.18
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: >-
+          npm install -g
+            ajv-cli@5.0.0
+            ajv-formats@2.1.1
+            ajv-formats-draft2019@1.6.1
+
+      - name: Validate JSON schema
+        env:
+          SCHEMA_PATH: ./src/main/resources/schemas/tasks/task.v0.json
+        run: >-
+          ajv compile
+            -s ${{ env.SCHEMA_PATH }}
+            -c ajv-formats
+            -c ajv-formats-draft2019
+            --spec=draft2019
+            --strict=false
+            --all-errors
+
   validate-openapi:
     runs-on: ubuntu-latest
 
@@ -20,5 +50,5 @@ jobs:
 
       - name: Validate OpenAPI specifications
         env:
-          OPENAPI_PATH: src/test/resources/spec/api/openapi_spec.v0.1.0.yml
+          OPENAPI_PATH: ./src/test/resources/spec/api/openapi_spec.v0.1.0.yml
         run: redocly lint ${{ env.OPENAPI_PATH }}
