@@ -4,15 +4,19 @@ import be.cytomine.appengine.dto.inputs.task.TaskRunParameterValue;
 import be.cytomine.appengine.exceptions.TypeValidationException;
 import be.cytomine.appengine.handlers.FileData;
 import be.cytomine.appengine.models.BaseEntity;
+
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Entity
@@ -20,8 +24,7 @@ import java.util.UUID;
 @Inheritance(strategy = InheritanceType.JOINED)
 @Data
 @EqualsAndHashCode(callSuper = true)
-
-public class Type extends BaseEntity{
+public class Type extends BaseEntity {
     @Id
     @Column(name = "identifier", updatable = false, nullable = false)
     @GeneratedValue(generator = "UUID")
@@ -30,6 +33,21 @@ public class Type extends BaseEntity{
 
     @ElementCollection
     private List<String> constraints; // used to track which constraints are defined for this type object
+
+    /**
+     * Parse a string representation of a list of string to a list of strings
+     *
+     * @param input The string representation of the list
+     * @return  The list of strings
+    */
+    public static List<String> parse(String input) {
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            return mapper.readValue(input, new TypeReference<List<String>>() {});
+        } catch (Exception e) {
+            return new ArrayList<>();
+        }
+    }
 
     public void validate(Object value) throws TypeValidationException {}
 

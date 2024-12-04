@@ -396,7 +396,7 @@ public class RunTaskStepDefinitions {
     @Then("the payload contains the output {string} and their corresponding value {int}")
     public void the_payload_contains_the_output_and_their_corresponding_value(String output, Integer value) {
         IntegerValue outputParameter = (IntegerValue) outputs.get(0);
-        Assertions.assertEquals(outputParameter.getParam_name(), output);
+        Assertions.assertEquals(outputParameter.getParameterName(), output);
         Assertions.assertEquals(outputParameter.getValue(), value);
     }
 
@@ -574,7 +574,7 @@ public class RunTaskStepDefinitions {
 
     @Then("the payload contains the output parameters and their corresponding values")
     public void the_payload_contains_the_output_parameters_and_their_corresponding_values() {
-        Assertions.assertEquals(outputs.get(0).getParam_name(), "sum");
+        Assertions.assertEquals(outputs.get(0).getParameterName(), "sum");
     }
 
     // successful run request for a provisioned task run

@@ -132,9 +132,10 @@ public class StringType extends Type {
     @Override
     public TaskRunParameterValue buildTaskRunParameterValue(String trimmedOutput, UUID id, String outputName) {
         StringValue value = new StringValue();
-        value.setTask_run_id(id);
+        value.setParameterName(outputName);
+        value.setTaskRunId(id);
+        value.setType(ValueType.STRING);
         value.setValue(trimmedOutput);
-        value.setParam_name(outputName);
 
         return value;
     }
@@ -143,9 +144,10 @@ public class StringType extends Type {
     public TaskRunParameterValue buildTaskRunParameterValue(TypePersistence typePersistence) {
         StringPersistence stringPersistence = (StringPersistence) typePersistence;
         StringValue value = new StringValue();
-        value.setTask_run_id(stringPersistence.getRunId());
+        value.setParameterName(stringPersistence.getParameterName());
+        value.setTaskRunId(stringPersistence.getRunId());
         value.setValue(stringPersistence.getValue());
-        value.setParam_name(stringPersistence.getParameterName());
+        value.setType(ValueType.STRING);
 
         return value;
     }

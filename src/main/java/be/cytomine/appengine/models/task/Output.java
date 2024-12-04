@@ -1,11 +1,12 @@
 package be.cytomine.appengine.models.task;
 
-import be.cytomine.appengine.models.BaseEntity;
+import java.util.UUID;
+
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import java.util.UUID;
+import be.cytomine.appengine.models.BaseEntity;
 
 @Entity
 @Table(name = "output")
@@ -23,4 +24,8 @@ public class Output extends BaseEntity {
     private boolean optional;
     @OneToOne(cascade = CascadeType.ALL)
     private Type type;
+
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinColumn(name = "derived_from", nullable = true)
+    private Input derivedFrom;
 }

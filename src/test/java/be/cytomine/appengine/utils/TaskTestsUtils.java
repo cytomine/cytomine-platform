@@ -17,6 +17,7 @@ import be.cytomine.appengine.dto.inputs.task.TaskRunParameterValue;
 import be.cytomine.appengine.dto.inputs.task.types.bool.BooleanValue;
 import be.cytomine.appengine.dto.inputs.task.types.enumeration.EnumerationValue;
 import be.cytomine.appengine.dto.inputs.task.types.geometry.GeometryValue;
+import be.cytomine.appengine.dto.inputs.task.types.image.ImageValue;
 import be.cytomine.appengine.dto.inputs.task.types.integer.IntegerValue;
 import be.cytomine.appengine.dto.inputs.task.types.string.StringValue;
 import be.cytomine.appengine.models.BaseEntity;
@@ -63,42 +64,50 @@ public class TaskTestsUtils {
             switch (value.getClass().getSimpleName().toLowerCase()) {
                 case "boolean":
                     BooleanValue booleanValue = new BooleanValue();
-                    booleanValue.setParam_name((String) entity.get("param_name"));
-                    booleanValue.setTask_run_id(UUID.fromString((String) entity.get("task_run_id")));
+                    booleanValue.setParameterName((String) entity.get("param_name"));
+                    booleanValue.setTaskRunId(UUID.fromString((String) entity.get("task_run_id")));
                     booleanValue.setValue((boolean) entity.get("value"));
                     parameterValues.add(booleanValue);
                     break;
 
                 case "integer":
                     IntegerValue integerValue = new IntegerValue();
-                    integerValue.setParam_name((String) entity.get("param_name"));
-                    integerValue.setTask_run_id(UUID.fromString((String) entity.get("task_run_id")));
+                    integerValue.setParameterName((String) entity.get("param_name"));
+                    integerValue.setTaskRunId(UUID.fromString((String) entity.get("task_run_id")));
                     integerValue.setValue((int) entity.get("value"));
                     parameterValues.add(integerValue);
                     break;
 
                 case "string":
                     StringValue stringValue = new StringValue();
-                    stringValue.setParam_name((String) entity.get("param_name"));
-                    stringValue.setTask_run_id(UUID.fromString((String) entity.get("task_run_id")));
+                    stringValue.setParameterName((String) entity.get("param_name"));
+                    stringValue.setTaskRunId(UUID.fromString((String) entity.get("task_run_id")));
                     stringValue.setValue((String) entity.get("value"));
                     parameterValues.add(stringValue);
                     break;
 
                 case "enumeration":
                     EnumerationValue enumerationValue = new EnumerationValue();
-                    enumerationValue.setParam_name((String) entity.get("param_name"));
-                    enumerationValue.setTask_run_id(UUID.fromString((String) entity.get("task_run_id")));
+                    enumerationValue.setParameterName((String) entity.get("param_name"));
+                    enumerationValue.setTaskRunId(UUID.fromString((String) entity.get("task_run_id")));
                     enumerationValue.setValue((String) entity.get("value"));
                     parameterValues.add(enumerationValue);
                     break;
 
                 case "geometry":
                     GeometryValue geometryValue = new GeometryValue();
-                    geometryValue.setParam_name((String) entity.get("param_name"));
-                    geometryValue.setTask_run_id(UUID.fromString((String) entity.get("task_run_id")));
+                    geometryValue.setParameterName((String) entity.get("param_name"));
+                    geometryValue.setTaskRunId(UUID.fromString((String) entity.get("task_run_id")));
                     geometryValue.setValue((String) entity.get("value"));
                     parameterValues.add(geometryValue);
+                    break;
+
+                case "image":
+                    ImageValue imageValue = new ImageValue();
+                    imageValue.setParameterName((String) entity.get("param_name"));
+                    imageValue.setTaskRunId(UUID.fromString((String) entity.get("task_run_id")));
+                    imageValue.setValue(((String) entity.get("value")).getBytes());
+                    parameterValues.add(imageValue);
                     break;
             }
         }
@@ -138,6 +147,10 @@ public class TaskTestsUtils {
             case "GeometryType":
                 provision.setType(be.cytomine.appengine.dto.inputs.task.ParameterType.GEOMETRY);
                 provision.setValue(value);
+                break;
+            case "ImageType":
+                provision.setType(be.cytomine.appengine.dto.inputs.task.ParameterType.IMAGE);
+                provision.setValue(value.getBytes());
                 break;
         }
 

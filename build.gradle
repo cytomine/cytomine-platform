@@ -128,6 +128,9 @@ dependencies {
     // liquibase
     liquibaseRuntime 'info.picocli:picocli:4.7.5'
     implementation 'org.liquibase:liquibase-core:4.25.0'
+
+    // Image processing
+    implementation 'org.apache.commons:commons-imaging:1.0.0-alpha5'
 }
 
 tasks.named('test') {

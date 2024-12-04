@@ -6,5 +6,6 @@ public enum ParameterType { // add types to this enum
     NUMBER,
     STRING,
     ENUMERATION,
-    GEOMETRY
+    GEOMETRY,
+    IMAGE
 }

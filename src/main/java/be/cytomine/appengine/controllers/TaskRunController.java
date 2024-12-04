@@ -3,6 +3,7 @@ package be.cytomine.appengine.controllers;
 import be.cytomine.appengine.dto.inputs.task.*;
 import be.cytomine.appengine.exceptions.*;
 import be.cytomine.appengine.handlers.FileData;
+import be.cytomine.appengine.models.task.ParameterType;
 import be.cytomine.appengine.services.TaskProvisioningService;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
@@ -17,6 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.List;
 
+
 @RestController
 @RequestMapping(path = "${app-engine.api_prefix}${app-engine.api_version}/")
 public class TaskRunController {
@@ -28,12 +30,27 @@ public class TaskRunController {
         this.taskRunService = taskRunService;
     }
 
-    @PutMapping(value = "/task-runs/{run_id}/input-provisions/{param_name}")
+    @PutMapping(value = "/task-runs/{run_id}/input-provisions/{param_name}", consumes = MediaType.APPLICATION_JSON_VALUE)
     @ResponseStatus(code = HttpStatus.OK)
-    public ResponseEntity<?> provision(@PathVariable String run_id, @PathVariable String param_name, @RequestBody JsonNode provision) throws ProvisioningException {
-        logger.info("/task-runs/{run_id}/input-provisions/{param_name} PUT");
+    public ResponseEntity<?> provisionJson(@PathVariable String run_id, @PathVariable String param_name, @RequestBody JsonNode provision) throws ProvisioningException {
+        logger.info("/task-runs/{run_id}/input-provisions/{param_name} JSON PUT");
         JsonNode provisioned = taskRunService.provisionRunParameter(provision, run_id);
-        logger.info("/task-runs/{run_id}/input-provisions/{param_name} PUT Ended");
+        logger.info("/task-runs/{run_id}/input-provisions/{param_name} JSON PUT Ended");
+        return ResponseEntity.ok(provisioned);
+    }
+
+    @PutMapping(value = "/task-runs/{run_id}/input-provisions/{param_name}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @ResponseStatus(code = HttpStatus.OK)
+    public ResponseEntity<?> provisionData(
+        @PathVariable("run_id") String runId,
+        @PathVariable("param_name") String parameterName,
+        @RequestParam("file") MultipartFile file
+    ) throws IOException, ProvisioningException {
+        logger.info("/task-runs/{run_id}/input-provisions/{param_name} File PUT");
+
+        JsonNode provisioned = taskRunService.provisionRunParameter(parameterName, runId, file.getBytes());
+        logger.info("/task-runs/{run_id}/input-provisions/{param_name} File PUT Ended");
+
         return ResponseEntity.ok(provisioned);
     }
 
@@ -85,6 +102,30 @@ public class TaskRunController {
         List<TaskRunParameterValue> outputs = taskRunService.retrieveRunInputs(run_id);
         logger.info("/task-runs/{run_id}/inputs GET Ended");
         return new ResponseEntity<>(outputs, HttpStatus.OK);
+    }
+
+    @GetMapping(value = "/task-runs/{run_id}/input/{parameter_name}")
+    @ResponseStatus(code = HttpStatus.OK)
+    public ResponseEntity<?> getInputRunParameter(
+        @PathVariable("run_id") String runId,
+        @PathVariable("parameter_name") String parameterName
+    ) throws ProvisioningException {
+        logger.info("/task-runs/{run_id}/input/{parameter_name} GET");
+        byte[] input = taskRunService.retrieveSingleRunIO(runId, parameterName, ParameterType.INPUT);
+        logger.info("/task-runs/{run_id}/input/{parameter_name} Ended");
+        return new ResponseEntity<>(input, HttpStatus.OK);
+    }
+
+    @GetMapping(value = "/task-runs/{run_id}/output/{parameter_name}")
+    @ResponseStatus(code = HttpStatus.OK)
+    public ResponseEntity<?> getOutputRunParameter(
+        @PathVariable("run_id") String runId,
+        @PathVariable("parameter_name") String parameterName
+    ) throws ProvisioningException {
+        logger.info("/task-runs/{run_id}/output/{parameter_name} GET");
+        byte[] output = taskRunService.retrieveSingleRunIO(runId, parameterName, ParameterType.OUTPUT);
+        logger.info("/task-runs/{run_id}/output/{parameter_name} Ended");
+        return new ResponseEntity<>(output, HttpStatus.OK);
     }
 
     @GetMapping(value = "/task-runs/{run_id}/outputs")

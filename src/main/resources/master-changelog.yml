@@ -11,7 +11,9 @@ databaseChangeLog:
   - include:
       file: migrations/remove-input-default-value-constraint.sql
       relativeToChangelogFile: false
+  - include:
+      file: migrations/add-derived-from.sql
+      relativeToChangelogFile: false
 #  - includeAll:
 #      path: migrations/
 #      relativeToChangelogFile: false
-

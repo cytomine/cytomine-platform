@@ -1,10 +1,8 @@
 package be.cytomine.appengine.models.task.enumeration;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -36,21 +34,6 @@ public class EnumerationType extends Type {
     public static final String NEW_LINE = System.getProperty("line.separator");
 
     private List<String> values;
-
-    /**
-     * Parse a string representation of a list of string to a list of strings
-     * 
-     * @param input The string representation of the list
-     * @return  The list of strings
-    */
-    public static List<String> parse(String input) {
-        ObjectMapper mapper = new ObjectMapper();
-        try {
-            return mapper.readValue(input, new TypeReference<List<String>>() {});
-        } catch (Exception e) {
-            return new ArrayList<>();
-        }
-    }
 
     public void setConstraint(EnumerationTypeConstraint constraint, String value) {
         switch (constraint) {
@@ -145,9 +128,10 @@ public class EnumerationType extends Type {
     @Override
     public EnumerationValue buildTaskRunParameterValue(String output, UUID id, String outputName) {
         EnumerationValue enumerationValue = new EnumerationValue();
-        enumerationValue.setTask_run_id(id);
+        enumerationValue.setParameterName(outputName);
+        enumerationValue.setTaskRunId(id);
+        enumerationValue.setType(ValueType.ENUMERATION);
         enumerationValue.setValue(output);
-        enumerationValue.setParam_name(outputName);
         return enumerationValue;
     }
 
@@ -155,9 +139,10 @@ public class EnumerationType extends Type {
     public EnumerationValue buildTaskRunParameterValue(TypePersistence typePersistence) {
         EnumerationPersistence enumerationPersistence = (EnumerationPersistence) typePersistence;
         EnumerationValue enumerationValue = new EnumerationValue();
-        enumerationValue.setTask_run_id(enumerationPersistence.getRunId());
+        enumerationValue.setParameterName(enumerationPersistence.getParameterName());
+        enumerationValue.setTaskRunId(enumerationPersistence.getRunId());
+        enumerationValue.setType(ValueType.ENUMERATION);
         enumerationValue.setValue(enumerationPersistence.getValue());
-        enumerationValue.setParam_name(enumerationPersistence.getParameterName());
         return enumerationValue;
     }
 }

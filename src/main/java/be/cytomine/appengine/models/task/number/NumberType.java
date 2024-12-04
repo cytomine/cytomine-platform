@@ -162,9 +162,10 @@ public class NumberType extends Type {
     @Override
     public TaskRunParameterValue buildTaskRunParameterValue(String trimmedOutput, UUID id, String outputName) {
         NumberValue value = new NumberValue();
-        value.setTask_run_id(id);
+        value.setParameterName(outputName);
+        value.setTaskRunId(id);
+        value.setType(ValueType.NUMBER);
         value.setValue(Double.parseDouble(trimmedOutput));
-        value.setParam_name(outputName);
 
         return value;
     }
@@ -173,9 +174,10 @@ public class NumberType extends Type {
     public TaskRunParameterValue buildTaskRunParameterValue(TypePersistence typePersistence) {
         NumberPersistence numberPersistence = (NumberPersistence) typePersistence;
         NumberValue value = new NumberValue();
-        value.setTask_run_id(numberPersistence.getRunId());
+        value.setParameterName(numberPersistence.getParameterName());
+        value.setTaskRunId(numberPersistence.getRunId());
+        value.setType(ValueType.NUMBER);
         value.setValue(numberPersistence.getValue());
-        value.setParam_name(numberPersistence.getParameterName());
 
         return value;
     }

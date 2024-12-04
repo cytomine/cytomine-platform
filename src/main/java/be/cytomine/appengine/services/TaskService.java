@@ -1,5 +1,15 @@
 package be.cytomine.appengine.services;
 
+import java.time.LocalDateTime;
+import java.util.*;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import jakarta.transaction.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
 import be.cytomine.appengine.dto.handlers.filestorage.Storage;
 import be.cytomine.appengine.dto.handlers.registry.DockerImage;
 import be.cytomine.appengine.dto.inputs.task.*;
@@ -12,28 +22,12 @@ import be.cytomine.appengine.handlers.FileData;
 import be.cytomine.appengine.handlers.FileStorageHandler;
 import be.cytomine.appengine.handlers.RegistryHandler;
 import be.cytomine.appengine.models.task.*;
-import be.cytomine.appengine.models.task.integer.IntegerType;
 import be.cytomine.appengine.repositories.RunRepository;
 import be.cytomine.appengine.repositories.TaskRepository;
 import be.cytomine.appengine.states.TaskRunState;
 import be.cytomine.appengine.utils.ArchiveUtils;
 
-
-import com.fasterxml.jackson.databind.JsonNode;
-import jakarta.transaction.Transactional;
-import lombok.extern.slf4j.Slf4j;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.time.LocalDateTime;
-import java.util.*;
-
-
 @Service
-@Slf4j
 public class TaskService {
 
     Logger logger = LoggerFactory.getLogger(TaskService.class);
@@ -133,7 +127,7 @@ public class TaskService {
 
         task.setAuthors(getAuthors(uploadTaskArchive));
         task.setInputs(getInputs(uploadTaskArchive));
-        task.setOutputs(getOutputs(uploadTaskArchive));
+        task.setOutputs(getOutputs(uploadTaskArchive, task.getInputs()));
 
         logger.info("UploadTask : saving task...");
         taskRepository.save(task);
@@ -185,27 +179,40 @@ public class TaskService {
         return inputs;
     }
 
-    private Set<Output> getOutputs(UploadTaskArchive uploadTaskArchive) {
+    private Set<Output> getOutputs(UploadTaskArchive uploadTaskArchive, Set<Input> inputs) {
         logger.info("UploadTask : getting outputs...");
-        Set<Output> outputs = new HashSet<>();
+
         JsonNode outputsNode = uploadTaskArchive.getDescriptorFileAsJson().get("outputs");
-        if (outputsNode.isObject()) {
-            Iterator<String> fieldNames = outputsNode.fieldNames();
-            while (fieldNames.hasNext()) {
-                String outputKey = fieldNames.next();
-                JsonNode inputValue = outputsNode.get(outputKey);
-
-                Output output = new Output();
-                output.setName(outputKey);
-                output.setDisplayName(inputValue.get("display_name").textValue());
-                output.setDescription(inputValue.get("description").textValue());
-                // use type factory to generate the correct type
-                output.setType(TypeFactory.createType(inputValue));
-
-                outputs.add(output);
-
-            }
+        if (!outputsNode.isObject()) {
+            return new HashSet<>();
         }
+
+        Set<Output> outputs = new HashSet<>();
+        Iterator<String> fieldNames = outputsNode.fieldNames();
+        while (fieldNames.hasNext()) {
+            String outputKey = fieldNames.next();
+            JsonNode inputValue = outputsNode.get(outputKey);
+
+            Output output = new Output();
+            output.setName(outputKey);
+            output.setDisplayName(inputValue.get("display_name").textValue());
+            output.setDescription(inputValue.get("description").textValue());
+            // use type factory to generate the correct type
+            output.setType(TypeFactory.createType(inputValue));
+
+            JsonNode dependencies = inputValue.get("dependencies");
+            if (dependencies != null && dependencies.isObject()) {
+                JsonNode derivedFrom = dependencies.get("derived_from");
+                String inputName = derivedFrom.textValue().substring("inputs/".length());
+                inputs.stream()
+                      .filter(input -> input.getName().equals(inputName))
+                      .findFirst()
+                      .ifPresent(output::setDerivedFrom);
+            }
+
+            outputs.add(output);
+        }
+
         logger.info("UploadTask : successful outputs ");
         return outputs;
     }

@@ -29,6 +29,13 @@ public class ErrorDefinitions {
         codes.put(ErrorCode.INTERNAL_PARAMETER_GEQ_VALIDATION_ERROR, new MessageCode("APPE-internal-request-validation-error", "value must be greater than or equal to define constraint"));
         codes.put(ErrorCode.INTERNAL_PARAMETER_GT_VALIDATION_ERROR, new MessageCode("APPE-internal-request-validation-error", "value must be greater than defined constraint"));
         codes.put(ErrorCode.INTERNAL_PARAMETER_INVALID_GEOJSON, new MessageCode("APPE-internal-request-validation-error", "invalid GeoJSON object"));
+        codes.put(ErrorCode.INTERNAL_PARAMETER_INVALID_IMAGE, new MessageCode("APPE-internal-request-validation-error", "invalid image"));
+        codes.put(ErrorCode.INTERNAL_PARAMETER_INVALID_IMAGE_DIMENSION, new MessageCode("APPE-internal-request-validation-error", "invalid image dimension"));
+        codes.put(ErrorCode.INTERNAL_PARAMETER_INVALID_IMAGE_FORMAT, new MessageCode("APPE-internal-request-validation-error", "invalid image format"));
+        codes.put(ErrorCode.INTERNAL_PARAMETER_INVALID_IMAGE_HEIGHT, new MessageCode("APPE-internal-request-validation-error", "invalid image height"));
+        codes.put(ErrorCode.INTERNAL_PARAMETER_INVALID_IMAGE_SIZE, new MessageCode("APPE-internal-request-validation-error", "invalid image size"));
+        codes.put(ErrorCode.INTERNAL_PARAMETER_INVALID_IMAGE_SIZE_FORMAT, new MessageCode("APPE-internal-request-validation-error", "invalid size format"));
+        codes.put(ErrorCode.INTERNAL_PARAMETER_INVALID_IMAGE_WIDTH, new MessageCode("APPE-internal-request-validation-error", "invalid image width"));
         codes.put(ErrorCode.INTERNAL_PARAMETER_LEQ_VALIDATION_ERROR, new MessageCode("APPE-internal-request-validation-error", "value must be less than or equal to defined constraint"));
         codes.put(ErrorCode.INTERNAL_PARAMETER_LT_VALIDATION_ERROR, new MessageCode("APPE-internal-request-validation-error", "value must be less than defined constraint"));
         codes.put(ErrorCode.INTERNAL_PARAMETER_MISSING_RADIUS_ERROR, new MessageCode("APPE-internal-request-validation-error", "missing radius parameter"));
@@ -47,6 +54,7 @@ public class ErrorDefinitions {
         codes.put(ErrorCode.REGISTRY_PUSHING_TASK_IMAGE_FAILED, new MessageCode("APPE-registry-push-failed", "pushing task image to registry failed in registry"));
         codes.put(ErrorCode.RUN_NOT_FOUND, new MessageCode("APPE-internal-run-not-found-error", "Run not found."));
         codes.put(ErrorCode.STORAGE_CREATING_STORAGE_FAILED, new MessageCode("APPE-storage-storage-creation-error", "creating storage failed in storage service"));
+        codes.put(ErrorCode.STORAGE_READING_FILE_FAILED, new MessageCode("APPE-storage-reading-file-error", "failed to read file from storage service"));
         codes.put(ErrorCode.STORAGE_STORING_INPUT_FAILED, new MessageCode("APPE-storage-storing-input-failed", "failed to store input file in storage service"));
         codes.put(ErrorCode.STORAGE_STORING_TASK_DEFINITION_FAILED, new MessageCode("APPE-storage-definition-storage-error", "storing task definition failed in storage service"));
         codes.put(ErrorCode.UKNOWN_STATE, new MessageCode("APPE-internal-task-run-state-error", "unknown state in transition request"));

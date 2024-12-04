@@ -51,7 +51,7 @@ public class GeometryType extends Type {
      * @return The geometry
      * @throws ParseException
      */
-    public static Geometry parse(String input) throws ParseException {
+    public static Geometry parseGeometry(String input) throws ParseException {
         try {
             GeoJsonReader reader = new GeoJsonReader();
             Geometry geometry = reader.read(input);
@@ -75,7 +75,7 @@ public class GeometryType extends Type {
 
         Geometry geometry;
         try {
-            geometry = parse((String) valueObject);
+            geometry = parseGeometry((String) valueObject);
         } catch (ParseException e) {
             throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_GEOJSON_PROCESSING_ERROR);
         }
@@ -171,9 +171,10 @@ public class GeometryType extends Type {
     @Override
     public TaskRunParameterValue buildTaskRunParameterValue(String trimmedOutput, UUID id, String outputName) {
         GeometryValue geometryValue = new GeometryValue();
-        geometryValue.setTask_run_id(id);
+        geometryValue.setParameterName(outputName);
+        geometryValue.setTaskRunId(id);
+        geometryValue.setType(ValueType.GEOMETRY);
         geometryValue.setValue(trimmedOutput);
-        geometryValue.setParam_name(outputName);
 
         return geometryValue;
     }
@@ -182,10 +183,10 @@ public class GeometryType extends Type {
     public TaskRunParameterValue buildTaskRunParameterValue(TypePersistence typePersistence) {
         GeometryPersistence geometryPersistence = (GeometryPersistence) typePersistence;
         GeometryValue geometryValue = new GeometryValue();
-        geometryValue.setTask_run_id(geometryPersistence.getRunId());
+        geometryValue.setParameterName(geometryPersistence.getParameterName());
+        geometryValue.setTaskRunId(geometryPersistence.getRunId());
+        geometryValue.setType(ValueType.GEOMETRY);
         geometryValue.setValue(geometryPersistence.getValue());
-        geometryValue.setParam_name(geometryPersistence.getParameterName());
-
         return geometryValue;
     }
 }

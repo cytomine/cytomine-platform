@@ -243,6 +243,18 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/task_run_input_provision_input_body'
+          image/png:
+            schema:
+              type: string
+              format: binary
+          image/jpeg:
+            schema:
+              type: string
+              format: binary
+          image/tiff:
+            schema:
+              type: string
+              format: binary
       responses:
         '200':
           description: Successful provisioning
@@ -480,7 +492,7 @@ paths:
           description: The UUID of the task run
       responses:
         '200':
-          description: valid zip file with output data (request should not fail if data is invalid)
+          description: task run outputs
           content:
             application/json:
               schema:
@@ -512,11 +524,106 @@ paths:
           description: The UUID of the task run
       responses:
         '200':
-          description: valid zip file with output data (request should not fail if data is invalid)
+          description: task run inputs
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/task_run_inputs'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/generic_error'
+
+  /task-runs/{run_id}/inputs/{param_name}/file:
+    get:
+      summary: Get a task run input file
+      operationId: getTaskRunInputFile
+      parameters:
+        - in: path
+          name: run_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The UUID of the task run
+        - in: path
+          name: param_name
+          required: true
+          schema:
+            $ref: "#/components/schemas/param_name_type"
+          description: name of the parameter
+      responses:
+        '200':
+          description: a file containing the input parameter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/individual_geojson_geometry'
+            text/plain:
+              schema:
+                type: string
+            image/png:
+              schema:
+                type: string
+                format: binary
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+            image/tiff:
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/generic_error'
+
+
+  /task-runs/{run_id}/outputs/{param_name}/file:
+    get:
+      summary: Get a task run output file
+      operationId: getTaskRunOutputFile
+      parameters:
+        - in: path
+          name: run_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The UUID of the task run
+        - in: path
+          name: param_name
+          required: true
+          schema:
+            $ref: "#/components/schemas/param_name_type"
+          description: name of the parameter
+      responses:
+        '200':
+          description: a file containing the output parameter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/individual_geojson_geometry'
+            text/plain:
+              schema:
+                type: string
+            image/png:
+              schema:
+                type: string
+                format: binary
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+            image/tiff:
+              schema:
+                type: string
+                format: binary
         '404':
           description: Not found
           content:
@@ -532,6 +639,11 @@ components:
       scheme: bearer
 
   schemas:
+
+    memory-string:
+      type: string
+      pattern: ^(?:0|[1-9]\d*)(?:\.\d+)?(?:\s*(?:[KMGTPEZY]i?)?B|(?:[kmgtpezy]i?)?b)?$
+
     contact:
       type: object
       properties:
@@ -553,7 +665,7 @@ components:
 
     individual_geojson_geometry:
       type: object
-      oneOf: 
+      oneOf:
         - $ref: "https://geojson.org/schema/Point.json"
         - $ref: "https://geojson.org/schema/MultiPoint.json"
         - $ref: "https://geojson.org/schema/LineString.json"
@@ -569,7 +681,7 @@ components:
             type:
               type: string
               enum: ["Feature"]
-            geometry: 
+            geometry:
               $ref: "https://geojson.org/schema/Point.json"
             properties:
               type: object
@@ -606,7 +718,7 @@ components:
                 subType:
                   type: string
                   enum: ["Rectangle"]
-        
+
     task_description:
       type: object
       required:
@@ -640,6 +752,10 @@ components:
       type: string
       maxLength: 256
       minLength: 1
+
+    param-deps-derived-from:
+      type: "string"
+      pattern: "^inputs/[a-zA-Z0-9_]+$"
 
     base_parameter:
       type: object
@@ -766,6 +882,36 @@ components:
           type: string
           enum: ["geometry"]
 
+    type_spec_image:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: string
+          enum: ["image"]
+        max_file_size:
+          type: integer
+          minimum: 1
+          description: max image file size, in bytes
+        max_width:
+          type: integer
+          minimum: 1
+          description: maximum width for the image
+        max_height:
+          type: integer
+          minimum: 1
+          description: maximum height for the image
+        formats:
+          type: array
+          minItems: 1
+          items:
+            type: string
+            enum:
+              - jpeg
+              - png
+              - tiff
+
     typed_parameter_integer:
       allOf:
         - $ref: "#/components/schemas/base_parameter"
@@ -815,7 +961,7 @@ components:
           properties:
             type:
               $ref: "#/components/schemas/type_spec_number"
-    
+
     typed_parameter_geometry:
       allOf:
         - $ref: "#/components/schemas/base_parameter"
@@ -825,7 +971,17 @@ components:
           properties:
             type:
               $ref: "#/components/schemas/type_spec_geometry"
-    
+
+    typed_parameter_image:
+      allOf:
+        - $ref: "#/components/schemas/base_parameter"
+        - type: object
+          required:
+            - type
+          properties:
+            type:
+              $ref: "#/components/schemas/type_spec_image"
+
     input_parameter:
       type: object
       allOf:
@@ -872,20 +1028,32 @@ components:
 
         - oneOf:
           - $ref: "#/components/schemas/typed_parameter_geometry"
-              
+
+        - oneOf:
+          - $ref: "#/components/schemas/typed_parameter_image"
+
       properties:
         optional:
           description: Whether or not the parameter is optional
           type: boolean
 
     output_parameter:
-      oneOf:
-        - $ref: "#/components/schemas/typed_parameter_integer"
-        - $ref: "#/components/schemas/typed_parameter_boolean"
-        - $ref: "#/components/schemas/typed_parameter_enumeration"
-        - $ref: "#/components/schemas/typed_parameter_number"
-        - $ref: "#/components/schemas/typed_parameter_string"
-        - $ref: "#/components/schemas/typed_parameter_geometry"
+      allOf:
+        - oneOf:
+          - $ref: "#/components/schemas/typed_parameter_integer"
+          - $ref: "#/components/schemas/typed_parameter_boolean"
+          - $ref: "#/components/schemas/typed_parameter_enumeration"
+          - $ref: "#/components/schemas/typed_parameter_number"
+          - $ref: "#/components/schemas/typed_parameter_string"
+          - $ref: "#/components/schemas/typed_parameter_geometry"
+          - $ref: "#/components/schemas/typed_parameter_image"
+        - type: "object"
+          properties:
+            dependencies:
+              type: "object"
+              properties:
+                derived_from:
+                  $ref: "#/components/schemas/param-deps-derived-from"
 
     task_run_state:
       type: string
@@ -1092,6 +1260,7 @@ components:
             - $ref: "#/components/schemas/number_task_run_parameter"
             - $ref: "#/components/schemas/string_task_run_parameter"
             - $ref: "#/components/schemas/geometry_task_run_parameter"
+            - $ref: "#/components/schemas/image_task_run_parameter"
 
     integer_task_run_parameter:
       type: object
@@ -1149,7 +1318,7 @@ components:
           enum: ["string"]
         value:
           type: string
-    
+
     geometry_task_run_parameter:
       type: object
       required: ["value", "type"]
@@ -1159,6 +1328,14 @@ components:
           enum: ["geometry"]
         value:
           $ref: "#/components/schemas/individual_geojson_geometry"
+
+    image_task_run_parameter:
+      type: object
+      required: ["type"]
+      properties:
+        type:
+          type: string
+          enum: ["image"]
 
     task_run_output:
       $ref: "#/components/schemas/typed_task_run_parameter"

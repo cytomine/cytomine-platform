@@ -3,6 +3,7 @@ package be.cytomine.appengine.models.task;
 import be.cytomine.appengine.models.task.bool.BooleanType;
 import be.cytomine.appengine.models.task.enumeration.EnumerationType;
 import be.cytomine.appengine.models.task.geometry.GeometryType;
+import be.cytomine.appengine.models.task.image.ImageType;
 import be.cytomine.appengine.models.task.integer.IntegerType;
 import be.cytomine.appengine.models.task.number.NumberType;
 import be.cytomine.appengine.models.task.string.StringType;
@@ -10,6 +11,7 @@ import be.cytomine.appengine.models.task.string.StringType;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import be.cytomine.appengine.dto.inputs.task.types.enumeration.EnumerationTypeConstraint;
+import be.cytomine.appengine.dto.inputs.task.types.image.ImageTypeConstraint;
 import be.cytomine.appengine.dto.inputs.task.types.integer.IntegerTypeConstraint;
 import be.cytomine.appengine.dto.inputs.task.types.number.NumberTypeConstraint;
 import be.cytomine.appengine.dto.inputs.task.types.string.StringTypeConstraint;
@@ -38,6 +40,7 @@ public class TypeFactory {
             case "string" -> createStringType(typeNode, typeId);
             case "enumeration" -> createEnumerationType(typeNode, typeId);
             case "geometry" -> createGeometryType(typeId);
+            case "image" -> createImageType(typeNode, typeId);
             default -> new Type();
         };
     }
@@ -106,6 +109,19 @@ public class TypeFactory {
     private static GeometryType createGeometryType(String typeId) {
         GeometryType type = new GeometryType();
         type.setId(typeId);
+
+        return type;
+    }
+
+    @NotNull
+    private static ImageType createImageType(JsonNode typeNode, String typeId) {
+        ImageType type = new ImageType();
+        type.setId(typeId);
+
+        Arrays.stream(ImageTypeConstraint.values())
+            .map(ImageTypeConstraint::getStringKey)
+            .filter(typeNode::has)
+            .forEach(key -> type.setConstraint(ImageTypeConstraint.getConstraint(key), typeNode.get(key)));
 
         return type;
     }

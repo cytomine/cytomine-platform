@@ -100,9 +100,10 @@ public class BooleanType extends Type {
     @Override
     public TaskRunParameterValue buildTaskRunParameterValue(String trimmedOutput, UUID id, String outputName) {
         BooleanValue booleanValue = new BooleanValue();
-        booleanValue.setTask_run_id(id);
+        booleanValue.setParameterName(outputName);
+        booleanValue.setTaskRunId(id);
+        booleanValue.setType(ValueType.BOOLEAN);
         booleanValue.setValue(Boolean.parseBoolean(trimmedOutput));
-        booleanValue.setParam_name(outputName);
 
         return booleanValue;
     }
@@ -111,9 +112,10 @@ public class BooleanType extends Type {
     public TaskRunParameterValue buildTaskRunParameterValue(TypePersistence typePersistence) {
         BooleanPersistence booleanPersistence = (BooleanPersistence) typePersistence;
         BooleanValue booleanValue = new BooleanValue();
-        booleanValue.setTask_run_id(booleanPersistence.getRunId());
+        booleanValue.setParameterName(booleanPersistence.getParameterName());
+        booleanValue.setTaskRunId(booleanPersistence.getRunId());
+        booleanValue.setType(ValueType.BOOLEAN);
         booleanValue.setValue(booleanPersistence.isValue());
-        booleanValue.setParam_name(booleanPersistence.getParameterName());
 
         return booleanValue;
     }
