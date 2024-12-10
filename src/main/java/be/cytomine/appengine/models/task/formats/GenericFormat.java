@@ -1,4 +1,4 @@
-package be.cytomine.appengine.models.task.image.formats;
+package be.cytomine.appengine.models.task.formats;
 
 import java.awt.Dimension;
 import java.awt.image.BufferedImage;
@@ -7,9 +7,7 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 
-import be.cytomine.appengine.models.task.image.ImageFormat;
-
-public class GenericFormat implements ImageFormat {
+public class GenericFormat implements FileFormat {
 
     @Override
     public boolean checkSignature(byte[] file) {

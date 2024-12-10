@@ -1,12 +1,10 @@
-package be.cytomine.appengine.models.task.image.formats;
+package be.cytomine.appengine.models.task.formats;
 
 import java.awt.Dimension;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
-import be.cytomine.appengine.models.task.image.ImageFormat;
-
-public class PNGFormat implements ImageFormat {
+public class PngFormat implements FileFormat {
 
     public static final byte[] SIGNATURE = {
             (byte) 0x89, (byte) 0x50, (byte) 0x4E, (byte) 0x47,

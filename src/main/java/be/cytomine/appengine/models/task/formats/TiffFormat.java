@@ -1,4 +1,4 @@
-package be.cytomine.appengine.models.task.image.formats;
+package be.cytomine.appengine.models.task.formats;
 
 import java.awt.Dimension;
 import java.io.IOException;
@@ -9,9 +9,8 @@ import org.apache.commons.imaging.ImagingException;
 import org.apache.commons.imaging.formats.tiff.TiffField;
 import org.apache.commons.imaging.formats.tiff.TiffImageMetadata;
 import org.apache.commons.imaging.formats.tiff.TiffImageParser;
-import be.cytomine.appengine.models.task.image.ImageFormat;
 
-public class TIFFFormat implements ImageFormat {
+public class TiffFormat implements FileFormat {
 
     public static final byte[] LE_SIGNATURE = {
             (byte) 0x49, (byte) 0x49, (byte) 0x2A, (byte) 0x00

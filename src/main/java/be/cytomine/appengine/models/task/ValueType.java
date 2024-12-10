@@ -7,5 +7,6 @@ public enum ValueType {
     STRING,
     ENUMERATION,
     GEOMETRY,
-    IMAGE
+    IMAGE,
+    WSI
 }

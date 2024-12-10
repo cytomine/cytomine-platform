@@ -54,7 +54,9 @@ configurations {
 repositories {
     mavenCentral()
     mavenLocal()
-
+    maven {
+        url "https://maven.dcm4che.org/"
+    }
 }
 
 ext {
@@ -131,6 +133,7 @@ dependencies {
 
     // Image processing
     implementation 'org.apache.commons:commons-imaging:1.0.0-alpha5'
+    implementation 'org.dcm4che:dcm4che-core:5.31.0'
 }
 
 tasks.named('test') {

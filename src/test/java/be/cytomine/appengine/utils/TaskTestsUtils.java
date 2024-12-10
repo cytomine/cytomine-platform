@@ -20,6 +20,7 @@ import be.cytomine.appengine.dto.inputs.task.types.geometry.GeometryValue;
 import be.cytomine.appengine.dto.inputs.task.types.image.ImageValue;
 import be.cytomine.appengine.dto.inputs.task.types.integer.IntegerValue;
 import be.cytomine.appengine.dto.inputs.task.types.string.StringValue;
+import be.cytomine.appengine.dto.inputs.task.types.wsi.WsiValue;
 import be.cytomine.appengine.models.BaseEntity;
 
 public class TaskTestsUtils {
@@ -109,6 +110,14 @@ public class TaskTestsUtils {
                     imageValue.setValue(((String) entity.get("value")).getBytes());
                     parameterValues.add(imageValue);
                     break;
+
+                case "wsi":
+                    WsiValue wsiValue = new WsiValue();
+                    wsiValue.setParameterName((String) entity.get("param_name"));
+                    wsiValue.setTaskRunId(UUID.fromString((String) entity.get("task_run_id")));
+                    wsiValue.setValue(((String) entity.get("value")).getBytes());
+                    parameterValues.add(wsiValue);
+                    break;
             }
         }
 
@@ -150,6 +159,10 @@ public class TaskTestsUtils {
                 break;
             case "ImageType":
                 provision.setType(be.cytomine.appengine.dto.inputs.task.ParameterType.IMAGE);
+                provision.setValue(value.getBytes());
+                break;
+            case "WsiType":
+                provision.setType(be.cytomine.appengine.dto.inputs.task.ParameterType.WSI);
                 provision.setValue(value.getBytes());
                 break;
         }

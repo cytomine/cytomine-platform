@@ -11,7 +11,7 @@ import org.springframework.boot.test.context.SpringBootTest;
         plugin = {"pretty" , "html:build/reports/tests/cucumber/cucmber-report.html"},
         features = {"src/test/resources"},
         glue = {"be.cytomine.appengine.integration.cucumber"}
-        ,tags = "not @Scheduler"
+        //,tags = "not @Scheduler"
 
 )
 @CucumberContextConfiguration

@@ -1,4 +1,4 @@
-package be.cytomine.appengine.models.task.image;
+package be.cytomine.appengine.models.task.wsi;
 
 import java.awt.Dimension;
 import java.io.IOException;
@@ -10,8 +10,14 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import be.cytomine.appengine.dto.inputs.task.types.image.ImageTypeConstraint;
-import be.cytomine.appengine.dto.inputs.task.types.image.ImageValue;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Transient;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+import be.cytomine.appengine.dto.inputs.task.types.wsi.WsiTypeConstraint;
+import be.cytomine.appengine.dto.inputs.task.types.wsi.WsiValue;
 import be.cytomine.appengine.dto.responses.errors.ErrorCode;
 import be.cytomine.appengine.exceptions.TypeValidationException;
 import be.cytomine.appengine.handlers.FileData;
@@ -22,19 +28,14 @@ import be.cytomine.appengine.models.task.Type;
 import be.cytomine.appengine.models.task.TypePersistence;
 import be.cytomine.appengine.models.task.ValueType;
 import be.cytomine.appengine.models.task.formats.FileFormat;
-import be.cytomine.appengine.repositories.image.ImagePersistenceRepository;
+import be.cytomine.appengine.repositories.wsi.WsiPersistenceRepository;
 import be.cytomine.appengine.utils.AppEngineApplicationContext;
 import be.cytomine.appengine.utils.units.Unit;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Transient;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 @Entity
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class ImageType extends Type {
+public class WsiType extends Type {
 
     @Column(nullable = true)
     private String maxFileSize;
@@ -51,7 +52,7 @@ public class ImageType extends Type {
     @Transient
     private FileFormat format;
 
-    public void setConstraint(ImageTypeConstraint constraint, JsonNode value) {
+    public void setConstraint(WsiTypeConstraint constraint, JsonNode value) {
         switch (constraint) {
             case FORMATS:
                 this.setFormats(parse(value.toString()));
@@ -70,13 +71,13 @@ public class ImageType extends Type {
 
     private void validateImageFormat(byte[] file) throws TypeValidationException {
         if (formats == null || formats.isEmpty()) {
-            this.format = ImageFormatFactory.getGenericFormat();
+            this.format = WsiFormatFactory.getGenericFormat();
             return;
         }
 
         List<FileFormat> checkers = formats
                 .stream()
-                .map(ImageFormatFactory::getFormat)
+                .map(WsiFormatFactory::getFormat)
                 .collect(Collectors.toList());
 
         this.format = checkers
@@ -114,7 +115,7 @@ public class ImageType extends Type {
             return;
         }
 
-        if(!Unit.isValid(maxFileSize)) {
+        if (!Unit.isValid(maxFileSize)) {
             throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_INVALID_IMAGE_SIZE_FORMAT);
         }
 
@@ -137,54 +138,52 @@ public class ImageType extends Type {
         validateImageDimension(file);
 
         validateImageSize(file);
-
-        /* Additional specific type validation */
-        if (!format.validate(file)) {
-            throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_INVALID_IMAGE);
-        }
     }
 
     @Override
     public void persistProvision(JsonNode provision, UUID runId) {
         String parameterName = provision.get("param_name").asText();
-        ImagePersistenceRepository imagePersistenceRepository = AppEngineApplicationContext.getBean(ImagePersistenceRepository.class);
-        ImagePersistence persistedProvision = imagePersistenceRepository.findImagePersistenceByParameterNameAndRunIdAndParameterType(parameterName, runId, ParameterType.INPUT);
+        WsiPersistenceRepository wsiPersistenceRepository = AppEngineApplicationContext.getBean(WsiPersistenceRepository.class);
+        WsiPersistence persistedProvision = wsiPersistenceRepository.findWsiPersistenceByParameterNameAndRunIdAndParameterType(parameterName, runId, ParameterType.INPUT);
         if (persistedProvision != null) {
             return;
         }
 
-        persistedProvision = new ImagePersistence();
+        persistedProvision = new WsiPersistence();
         persistedProvision.setParameterName(parameterName);
         persistedProvision.setParameterType(ParameterType.INPUT);
         persistedProvision.setRunId(runId);
-        persistedProvision.setValueType(ValueType.IMAGE);
+        persistedProvision.setValueType(ValueType.WSI);
 
-        imagePersistenceRepository.save(persistedProvision);
+        wsiPersistenceRepository.save(persistedProvision);
     }
 
     @Override
     public void persistResult(Run run, Output currentOutput, String outputValue) {
-        ImagePersistenceRepository imagePersistenceRepository = AppEngineApplicationContext.getBean(ImagePersistenceRepository.class);
-        ImagePersistence result = imagePersistenceRepository.findImagePersistenceByParameterNameAndRunIdAndParameterType(currentOutput.getName(), run.getId(), ParameterType.OUTPUT);
+        WsiPersistenceRepository wsiPersistenceRepository = AppEngineApplicationContext.getBean(WsiPersistenceRepository.class);
+        WsiPersistence result = wsiPersistenceRepository.findWsiPersistenceByParameterNameAndRunIdAndParameterType(currentOutput.getName(), run.getId(), ParameterType.OUTPUT);
         if (result != null) {
             return;
         }
-        result = new ImagePersistence();
+
+        result = new WsiPersistence();
         result.setParameterType(ParameterType.OUTPUT);
         result.setParameterName(currentOutput.getName());
         result.setRunId(run.getId());
-        result.setValueType(ValueType.IMAGE);
+        result.setValueType(ValueType.WSI);
 
-        imagePersistenceRepository.save(result);
+        wsiPersistenceRepository.save(result);
     }
 
     @Override
     public FileData mapToStorageFileData(JsonNode provision, String charset) {
         String parameterName = provision.get("param_name").asText();
         byte[] inputFileData = null;
+
         try {
             inputFileData = provision.get("value").binaryValue();
         } catch (IOException ignored) {}
+
         return new FileData(inputFileData, parameterName);
     }
 
@@ -194,25 +193,28 @@ public class ImageType extends Type {
         ObjectNode provisionedParameter = mapper.createObjectNode();
         provisionedParameter.put("param_name", provision.get("param_name").asText());
         provisionedParameter.put("task_run_id", String.valueOf(run.getId()));
+
         return provisionedParameter;
     }
 
     @Override
-    public ImageValue buildTaskRunParameterValue(String output, UUID id, String outputName) {
-        ImageValue imageValue = new ImageValue();
-        imageValue.setParameterName(outputName);
-        imageValue.setTaskRunId(id);
-        imageValue.setType(ValueType.IMAGE);
-        return imageValue;
+    public WsiValue buildTaskRunParameterValue(String output, UUID id, String outputName) {
+        WsiValue wsiValue = new WsiValue();
+        wsiValue.setParameterName(outputName);
+        wsiValue.setTaskRunId(id);
+        wsiValue.setType(ValueType.WSI);
+
+        return wsiValue;
     }
 
     @Override
-    public ImageValue buildTaskRunParameterValue(TypePersistence typePersistence) {
-        ImagePersistence imagePersistence = (ImagePersistence) typePersistence;
-        ImageValue imageValue = new ImageValue();
-        imageValue.setParameterName(imagePersistence.getParameterName());
-        imageValue.setTaskRunId(imagePersistence.getRunId());
-        imageValue.setType(ValueType.IMAGE);
-        return imageValue;
+    public WsiValue buildTaskRunParameterValue(TypePersistence typePersistence) {
+        WsiPersistence wsiPersistence = (WsiPersistence) typePersistence;
+        WsiValue wsiValue = new WsiValue();
+        wsiValue.setParameterName(wsiPersistence.getParameterName());
+        wsiValue.setTaskRunId(wsiPersistence.getRunId());
+        wsiValue.setType(ValueType.WSI);
+
+        return wsiValue;
     }
 }

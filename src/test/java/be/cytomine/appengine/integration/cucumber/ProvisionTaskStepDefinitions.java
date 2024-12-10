@@ -21,6 +21,8 @@ import be.cytomine.appengine.models.task.number.NumberPersistence;
 import be.cytomine.appengine.models.task.number.NumberType;
 import be.cytomine.appengine.models.task.string.StringPersistence;
 import be.cytomine.appengine.models.task.string.StringType;
+import be.cytomine.appengine.models.task.wsi.WsiPersistence;
+import be.cytomine.appengine.models.task.wsi.WsiType;
 import be.cytomine.appengine.openapi.api.DefaultApi;
 import be.cytomine.appengine.openapi.invoker.ApiClient;
 import be.cytomine.appengine.openapi.invoker.ApiException;
@@ -34,6 +36,7 @@ import be.cytomine.appengine.repositories.image.ImagePersistenceRepository;
 import be.cytomine.appengine.repositories.integer.IntegerPersistenceRepository;
 import be.cytomine.appengine.repositories.number.NumberPersistenceRepository;
 import be.cytomine.appengine.repositories.string.StringPersistenceRepository;
+import be.cytomine.appengine.repositories.wsi.WsiPersistenceRepository;
 import be.cytomine.appengine.repositories.RunRepository;
 import be.cytomine.appengine.repositories.TaskRepository;
 import be.cytomine.appengine.states.TaskRunState;
@@ -107,6 +110,9 @@ public class ProvisionTaskStepDefinitions {
 
     @Autowired
     private ImagePersistenceRepository imageProvisionRepository;
+
+    @Autowired
+    private WsiPersistenceRepository wsiPersistenceRepository;
 
     @Autowired
     private TypePersistenceRepository typePersistenceRepository;
@@ -215,6 +221,8 @@ public class ProvisionTaskStepDefinitions {
                     return !(((GeometryType) input.getType()).getId().equals(type) && input.getName().equals(paramName));
                 case "ImageType":
                     return !(((ImageType) input.getType()).getId().equals(type) && input.getName().equals(paramName));
+                case "WsiType":
+                    return !(((WsiType) input.getType()).getId().equals(type) && input.getName().equals(paramName));
                 default:
                     return false;
             }
@@ -287,6 +295,11 @@ public class ProvisionTaskStepDefinitions {
                 provision.setValueType(ValueType.IMAGE);
                 ((ImagePersistence) provision).setValue(initialValue.getBytes());
                 break;
+            case "WsiType":
+                provision = new WsiPersistence();
+                provision.setValueType(ValueType.WSI);
+                ((WsiPersistence) provision).setValue(initialValue.getBytes());
+                break;
         }
 
         provision.setRunId(persistedRun.getId());
@@ -335,7 +348,7 @@ public class ProvisionTaskStepDefinitions {
                 .orElse(null);
 
         HttpEntity<?> entity = null;
-        if (type.equals("image")) {
+        if (type.equals("image") || type.equals("wsi")) {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 
@@ -400,6 +413,9 @@ public class ProvisionTaskStepDefinitions {
                 break;
             case "ImageType":
                 provision = imageProvisionRepository.findImagePersistenceByParameterNameAndRunIdAndParameterType(parameterName, persistedRun.getId() , ParameterType.INPUT);
+                break;
+            case "WsiType":
+                provision = wsiPersistenceRepository.findWsiPersistenceByParameterNameAndRunIdAndParameterType(parameterName, persistedRun.getId(), ParameterType.INPUT);
                 break;
         }
 
@@ -606,6 +622,8 @@ public class ProvisionTaskStepDefinitions {
                             return ((GeometryType) input.getType()).getId().equals(type) && input.getName().equals(paramName);
                         case "image":
                             return ((ImageType) input.getType()).getId().equals(type) && input.getName().equals(paramName);
+                        case "wsi":
+                            return ((WsiType) input.getType()).getId().equals(type) && input.getName().equals(paramName);
                         default:
                             return false;
                     }
@@ -659,6 +677,9 @@ public class ProvisionTaskStepDefinitions {
                 break;
             case "ImageType":
                 provision = imageProvisionRepository.findImagePersistenceByParameterNameAndRunIdAndParameterType(parameterName, persistedRun.getId(), ParameterType.INPUT);
+                break;
+            case "WsiType":
+                provision = wsiPersistenceRepository.findWsiPersistenceByParameterNameAndRunIdAndParameterType(parameterName, persistedRun.getId(), ParameterType.INPUT);
                 break;
         }
 

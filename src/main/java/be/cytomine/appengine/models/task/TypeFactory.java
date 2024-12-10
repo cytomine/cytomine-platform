@@ -1,5 +1,16 @@
 package be.cytomine.appengine.models.task;
 
+import java.util.Arrays;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import jakarta.validation.constraints.NotNull;
+
+import be.cytomine.appengine.dto.inputs.task.types.enumeration.EnumerationTypeConstraint;
+import be.cytomine.appengine.dto.inputs.task.types.image.ImageTypeConstraint;
+import be.cytomine.appengine.dto.inputs.task.types.integer.IntegerTypeConstraint;
+import be.cytomine.appengine.dto.inputs.task.types.number.NumberTypeConstraint;
+import be.cytomine.appengine.dto.inputs.task.types.string.StringTypeConstraint;
+import be.cytomine.appengine.dto.inputs.task.types.wsi.WsiTypeConstraint;
 import be.cytomine.appengine.models.task.bool.BooleanType;
 import be.cytomine.appengine.models.task.enumeration.EnumerationType;
 import be.cytomine.appengine.models.task.geometry.GeometryType;
@@ -7,17 +18,8 @@ import be.cytomine.appengine.models.task.image.ImageType;
 import be.cytomine.appengine.models.task.integer.IntegerType;
 import be.cytomine.appengine.models.task.number.NumberType;
 import be.cytomine.appengine.models.task.string.StringType;
+import be.cytomine.appengine.models.task.wsi.WsiType;
 
-import com.fasterxml.jackson.databind.JsonNode;
-
-import be.cytomine.appengine.dto.inputs.task.types.enumeration.EnumerationTypeConstraint;
-import be.cytomine.appengine.dto.inputs.task.types.image.ImageTypeConstraint;
-import be.cytomine.appengine.dto.inputs.task.types.integer.IntegerTypeConstraint;
-import be.cytomine.appengine.dto.inputs.task.types.number.NumberTypeConstraint;
-import be.cytomine.appengine.dto.inputs.task.types.string.StringTypeConstraint;
-import jakarta.validation.constraints.NotNull;
-
-import java.util.Arrays;
 
 public class TypeFactory {
 
@@ -41,6 +43,7 @@ public class TypeFactory {
             case "enumeration" -> createEnumerationType(typeNode, typeId);
             case "geometry" -> createGeometryType(typeId);
             case "image" -> createImageType(typeNode, typeId);
+            case "wsi" -> createWsiType(typeNode, typeId);
             default -> new Type();
         };
     }
@@ -122,6 +125,19 @@ public class TypeFactory {
             .map(ImageTypeConstraint::getStringKey)
             .filter(typeNode::has)
             .forEach(key -> type.setConstraint(ImageTypeConstraint.getConstraint(key), typeNode.get(key)));
+
+        return type;
+    }
+
+    @NotNull
+    private static WsiType createWsiType(JsonNode typeNode, String typeId) {
+        WsiType type = new WsiType();
+        type.setId(typeId);
+
+        Arrays.stream(WsiTypeConstraint.values())
+            .map(WsiTypeConstraint::getStringKey)
+            .filter(typeNode::has)
+            .forEach(key -> type.setConstraint(WsiTypeConstraint.getConstraint(key), typeNode.get(key)));
 
         return type;
     }

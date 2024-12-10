@@ -1,8 +1,8 @@
-package be.cytomine.appengine.models.task.image;
+package be.cytomine.appengine.models.task.formats;
 
 import java.awt.Dimension;
 
-public interface ImageFormat {
+public interface FileFormat {
     boolean checkSignature(byte[] file);
 
     /* Validate extra constraint */
