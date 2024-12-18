@@ -340,6 +340,31 @@
             }
           ]
         },
+        "file": {
+          "oneOf": [
+            {
+              "const": "file"
+            },
+            {
+              "type": "object",
+              "required": ["id"],
+              "properties": {
+                "id": {"const": "file"},
+                "max_file_size": {
+                  "$ref": "#/$defs/types/memory"
+                },
+                "formats": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "string",
+                    "enum": ["binary", "text"]
+                  }
+                }
+              }
+            }
+          ]
+        },
         "image": {
           "oneOf": [
             {
@@ -510,6 +535,17 @@
           },
           "unevaluatedProperties": true
         },
+        "file": {
+          "type": "object",
+          "allOf": [
+            {"$ref": "#/$defs/io/base_parameter"}
+          ],
+          "required": ["type"],
+          "properties": {
+            "type": {"$ref": "#/$defs/io/type_specs/file"}
+          },
+          "unevaluatedProperties": true
+        },
         "image": {
           "type": "object",
           "allOf": [
@@ -600,6 +636,9 @@
                 "$ref": "#/$defs/io/typed_parameter/geometry"
               },
               {
+                "$ref": "#/$defs/io/typed_parameter/file"
+              },
+              {
                 "$ref": "#/$defs/io/typed_parameter/image"
               },
               {
@@ -630,6 +669,7 @@
               {"$ref": "#/$defs/io/typed_parameter/enumeration"},
               {"$ref": "#/$defs/io/typed_parameter/datetime"},
               {"$ref": "#/$defs/io/typed_parameter/geometry"},
+              {"$ref": "#/$defs/io/typed_parameter/file"},
               {"$ref": "#/$defs/io/typed_parameter/image"},
               {"$ref": "#/$defs/io/typed_parameter/wsi"},
               {"$ref": "#/$defs/io/typed_parameter/array"}
