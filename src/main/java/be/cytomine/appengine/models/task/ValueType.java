@@ -8,5 +8,6 @@ public enum ValueType {
     ENUMERATION,
     GEOMETRY,
     IMAGE,
-    WSI
+    WSI,
+    FILE
 }

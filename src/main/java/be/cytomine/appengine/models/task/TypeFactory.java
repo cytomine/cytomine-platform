@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.validation.constraints.NotNull;
 
 import be.cytomine.appengine.dto.inputs.task.types.enumeration.EnumerationTypeConstraint;
+import be.cytomine.appengine.dto.inputs.task.types.file.FileTypeConstraint;
 import be.cytomine.appengine.dto.inputs.task.types.image.ImageTypeConstraint;
 import be.cytomine.appengine.dto.inputs.task.types.integer.IntegerTypeConstraint;
 import be.cytomine.appengine.dto.inputs.task.types.number.NumberTypeConstraint;
@@ -13,6 +14,7 @@ import be.cytomine.appengine.dto.inputs.task.types.string.StringTypeConstraint;
 import be.cytomine.appengine.dto.inputs.task.types.wsi.WsiTypeConstraint;
 import be.cytomine.appengine.models.task.bool.BooleanType;
 import be.cytomine.appengine.models.task.enumeration.EnumerationType;
+import be.cytomine.appengine.models.task.file.FileType;
 import be.cytomine.appengine.models.task.geometry.GeometryType;
 import be.cytomine.appengine.models.task.image.ImageType;
 import be.cytomine.appengine.models.task.integer.IntegerType;
@@ -44,6 +46,7 @@ public class TypeFactory {
             case "geometry" -> createGeometryType(typeId);
             case "image" -> createImageType(typeNode, typeId);
             case "wsi" -> createWsiType(typeNode, typeId);
+            case "file" -> createFileType(typeNode, typeId);
             default -> new Type();
         };
     }
@@ -138,6 +141,19 @@ public class TypeFactory {
             .map(WsiTypeConstraint::getStringKey)
             .filter(typeNode::has)
             .forEach(key -> type.setConstraint(WsiTypeConstraint.getConstraint(key), typeNode.get(key)));
+
+        return type;
+    }
+
+    @NotNull
+    private static FileType createFileType(JsonNode typeNode, String typeId) {
+        FileType type = new FileType();
+        type.setId(typeId);
+
+        Arrays.stream(FileTypeConstraint.values())
+            .map(FileTypeConstraint::getStringKey)
+            .filter(typeNode::has)
+            .forEach(key -> type.setConstraint(FileTypeConstraint.getConstraint(key), typeNode.get(key)));
 
         return type;
     }

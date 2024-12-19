@@ -16,6 +16,7 @@ import be.cytomine.appengine.dto.inputs.task.GenericParameterProvision;
 import be.cytomine.appengine.dto.inputs.task.TaskRunParameterValue;
 import be.cytomine.appengine.dto.inputs.task.types.bool.BooleanValue;
 import be.cytomine.appengine.dto.inputs.task.types.enumeration.EnumerationValue;
+import be.cytomine.appengine.dto.inputs.task.types.file.FileValue;
 import be.cytomine.appengine.dto.inputs.task.types.geometry.GeometryValue;
 import be.cytomine.appengine.dto.inputs.task.types.image.ImageValue;
 import be.cytomine.appengine.dto.inputs.task.types.integer.IntegerValue;
@@ -118,6 +119,14 @@ public class TaskTestsUtils {
                     wsiValue.setValue(((String) entity.get("value")).getBytes());
                     parameterValues.add(wsiValue);
                     break;
+
+                case "file":
+                    FileValue fileValue = new FileValue();
+                    fileValue.setParameterName((String) entity.get("param_name"));
+                    fileValue.setTaskRunId(UUID.fromString((String) entity.get("task_run_id")));
+                    fileValue.setValue(((String) entity.get("value")).getBytes());
+                    parameterValues.add(fileValue);
+                    break;
             }
         }
 
@@ -163,6 +172,10 @@ public class TaskTestsUtils {
                 break;
             case "WsiType":
                 provision.setType(be.cytomine.appengine.dto.inputs.task.ParameterType.WSI);
+                provision.setValue(value.getBytes());
+                break;
+            case "FileType":
+                provision.setType(be.cytomine.appengine.dto.inputs.task.ParameterType.FILE);
                 provision.setValue(value.getBytes());
                 break;
         }

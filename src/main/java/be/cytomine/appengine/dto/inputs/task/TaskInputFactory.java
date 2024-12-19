@@ -2,6 +2,7 @@ package be.cytomine.appengine.dto.inputs.task;
 
 import be.cytomine.appengine.dto.inputs.task.types.bool.TaskParameterBooleanType;
 import be.cytomine.appengine.dto.inputs.task.types.enumeration.TaskParameterEnumerationType;
+import be.cytomine.appengine.dto.inputs.task.types.file.TaskParameterFileType;
 import be.cytomine.appengine.dto.inputs.task.types.geometry.TaskParameterGeometryType;
 import be.cytomine.appengine.dto.inputs.task.types.image.TaskParameterImageType;
 import be.cytomine.appengine.dto.inputs.task.types.integer.TaskParameterIntegerType;
@@ -11,6 +12,7 @@ import be.cytomine.appengine.dto.inputs.task.types.wsi.TaskParameterWsiType;
 import be.cytomine.appengine.models.task.Input;
 import be.cytomine.appengine.models.task.bool.BooleanType;
 import be.cytomine.appengine.models.task.enumeration.EnumerationType;
+import be.cytomine.appengine.models.task.file.FileType;
 import be.cytomine.appengine.models.task.geometry.GeometryType;
 import be.cytomine.appengine.models.task.image.ImageType;
 import be.cytomine.appengine.models.task.integer.IntegerType;
@@ -39,6 +41,8 @@ public class TaskInputFactory {
             taskParameterType = new TaskParameterImageType(type.getId(), type.getFormats());
         } else if (input.getType() instanceof WsiType type) {
             taskParameterType = new TaskParameterWsiType(type.getId(), type.getFormats());
+        } else if (input.getType() instanceof FileType type) {
+            taskParameterType = new TaskParameterFileType(type.getId(), type.getFormats());
         }
 
         return new TaskInput(input.getId().toString(), input.getDefaultValue(), input.getName(), input.getDisplayName(), input.getDescription(), input.isOptional(), taskParameterType);

@@ -2,14 +2,17 @@ package be.cytomine.appengine.dto.inputs.task;
 
 import be.cytomine.appengine.dto.inputs.task.types.bool.TaskParameterBooleanType;
 import be.cytomine.appengine.dto.inputs.task.types.enumeration.TaskParameterEnumerationType;
+import be.cytomine.appengine.dto.inputs.task.types.file.TaskParameterFileType;
 import be.cytomine.appengine.dto.inputs.task.types.geometry.TaskParameterGeometryType;
 import be.cytomine.appengine.dto.inputs.task.types.image.TaskParameterImageType;
 import be.cytomine.appengine.dto.inputs.task.types.integer.TaskParameterIntegerType;
 import be.cytomine.appengine.dto.inputs.task.types.number.TaskParameterNumberType;
 import be.cytomine.appengine.dto.inputs.task.types.string.TaskParameterStringType;
+import be.cytomine.appengine.dto.inputs.task.types.wsi.TaskParameterWsiType;
 import be.cytomine.appengine.models.task.Output;
 import be.cytomine.appengine.models.task.bool.BooleanType;
 import be.cytomine.appengine.models.task.enumeration.EnumerationType;
+import be.cytomine.appengine.models.task.file.FileType;
 import be.cytomine.appengine.models.task.geometry.GeometryType;
 import be.cytomine.appengine.models.task.image.ImageType;
 import be.cytomine.appengine.models.task.integer.IntegerType;
@@ -37,7 +40,9 @@ public class TaskOutputFactory {
         } else if (output.getType() instanceof ImageType type) {
             taskParameterType = new TaskParameterImageType(type.getId(), type.getFormats());
         } else if (output.getType() instanceof WsiType type) {
-            taskParameterType = new TaskParameterImageType(type.getId(), type.getFormats());
+            taskParameterType = new TaskParameterWsiType(type.getId(), type.getFormats());
+        } else if (output.getType() instanceof FileType type) {
+            taskParameterType = new TaskParameterFileType(type.getId(), type.getFormats());
         }
 
         return new TaskOutput(
