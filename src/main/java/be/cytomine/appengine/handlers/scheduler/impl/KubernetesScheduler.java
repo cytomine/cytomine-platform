@@ -96,7 +96,6 @@ public class KubernetesScheduler implements SchedulerHandler {
 
         // Pre container commands
         String url = baseUrl + runId;
-        String installDeps = "apk update && apk --no-cache add curl zip";
         String fetchInputs = "curl -L -o inputs.zip " + url + "/inputs.zip";
         String unzipInputs = "unzip -o inputs.zip -d " + task.getInputFolder();
         String sendOutputs = "curl -X POST -F 'outputs=@outputs.zip' " + url + "/outputs.zip";
@@ -122,9 +121,9 @@ public class KubernetesScheduler implements SchedulerHandler {
                 // Pre-task for inputs provisioning
                 .addNewInitContainer()
                 .withName("inputs-provisioning")
-                .withImage("alpine:latest")
+                .withImage("cytomineuliege/alpine-task-utils:latest")
                 .withImagePullPolicy("IfNotPresent")
-                .withCommand("/bin/sh", "-c", installDeps + and + fetchInputs + and + unzipInputs)
+                .withCommand("/bin/sh", "-c", fetchInputs + and + unzipInputs)
 
                 // Mount volume for inputs provisioning
                 .addNewVolumeMount()
@@ -157,12 +156,12 @@ public class KubernetesScheduler implements SchedulerHandler {
                 // Post Task for outputs sending
                 .addNewContainer()
                 .withName("outputs-sending")
-                .withImage("alpine:latest")
+                .withImage("cytomineuliege/alpine-task-utils:latest")
                 .withImagePullPolicy("IfNotPresent")
                 .withCommand(
                     "/bin/sh",
                     "-c",
-                    installDeps + and + wait + and + zipOutputs + and + sendOutputs
+                    wait + and + zipOutputs + and + sendOutputs
                 )
 
                 .addNewVolumeMount()
