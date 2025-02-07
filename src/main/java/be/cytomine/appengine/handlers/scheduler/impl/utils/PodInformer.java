@@ -23,7 +23,6 @@ import be.cytomine.appengine.states.TaskRunState;
 public class PodInformer implements ResourceEventHandler<Pod> {
 
     private static final Map<String, TaskRunState> STATUS = new HashMap<String, TaskRunState>() {{
-        put("Pending", TaskRunState.PENDING);
         put("Running", TaskRunState.RUNNING);
         put("Succeeded", TaskRunState.RUNNING);
         put("Failed", TaskRunState.FAILED);
@@ -54,21 +53,21 @@ public class PodInformer implements ResourceEventHandler<Pod> {
             return;
         }
 
-        run.setState(TaskRunState.QUEUED);
+        run.setState(TaskRunState.PENDING);
         run = runRepository.saveAndFlush(run);
-        log.info("Pod Informer: updated Run {} to {}", run.getId(), run.getState());
+        log.info("Pod Informer: set Run {} to {}", run.getId(), run.getState());
     }
 
     @Override
     public void onUpdate(Pod oldPod, Pod newPod) {
         Run run = getRun(newPod);
-        if (FINAL_STATES.contains(run.getState())) {
+        if (FINAL_STATES.contains(run.getState()) || newPod.getStatus().getPhase().equals("Pending")) {
             return;
         }
 
         run.setState(STATUS.getOrDefault(newPod.getStatus().getPhase(), TaskRunState.FAILED));
         run = runRepository.saveAndFlush(run);
-        log.info("Pod Informer: updated Run {} to {}", run.getId(), run.getState());
+        log.info("Pod Informer: update Run {} to {}", run.getId(), run.getState());
     }
 
     @Override
