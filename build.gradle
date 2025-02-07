@@ -18,6 +18,7 @@ plugins {
     id 'jacoco'
     id 'maven-publish'
     id 'org.liquibase.gradle' version '2.2.0'
+    id 'checkstyle'
 }
 
 apply plugin: "org.openapi.generator"
@@ -42,6 +43,11 @@ version = 'ce-0.0.0-SNAPSHOT' // do not modify this, it will be replace during b
 
 java {
     sourceCompatibility = '17'
+}
+
+checkstyle {
+    toolVersion = '10.21.2'
+    configFile = file("${rootProject.projectDir}/config/checkstyle.xml")
 }
 
 configurations {
