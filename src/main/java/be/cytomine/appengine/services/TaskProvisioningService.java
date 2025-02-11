@@ -307,9 +307,13 @@ public class TaskProvisioningService {
         return new StorageData(byteArrayOutputStream.toByteArray());
     }
 
-    public List<TaskRunParameterValue> postOutputsZipArchive(String runId, MultipartFile outputs) throws ProvisioningException {
+    public List<TaskRunParameterValue> postOutputsZipArchive(String runId, String secret, MultipartFile outputs) throws ProvisioningException {
         log.info("Posting Outputs Archive : posting...");
         Run run = getRunIfValid(runId);
+        if (!run.getSecret().equals(UUID.fromString(secret))) {
+            AppEngineError error = ErrorBuilder.build(ErrorCode.SCHEDULER_UNAUTHNTICATED_OUTPUT_PROVISIONING);
+            throw new ProvisioningException(error);
+        }
         if (notInOneOfSchedulerManagedStates(run)) {
             AppEngineError error = ErrorBuilder.build(ErrorCode.INTERNAL_INVALID_TASK_RUN_STATE);
             throw new ProvisioningException(error);
