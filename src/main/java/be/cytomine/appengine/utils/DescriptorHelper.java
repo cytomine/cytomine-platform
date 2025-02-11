@@ -1,21 +1,23 @@
 package be.cytomine.appengine.utils;
 
+import java.io.IOException;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
-import java.io.*;
+import lombok.extern.slf4j.Slf4j;
 
-
+@Slf4j
 public class DescriptorHelper {
-  public static JsonNode parseDescriptor(File descriptorFile) {
+  public static JsonNode parseDescriptor(byte[] descriptorFile) {
     ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-    JsonNode map;
+
     try {
-      map = mapper.readTree(descriptorFile);
+      return mapper.readTree(descriptorFile);
     } catch (IOException e) {
+      log.error("DescriptorHelper: failed to convert descriptor.yml to json [{}]", e.getMessage());
       throw new RuntimeException(e);
     }
-    return map;
   }
 }

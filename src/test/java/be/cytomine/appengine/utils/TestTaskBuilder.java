@@ -1,26 +1,21 @@
 package be.cytomine.appengine.utils;
 
+import java.util.*;
+import java.io.*;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.mock.web.MockMultipartFile;
 
 import be.cytomine.appengine.dto.inputs.task.UploadTaskArchive;
 import be.cytomine.appengine.dto.misc.TaskIdentifiers;
 import be.cytomine.appengine.exceptions.BundleArchiveException;
-import be.cytomine.appengine.exceptions.ValidationException;
 import be.cytomine.appengine.models.task.Author;
 import be.cytomine.appengine.models.task.Input;
 import be.cytomine.appengine.models.task.integer.IntegerType;
 import be.cytomine.appengine.models.task.Output;
 import be.cytomine.appengine.models.task.Task;
 import be.cytomine.appengine.models.task.TypeFactory;
-
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.mock.web.MockMultipartFile;
-
-import com.fasterxml.jackson.databind.JsonNode;
-
-import java.util.*;
-import java.io.*;
-
-
 
 public class TestTaskBuilder {
   public static Task buildHardcodedAddInteger(UUID taskUUID) {
@@ -187,7 +182,6 @@ public class TestTaskBuilder {
     return new ClassPathResource("/artifacts/" + bundleFilename);
   }
 
-
   public static Task buildTaskFromResource(String bundleFilename) {
     return buildTaskFromResource(bundleFilename, UUID.randomUUID());
   }
@@ -203,7 +197,7 @@ public class TestTaskBuilder {
         fos.write(taskArchive.getDescriptorFile());
         return tempFile;
       }
-    } catch (IOException | ValidationException | BundleArchiveException e) {
+    } catch (IOException | BundleArchiveException e) {
       throw new RuntimeException(e);
     }
   }
@@ -235,7 +229,7 @@ public class TestTaskBuilder {
       task.setInputs(getInputs(taskArchive));
       task.setOutputs(getOnputs(taskArchive));
       return task;
-    } catch(IOException | ValidationException | BundleArchiveException e) {
+    } catch(IOException | BundleArchiveException e) {
       throw new RuntimeException(e);
     }
   }
@@ -312,6 +306,4 @@ public class TestTaskBuilder {
     }
     return authors;
   }
-
 }
-

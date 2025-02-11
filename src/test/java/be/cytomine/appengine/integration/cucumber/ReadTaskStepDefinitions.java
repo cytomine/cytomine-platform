@@ -39,6 +39,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.*;
+import java.nio.file.Files;
 import java.util.*;
 
 @ContextConfiguration(classes = AppEngineApplication.class, loader = SpringBootContextLoader.class)
@@ -314,9 +315,9 @@ public class ReadTaskStepDefinitions {
     }
 
     @Then("App Engine sends a {string} OK response with the descriptor file as a binary payload \\(see OpenAPI spec)")
-    public void app_engine_sends_a_response_with_the_descriptor_file_as_a_binary_payload_see_open_api_spec(String string) {
+    public void app_engine_sends_a_response_with_the_descriptor_file_as_a_binary_payload_see_open_api_spec(String string) throws IOException {
         Assertions.assertNotNull(persistedDescriptorYml);
-        JsonNode descriptorJson = DescriptorHelper.parseDescriptor(persistedDescriptorYml);
+        JsonNode descriptorJson = DescriptorHelper.parseDescriptor(Files.readAllBytes(persistedDescriptorYml.toPath()));
         Assertions.assertTrue(descriptorJson.has("namespace"));
         Assertions.assertTrue(descriptorJson.has("version"));
         Assertions.assertEquals(persistedTask.getNamespace(), descriptorJson.get("namespace").textValue());

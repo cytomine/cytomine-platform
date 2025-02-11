@@ -1,18 +1,8 @@
 package be.cytomine.appengine.unit.services;
 
-import be.cytomine.appengine.dto.inputs.task.TaskDescription;
-import be.cytomine.appengine.dto.inputs.task.UploadTaskArchive;
-import be.cytomine.appengine.exceptions.BundleArchiveException;
-import be.cytomine.appengine.exceptions.TaskServiceException;
-import be.cytomine.appengine.exceptions.ValidationException;
-import be.cytomine.appengine.handlers.RegistryHandler;
-import be.cytomine.appengine.handlers.StorageHandler;
-import be.cytomine.appengine.models.task.Task;
-import be.cytomine.appengine.repositories.TaskRepository;
-import be.cytomine.appengine.services.TaskService;
-import be.cytomine.appengine.services.TaskValidationService;
-import be.cytomine.appengine.utils.ArchiveUtils;
-import be.cytomine.appengine.utils.TestTaskBuilder;
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -27,14 +17,24 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.mock.web.MockMultipartFile;
 
-import java.io.IOException;
-import java.util.*;
+import be.cytomine.appengine.dto.inputs.task.TaskDescription;
+import be.cytomine.appengine.dto.inputs.task.UploadTaskArchive;
+import be.cytomine.appengine.exceptions.BundleArchiveException;
+import be.cytomine.appengine.exceptions.TaskServiceException;
+import be.cytomine.appengine.exceptions.ValidationException;
+import be.cytomine.appengine.handlers.RegistryHandler;
+import be.cytomine.appengine.handlers.StorageHandler;
+import be.cytomine.appengine.models.task.Task;
+import be.cytomine.appengine.repositories.TaskRepository;
+import be.cytomine.appengine.services.TaskService;
+import be.cytomine.appengine.services.TaskValidationService;
+import be.cytomine.appengine.utils.ArchiveUtils;
+import be.cytomine.appengine.utils.TestTaskBuilder;
 
 import static org.mockito.Mockito.lenient;
 
 @ExtendWith(MockitoExtension.class)
 public class TaskServiceTest {
-
 
     @Mock
     TaskRepository taskRepository;
@@ -54,7 +54,6 @@ public class TaskServiceTest {
     @InjectMocks
     TaskService taskService;
 
-
     @Test
     @DisplayName("Testing successful upload")
     public void succesfulUpload() throws IOException, TaskServiceException, ValidationException, BundleArchiveException {
@@ -68,7 +67,7 @@ public class TaskServiceTest {
         Task task = new Task(UUID.randomUUID(), nameSpace, version, descriptorFile, storageReference);
 
         UploadTaskArchive uploadTaskArchive = new UploadTaskArchive();
-        uploadTaskArchive.setDockerImage(new byte[]{});
+        uploadTaskArchive.setDockerImage(File.createTempFile("docker-image", ".tar"));
         uploadTaskArchive.setDescriptorFile(new byte[]{});
         String descriptorYml = "name: Integers addition\n" +
                 "name_short: add_int\n" +
