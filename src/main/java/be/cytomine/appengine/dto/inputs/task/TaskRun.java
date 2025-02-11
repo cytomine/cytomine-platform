@@ -1,17 +1,18 @@
 package be.cytomine.appengine.dto.inputs.task;
 
+import java.util.UUID;
 
-import be.cytomine.appengine.states.TaskRunState;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
-import java.util.UUID;
-
+import be.cytomine.appengine.states.TaskRunState;
 
 @Data
 @AllArgsConstructor
 public class TaskRun {
-    TaskDescription task;
     private UUID id;
+
+    private TaskDescription task;
+
     private TaskRunState state;
 }

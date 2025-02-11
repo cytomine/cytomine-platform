@@ -4,7 +4,6 @@ import java.awt.Dimension;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-
 import javax.imageio.ImageIO;
 
 public class GenericFormat implements FileFormat {

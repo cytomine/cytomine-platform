@@ -1,21 +1,29 @@
 package be.cytomine.appengine.dto.inputs.task;
 
-
-import be.cytomine.appengine.states.TaskRunState;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+
+import be.cytomine.appengine.states.TaskRunState;
 
 @Data
 @AllArgsConstructor
 public class TaskRunResponse {
-    TaskDescription task;
     private UUID id;
+
+    private TaskDescription task;
+
     private TaskRunState state;
-    private LocalDateTime created_at;
-    private LocalDateTime updated_at;
-    private LocalDateTime last_state_transition_at;
+
+    @JsonProperty("created_at")
+    private LocalDateTime createdAt;
+
+    @JsonProperty("updated_at")
+    private LocalDateTime updatedAt;
+
+    @JsonProperty("last_state_transition_at")
+    private LocalDateTime lastStateTransitionAt;
 }

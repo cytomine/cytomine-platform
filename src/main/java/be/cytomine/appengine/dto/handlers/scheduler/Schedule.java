@@ -1,10 +1,8 @@
 package be.cytomine.appengine.dto.handlers.scheduler;
 
-import be.cytomine.appengine.models.task.Run;
-import be.cytomine.appengine.models.task.Task;
 import lombok.Data;
 
-import java.util.UUID;
+import be.cytomine.appengine.models.task.Run;
 
 @Data
 public class Schedule {

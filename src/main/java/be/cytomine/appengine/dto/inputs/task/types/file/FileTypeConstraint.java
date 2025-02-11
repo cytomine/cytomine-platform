@@ -8,16 +8,17 @@ public enum FileTypeConstraint {
 
     public String getStringKey() {
         return switch (this) {
-        case FORMATS -> "formats";
-        case MAX_FILE_SIZE -> "max_file_size";
-        default -> throw new RuntimeException("Unknown constraint");
+            case FORMATS -> "formats";
+            case MAX_FILE_SIZE -> "max_file_size";
+            default -> throw new RuntimeException("Unknown constraint");
         };
     }
 
     public static FileTypeConstraint getConstraint(String key) {
+        String error = "Invalid file type constraint key: " + key;
         return Arrays.stream(FileTypeConstraint.values())
-                .filter(constraint -> constraint.getStringKey().equals(key))
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Invalid file type constraint key: " + key));
+            .filter(constraint -> constraint.getStringKey().equals(key))
+            .findFirst()
+            .orElseThrow(() -> new IllegalArgumentException(error));
     }
 }

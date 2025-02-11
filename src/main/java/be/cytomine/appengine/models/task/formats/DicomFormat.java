@@ -11,9 +11,7 @@ import org.dcm4che3.io.DicomInputStream;
 
 public class DicomFormat implements FileFormat {
 
-    public static final byte[] SIGNATURE = {
-            (byte) 0x44, (byte) 0x49, (byte) 0x43, (byte) 0x4D
-    };
+    public static final byte[] SIGNATURE = { (byte) 0x44, (byte) 0x49, (byte) 0x43, (byte) 0x4D };
 
     @Override
     public boolean checkSignature(byte[] file) {

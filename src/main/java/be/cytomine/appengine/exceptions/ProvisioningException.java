@@ -1,15 +1,15 @@
 package be.cytomine.appengine.exceptions;
 
-
-import be.cytomine.appengine.dto.responses.errors.AppEngineError;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+
+import be.cytomine.appengine.dto.responses.errors.AppEngineError;
 
 @Data
 @EqualsAndHashCode(callSuper = false)
 public class ProvisioningException extends Exception {
 
-    AppEngineError error;
+    private AppEngineError error;
 
     public ProvisioningException(Exception e) {
         super(e);
@@ -23,6 +23,4 @@ public class ProvisioningException extends Exception {
     public ProvisioningException(String message) {
         super(message);
     }
-
-
 }

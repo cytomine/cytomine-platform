@@ -26,25 +26,67 @@ public class TaskInputFactory {
         TaskParameterType taskParameterType = null;
 
         if (input.getType() instanceof BooleanType type) {
-            taskParameterType = new TaskParameterBooleanType(type.getId());
+            taskParameterType = new TaskParameterBooleanType(
+                type.getId()
+            );
         } else if (input.getType() instanceof IntegerType type) {
-            taskParameterType = new TaskParameterIntegerType(type.getId(), type.getGt(), type.getLt(), type.getGeq(), type.getLeq());
+            taskParameterType = new TaskParameterIntegerType(
+                type.getId(),
+                type.getGt(),
+                type.getLt(),
+                type.getGeq(),
+                type.getLeq()
+            );
         } else if (input.getType() instanceof NumberType type) {
-            taskParameterType = new TaskParameterNumberType(type.getId(), type.getGt(), type.getGeq(), type.getLt(), type.getLeq(), type.isInfinityAllowed(), type.isNanAllowed());
+            taskParameterType = new TaskParameterNumberType(
+                type.getId(),
+                type.getGt(),
+                type.getGeq(),
+                type.getLt(),
+                type.getLeq(),
+                type.isInfinityAllowed(),
+                type.isNanAllowed()
+            );
         } else if (input.getType() instanceof StringType type) {
-            taskParameterType = new TaskParameterStringType(type.getId(), type.getMinLength(), type.getMaxLength());
+            taskParameterType = new TaskParameterStringType(
+                type.getId(),
+                type.getMinLength(),
+                type.getMaxLength()
+            );
         } else if (input.getType() instanceof EnumerationType type) {
-            taskParameterType = new TaskParameterEnumerationType(type.getId(), type.getValues());
+            taskParameterType = new TaskParameterEnumerationType(
+                type.getId(),
+                type.getValues()
+            );
         } else if (input.getType() instanceof GeometryType type) {
-            taskParameterType = new TaskParameterGeometryType(type.getId());
+            taskParameterType = new TaskParameterGeometryType(
+                type.getId()
+            );
         } else if (input.getType() instanceof ImageType type) {
-            taskParameterType = new TaskParameterImageType(type.getId(), type.getFormats());
+            taskParameterType = new TaskParameterImageType(
+                type.getId(),
+                type.getFormats()
+            );
         } else if (input.getType() instanceof WsiType type) {
-            taskParameterType = new TaskParameterWsiType(type.getId(), type.getFormats());
+            taskParameterType = new TaskParameterWsiType(
+                type.getId(),
+                type.getFormats()
+            );
         } else if (input.getType() instanceof FileType type) {
-            taskParameterType = new TaskParameterFileType(type.getId(), type.getFormats());
+            taskParameterType = new TaskParameterFileType(
+                type.getId(),
+                type.getFormats()
+            );
         }
 
-        return new TaskInput(input.getId().toString(), input.getDefaultValue(), input.getName(), input.getDisplayName(), input.getDescription(), input.isOptional(), taskParameterType);
+        return new TaskInput(
+            input.getId().toString(),
+            input.getDefaultValue(),
+            input.getName(),
+            input.getDisplayName(),
+            input.getDescription(),
+            input.isOptional(),
+            taskParameterType
+        );
     }
 }

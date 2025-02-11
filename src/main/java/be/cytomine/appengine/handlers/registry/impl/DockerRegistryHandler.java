@@ -55,7 +55,8 @@ public class DockerRegistryHandler implements RegistryHandler {
             throw new RegistryException("Docker Registry Handler: failed to read image data");
         } catch (Exception e) {
             log.error("Failed to push image: {}", imageName, e);
-            throw new RegistryException("Docker Registry Handler: failed to push the image to registry");
+            String message = "Docker Registry Handler: failed to push the image to registry";
+            throw new RegistryException(message);
         }
     }
 }

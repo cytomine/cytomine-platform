@@ -1,5 +1,15 @@
 package be.cytomine.appengine.models.task.string;
 
+import java.util.UUID;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
 import be.cytomine.appengine.dto.inputs.task.TaskRunParameterValue;
 import be.cytomine.appengine.dto.inputs.task.types.string.StringTypeConstraint;
 import be.cytomine.appengine.dto.inputs.task.types.string.StringValue;
@@ -16,17 +26,8 @@ import be.cytomine.appengine.models.task.TypePersistence;
 import be.cytomine.appengine.models.task.ValueType;
 import be.cytomine.appengine.repositories.string.StringPersistenceRepository;
 import be.cytomine.appengine.utils.AppEngineApplicationContext;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-
-import java.util.UUID;
-
+@SuppressWarnings("checkstyle:LineLength")
 @Data
 @Entity
 @EqualsAndHashCode(callSuper = true)
@@ -45,6 +46,7 @@ public class StringType extends Type {
             case MAX_LENGTH:
                 this.setMaxLength(value);
                 break;
+            default:
         }
     }
 
@@ -64,11 +66,17 @@ public class StringType extends Type {
 
         String value = (String) valueObject;
 
-        if (this.hasConstraint(StringTypeConstraint.MIN_LENGTH) && value.length() < this.getMinLength()) {
+        if (
+            this.hasConstraint(StringTypeConstraint.MIN_LENGTH)
+            && value.length() < this.getMinLength()
+        ) {
             throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_GT_VALIDATION_ERROR);
         }
 
-        if (this.hasConstraint(StringTypeConstraint.MAX_LENGTH) && value.length() > this.getMaxLength()) {
+        if (
+            this.hasConstraint(StringTypeConstraint.MAX_LENGTH)
+            && value.length() > this.getMaxLength()
+        ) {
             throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_GEQ_VALIDATION_ERROR);
         }
     }
@@ -118,9 +126,8 @@ public class StringType extends Type {
         String value = provision.get("value").asText();
         String parameterName = provision.get("param_name").asText();
         byte[] inputFileData = value.getBytes(getStorageCharset());
-        StorageDataEntry storageDataEntry = new StorageDataEntry(inputFileData, parameterName , StorageDataType.FILE);
+        StorageDataEntry storageDataEntry = new StorageDataEntry(inputFileData, parameterName, StorageDataType.FILE);
         return new StorageData(storageDataEntry);
-//        return new FileData(inputFileData, parameterName);
     }
 
     @Override

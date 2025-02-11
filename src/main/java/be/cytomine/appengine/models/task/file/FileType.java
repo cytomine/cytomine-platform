@@ -4,13 +4,9 @@ import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
-import be.cytomine.appengine.handlers.StorageData;
-import be.cytomine.appengine.handlers.StorageDataEntry;
-import be.cytomine.appengine.handlers.StorageDataType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import lombok.Data;
@@ -20,6 +16,9 @@ import be.cytomine.appengine.dto.inputs.task.types.file.FileTypeConstraint;
 import be.cytomine.appengine.dto.inputs.task.types.file.FileValue;
 import be.cytomine.appengine.dto.responses.errors.ErrorCode;
 import be.cytomine.appengine.exceptions.TypeValidationException;
+import be.cytomine.appengine.handlers.StorageData;
+import be.cytomine.appengine.handlers.StorageDataEntry;
+import be.cytomine.appengine.handlers.StorageDataType;
 import be.cytomine.appengine.models.task.Output;
 import be.cytomine.appengine.models.task.ParameterType;
 import be.cytomine.appengine.models.task.Run;
@@ -29,8 +28,9 @@ import be.cytomine.appengine.models.task.ValueType;
 import be.cytomine.appengine.repositories.file.FilePersistenceRepository;
 import be.cytomine.appengine.utils.AppEngineApplicationContext;
 
-@Entity
+@SuppressWarnings("checkstyle:LineLength")
 @Data
+@Entity
 @EqualsAndHashCode(callSuper = true)
 public class FileType extends Type {
 
@@ -42,12 +42,13 @@ public class FileType extends Type {
 
     public void setConstraint(FileTypeConstraint constraint, JsonNode value) {
         switch (constraint) {
-        case FORMATS:
-            this.setFormats(parse(value.toString()));
-            break;
-        case MAX_FILE_SIZE:
-            this.setMaxFileSize(value.asText());
-            break;
+            case FORMATS:
+                this.setFormats(parse(value.toString()));
+                break;
+            case MAX_FILE_SIZE:
+                this.setMaxFileSize(value.asText());
+                break;
+            default:
         }
     }
 
@@ -98,8 +99,10 @@ public class FileType extends Type {
         byte[] inputFileData = null;
         try {
             inputFileData = provision.get("value").binaryValue();
-        } catch (IOException ignored) {}
-        StorageDataEntry storageDataEntry = new StorageDataEntry(inputFileData, parameterName , StorageDataType.FILE);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        StorageDataEntry storageDataEntry = new StorageDataEntry(inputFileData, parameterName, StorageDataType.FILE);
         return new StorageData(storageDataEntry);
     }
 

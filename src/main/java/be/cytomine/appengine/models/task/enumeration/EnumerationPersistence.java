@@ -1,12 +1,13 @@
 package be.cytomine.appengine.models.task.enumeration;
 
-import be.cytomine.appengine.models.task.TypePersistence;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+
+import be.cytomine.appengine.models.task.TypePersistence;
 
 @Entity
 @Table(name = "enumeration_type_persistence")

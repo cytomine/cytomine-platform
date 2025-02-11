@@ -19,9 +19,10 @@ public enum WsiTypeConstraint {
     }
 
     public static WsiTypeConstraint getConstraint(String key) {
+        String error = "Invalid wsi type constraint key: " + key;
         return Arrays.stream(WsiTypeConstraint.values())
-                .filter(constraint -> constraint.getStringKey().equals(key))
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Invalid wsi type constraint key: " + key));
+            .filter(constraint -> constraint.getStringKey().equals(key))
+            .findFirst()
+            .orElseThrow(() -> new IllegalArgumentException(error));
     }
 }

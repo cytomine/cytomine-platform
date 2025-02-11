@@ -8,6 +8,7 @@ import java.util.regex.Pattern;
 
 import lombok.Getter;
 
+@SuppressWarnings("checkstyle:LineLength")
 @Getter
 public class Unit {
 

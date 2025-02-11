@@ -1,27 +1,28 @@
 package be.cytomine.appengine.exceptions;
 
-import be.cytomine.appengine.dto.responses.errors.AppEngineError;
+import java.util.Set;
+
 import com.networknt.schema.ValidationMessage;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
-import java.util.Set;
+import be.cytomine.appengine.dto.responses.errors.AppEngineError;
 
 @Getter
 @EqualsAndHashCode(callSuper = false)
 public class ValidationException extends Exception {
 
+    private boolean internalError;
+
+    private Set<ValidationMessage> errors;
+
+    private boolean integrityViolated;
+
+    private AppEngineError error;
 
     public ValidationException(Exception e) {
         super(e);
     }
-
-
-    private boolean internalError;
-    private Set<ValidationMessage> errors;
-    private boolean integrityViolated;
-
-    AppEngineError error;
 
     public ValidationException(String message) {
         super(message);
@@ -36,6 +37,7 @@ public class ValidationException extends Exception {
         super(message);
         this.internalError = internalError;
     }
+
     public ValidationException(AppEngineError error, boolean internalError) {
         super(error.getMessage());
         this.internalError = internalError;
@@ -48,18 +50,19 @@ public class ValidationException extends Exception {
         this.integrityViolated = integrityViolated;
     }
 
-    public ValidationException(AppEngineError error, boolean internalError, boolean integrityViolated) {
+    public ValidationException(
+        AppEngineError error,
+        boolean internalError,
+        boolean integrityViolated
+    ) {
         super(error.getMessage());
         this.internalError = internalError;
         this.integrityViolated = integrityViolated;
         this.error = error;
     }
 
-
     public ValidationException(String message, Set<ValidationMessage> errors) {
         super(message);
         this.errors = errors;
     }
-
-
 }

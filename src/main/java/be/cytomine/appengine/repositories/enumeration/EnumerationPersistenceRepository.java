@@ -8,7 +8,8 @@ import org.springframework.stereotype.Repository;
 import be.cytomine.appengine.models.task.ParameterType;
 import be.cytomine.appengine.models.task.enumeration.EnumerationPersistence;
 
+@SuppressWarnings("checkstyle:LineLength")
 @Repository
 public interface EnumerationPersistenceRepository extends JpaRepository<EnumerationPersistence, UUID> {
-    EnumerationPersistence findEnumerationPersistenceByParameterNameAndRunIdAndParameterType(String parameterName, UUID run , ParameterType parameterType);
+    EnumerationPersistence findEnumerationPersistenceByParameterNameAndRunIdAndParameterType(String parameterName, UUID run, ParameterType parameterType);
 }

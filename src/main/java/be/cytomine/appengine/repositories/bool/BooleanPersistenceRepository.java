@@ -10,5 +10,9 @@ import be.cytomine.appengine.models.task.bool.BooleanPersistence;
 
 @Repository
 public interface BooleanPersistenceRepository extends JpaRepository<BooleanPersistence, UUID> {
-    BooleanPersistence findBooleanPersistenceByParameterNameAndRunIdAndParameterType(String parameterName, UUID run , ParameterType parameterType);
+    BooleanPersistence findBooleanPersistenceByParameterNameAndRunIdAndParameterType(
+        String parameterName,
+        UUID run,
+        ParameterType parameterType
+    );
 }
