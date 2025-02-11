@@ -139,11 +139,11 @@ public class TaskRunController {
         return new ResponseEntity<>(outputs, HttpStatus.OK);
     }
 
-    @PostMapping(value = "/task-runs/{run_id}/outputs.zip")
+    @PostMapping(value = "/task-runs/{run_id}/{secret}/outputs.zip")
     @ResponseStatus(code = HttpStatus.OK)
-    public ResponseEntity<?> postOutputsProvisionsArchives(@PathVariable String run_id, @RequestParam("outputs") MultipartFile outputs) throws ProvisioningException {
+    public ResponseEntity<?> postOutputsProvisionsArchives(@PathVariable String run_id, @PathVariable String secret ,@RequestParam("outputs") MultipartFile outputs) throws ProvisioningException {
         log.info("/task-runs/{run_id}/outputs.zip POST");
-        List<TaskRunParameterValue> taskOutputs = taskRunService.postOutputsZipArchive(run_id, outputs);
+        List<TaskRunParameterValue> taskOutputs = taskRunService.postOutputsZipArchive(run_id, secret ,outputs);
         log.info("/task-runs/{run_id}/outputs.zip POST Ended");
         return new ResponseEntity<>(taskOutputs, HttpStatus.OK);
     }
