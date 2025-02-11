@@ -3,6 +3,9 @@ package be.cytomine.appengine.models.task.enumeration;
 import java.util.List;
 import java.util.UUID;
 
+import be.cytomine.appengine.handlers.StorageData;
+import be.cytomine.appengine.handlers.StorageDataEntry;
+import be.cytomine.appengine.handlers.StorageDataType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -11,7 +14,6 @@ import be.cytomine.appengine.dto.inputs.task.types.enumeration.EnumerationTypeCo
 import be.cytomine.appengine.dto.inputs.task.types.enumeration.EnumerationValue;
 import be.cytomine.appengine.dto.responses.errors.ErrorCode;
 import be.cytomine.appengine.exceptions.TypeValidationException;
-import be.cytomine.appengine.handlers.FileData;
 import be.cytomine.appengine.models.task.Output;
 import be.cytomine.appengine.models.task.ParameterType;
 import be.cytomine.appengine.models.task.Run;
@@ -89,30 +91,35 @@ public class EnumerationType extends Type {
     }
 
     @Override
-    public void persistResult(Run run, Output currentOutput, String outputValue) {
+    public void persistResult(Run run, Output currentOutput, StorageData outputValue) {
         EnumerationPersistenceRepository enumerationPersistenceRepository = AppEngineApplicationContext.getBean(EnumerationPersistenceRepository.class);
         EnumerationPersistence result = enumerationPersistenceRepository.findEnumerationPersistenceByParameterNameAndRunIdAndParameterType(currentOutput.getName(), run.getId(), ParameterType.OUTPUT);
+        String output = new String(outputValue.poll().getData(), getStorageCharset());
+        String trimmedOutput = output.trim();
         if (result == null) {
             result = new EnumerationPersistence();
-            result.setValue(outputValue);
+            result.setValue(trimmedOutput);
             result.setValueType(ValueType.INTEGER);
             result.setParameterType(ParameterType.OUTPUT);
             result.setRunId(run.getId());
             result.setParameterName(currentOutput.getName());
             enumerationPersistenceRepository.save(result);
         } else {
-            result.setValue(outputValue);
+            result.setValue(trimmedOutput);
             enumerationPersistenceRepository.saveAndFlush(result);
         }
     }
 
     @Override
-    public FileData mapToStorageFileData(JsonNode provision, String charset) {
+    public StorageData mapToStorageFileData(JsonNode provision) {
         String value = provision.get("value").asText();
         String parameterName = provision.get("param_name").asText();
-        byte[] inputFileData = value.getBytes(getStorageCharset(charset));
-        return new FileData(inputFileData, parameterName);
+        byte[] inputFileData = value.getBytes(getStorageCharset());
+        StorageDataEntry storageDataEntry = new StorageDataEntry(inputFileData, parameterName , StorageDataType.FILE);
+        return new StorageData(storageDataEntry);
     }
+
+
 
 
     @Override
@@ -126,12 +133,15 @@ public class EnumerationType extends Type {
     }
 
     @Override
-    public EnumerationValue buildTaskRunParameterValue(String output, UUID id, String outputName) {
+    public EnumerationValue buildTaskRunParameterValue(StorageData output, UUID id, String outputName) {
+        String outputValue = new String(output.poll().getData(), getStorageCharset());
+        String trimmedOutput = outputValue.trim();
+
         EnumerationValue enumerationValue = new EnumerationValue();
         enumerationValue.setParameterName(outputName);
         enumerationValue.setTaskRunId(id);
         enumerationValue.setType(ValueType.ENUMERATION);
-        enumerationValue.setValue(output);
+        enumerationValue.setValue(trimmedOutput);
         return enumerationValue;
     }
 

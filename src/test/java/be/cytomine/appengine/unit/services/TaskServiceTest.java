@@ -5,8 +5,8 @@ import be.cytomine.appengine.dto.inputs.task.UploadTaskArchive;
 import be.cytomine.appengine.exceptions.BundleArchiveException;
 import be.cytomine.appengine.exceptions.TaskServiceException;
 import be.cytomine.appengine.exceptions.ValidationException;
-import be.cytomine.appengine.handlers.FileStorageHandler;
 import be.cytomine.appengine.handlers.RegistryHandler;
+import be.cytomine.appengine.handlers.StorageHandler;
 import be.cytomine.appengine.models.task.Task;
 import be.cytomine.appengine.repositories.TaskRepository;
 import be.cytomine.appengine.services.TaskService;
@@ -43,7 +43,7 @@ public class TaskServiceTest {
     ArchiveUtils archiveUtils;
 
     @Mock
-    FileStorageHandler fileStorageHandler;
+    StorageHandler fileStorageHandler;
 
     @Mock
     RegistryHandler registryHandler;

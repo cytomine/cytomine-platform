@@ -1,9 +1,9 @@
 package be.cytomine.appengine.config;
 
 
-import be.cytomine.appengine.handlers.FileStorageHandler;
 import be.cytomine.appengine.handlers.RegistryHandler;
 import be.cytomine.appengine.handlers.SchedulerHandler;
+import be.cytomine.appengine.handlers.StorageHandler;
 import be.cytomine.appengine.handlers.scheduler.impl.KubernetesScheduler;
 import be.cytomine.appengine.handlers.storage.impl.FileSystemStorageHandler;
 import be.cytomine.appengine.handlers.registry.impl.DefaultRegistryHandler;
@@ -39,7 +39,7 @@ public class ImplementationConfig {
 
     @Bean
     @Primary
-    public FileStorageHandler loadStorageImpl() throws Exception {
+    public StorageHandler loadStorageImpl() throws Exception {
         return new FileSystemStorageHandler();
     }
 

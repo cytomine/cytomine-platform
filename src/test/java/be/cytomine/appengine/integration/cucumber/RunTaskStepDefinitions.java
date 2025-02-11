@@ -6,9 +6,9 @@ import be.cytomine.appengine.dto.inputs.task.TaskRunParameterValue;
 import be.cytomine.appengine.dto.inputs.task.types.integer.IntegerValue;
 import be.cytomine.appengine.exceptions.FileStorageException;
 import be.cytomine.appengine.exceptions.SchedulingException;
-import be.cytomine.appengine.handlers.FileData;
-import be.cytomine.appengine.handlers.FileStorageHandler;
+import be.cytomine.appengine.handlers.StorageData;
 import be.cytomine.appengine.handlers.SchedulerHandler;
+import be.cytomine.appengine.handlers.StorageHandler;
 import be.cytomine.appengine.models.task.*;
 import be.cytomine.appengine.models.task.integer.IntegerPersistence;
 import be.cytomine.appengine.openapi.api.DefaultApi;
@@ -71,7 +71,7 @@ public class RunTaskStepDefinitions {
     private DefaultApi appEngineApi;
 
     @Autowired
-    private FileStorageHandler fileStorageHandler;
+    private StorageHandler fileStorageHandler;
 
     @Autowired
     private IntegerPersistenceRepository integerPersistenceRepository;
@@ -109,9 +109,9 @@ public class RunTaskStepDefinitions {
     private File inputsArchive;
     private File outputsArchive;
     private File persistedZipFile;
-    private FileData param1FileData;
-    private FileData param2FileData;
-    private FileData outputFileData;
+    private StorageData param1FileData;
+    private StorageData param2FileData;
+    private StorageData outputFileData;
 
     @NotNull
     private static String removeWhitespacesFromPath(File file) {
@@ -222,10 +222,10 @@ public class RunTaskStepDefinitions {
         // save inputs in storage
         Storage storage = new Storage("task-run-inputs-" + runId);
         fileStorageHandler.createStorage(storage);
-        FileData parameterFile = new FileData(value1.getBytes(StandardCharsets.UTF_8), name1); // UTF_8 is assumed in tests
-        fileStorageHandler.createFile(storage, parameterFile);
-        parameterFile = new FileData(value2.getBytes(StandardCharsets.UTF_8), name2); // UTF_8 is assumed in tests
-        fileStorageHandler.createFile(storage, parameterFile);
+        StorageData parameterFile = new StorageData(value1.getBytes(StandardCharsets.UTF_8), name1); // UTF_8 is assumed in tests
+        fileStorageHandler.saveStorageData(storage, parameterFile);
+        parameterFile = new StorageData(value2.getBytes(StandardCharsets.UTF_8), name2); // UTF_8 is assumed in tests
+        fileStorageHandler.saveStorageData(storage, parameterFile);
     }
 
     @When("user calls the endpoint to fetch inputs archive with {string} HTTP method GET")
@@ -271,11 +271,11 @@ public class RunTaskStepDefinitions {
             while ((file = zis.getNextEntry()) != null) {
                 if (file.getName().equalsIgnoreCase(param1)) {
                     param1Found = true;
-                    param1FileData = new FileData(zis.readAllBytes(), file.getName());
+                    param1FileData = new StorageData(zis.readAllBytes(), file.getName());
                 }
                 if (file.getName().equalsIgnoreCase(param2)) {
                     param2Found = true;
-                    param2FileData = new FileData(zis.readAllBytes(), file.getName());
+                    param2FileData = new StorageData(zis.readAllBytes(), file.getName());
                 }
             }
             Assertions.assertTrue(param1Found);
@@ -289,12 +289,12 @@ public class RunTaskStepDefinitions {
         int testValue;
         if (paramName.equalsIgnoreCase("a")) {
             testValue = Integer.parseInt(paramValue);
-            fileValue = Integer.parseInt(new String(param1FileData.getFileData()));
+            fileValue = Integer.parseInt(new String(param1FileData.poll().getData()));
             Assertions.assertEquals(fileValue, testValue);
         }
         if (paramName.equalsIgnoreCase("b")) {
             testValue = Integer.parseInt(paramValue);
-            fileValue = Integer.parseInt(new String(param2FileData.getFileData()));
+            fileValue = Integer.parseInt(new String(param2FileData.poll().getData()));
             Assertions.assertEquals(fileValue, testValue);
         }
     }
@@ -329,9 +329,9 @@ public class RunTaskStepDefinitions {
             Storage outputsStorage = new Storage("task-run-outputs-" + persistedRun.getId());
             String valueString = String.valueOf(value);
             byte[] inputFileData = valueString.getBytes(getStorageCharset(charset));
-            FileData outputFileData = new FileData(inputFileData, name);
+            StorageData outputFileData = new StorageData(inputFileData, name);
 
-            fileStorageHandler.createFile(outputsStorage, outputFileData);
+            fileStorageHandler.saveStorageData(outputsStorage, outputFileData);
         }
     }
 
@@ -358,7 +358,7 @@ public class RunTaskStepDefinitions {
             while ((file = zis.getNextEntry()) != null) {
                 if (file.getName().equalsIgnoreCase(outputName)) {
                     outputFound = true;
-                    outputFileData = new FileData(zis.readAllBytes(), file.getName());
+                    outputFileData = new StorageData(zis.readAllBytes(), file.getName());
                 }
 
             }
@@ -368,7 +368,7 @@ public class RunTaskStepDefinitions {
 
     @Then("the content of output file {string} is {string}")
     public void the_content_of_output_file_is(String outputName, String outputValue) {
-        int fileValue = Integer.parseInt(new String(outputFileData.getFileData()));
+        int fileValue = Integer.parseInt(new String(outputFileData.peek().getData()));
         int testValue = Integer.parseInt(outputValue);
 
         Assertions.assertEquals(fileValue, testValue);
@@ -604,13 +604,13 @@ public class RunTaskStepDefinitions {
 
         String value = String.valueOf(provisionInputA.getValue());
         byte[] inputFileData = value.getBytes(getStorageCharset(charset));
-        FileData inputProvisionFileData = new FileData(inputFileData, provisionInputA.getParameterName());
-        fileStorageHandler.createFile(runStorage, inputProvisionFileData);
+        StorageData inputProvisionFileData = new StorageData(inputFileData, provisionInputA.getParameterName());
+        fileStorageHandler.saveStorageData(runStorage, inputProvisionFileData);
 
         value = String.valueOf(provisionInputB.getValue());
         inputFileData = value.getBytes(getStorageCharset(charset));
-        inputProvisionFileData = new FileData(inputFileData, provisionInputB.getParameterName());
-        fileStorageHandler.createFile(runStorage, inputProvisionFileData);
+        inputProvisionFileData = new StorageData(inputFileData, provisionInputB.getParameterName());
+        fileStorageHandler.saveStorageData(runStorage, inputProvisionFileData);
 
         persistedRun.setState(TaskRunState.PROVISIONED);
         persistedRun = runRepository.saveAndFlush(persistedRun);

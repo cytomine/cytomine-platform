@@ -8,9 +8,7 @@ import be.cytomine.appengine.dto.responses.errors.ErrorBuilder;
 import be.cytomine.appengine.dto.responses.errors.ErrorCode;
 import be.cytomine.appengine.dto.responses.errors.details.ParameterError;
 import be.cytomine.appengine.exceptions.*;
-import be.cytomine.appengine.handlers.FileData;
-import be.cytomine.appengine.handlers.FileStorageHandler;
-import be.cytomine.appengine.handlers.SchedulerHandler;
+import be.cytomine.appengine.handlers.*;
 import be.cytomine.appengine.models.task.*;
 import be.cytomine.appengine.models.task.ParameterType;
 import be.cytomine.appengine.repositories.*;
@@ -23,7 +21,6 @@ import jakarta.validation.constraints.NotNull;
 import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -41,14 +38,13 @@ public class TaskProvisioningService {
 
     private final TypePersistenceRepository typePersistenceRepository;
     private final RunRepository runRepository;
-    private final FileStorageHandler fileStorageHandler;
+    private final StorageHandler fileStorageHandler;
 
     private SchedulerHandler schedulerHandler;
-    @Value("${storage.input.charset}")
-    private String charset;
 
 
-    public TaskProvisioningService(SchedulerHandler schedulerHandler, RunRepository runRepository, FileStorageHandler fileStorageHandler, TypePersistenceRepository typePersistenceRepository) {
+
+    public TaskProvisioningService(SchedulerHandler schedulerHandler, RunRepository runRepository, StorageHandler fileStorageHandler, TypePersistenceRepository typePersistenceRepository) {
         this.runRepository = runRepository;
         this.fileStorageHandler = fileStorageHandler;
         this.typePersistenceRepository = typePersistenceRepository;
@@ -248,9 +244,9 @@ public class TaskProvisioningService {
         Input inputForType = inputs.stream().filter(input -> input.getName().equalsIgnoreCase(provision.get("param_name").asText())).findFirst().get();
 
         Storage runStorage = new Storage("task-run-inputs-" + run.getId());
-        FileData inputProvisionFileData = inputForType.getType().mapToStorageFileData(provision, charset);
+        StorageData inputProvisionFileData = inputForType.getType().mapToStorageFileData(provision);
         try {
-            fileStorageHandler.createFile(runStorage, inputProvisionFileData);
+            fileStorageHandler.saveStorageData(runStorage, inputProvisionFileData);
         } catch (FileStorageException e) {
             AppEngineError error = ErrorBuilder.buildParamRelatedError(ErrorCode.STORAGE_STORING_INPUT_FAILED, provision.get("param_name").asText(), e.getMessage());
             throw new ProvisioningException(error);
@@ -268,9 +264,9 @@ public class TaskProvisioningService {
         provision.put("value", value);
 
         Storage runStorage = new Storage("task-run-inputs-" + run.getId());
-        FileData inputProvisionFileData = inputForType.getType().mapToStorageFileData(provision, charset);
+        StorageData inputProvisionFileData = inputForType.getType().mapToStorageFileData(provision);
         try {
-            fileStorageHandler.createFile(runStorage, inputProvisionFileData);
+            fileStorageHandler.saveStorageData(runStorage, inputProvisionFileData);
         } catch (FileStorageException e) {
             AppEngineError error = ErrorBuilder.buildParamRelatedError(ErrorCode.STORAGE_STORING_INPUT_FAILED, parameterName, e.getMessage());
             throw new ProvisioningException(error);
@@ -292,7 +288,7 @@ public class TaskProvisioningService {
         }
     }
 
-    public FileData retrieveInputsZipArchive(String runId) throws ProvisioningException, FileStorageException, IOException {
+    public StorageData retrieveInputsZipArchive(String runId) throws ProvisioningException, FileStorageException, IOException {
         logger.info("Retrieving Inputs Archive : retrieving...");
         Run run = getRunIfValid(runId);
         if (run.getState().equals(TaskRunState.CREATED)) {
@@ -310,19 +306,24 @@ public class TaskProvisioningService {
         logger.info("Retrieving Inputs Archive : zipping...");
         ZipOutputStream zipOut = new ZipOutputStream(byteArrayOutputStream);
         for (TypePersistence provision : provisions) {
-            FileData provisionFileData = fileStorageHandler.readFile(new FileData(provision.getParameterName(), "task-run-inputs-" + run.getId()));
-            ZipEntry zipEntry = new ZipEntry(provision.getParameterName());
-            zipOut.putNextEntry(zipEntry);
-            zipOut.write(provisionFileData.getFileData());
-            zipOut.closeEntry();
+            StorageData provisionFileData = fileStorageHandler.readStorageData(new StorageData(provision.getParameterName(), "task-run-inputs-" + run.getId()));
+            while (!provisionFileData.isEmpty()){
+                StorageDataEntry current = provisionFileData.poll();
+                ZipEntry zipEntry = new ZipEntry(current.getName());
+                zipOut.putNextEntry(zipEntry);
+                if(current.getStorageDataType().equals(StorageDataType.FILE)){
+                    zipOut.write(current.getData());
+                }
+                zipOut.closeEntry();
+            }
         }
         zipOut.close();
         byteArrayOutputStream.close();
         logger.info("Retrieving Inputs Archive : zipped...");
-        return new FileData(byteArrayOutputStream.toByteArray());
+        return new StorageData(byteArrayOutputStream.toByteArray());
     }
 
-    public FileData retrieveOutputsZipArchive(String runId) throws ProvisioningException, FileStorageException, IOException {
+    public StorageData retrieveOutputsZipArchive(String runId) throws ProvisioningException, FileStorageException, IOException {
         logger.info("Retrieving Outputs Archive : retrieving...");
         Optional<Run> runOptional = runRepository.findById(UUID.fromString(runId));
         if (runOptional.isEmpty()) {
@@ -342,16 +343,21 @@ public class TaskProvisioningService {
         logger.info("Retrieving Outputs Archive : zipping...");
         ZipOutputStream zipOut = new ZipOutputStream(byteArrayOutputStream);
         for (TypePersistence result : results) {
-            FileData provision = fileStorageHandler.readFile(new FileData(result.getParameterName(), "task-run-outputs-" + runOptional.get().getId()));
-            ZipEntry zipEntry = new ZipEntry(result.getParameterName());
-            zipOut.putNextEntry(zipEntry);
-            zipOut.write(provision.getFileData());
-            zipOut.closeEntry();
+            StorageData provisionFileData = fileStorageHandler.readStorageData(new StorageData(result.getParameterName(), "task-run-outputs-" + run.getId()));
+            while (!provisionFileData.isEmpty()){
+                StorageDataEntry current = provisionFileData.poll();
+                ZipEntry zipEntry = new ZipEntry(current.getName());
+                zipOut.putNextEntry(zipEntry);
+                if(current.getStorageDataType().equals(StorageDataType.FILE)){
+                    zipOut.write(current.getData());
+                }
+                zipOut.closeEntry();
+            }
         }
         zipOut.close();
         byteArrayOutputStream.close();
         logger.info("Retrieving Outputs Archive : zipped...");
-        return new FileData(byteArrayOutputStream.toByteArray());
+        return new StorageData(byteArrayOutputStream.toByteArray());
     }
 
     public List<TaskRunParameterValue> postOutputsZipArchive(String runId, MultipartFile outputs) throws ProvisioningException {
@@ -374,22 +380,32 @@ public class TaskProvisioningService {
             throw new RuntimeException(e);
         }
     }
-
+    // This fuction should return a JsonNode object to give more freedom to the type implementer to return complex types
     private List<TaskRunParameterValue> processOutputFiles(MultipartFile outputs, Set<Output> runTaskOutputs, Run run) throws IOException, ProvisioningException {
         // read files from the archive
         try (ZipArchiveInputStream multiPartFileZipInputStream = new ZipArchiveInputStream(outputs.getInputStream())) {
             logger.info("Posting Outputs Archive : unzipped");
             List<Output> remainingOutputs = new ArrayList<>(runTaskOutputs);
             List<TaskRunParameterValue> taskRunParameterValues = new ArrayList<>();
-
+            List<StorageData> contentsOfZip = new ArrayList<>();
+            List<Output> remainingUnStoredOutputs = new ArrayList<>(runTaskOutputs);
             ZipEntry ze;
             while ((ze = multiPartFileZipInputStream.getNextZipEntry()) != null) {
                 // look for output matching file name
+                boolean isDirectory = false;
                 Output currentOutput = null;
                 for (int i = 0; i < remainingOutputs.size(); i++) {
                     currentOutput = remainingOutputs.get(i);
-                    if (currentOutput.getName().equals(ze.getName())) {
+                    if (currentOutput.getName().equals(ze.getName())) { // assuming it's a file
                         remainingOutputs.remove(i);
+                        break;
+                    }
+                    // remove the trailing slash
+                    String noTrailingSlash = ze.getName().replace("/" , "");
+                    if (currentOutput.getName().equals(noTrailingSlash)) { // assuming it's a directory
+                        currentOutput.setName(ze.getName()); // already contains the trailing /
+                        remainingOutputs.remove(i);
+                        isDirectory = true;
                         break;
                     }
                     currentOutput = null;
@@ -405,28 +421,59 @@ public class TaskProvisioningService {
                     throw new ProvisioningException(error);
                 }
 
-                // read file
-                String outputName = currentOutput.getName();
-                byte[] rawOutput = multiPartFileZipInputStream.readNBytes((int) ze.getSize());
-                String output = new String(rawOutput, getStorageCharset(charset));
+                if (!remainingOutputs.isEmpty()) {
+                    AppEngineError error = ErrorBuilder.build(ErrorCode.INTERNAL_MISSING_OUTPUTS);
+                    logger.info("Posting Outputs Archive : output invalid (missing outputs)");
+                    run.setState(TaskRunState.FAILED);
+                    runRepository.saveAndFlush(run);
+                    logger.info("Posting Outputs Archive : updated Run state to FAILED");
+                    throw new ProvisioningException(error);
+                }
 
-                String trimmedOutput = output.trim();
-                // saving to database does not care about the type
-                saveOutput(run, currentOutput, trimmedOutput);
-                // saving to the storage does not care about the type
-                storeOutputInFileStorage(run, rawOutput, outputName);
-                // based on parsed type build the response
-                taskRunParameterValues.add(currentOutput.getType().buildTaskRunParameterValue(trimmedOutput, run.getId(), outputName));
-            }
+                // create a StorageData object and add it to the list to make it searchable
+                StorageData parameterZipEntryStorageData;
+                if(isDirectory){
+                    parameterZipEntryStorageData = new StorageData(currentOutput.getName());
+                    contentsOfZip.add(parameterZipEntryStorageData);
+                }else {
+                    byte[] rawOutput = multiPartFileZipInputStream.readNBytes((int) ze.getSize());
+                    parameterZipEntryStorageData = new StorageData(rawOutput , currentOutput.getName());
+                    contentsOfZip.add(parameterZipEntryStorageData);
+                }
 
-            if (!remainingOutputs.isEmpty()) {
-                AppEngineError error = ErrorBuilder.build(ErrorCode.INTERNAL_MISSING_OUTPUTS);
-                logger.info("Posting Outputs Archive : output invalid (missing outputs)");
-                run.setState(TaskRunState.FAILED);
-                runRepository.saveAndFlush(run);
-                logger.info("Posting Outputs Archive : updated Run state to FAILED");
-                throw new ProvisioningException(error);
             }
+            // a compaction step
+            // order by the length of name to make sure deeper files and directories are merged first
+            contentsOfZip = contentsOfZip.stream().sorted((s1, s2) -> Integer.compare(s2.peek().getName().length(), s1.peek().getName().length())).toList();
+            // merge StorageData objects together
+            for (StorageData storageData : contentsOfZip) {
+                for (StorageData compared : contentsOfZip) {
+                    if (storageData.equals(compared)) { continue;}
+                    if (compared.peek().getName().startsWith(storageData.peek().getName())) {
+                        storageData.merge(compared);
+                        contentsOfZip.remove(compared);
+                    }
+                }
+            }
+            // processing of files
+                for (Output currentOutput : remainingUnStoredOutputs) {
+                    Optional<StorageData> currentOutputStorageDataOptional = contentsOfZip.stream().filter(s -> s.peek().getName().equals(currentOutput.getName())).findFirst();
+                    StorageData currentOutputStorageData = null;
+                    if (currentOutputStorageDataOptional.isPresent()) {
+                        currentOutputStorageData = currentOutputStorageDataOptional.get();
+                    }
+                    StorageData copyForStorageData = new StorageData(currentOutputStorageData);
+                    StorageData copyForOutputResponse = new StorageData(currentOutputStorageData);
+                    // read file
+                    String outputName = currentOutput.getName();
+                    // saving to database does not care about the type
+                    saveOutput(run, currentOutput, currentOutputStorageData);
+                    // saving to the storage does not care about the type
+                    storeOutputInFileStorage(run, copyForStorageData, outputName);
+                    // based on parsed type build the response
+                    taskRunParameterValues.add(currentOutput.getType().buildTaskRunParameterValue(copyForOutputResponse, run.getId(), outputName));
+
+                }
 
             logger.info("Posting Outputs Archive : posted");
             return taskRunParameterValues;
@@ -444,12 +491,11 @@ public class TaskProvisioningService {
         };
     }
 
-    private void storeOutputInFileStorage(Run run, byte[] outputValue, String name) throws ProvisioningException {
+    private void storeOutputInFileStorage(Run run, StorageData outputFileData, String name) throws ProvisioningException {
         logger.info("Posting Outputs Archive : storing in file storage...");
         Storage outputsStorage = new Storage("task-run-outputs-" + run.getId());
-        FileData outputFileData = new FileData(outputValue, name);
         try {
-            fileStorageHandler.createFile(outputsStorage, outputFileData);
+            fileStorageHandler.saveStorageData(outputsStorage, outputFileData);
         } catch (FileStorageException e) {
             run.setState(TaskRunState.FAILED);
             runRepository.saveAndFlush(run);
@@ -460,7 +506,7 @@ public class TaskProvisioningService {
         logger.info("Posting Outputs Archive : stored");
     }
 
-    private void saveOutput(Run run, Output currentOutput, String outputValue) {
+    private void saveOutput(Run run, Output currentOutput, StorageData outputValue) {
         logger.info("Posting Outputs Archive : saving...");
         currentOutput.getType().persistResult(run, currentOutput, outputValue);
         logger.info("Posting Outputs Archive : saved...");
@@ -513,11 +559,11 @@ public class TaskProvisioningService {
 
         String io = type.equals(ParameterType.INPUT) ? "inputs" : "outputs";
         Storage storage = new Storage("task-run-" + io + "-" + runId);
-        FileData data = new FileData(parameterName, storage.getIdStorage());
+        StorageData data = new StorageData(parameterName, storage.getIdStorage());
 
         logger.info("Get IO file from storage: read file " + parameterName + " from storage...");
         try {
-            data = fileStorageHandler.readFile(data);
+            data = fileStorageHandler.readStorageData(data);
         } catch (FileStorageException e) {
             AppEngineError error = ErrorBuilder.buildParamRelatedError(
                 ErrorCode.STORAGE_READING_FILE_FAILED,
@@ -528,7 +574,7 @@ public class TaskProvisioningService {
         }
 
         logger.info("Get IO file from storage: done");
-        return data.getFileData();
+        return data.peek().getData();
     }
 
     private List<TaskRunParameterValue> buildTaskRunParameterValues(Run run, ParameterType type) {

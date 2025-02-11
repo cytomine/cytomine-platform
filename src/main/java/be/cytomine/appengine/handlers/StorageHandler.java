@@ -2,15 +2,11 @@ package be.cytomine.appengine.handlers;
 
 import be.cytomine.appengine.dto.handlers.filestorage.Storage;
 import be.cytomine.appengine.exceptions.FileStorageException;
-
-public interface FileStorageHandler {
+public interface StorageHandler {
     void createStorage(Storage storage)
         throws FileStorageException;
 
     void deleteStorage(Storage storage)
-        throws FileStorageException;
-
-    void createFile(Storage storage, FileData file)
         throws FileStorageException;
 
     boolean checkStorageExists(Storage storage)
@@ -19,8 +15,10 @@ public interface FileStorageHandler {
     boolean checkStorageExists(String idStorage)
         throws FileStorageException;
 
-    void deleteFile(FileData file)
+    void deleteStorageData(StorageData file)
         throws FileStorageException;
 
-    FileData readFile(FileData emptyFile) throws FileStorageException;
+    void saveStorageData(Storage storage , StorageData storageData) throws FileStorageException;
+
+    StorageData readStorageData(StorageData emptyFile) throws FileStorageException;
 }

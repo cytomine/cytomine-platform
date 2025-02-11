@@ -4,6 +4,9 @@ import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
+import be.cytomine.appengine.handlers.StorageData;
+import be.cytomine.appengine.handlers.StorageDataEntry;
+import be.cytomine.appengine.handlers.StorageDataType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -17,7 +20,6 @@ import be.cytomine.appengine.dto.inputs.task.types.file.FileTypeConstraint;
 import be.cytomine.appengine.dto.inputs.task.types.file.FileValue;
 import be.cytomine.appengine.dto.responses.errors.ErrorCode;
 import be.cytomine.appengine.exceptions.TypeValidationException;
-import be.cytomine.appengine.handlers.FileData;
 import be.cytomine.appengine.models.task.Output;
 import be.cytomine.appengine.models.task.ParameterType;
 import be.cytomine.appengine.models.task.Run;
@@ -75,7 +77,7 @@ public class FileType extends Type {
     }
 
     @Override
-    public void persistResult(Run run, Output currentOutput, String outputValue) {
+    public void persistResult(Run run, Output currentOutput, StorageData outputValue) {
         FilePersistenceRepository filePersistenceRepository = AppEngineApplicationContext.getBean(FilePersistenceRepository.class);
         FilePersistence result = filePersistenceRepository.findFilePersistenceByParameterNameAndRunIdAndParameterType(currentOutput.getName(), run.getId(), ParameterType.OUTPUT);
         if (result != null) {
@@ -91,13 +93,14 @@ public class FileType extends Type {
     }
 
     @Override
-    public FileData mapToStorageFileData(JsonNode provision, String charset) {
+    public StorageData mapToStorageFileData(JsonNode provision) {
         String parameterName = provision.get("param_name").asText();
         byte[] inputFileData = null;
         try {
             inputFileData = provision.get("value").binaryValue();
         } catch (IOException ignored) {}
-        return new FileData(inputFileData, parameterName);
+        StorageDataEntry storageDataEntry = new StorageDataEntry(inputFileData, parameterName , StorageDataType.FILE);
+        return new StorageData(storageDataEntry);
     }
 
     @Override
@@ -110,7 +113,7 @@ public class FileType extends Type {
     }
 
     @Override
-    public FileValue buildTaskRunParameterValue(String output, UUID id, String outputName) {
+    public FileValue buildTaskRunParameterValue(StorageData output, UUID id, String outputName) {
         FileValue fileValue = new FileValue();
         fileValue.setParameterName(outputName);
         fileValue.setTaskRunId(id);

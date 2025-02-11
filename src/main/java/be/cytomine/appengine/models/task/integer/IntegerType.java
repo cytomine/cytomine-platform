@@ -5,7 +5,9 @@ import be.cytomine.appengine.dto.inputs.task.types.integer.IntegerTypeConstraint
 import be.cytomine.appengine.dto.inputs.task.types.integer.IntegerValue;
 import be.cytomine.appengine.dto.responses.errors.ErrorCode;
 import be.cytomine.appengine.exceptions.TypeValidationException;
-import be.cytomine.appengine.handlers.FileData;
+import be.cytomine.appengine.handlers.StorageData;
+import be.cytomine.appengine.handlers.StorageDataEntry;
+import be.cytomine.appengine.handlers.StorageDataType;
 import be.cytomine.appengine.models.task.*;
 import be.cytomine.appengine.repositories.integer.IntegerPersistenceRepository;
 import be.cytomine.appengine.utils.AppEngineApplicationContext;
@@ -32,6 +34,8 @@ public class IntegerType extends Type {
     private Integer geq;
     @Column(nullable = true)
     private Integer leq;
+
+
 
 
     public void setConstraint(IntegerTypeConstraint constraint, Integer value) {
@@ -104,29 +108,33 @@ public class IntegerType extends Type {
     }
 
     @Override
-    public void persistResult(Run run, Output currentOutput, String outputValue) {
+    public void persistResult(Run run, Output currentOutput, StorageData outputValue) {
         IntegerPersistenceRepository integerPersistenceRepository = AppEngineApplicationContext.getBean(IntegerPersistenceRepository.class);
         IntegerPersistence result = integerPersistenceRepository.findIntegerPersistenceByParameterNameAndRunIdAndParameterType(currentOutput.getName(), run.getId(), ParameterType.OUTPUT);
+        String output = new String(outputValue.peek().getData(), getStorageCharset());
+        String trimmedOutput = output.trim();
         if (result == null) {
             result = new IntegerPersistence();
-            result.setValue(Integer.parseInt(outputValue));
+            result.setValue(Integer.parseInt(trimmedOutput));
             result.setValueType(ValueType.INTEGER);
             result.setParameterType(ParameterType.OUTPUT);
             result.setRunId(run.getId());
             result.setParameterName(currentOutput.getName());
             integerPersistenceRepository.save(result);
         } else {
-            result.setValue(Integer.parseInt(outputValue));
+            result.setValue(Integer.parseInt(trimmedOutput));
             integerPersistenceRepository.saveAndFlush(result);
         }
     }
 
     @Override
-    public FileData mapToStorageFileData(JsonNode provision, String charset) {
+    public StorageData mapToStorageFileData(JsonNode provision) {
         String value = provision.get("value").asText();
         String parameterName = provision.get("param_name").asText();
-        byte[] inputFileData = value.getBytes(getStorageCharset(charset));
-        return new FileData(inputFileData, parameterName);
+        byte[] inputFileData = value.getBytes(getStorageCharset());
+        StorageDataEntry storageDataEntry = new StorageDataEntry(inputFileData, parameterName , StorageDataType.FILE);
+        return new StorageData(storageDataEntry);
+//        return new FileData(inputFileData, parameterName);
     }
 
 
@@ -141,12 +149,14 @@ public class IntegerType extends Type {
     }
 
     @Override
-    public IntegerValue buildTaskRunParameterValue(String output, UUID id, String outputName) {
+    public IntegerValue buildTaskRunParameterValue(StorageData output, UUID id, String outputName) {
+        String outputValue = new String(output.poll().getData(), getStorageCharset());
+        String trimmedOutput = outputValue.trim();
         IntegerValue integerValue = new IntegerValue();
         integerValue.setParameterName(outputName);
         integerValue.setTaskRunId(id);
         integerValue.setType(ValueType.INTEGER);
-        integerValue.setValue(Integer.parseInt(output));
+        integerValue.setValue(Integer.parseInt(trimmedOutput));
         return integerValue;
     }
 

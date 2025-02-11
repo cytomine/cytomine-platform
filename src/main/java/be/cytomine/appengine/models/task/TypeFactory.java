@@ -33,36 +33,38 @@ public class TypeFactory {
         }
     }
 
-    public static Type createType(JsonNode node) {
+    public static Type createType(JsonNode node , String charset) {
         JsonNode typeNode = node.get("type");
         // add new types here
         String typeId = getTypeId(typeNode);
         return switch (typeId) {
-            case "boolean" -> createBooleanType(typeId);
-            case "integer" -> createIntegerType(typeNode, typeId);
-            case "number" -> createNumberType(typeNode, typeId);
-            case "string" -> createStringType(typeNode, typeId);
-            case "enumeration" -> createEnumerationType(typeNode, typeId);
-            case "geometry" -> createGeometryType(typeId);
-            case "image" -> createImageType(typeNode, typeId);
-            case "wsi" -> createWsiType(typeNode, typeId);
-            case "file" -> createFileType(typeNode, typeId);
+            case "boolean" -> createBooleanType(typeId , charset);
+            case "integer" -> createIntegerType(typeNode, typeId , charset);
+            case "number" -> createNumberType(typeNode, typeId , charset);
+            case "string" -> createStringType(typeNode, typeId , charset);
+            case "enumeration" -> createEnumerationType(typeNode, typeId , charset);
+            case "geometry" -> createGeometryType(typeId , charset);
+            case "image" -> createImageType(typeNode, typeId , charset);
+            case "wsi" -> createWsiType(typeNode, typeId , charset);
+            case "file" -> createFileType(typeNode, typeId , charset);
             default -> new Type();
         };
     }
 
     @NotNull
-    private static BooleanType createBooleanType(String typeId) {
+    private static BooleanType createBooleanType(String typeId , String charset) {
         BooleanType type = new BooleanType();
         type.setId(typeId);
+        type.setCharset(charset);
 
         return type;
     }
 
     @NotNull
-    private static IntegerType createIntegerType(JsonNode typeNode, String typeId) {
+    private static IntegerType createIntegerType(JsonNode typeNode, String typeId , String charset) {
         IntegerType type = new IntegerType();
         type.setId(typeId);
+        type.setCharset(charset);
 
         Arrays.stream(IntegerTypeConstraint.values())
             .map(IntegerTypeConstraint::getStringKey)
@@ -73,9 +75,10 @@ public class TypeFactory {
     }
 
     @NotNull
-    private static NumberType createNumberType(JsonNode typeNode, String typeId) {
+    private static NumberType createNumberType(JsonNode typeNode, String typeId , String charset) {
         NumberType type = new NumberType();
         type.setId(typeId);
+        type.setCharset(charset);
 
         Arrays.stream(NumberTypeConstraint.values())
             .map(NumberTypeConstraint::getStringKey)
@@ -86,9 +89,10 @@ public class TypeFactory {
     }
 
     @NotNull
-    private static StringType createStringType(JsonNode typeNode, String typeId) {
+    private static StringType createStringType(JsonNode typeNode, String typeId , String charset) {
         StringType type = new StringType();
         type.setId(typeId);
+        type.setCharset(charset);
 
         Arrays.stream(StringTypeConstraint.values())
             .map(StringTypeConstraint::getStringKey)
@@ -99,9 +103,10 @@ public class TypeFactory {
     }
 
     @NotNull
-    private static EnumerationType createEnumerationType(JsonNode typeNode, String typeId) {
+    private static EnumerationType createEnumerationType(JsonNode typeNode, String typeId , String charset) {
         EnumerationType type = new EnumerationType();
         type.setId(typeId);
+        type.setCharset(charset);
 
         Arrays.stream(EnumerationTypeConstraint.values())
             .map(EnumerationTypeConstraint::getStringKey)
@@ -112,18 +117,19 @@ public class TypeFactory {
     }
 
     @NotNull
-    private static GeometryType createGeometryType(String typeId) {
+    private static GeometryType createGeometryType(String typeId , String charset) {
         GeometryType type = new GeometryType();
         type.setId(typeId);
+        type.setCharset(charset);
 
         return type;
     }
 
     @NotNull
-    private static ImageType createImageType(JsonNode typeNode, String typeId) {
+    private static ImageType createImageType(JsonNode typeNode, String typeId , String charset) {
         ImageType type = new ImageType();
         type.setId(typeId);
-
+        type.setCharset(charset);
         Arrays.stream(ImageTypeConstraint.values())
             .map(ImageTypeConstraint::getStringKey)
             .filter(typeNode::has)
@@ -133,10 +139,10 @@ public class TypeFactory {
     }
 
     @NotNull
-    private static WsiType createWsiType(JsonNode typeNode, String typeId) {
+    private static WsiType createWsiType(JsonNode typeNode, String typeId , String charset) {
         WsiType type = new WsiType();
         type.setId(typeId);
-
+        type.setCharset(charset);
         Arrays.stream(WsiTypeConstraint.values())
             .map(WsiTypeConstraint::getStringKey)
             .filter(typeNode::has)
@@ -146,9 +152,10 @@ public class TypeFactory {
     }
 
     @NotNull
-    private static FileType createFileType(JsonNode typeNode, String typeId) {
+    private static FileType createFileType(JsonNode typeNode, String typeId , String charset) {
         FileType type = new FileType();
         type.setId(typeId);
+        type.setCharset(charset);
 
         Arrays.stream(FileTypeConstraint.values())
             .map(FileTypeConstraint::getStringKey)

@@ -40,6 +40,7 @@ public class TestTaskBuilder {
     task.setDescription("");
     task.setInputFolder("/inputs");
     task.setOutputFolder("/outputs");
+
     // add authors
     Set<Author> authors = new HashSet<>();
     Author author = new Author();
@@ -59,6 +60,7 @@ public class TestTaskBuilder {
     inputa.setDescription("First operand");
     IntegerType inputType1_1 = new IntegerType();
     inputType1_1.setId("integer");
+    inputType1_1.setCharset("UTF_8");
     inputa.setType(inputType1_1);
     inputa.setDefaultValue("0");
 
@@ -68,6 +70,7 @@ public class TestTaskBuilder {
     inputb.setDescription("Second operand");
     IntegerType inputType1_2 = new IntegerType();
     inputType1_2.setId("integer");
+    inputType1_2.setCharset("UTF_8");
     inputb.setType(inputType1_2);
     inputb.setDefaultValue("0");
 
@@ -82,6 +85,7 @@ public class TestTaskBuilder {
     output.setDescription("Sum of operands A and B");
     IntegerType outputType = new IntegerType();
     outputType.setId("integer");
+    outputType.setCharset("UTF_8");
     output.setType(outputType);
     outputs.add(output);
     task.setOutputs(outputs);
@@ -250,7 +254,7 @@ public class TestTaskBuilder {
         input.setDisplayName(inputValue.get("display_name").textValue());
         input.setDescription(inputValue.get("description").textValue());
         // use type factory to generate the correct type
-        input.setType(TypeFactory.createType(inputValue));
+        input.setType(TypeFactory.createType(inputValue , "UTF_8"));
         switch (TypeFactory.getTypeId(inputValue.get("type"))) {
           case "boolean":
               input.setDefaultValue("false");
@@ -283,7 +287,7 @@ public class TestTaskBuilder {
               output.setDisplayName(inputValue.get("display_name").textValue());
               output.setDescription(inputValue.get("description").textValue());
               // use type factory to generate the correct type
-              output.setType(TypeFactory.createType(inputValue));
+              output.setType(TypeFactory.createType(inputValue , "UTF_8"));
 
               outputs.add(output);
 

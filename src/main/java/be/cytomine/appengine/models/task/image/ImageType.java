@@ -4,8 +4,10 @@ import java.awt.Dimension;
 import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
+import be.cytomine.appengine.handlers.StorageData;
+import be.cytomine.appengine.handlers.StorageDataEntry;
+import be.cytomine.appengine.handlers.StorageDataType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -14,7 +16,6 @@ import be.cytomine.appengine.dto.inputs.task.types.image.ImageTypeConstraint;
 import be.cytomine.appengine.dto.inputs.task.types.image.ImageValue;
 import be.cytomine.appengine.dto.responses.errors.ErrorCode;
 import be.cytomine.appengine.exceptions.TypeValidationException;
-import be.cytomine.appengine.handlers.FileData;
 import be.cytomine.appengine.models.task.Output;
 import be.cytomine.appengine.models.task.ParameterType;
 import be.cytomine.appengine.models.task.Run;
@@ -77,7 +78,7 @@ public class ImageType extends Type {
         List<FileFormat> checkers = formats
                 .stream()
                 .map(ImageFormatFactory::getFormat)
-                .collect(Collectors.toList());
+                .toList();
 
         this.format = checkers
                 .stream()
@@ -163,7 +164,7 @@ public class ImageType extends Type {
     }
 
     @Override
-    public void persistResult(Run run, Output currentOutput, String outputValue) {
+    public void persistResult(Run run, Output currentOutput, StorageData outputValue) {
         ImagePersistenceRepository imagePersistenceRepository = AppEngineApplicationContext.getBean(ImagePersistenceRepository.class);
         ImagePersistence result = imagePersistenceRepository.findImagePersistenceByParameterNameAndRunIdAndParameterType(currentOutput.getName(), run.getId(), ParameterType.OUTPUT);
         if (result != null) {
@@ -179,13 +180,14 @@ public class ImageType extends Type {
     }
 
     @Override
-    public FileData mapToStorageFileData(JsonNode provision, String charset) {
+    public StorageData mapToStorageFileData(JsonNode provision) {
         String parameterName = provision.get("param_name").asText();
         byte[] inputFileData = null;
         try {
             inputFileData = provision.get("value").binaryValue();
         } catch (IOException ignored) {}
-        return new FileData(inputFileData, parameterName);
+        StorageDataEntry storageDataEntry = new StorageDataEntry(inputFileData, parameterName , StorageDataType.FILE);
+        return new StorageData(storageDataEntry);
     }
 
     @Override
@@ -198,7 +200,7 @@ public class ImageType extends Type {
     }
 
     @Override
-    public ImageValue buildTaskRunParameterValue(String output, UUID id, String outputName) {
+    public ImageValue buildTaskRunParameterValue(StorageData output, UUID id, String outputName) {
         ImageValue imageValue = new ImageValue();
         imageValue.setParameterName(outputName);
         imageValue.setTaskRunId(id);

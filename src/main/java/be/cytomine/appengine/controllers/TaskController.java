@@ -4,8 +4,7 @@ import be.cytomine.appengine.dto.inputs.task.*;
 import be.cytomine.appengine.dto.responses.errors.ErrorBuilder;
 import be.cytomine.appengine.dto.responses.errors.ErrorCode;
 import be.cytomine.appengine.exceptions.*;
-import be.cytomine.appengine.handlers.FileData;
-import be.cytomine.appengine.models.task.Run;
+import be.cytomine.appengine.handlers.StorageData;
 import be.cytomine.appengine.models.task.Task;
 import be.cytomine.appengine.services.TaskService;
 import org.slf4j.Logger;
@@ -123,11 +122,11 @@ public class TaskController {
     public ResponseEntity<?> findDescriptorOfTaskByNamespaceAndVersion(@PathVariable String namespace, @PathVariable String version) throws TaskServiceException {
         logger.info("tasks/{namespace}/{version}/descriptor.yml GET");
         try {
-            FileData file = taskService.retrieveYmlDescriptor(namespace, version);
+            StorageData file = taskService.retrieveYmlDescriptor(namespace, version);
             logger.info("tasks/{namespace}/{version}/descriptor.yml GET Ended");
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
-            return new ResponseEntity<>(file.getFileData(), headers, HttpStatus.OK);
+            return new ResponseEntity<>(file.peek().getData(), headers, HttpStatus.OK);
         } catch (TaskNotFoundException e) {
             logger.info("tasks/{namespace}/{version}/descriptor.yml GET Ended");
             return new ResponseEntity<>(ErrorBuilder.build(ErrorCode.INTERNAL_TASK_NOT_FOUND), HttpStatus.NOT_FOUND);
@@ -139,11 +138,11 @@ public class TaskController {
     public ResponseEntity<?> findDescriptorOfTaskById(@PathVariable String id) throws TaskServiceException {
         logger.info("tasks/{namespace}/{version}/descriptor.yml GET");
         try {
-            FileData file = taskService.retrieveYmlDescriptor(id);
+            StorageData file = taskService.retrieveYmlDescriptor(id);
             logger.info("tasks/{namespace}/{version}/descriptor.yml GET Ended");
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
-            return new ResponseEntity<>(file.getFileData(), headers, HttpStatus.OK);
+            return new ResponseEntity<>(file.peek().getData(), headers, HttpStatus.OK);
         } catch (TaskNotFoundException e) {
             logger.info("tasks/{namespace}/{version}/descriptor.yml GET Ended");
             return new ResponseEntity<>(ErrorBuilder.build(ErrorCode.INTERNAL_TASK_NOT_FOUND), HttpStatus.NOT_FOUND);
