@@ -13,11 +13,11 @@ import org.apache.commons.imaging.formats.tiff.TiffImageParser;
 public class TiffFormat implements FileFormat {
 
     public static final byte[] LE_SIGNATURE = {
-            (byte) 0x49, (byte) 0x49, (byte) 0x2A, (byte) 0x00
+        (byte) 0x49, (byte) 0x49, (byte) 0x2A, (byte) 0x00
     };
 
     public static final byte[] BE_SIGNATURE = {
-            (byte) 0x4D, (byte) 0x4D, (byte) 0x00, (byte) 0x2A
+        (byte) 0x4D, (byte) 0x4D, (byte) 0x00, (byte) 0x2A
     };
 
     @Override
@@ -67,16 +67,16 @@ public class TiffFormat implements FileFormat {
         List<TiffField> fields = metadata.getAllFields();
 
         TiffField samplesPerPixel = fields
-                .stream()
-                .filter(field -> field.getTagInfo().name.equals("SamplesPerPixel"))
-                .findFirst()
-                .orElse(null);
+            .stream()
+            .filter(field -> field.getTagInfo().name.equals("SamplesPerPixel"))
+            .findFirst()
+            .orElse(null);
 
         TiffField tileWidth = fields
-                .stream()
-                .filter(field -> field.getTagInfo().name.equals("TileWidth"))
-                .findFirst()
-                .orElse(null);
+            .stream()
+            .filter(field -> field.getTagInfo().name.equals("TileWidth"))
+            .findFirst()
+            .orElse(null);
 
         try {
             boolean isRGB = samplesPerPixel.getIntValue() == 3;

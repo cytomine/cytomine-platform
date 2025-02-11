@@ -1,28 +1,27 @@
 package be.cytomine.appengine.dto.misc;
 
-import lombok.Getter;
-
 import java.util.UUID;
 
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
 @Getter
+@RequiredArgsConstructor
 public class TaskIdentifiers {
 
-    private final String storageIdentifier;
-    private final String imageRegistryCompliantName;
     private final UUID localTaskIdentifier;
-    public TaskIdentifiers(UUID localTaskIdentifier, String storageIdentifier, String imageRegistryCompliantName) {
-        super();
-        this.storageIdentifier = storageIdentifier;
-        this.imageRegistryCompliantName = imageRegistryCompliantName;
-        this.localTaskIdentifier = localTaskIdentifier;
-    }
+
+    private final String storageIdentifier;
+
+    private final String imageRegistryCompliantName;
 
     @Override
     public String toString() {
-        return "Ids [" +
-                "storage ='" + storageIdentifier + '\'' +
-                ", image ='" + imageRegistryCompliantName + '\'' +
-                ", ID =" + localTaskIdentifier +
-                ']';
+        return new StringBuilder("Ids [")
+            .append("storage='").append(storageIdentifier).append('\'')
+            .append(", image='").append(imageRegistryCompliantName).append('\'')
+            .append(", ID=").append(localTaskIdentifier)
+            .append(']')
+            .toString();
     }
 }

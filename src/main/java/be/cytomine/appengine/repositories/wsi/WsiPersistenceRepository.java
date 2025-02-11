@@ -10,5 +10,9 @@ import be.cytomine.appengine.models.task.wsi.WsiPersistence;
 
 @Repository
 public interface WsiPersistenceRepository extends JpaRepository<WsiPersistence, UUID> {
-    WsiPersistence findWsiPersistenceByParameterNameAndRunIdAndParameterType(String parameterName, UUID run, ParameterType parameterType);
+    WsiPersistence findWsiPersistenceByParameterNameAndRunIdAndParameterType(
+        String parameterName,
+        UUID run,
+        ParameterType parameterType
+    );
 }

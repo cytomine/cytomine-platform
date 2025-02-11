@@ -2,7 +2,6 @@ package be.cytomine.appengine.handlers;
 
 import lombok.Data;
 
-
 @Data
 public class StorageDataEntry {
 
@@ -11,7 +10,12 @@ public class StorageDataEntry {
     private String storageId;
     private StorageDataType storageDataType;
 
-    public StorageDataEntry(byte[] data, String name, String storageId, StorageDataType storageDataType) {
+    public StorageDataEntry(
+        byte[] data,
+        String name,
+        String storageId,
+        StorageDataType storageDataType
+    ) {
         this.data = data;
         this.name = name;
         this.storageId = storageId;
@@ -33,7 +37,7 @@ public class StorageDataEntry {
         this.storageDataType = storageDataType;
     }
 
-    public StorageDataEntry( String name, StorageDataType storageDataType) {
+    public StorageDataEntry(String name, StorageDataType storageDataType) {
         this.name = name;
         this.storageDataType = storageDataType;
     }

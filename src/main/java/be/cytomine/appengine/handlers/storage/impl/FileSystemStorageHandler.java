@@ -1,19 +1,23 @@
 package be.cytomine.appengine.handlers.storage.impl;
 
-import be.cytomine.appengine.dto.handlers.filestorage.Storage;
-import be.cytomine.appengine.exceptions.FileStorageException;
-import be.cytomine.appengine.handlers.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Comparator;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+
+import be.cytomine.appengine.dto.handlers.filestorage.Storage;
+import be.cytomine.appengine.exceptions.FileStorageException;
+import be.cytomine.appengine.handlers.StorageData;
+import be.cytomine.appengine.handlers.StorageDataEntry;
+import be.cytomine.appengine.handlers.StorageDataType;
+import be.cytomine.appengine.handlers.StorageHandler;
 
 @Data
 @AllArgsConstructor
@@ -23,14 +27,20 @@ public class FileSystemStorageHandler implements StorageHandler {
     @Value("${storage.base-path}")
     private String basePath;
 
-    public void saveStorageData(Storage storage , StorageData storageData) throws FileStorageException {
-        if (storageData.peek() == null) return;
+    public void saveStorageData(
+        Storage storage,
+        StorageData storageData
+    ) throws FileStorageException {
+        if (storageData.peek() == null) {
+            return;
+        }
+
         while (!storageData.isEmpty()) {
             StorageDataEntry current = storageData.poll();
             String filename = current.getName();
             String storageId = storage.getIdStorage();
             // process the node here
-            if(current.getStorageDataType() == StorageDataType.FILE){
+            if (current.getStorageDataType() == StorageDataType.FILE) {
                 try {
                     Path filePath = Paths.get(basePath, storageId, filename);
                     Files.createDirectories(filePath.getParent());
@@ -42,12 +52,10 @@ public class FileSystemStorageHandler implements StorageHandler {
                 }
             }
 
-            if(current.getStorageDataType() == StorageDataType.DIRECTORY){
+            if (current.getStorageDataType() == StorageDataType.DIRECTORY) {
                 Storage modifiedStorage = new Storage(storageId + current.getName());
                 createStorage(modifiedStorage);
-
             }
-
         }
     }
 
@@ -70,9 +78,7 @@ public class FileSystemStorageHandler implements StorageHandler {
 
         try {
             Path path = Paths.get(basePath, storageId);
-            Files.walk(path)
-                    .sorted(Comparator.reverseOrder())
-                    .map(Path::toFile)
+            Files.walk(path).sorted(Comparator.reverseOrder()).map(Path::toFile)
                     .forEach(File::delete);
         } catch (IOException e) {
             String error = "Failed to delete storage " + storageId + ": " + e.getMessage();
@@ -95,17 +101,21 @@ public class FileSystemStorageHandler implements StorageHandler {
         String fileOrDirName = storageData.peek().getName();
         if (storageData.peek().getStorageDataType() == StorageDataType.FILE) {
             try {
-                Path filePath = Paths.get(basePath, storageData.peek().getStorageId(), fileOrDirName);
+                Path filePath = Paths.get(
+                    basePath,
+                    storageData.peek().getStorageId(),
+                    fileOrDirName
+                );
                 Files.deleteIfExists(filePath);
             } catch (IOException e) {
                 throw new FileStorageException("Failed to delete file " + fileOrDirName);
             }
         }
+
         if (storageData.peek().getStorageDataType() == StorageDataType.DIRECTORY) {
             Storage storage = new Storage(fileOrDirName);
             deleteStorage(storage);
         }
-
     }
 
     @Override

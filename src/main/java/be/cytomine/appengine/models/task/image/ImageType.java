@@ -5,17 +5,22 @@ import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
-import be.cytomine.appengine.handlers.StorageData;
-import be.cytomine.appengine.handlers.StorageDataEntry;
-import be.cytomine.appengine.handlers.StorageDataType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Transient;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import be.cytomine.appengine.dto.inputs.task.types.image.ImageTypeConstraint;
 import be.cytomine.appengine.dto.inputs.task.types.image.ImageValue;
 import be.cytomine.appengine.dto.responses.errors.ErrorCode;
 import be.cytomine.appengine.exceptions.TypeValidationException;
+import be.cytomine.appengine.handlers.StorageData;
+import be.cytomine.appengine.handlers.StorageDataEntry;
+import be.cytomine.appengine.handlers.StorageDataType;
 import be.cytomine.appengine.models.task.Output;
 import be.cytomine.appengine.models.task.ParameterType;
 import be.cytomine.appengine.models.task.Run;
@@ -26,14 +31,10 @@ import be.cytomine.appengine.models.task.formats.FileFormat;
 import be.cytomine.appengine.repositories.image.ImagePersistenceRepository;
 import be.cytomine.appengine.utils.AppEngineApplicationContext;
 import be.cytomine.appengine.utils.units.Unit;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Transient;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
 
-@Entity
+@SuppressWarnings("checkstyle:LineLength")
 @Data
+@Entity
 @EqualsAndHashCode(callSuper = true)
 public class ImageType extends Type {
 
@@ -66,6 +67,7 @@ public class ImageType extends Type {
             case MAX_HEIGHT:
                 this.setMaxHeight(value.asInt());
                 break;
+            default:
         }
     }
 
@@ -76,15 +78,15 @@ public class ImageType extends Type {
         }
 
         List<FileFormat> checkers = formats
-                .stream()
-                .map(ImageFormatFactory::getFormat)
-                .toList();
+            .stream()
+            .map(ImageFormatFactory::getFormat)
+            .toList();
 
         this.format = checkers
-                .stream()
-                .filter(checker -> checker.checkSignature(file))
-                .findFirst()
-                .orElse(null);
+            .stream()
+            .filter(checker -> checker.checkSignature(file))
+            .findFirst()
+            .orElse(null);
 
         if (this.format == null) {
             throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_INVALID_IMAGE_FORMAT);
@@ -115,8 +117,10 @@ public class ImageType extends Type {
             return;
         }
 
-        if(!Unit.isValid(maxFileSize)) {
-            throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_INVALID_IMAGE_SIZE_FORMAT);
+        if (!Unit.isValid(maxFileSize)) {
+            throw new TypeValidationException(
+                ErrorCode.INTERNAL_PARAMETER_INVALID_IMAGE_SIZE_FORMAT
+            );
         }
 
         Unit unit = new Unit(maxFileSize);
@@ -185,8 +189,10 @@ public class ImageType extends Type {
         byte[] inputFileData = null;
         try {
             inputFileData = provision.get("value").binaryValue();
-        } catch (IOException ignored) {}
-        StorageDataEntry storageDataEntry = new StorageDataEntry(inputFileData, parameterName , StorageDataType.FILE);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        StorageDataEntry storageDataEntry = new StorageDataEntry(inputFileData, parameterName, StorageDataType.FILE);
         return new StorageData(storageDataEntry);
     }
 

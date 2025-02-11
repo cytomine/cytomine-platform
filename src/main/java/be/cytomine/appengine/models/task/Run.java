@@ -1,17 +1,25 @@
 package be.cytomine.appengine.models.task;
 
-import be.cytomine.appengine.models.BaseEntity;
-import be.cytomine.appengine.states.TaskRunState;
-import jakarta.persistence.*;
+import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
+import be.cytomine.appengine.models.BaseEntity;
+import be.cytomine.appengine.states.TaskRunState;
 
 @Entity
 @Table(name = "run")
@@ -23,41 +31,53 @@ public class Run extends BaseEntity {
     @Id
     @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
+
     private TaskRunState state;
-    private LocalDateTime created_at;
-    private LocalDateTime updated_at;
-    private LocalDateTime last_state_transition_at;
+
+    private LocalDateTime createdAt;
+
+    private LocalDateTime updatedAt;
+
+    private LocalDateTime lastStateTransitionAt;
+
     @ManyToOne(cascade = CascadeType.ALL)
     private Task task;
 
-    @OneToMany(cascade = CascadeType.ALL , fetch = FetchType.EAGER)
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Set<TypePersistence> provisions;
 
-    public Run(UUID taskRunID, TaskRunState taskRunState, Task task) {
+    public Run(UUID taskRunId, TaskRunState taskRunState, Task task) {
         super();
-        this.id = taskRunID;
+        this.id = taskRunId;
         this.state = taskRunState;
         this.task = task;
         this.provisions = new HashSet<>();
     }
 
-    public Run(UUID taskRunID, TaskRunState taskRunState, Task task , LocalDateTime created_at , LocalDateTime updated_at , LocalDateTime last_state_transition_at) {
+    public Run(
+        UUID taskRunId,
+        TaskRunState taskRunState,
+        Task task,
+        LocalDateTime createdAt,
+        LocalDateTime updatedAt,
+        LocalDateTime lastStateTransitionAt
+    ) {
         super();
-        this.id = taskRunID;
+        this.id = taskRunId;
         this.state = taskRunState;
         this.task = task;
         this.provisions = new HashSet<>();
-        this.created_at = created_at;
-        this.updated_at = updated_at;
-        this.last_state_transition_at = last_state_transition_at;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+        this.lastStateTransitionAt = lastStateTransitionAt;
     }
 
-    public Run(UUID taskRunID, TaskRunState taskRunState, Task task, LocalDateTime created_at) {
+    public Run(UUID taskRunId, TaskRunState taskRunState, Task task, LocalDateTime createdAt) {
         super();
-        this.id = taskRunID;
+        this.id = taskRunId;
         this.state = taskRunState;
         this.task = task;
         this.provisions = new HashSet<>();
-        this.created_at = created_at;
+        this.createdAt = createdAt;
     }
 }

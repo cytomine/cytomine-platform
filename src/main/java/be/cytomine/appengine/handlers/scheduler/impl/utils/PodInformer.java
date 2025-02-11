@@ -10,7 +10,6 @@ import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.client.informers.ResourceEventHandler;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.stereotype.Component;
 
 import be.cytomine.appengine.models.task.Run;
@@ -22,14 +21,19 @@ import be.cytomine.appengine.states.TaskRunState;
 @Component
 public class PodInformer implements ResourceEventHandler<Pod> {
 
-    private static final Map<String, TaskRunState> STATUS = new HashMap<String, TaskRunState>() {{
-        put("Running", TaskRunState.RUNNING);
-        put("Succeeded", TaskRunState.RUNNING);
-        put("Failed", TaskRunState.FAILED);
-        put("Unknown", TaskRunState.FAILED);
-    }};
+    private static final Map<String, TaskRunState> STATUS = new HashMap<String, TaskRunState>() {
+        {
+            put("Running", TaskRunState.RUNNING);
+            put("Succeeded", TaskRunState.RUNNING);
+            put("Failed", TaskRunState.FAILED);
+            put("Unknown", TaskRunState.FAILED);
+        }
+    };
 
-    private static final Set<TaskRunState> FINAL_STATES = Set.of(TaskRunState.FAILED, TaskRunState.FINISHED);
+    private static final Set<TaskRunState> FINAL_STATES = Set.of(
+        TaskRunState.FAILED,
+        TaskRunState.FINISHED
+    );
 
     private final RunRepository runRepository;
 
@@ -49,7 +53,7 @@ public class PodInformer implements ResourceEventHandler<Pod> {
     @Override
     public void onAdd(Pod pod) {
         Run run = getRun(pod);
-        if (FINAL_STATES.contains(run.getState())) {
+        if (run == null || FINAL_STATES.contains(run.getState())) {
             return;
         }
 
@@ -61,7 +65,9 @@ public class PodInformer implements ResourceEventHandler<Pod> {
     @Override
     public void onUpdate(Pod oldPod, Pod newPod) {
         Run run = getRun(newPod);
-        if (FINAL_STATES.contains(run.getState()) || newPod.getStatus().getPhase().equals("Pending")) {
+        boolean isFinalState = FINAL_STATES.contains(run.getState());
+        boolean isPending = newPod.getStatus().getPhase().equals("Pending");
+        if (isFinalState || isPending) {
             return;
         }
 

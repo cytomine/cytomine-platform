@@ -10,5 +10,9 @@ import be.cytomine.appengine.models.task.geometry.GeometryPersistence;
 
 @Repository
 public interface GeometryPersistenceRepository extends JpaRepository<GeometryPersistence, UUID> {
-    GeometryPersistence findGeometryPersistenceByParameterNameAndRunIdAndParameterType(String parameterName, UUID run, ParameterType parameterType);
+    GeometryPersistence findGeometryPersistenceByParameterNameAndRunIdAndParameterType(
+        String parameterName,
+        UUID run,
+        ParameterType parameterType
+    );
 }

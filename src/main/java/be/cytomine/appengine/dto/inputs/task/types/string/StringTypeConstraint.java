@@ -7,20 +7,18 @@ public enum StringTypeConstraint {
     MAX_LENGTH;
 
     public String getStringKey() {
-        switch (this) {
-            case MIN_LENGTH:
-                return "min_length";
-            case MAX_LENGTH:
-                return "max_length";
-            default:
-                throw new RuntimeException("Unknown constraint");
-        }
+        return switch (this) {
+            case MIN_LENGTH -> "min_length";
+            case MAX_LENGTH -> "max_length";
+            default -> throw new RuntimeException("Unknown constraint");
+        };
     }
 
     public static StringTypeConstraint getConstraint(String key) {
+        String error = "Invalid string type constraint key: " + key;
         return Arrays.stream(StringTypeConstraint.values())
-                .filter(constraint -> constraint.getStringKey().equals(key))
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Invalid string type constraint key: " + key));
+            .filter(constraint -> constraint.getStringKey().equals(key))
+            .findFirst()
+            .orElseThrow(() -> new IllegalArgumentException(error));
     }
 }

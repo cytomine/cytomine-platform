@@ -32,7 +32,9 @@ public class ArchiveUtils {
 
             return type.equalsIgnoreCase("application/zip");
         } catch (IOException e) {
-            AppEngineError error = ErrorBuilder.build(ErrorCode.INTERNAL_UNKNOWN_IMAGE_ARCHIVE_FORMAT);
+            AppEngineError error = ErrorBuilder.build(
+                ErrorCode.INTERNAL_UNKNOWN_IMAGE_ARCHIVE_FORMAT
+            );
             throw new BundleArchiveException(error);
         }
     }
@@ -61,7 +63,11 @@ public class ArchiveUtils {
                 .get("file")
                 .textValue();
         } catch (Exception e) {
-            log.warn("Bundle/Archive processing failure: no image location is configured in descriptor.yml, will fallback to default image location in root");
+            log.info(
+                "Bundle/Archive processing failure: "
+                + "no image location is configured in descriptor.yml, "
+                + "will fallback to default image location in root"
+            );
         }
 
         return DEFAULT_IMAGE_NAME;
@@ -81,17 +87,28 @@ public class ArchiveUtils {
                 }
             }
         } catch (Exception e) {
-            log.error("Failed to extract descriptor file from archive: {}", archive.getOriginalFilename(), e);
-            AppEngineError error = ErrorBuilder.build(ErrorCode.INTERNAL_DESCRIPTOR_EXTRACTION_FAILED);
+            log.error(
+                "Failed to extract descriptor file from archive: {}",
+                archive.getOriginalFilename(),
+                e
+            );
+            AppEngineError error = ErrorBuilder.build(
+                ErrorCode.INTERNAL_DESCRIPTOR_EXTRACTION_FAILED
+            );
             throw new BundleArchiveException(error);
         }
 
         log.error("Descriptor file not found in archive: {}", archive.getOriginalFilename());
-        AppEngineError error = ErrorBuilder.build(ErrorCode.INTERNAL_DESCRIPTOR_NOT_IN_DEFAULT_LOCATION);
+        AppEngineError error = ErrorBuilder.build(
+            ErrorCode.INTERNAL_DESCRIPTOR_NOT_IN_DEFAULT_LOCATION
+        );
         throw new BundleArchiveException(error);
     }
 
-    private File getDockerImageFromZip(MultipartFile archive, String imageName) throws BundleArchiveException {
+    private File getDockerImageFromZip(
+        MultipartFile archive,
+        String imageName
+    ) throws BundleArchiveException {
         log.info("ArchiveUtils: read image from location [{}]", imageName);
 
         if (imageName.startsWith("/")) {
@@ -113,8 +130,14 @@ public class ArchiveUtils {
                 }
             }
         } catch (IOException e) {
-            log.error("Failed to extract Docker image from archive: {}", archive.getOriginalFilename(), e);
-            AppEngineError error = ErrorBuilder.build(ErrorCode.INTERNAL_DOCKER_IMAGE_EXTRACTION_FAILED);
+            log.error(
+                "Failed to extract Docker image from archive: {}",
+                archive.getOriginalFilename(),
+                e
+            );
+            AppEngineError error = ErrorBuilder.build(
+                ErrorCode.INTERNAL_DOCKER_IMAGE_EXTRACTION_FAILED
+            );
             throw new BundleArchiveException(error);
         }
 

@@ -22,7 +22,6 @@ import be.cytomine.appengine.models.task.number.NumberType;
 import be.cytomine.appengine.models.task.string.StringType;
 import be.cytomine.appengine.models.task.wsi.WsiType;
 
-
 public class TypeFactory {
 
     public static String getTypeId(JsonNode typeNode) {
@@ -33,26 +32,26 @@ public class TypeFactory {
         }
     }
 
-    public static Type createType(JsonNode node , String charset) {
+    public static Type createType(JsonNode node, String charset) {
         JsonNode typeNode = node.get("type");
         // add new types here
         String typeId = getTypeId(typeNode);
         return switch (typeId) {
-            case "boolean" -> createBooleanType(typeId , charset);
-            case "integer" -> createIntegerType(typeNode, typeId , charset);
-            case "number" -> createNumberType(typeNode, typeId , charset);
-            case "string" -> createStringType(typeNode, typeId , charset);
-            case "enumeration" -> createEnumerationType(typeNode, typeId , charset);
-            case "geometry" -> createGeometryType(typeId , charset);
-            case "image" -> createImageType(typeNode, typeId , charset);
-            case "wsi" -> createWsiType(typeNode, typeId , charset);
-            case "file" -> createFileType(typeNode, typeId , charset);
+            case "boolean" -> createBooleanType(typeId, charset);
+            case "integer" -> createIntegerType(typeNode, typeId, charset);
+            case "number" -> createNumberType(typeNode, typeId, charset);
+            case "string" -> createStringType(typeNode, typeId, charset);
+            case "enumeration" -> createEnumerationType(typeNode, typeId, charset);
+            case "geometry" -> createGeometryType(typeId, charset);
+            case "image" -> createImageType(typeNode, typeId, charset);
+            case "wsi" -> createWsiType(typeNode, typeId, charset);
+            case "file" -> createFileType(typeNode, typeId, charset);
             default -> new Type();
         };
     }
 
     @NotNull
-    private static BooleanType createBooleanType(String typeId , String charset) {
+    private static BooleanType createBooleanType(String typeId, String charset) {
         BooleanType type = new BooleanType();
         type.setId(typeId);
         type.setCharset(charset);
@@ -61,7 +60,7 @@ public class TypeFactory {
     }
 
     @NotNull
-    private static IntegerType createIntegerType(JsonNode typeNode, String typeId , String charset) {
+    private static IntegerType createIntegerType(JsonNode typeNode, String typeId, String charset) {
         IntegerType type = new IntegerType();
         type.setId(typeId);
         type.setCharset(charset);
@@ -69,13 +68,18 @@ public class TypeFactory {
         Arrays.stream(IntegerTypeConstraint.values())
             .map(IntegerTypeConstraint::getStringKey)
             .filter(typeNode::has)
-            .forEach(key -> type.setConstraint(IntegerTypeConstraint.getConstraint(key), typeNode.get(key).asInt()));
+            .forEach(key -> {
+                type.setConstraint(
+                    IntegerTypeConstraint.getConstraint(key),
+                    typeNode.get(key).asInt()
+                );
+            });
 
         return type;
     }
 
     @NotNull
-    private static NumberType createNumberType(JsonNode typeNode, String typeId , String charset) {
+    private static NumberType createNumberType(JsonNode typeNode, String typeId, String charset) {
         NumberType type = new NumberType();
         type.setId(typeId);
         type.setCharset(charset);
@@ -83,13 +87,18 @@ public class TypeFactory {
         Arrays.stream(NumberTypeConstraint.values())
             .map(NumberTypeConstraint::getStringKey)
             .filter(typeNode::has)
-            .forEach(key -> type.setConstraint(NumberTypeConstraint.getConstraint(key), typeNode.get(key).asText()));
+            .forEach(key -> {
+                type.setConstraint(
+                    NumberTypeConstraint.getConstraint(key),
+                    typeNode.get(key).asText()
+                );
+            });
 
         return type;
     }
 
     @NotNull
-    private static StringType createStringType(JsonNode typeNode, String typeId , String charset) {
+    private static StringType createStringType(JsonNode typeNode, String typeId, String charset) {
         StringType type = new StringType();
         type.setId(typeId);
         type.setCharset(charset);
@@ -97,13 +106,22 @@ public class TypeFactory {
         Arrays.stream(StringTypeConstraint.values())
             .map(StringTypeConstraint::getStringKey)
             .filter(typeNode::has)
-            .forEach(key -> type.setConstraint(StringTypeConstraint.getConstraint(key), typeNode.get(key).asInt()));
+            .forEach(key -> {
+                type.setConstraint(
+                    StringTypeConstraint.getConstraint(key),
+                    typeNode.get(key).asInt()
+                );
+            });
 
         return type;
     }
 
     @NotNull
-    private static EnumerationType createEnumerationType(JsonNode typeNode, String typeId , String charset) {
+    private static EnumerationType createEnumerationType(
+        JsonNode typeNode,
+        String typeId,
+        String charset
+    ) {
         EnumerationType type = new EnumerationType();
         type.setId(typeId);
         type.setCharset(charset);
@@ -111,13 +129,18 @@ public class TypeFactory {
         Arrays.stream(EnumerationTypeConstraint.values())
             .map(EnumerationTypeConstraint::getStringKey)
             .filter(typeNode::has)
-            .forEach(key -> type.setConstraint(EnumerationTypeConstraint.getConstraint(key), typeNode.get(key).toString()));
+            .forEach(key -> {
+                type.setConstraint(
+                    EnumerationTypeConstraint.getConstraint(key),
+                    typeNode.get(key).toString()
+                );
+            });
 
         return type;
     }
 
     @NotNull
-    private static GeometryType createGeometryType(String typeId , String charset) {
+    private static GeometryType createGeometryType(String typeId, String charset) {
         GeometryType type = new GeometryType();
         type.setId(typeId);
         type.setCharset(charset);
@@ -126,33 +149,37 @@ public class TypeFactory {
     }
 
     @NotNull
-    private static ImageType createImageType(JsonNode typeNode, String typeId , String charset) {
+    private static ImageType createImageType(JsonNode typeNode, String typeId, String charset) {
         ImageType type = new ImageType();
         type.setId(typeId);
         type.setCharset(charset);
         Arrays.stream(ImageTypeConstraint.values())
             .map(ImageTypeConstraint::getStringKey)
             .filter(typeNode::has)
-            .forEach(key -> type.setConstraint(ImageTypeConstraint.getConstraint(key), typeNode.get(key)));
+            .forEach(key -> {
+                type.setConstraint(ImageTypeConstraint.getConstraint(key), typeNode.get(key));
+            });
 
         return type;
     }
 
     @NotNull
-    private static WsiType createWsiType(JsonNode typeNode, String typeId , String charset) {
+    private static WsiType createWsiType(JsonNode typeNode, String typeId, String charset) {
         WsiType type = new WsiType();
         type.setId(typeId);
         type.setCharset(charset);
         Arrays.stream(WsiTypeConstraint.values())
             .map(WsiTypeConstraint::getStringKey)
             .filter(typeNode::has)
-            .forEach(key -> type.setConstraint(WsiTypeConstraint.getConstraint(key), typeNode.get(key)));
+            .forEach(key -> {
+                type.setConstraint(WsiTypeConstraint.getConstraint(key), typeNode.get(key));
+            });
 
         return type;
     }
 
     @NotNull
-    private static FileType createFileType(JsonNode typeNode, String typeId , String charset) {
+    private static FileType createFileType(JsonNode typeNode, String typeId, String charset) {
         FileType type = new FileType();
         type.setId(typeId);
         type.setCharset(charset);
@@ -160,7 +187,9 @@ public class TypeFactory {
         Arrays.stream(FileTypeConstraint.values())
             .map(FileTypeConstraint::getStringKey)
             .filter(typeNode::has)
-            .forEach(key -> type.setConstraint(FileTypeConstraint.getConstraint(key), typeNode.get(key)));
+            .forEach(key -> {
+                type.setConstraint(FileTypeConstraint.getConstraint(key), typeNode.get(key));
+            });
 
         return type;
     }

@@ -9,6 +9,10 @@ import be.cytomine.appengine.models.task.ParameterType;
 import be.cytomine.appengine.models.task.image.ImagePersistence;
 
 @Repository
-public interface ImagePersistenceRepository extends JpaRepository<ImagePersistence, UUID>{
-    ImagePersistence findImagePersistenceByParameterNameAndRunIdAndParameterType(String parameterName, UUID run , ParameterType parameterType);
+public interface ImagePersistenceRepository extends JpaRepository<ImagePersistence, UUID> {
+    ImagePersistence findImagePersistenceByParameterNameAndRunIdAndParameterType(
+        String parameterName,
+        UUID run,
+        ParameterType parameterType
+    );
 }

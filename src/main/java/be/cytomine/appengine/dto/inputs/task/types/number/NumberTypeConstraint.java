@@ -11,28 +11,22 @@ public enum NumberTypeConstraint {
     NAN_ALLOWED;
 
     public String getStringKey() {
-        switch (this) {
-            case GREATER_EQUAL:
-                return "geq";
-            case LOWER_EQUAL:
-                return "leq";
-            case GREATER_THAN:
-                return "gt";
-            case LOWER_THAN:
-                return "lt";
-            case INFINITY_ALLOWED:
-                return "infinity_allowed";
-            case NAN_ALLOWED:
-                return "nan_allowed";
-            default:
-                throw new RuntimeException("Unknown constraint");
-        }
+        return switch (this) {
+            case GREATER_EQUAL -> "geq";
+            case LOWER_EQUAL -> "leq";
+            case GREATER_THAN -> "gt";
+            case LOWER_THAN -> "lt";
+            case INFINITY_ALLOWED -> "infinity_allowed";
+            case NAN_ALLOWED -> "nan_allowed";
+            default -> throw new RuntimeException("Unknown constraint");
+        };
     }
 
     public static NumberTypeConstraint getConstraint(String key) {
+        String error = "Invalid number type constraint key: " + key;
         return Arrays.stream(NumberTypeConstraint.values())
-                .filter(constraint -> constraint.getStringKey().equals(key))
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Invalid number type constraint key: " + key));
+            .filter(constraint -> constraint.getStringKey().equals(key))
+            .findFirst()
+            .orElseThrow(() -> new IllegalArgumentException(error));
     }
 }

@@ -3,17 +3,20 @@ package be.cytomine.appengine.models.task.enumeration;
 import java.util.List;
 import java.util.UUID;
 
-import be.cytomine.appengine.handlers.StorageData;
-import be.cytomine.appengine.handlers.StorageDataEntry;
-import be.cytomine.appengine.handlers.StorageDataType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import jakarta.persistence.Entity;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import be.cytomine.appengine.dto.inputs.task.types.enumeration.EnumerationTypeConstraint;
 import be.cytomine.appengine.dto.inputs.task.types.enumeration.EnumerationValue;
 import be.cytomine.appengine.dto.responses.errors.ErrorCode;
 import be.cytomine.appengine.exceptions.TypeValidationException;
+import be.cytomine.appengine.handlers.StorageData;
+import be.cytomine.appengine.handlers.StorageDataEntry;
+import be.cytomine.appengine.handlers.StorageDataType;
 import be.cytomine.appengine.models.task.Output;
 import be.cytomine.appengine.models.task.ParameterType;
 import be.cytomine.appengine.models.task.Run;
@@ -22,12 +25,10 @@ import be.cytomine.appengine.models.task.TypePersistence;
 import be.cytomine.appengine.models.task.ValueType;
 import be.cytomine.appengine.repositories.enumeration.EnumerationPersistenceRepository;
 import be.cytomine.appengine.utils.AppEngineApplicationContext;
-import jakarta.persistence.Entity;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
 
-@Entity
+@SuppressWarnings("checkstyle:LineLength")
 @Data
+@Entity
 @EqualsAndHashCode(callSuper = true)
 public class EnumerationType extends Type {
 
@@ -42,6 +43,7 @@ public class EnumerationType extends Type {
             case VALUES:
                 this.setValues(parse(value));
                 break;
+            default:
         }
     }
 
@@ -72,10 +74,10 @@ public class EnumerationType extends Type {
 
     @Override
     public void persistProvision(JsonNode provision, UUID runId) {
-        EnumerationPersistenceRepository enumerationPersistenceRepository = AppEngineApplicationContext.getBean(EnumerationPersistenceRepository.class);
+        EnumerationPersistenceRepository repository = AppEngineApplicationContext.getBean(EnumerationPersistenceRepository.class);
         String parameterName = provision.get("param_name").asText();
         String value = provision.get("value").asText();
-        EnumerationPersistence persistedProvision = enumerationPersistenceRepository.findEnumerationPersistenceByParameterNameAndRunIdAndParameterType(parameterName, runId, ParameterType.INPUT);
+        EnumerationPersistence persistedProvision = repository.findEnumerationPersistenceByParameterNameAndRunIdAndParameterType(parameterName, runId, ParameterType.INPUT);
         if (persistedProvision == null) {
             persistedProvision = new EnumerationPersistence();
             persistedProvision.setValueType(ValueType.ENUMERATION);
@@ -83,10 +85,10 @@ public class EnumerationType extends Type {
             persistedProvision.setParameterName(parameterName);
             persistedProvision.setRunId(runId);
             persistedProvision.setValue(value);
-            enumerationPersistenceRepository.save(persistedProvision);
+            repository.save(persistedProvision);
         } else {
             persistedProvision.setValue(value);
-            enumerationPersistenceRepository.saveAndFlush(persistedProvision);
+            repository.saveAndFlush(persistedProvision);
         }
     }
 
@@ -115,12 +117,9 @@ public class EnumerationType extends Type {
         String value = provision.get("value").asText();
         String parameterName = provision.get("param_name").asText();
         byte[] inputFileData = value.getBytes(getStorageCharset());
-        StorageDataEntry storageDataEntry = new StorageDataEntry(inputFileData, parameterName , StorageDataType.FILE);
+        StorageDataEntry storageDataEntry = new StorageDataEntry(inputFileData, parameterName, StorageDataType.FILE);
         return new StorageData(storageDataEntry);
     }
-
-
-
 
     @Override
     public JsonNode createTypedParameterResponse(JsonNode provision, Run run) {

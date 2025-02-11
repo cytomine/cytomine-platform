@@ -10,5 +10,9 @@ import be.cytomine.appengine.models.task.file.FilePersistence;
 
 @Repository
 public interface FilePersistenceRepository extends JpaRepository<FilePersistence, UUID> {
-    FilePersistence findFilePersistenceByParameterNameAndRunIdAndParameterType(String parameterName, UUID run, ParameterType parameterType);
+    FilePersistence findFilePersistenceByParameterNameAndRunIdAndParameterType(
+        String parameterName,
+        UUID run,
+        ParameterType parameterType
+    );
 }
