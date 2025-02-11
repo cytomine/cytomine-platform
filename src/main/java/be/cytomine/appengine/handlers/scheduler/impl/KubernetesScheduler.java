@@ -4,6 +4,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import io.fabric8.kubernetes.api.model.HostPathVolumeSourceBuilder;
 import io.fabric8.kubernetes.api.model.PodBuilder;
@@ -94,6 +95,7 @@ public class KubernetesScheduler implements SchedulerHandler {
 
         Run run = schedule.getRun();
         String runId = run.getId().toString();
+        String runSecret = String.valueOf(run.getSecret());
         Task task = run.getTask();
 
         String podName = task.getName().toLowerCase().replaceAll("[^a-zA-Z0-9]", "") + "-" + runId;
@@ -103,7 +105,7 @@ public class KubernetesScheduler implements SchedulerHandler {
         String url = baseUrl + runId;
         String fetchInputs = "curl -L -o inputs.zip " + url + "/inputs.zip";
         String unzipInputs = "unzip -o inputs.zip -d " + task.getInputFolder();
-        String sendOutputs = "curl -X POST -F 'outputs=@outputs.zip' " + url + "/outputs.zip";
+        String sendOutputs = "curl -X POST -F 'outputs=@outputs.zip' " + url + "/" + runSecret + "/outputs.zip";
         String zipOutputs = "zip -rj outputs.zip " + task.getOutputFolder();
         String wait = "export TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token); ";
         wait += "while ! curl -k -H \"Authorization: Bearer $TOKEN\" ";
@@ -111,6 +113,7 @@ public class KubernetesScheduler implements SchedulerHandler {
         wait += "| jq '.status | .containerStatuses[] | select(.name == \"task\") | .state | keys[0]' ";
         wait += "| grep -q -F \"terminated\"; do sleep 2; done";
         String and = " && ";
+
 
         Map<String, String> labels = new HashMap<>() {{
             put("runId", runId);
