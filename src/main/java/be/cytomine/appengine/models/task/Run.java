@@ -30,6 +30,8 @@ public class Run extends BaseEntity {
     @ManyToOne(cascade = CascadeType.ALL)
     private Task task;
 
+    private UUID secret;
+
     @OneToMany(cascade = CascadeType.ALL , fetch = FetchType.EAGER)
     private Set<TypePersistence> provisions;
 
