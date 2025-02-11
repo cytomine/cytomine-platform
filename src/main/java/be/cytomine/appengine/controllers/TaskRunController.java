@@ -197,9 +197,9 @@ public class TaskRunController {
     ) throws ProvisioningException {
         log.info("/task-runs/{run_id}/outputs.zip POST");
         List<TaskRunParameterValue> taskOutputs = taskRunService.postOutputsZipArchive(
-                runId,
-                secret,
-                outputs);
+            runId,
+            secret,
+            outputs);
         log.info("/task-runs/{run_id}/outputs.zip POST Ended");
         return new ResponseEntity<>(taskOutputs, HttpStatus.OK);
     }

@@ -104,10 +104,10 @@ public class KubernetesScheduler implements SchedulerHandler {
         String fetchInputs = "curl -L -o inputs.zip " + url + "/inputs.zip";
         String unzipInputs = "unzip -o inputs.zip -d " + task.getInputFolder();
         String sendOutputs = "curl -X POST -F 'outputs=@outputs.zip' "
-                + url
-                + "/"
-                + runSecret
-                + "/outputs.zip";
+            + url
+            + "/"
+            + runSecret
+            + "/outputs.zip";
         String zipOutputs = "zip -rj outputs.zip " + task.getOutputFolder();
         String wait = "export TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token); ";
         wait += "while ! curl -k -H \"Authorization: Bearer $TOKEN\" ";
