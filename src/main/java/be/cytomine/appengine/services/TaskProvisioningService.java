@@ -403,7 +403,8 @@ public class TaskProvisioningService {
         log.info("Posting Outputs Archive: posting...");
         Run run = getRunIfValid(runId);
         if (!run.getSecret().equals(secret)) {
-            AppEngineError error = ErrorBuilder.build(ErrorCode.SCHEDULER_UNAUTHNTICATED_OUTPUT_PROVISIONING);
+            AppEngineError error = ErrorBuilder
+                    .build(ErrorCode.SCHEDULER_UNAUTHNTICATED_OUTPUT_PROVISIONING);
             throw new ProvisioningException(error);
         }
         if (notInOneOfSchedulerManagedStates(run)) {

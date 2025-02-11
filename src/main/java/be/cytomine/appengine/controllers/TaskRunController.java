@@ -196,7 +196,7 @@ public class TaskRunController {
         @RequestParam MultipartFile outputs
     ) throws ProvisioningException {
         log.info("/task-runs/{run_id}/outputs.zip POST");
-        List<TaskRunParameterValue> taskOutputs = taskRunService.postOutputsZipArchive(runId, secret ,outputs);
+        List<TaskRunParameterValue> taskOutputs = taskRunService.postOutputsZipArchive(runId, secret, outputs);
         log.info("/task-runs/{run_id}/outputs.zip POST Ended");
         return new ResponseEntity<>(taskOutputs, HttpStatus.OK);
     }

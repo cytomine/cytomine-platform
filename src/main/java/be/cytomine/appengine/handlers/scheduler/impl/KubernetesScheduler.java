@@ -4,7 +4,6 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 import io.fabric8.kubernetes.api.model.HostPathVolumeSourceBuilder;
 import io.fabric8.kubernetes.api.model.PodBuilder;
@@ -81,7 +80,7 @@ public class KubernetesScheduler implements SchedulerHandler {
     @PostConstruct
     private void initUrl() throws SchedulingException {
         String port = environment.getProperty("server.port");
-        String hostAddress = "http://172.17.0.1";//getHostAddress();
+        String hostAddress = getHostAddress();
 
         this.baseUrl = hostAddress + ":" + port + apiPrefix + apiVersion + "/task-runs/";
         this.baseInputPath = "/tmp/app-engine/task-run-inputs-";
