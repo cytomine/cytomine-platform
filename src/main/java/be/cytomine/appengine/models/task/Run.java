@@ -40,6 +40,8 @@ public class Run extends BaseEntity {
 
     private LocalDateTime lastStateTransitionAt;
 
+    private String secret;
+
     @ManyToOne(cascade = CascadeType.ALL)
     private Task task;
 

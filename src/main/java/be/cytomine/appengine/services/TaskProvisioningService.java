@@ -402,7 +402,7 @@ public class TaskProvisioningService {
     ) throws ProvisioningException {
         log.info("Posting Outputs Archive: posting...");
         Run run = getRunIfValid(runId);
-        if (!run.getSecret().equals(UUID.fromString(secret))) {
+        if (!run.getSecret().equals(secret)) {
             AppEngineError error = ErrorBuilder.build(ErrorCode.SCHEDULER_UNAUTHNTICATED_OUTPUT_PROVISIONING);
             throw new ProvisioningException(error);
         }
@@ -805,8 +805,8 @@ public class TaskProvisioningService {
         TaskDescription description = makeTaskDescription(run.getTask());
         log.info("Retrieving Run: retrieved");
         return new TaskRunResponse(
-            description,
             UUID.fromString(runId),
+            description,
             run.getState(),
             run.getCreatedAt(),
             run.getUpdatedAt(),
