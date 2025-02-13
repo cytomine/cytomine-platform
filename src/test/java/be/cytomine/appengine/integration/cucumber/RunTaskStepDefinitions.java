@@ -113,6 +113,9 @@ public class RunTaskStepDefinitions {
     private StorageData param2FileData;
     private StorageData outputFileData;
 
+    private String secret;
+    private ResponseEntity<JsonNode> persistedRunResponse;
+
     @NotNull
     private static String removeWhitespacesFromPath(File file) {
         String absolutePath = file.getAbsolutePath();
@@ -167,12 +170,14 @@ public class RunTaskStepDefinitions {
         schedulerHandler.alive();
     }
 
+
     @Given("a task run exists with identifier {string}")
     public void a_task_run_exists_with_identifier(String uuid) throws FileStorageException {
         runRepository.deleteAll();
         Task task = TestTaskBuilder.buildHardcodedAddInteger(UUID.fromString(uuid));
         task = taskRepository.save(task);
-        persistedRun = new Run(UUID.fromString(uuid), null, task);
+        secret = UUID.randomUUID().toString();
+        persistedRun = new Run(UUID.fromString(uuid), null, task , secret);
         createStorage(uuid);
     }
 
@@ -418,21 +423,26 @@ public class RunTaskStepDefinitions {
 
     @When("When user calls the endpoint to run task with HTTP method POST")
     public void when_user_calls_the_endpoint_to_run_task_with_http_method_post() {
-        TaskRunStateAction taskRunStateAction = new TaskRunStateAction();
-        taskRunStateAction.desired(new TaskRunStateActionAllOfDesired("RUNNING"));
-        try {
-            persistedResponse = appEngineApi.performStateActionAgainstTaskRun(persistedRun.getId(), taskRunStateAction);
-        } catch (ApiException e) {
-            e.printStackTrace();
-            exception = e;
-        }
+
+          HttpHeaders headers = new HttpHeaders();
+          headers.setContentType(MediaType.APPLICATION_JSON);
+          String runningRequest = "{\"desired\": \"RUNNING\"}";
+          HttpEntity<String> entity = new HttpEntity<>(runningRequest, headers);
+          String endpointUrl = buildAppEngineUrl() + "/task-runs/" + persistedRun.getId() + "/state-actions";
+          try {
+              persistedRunResponse = new RestTemplate().exchange(endpointUrl, HttpMethod.POST, entity, JsonNode.class);
+          } catch (RestClientResponseException e) {
+              e.printStackTrace();
+              persistedException = e;
+          }
     }
 
     @Then("App Engine sends a {string} Forbidden response with a payload containing the error message \\(see OpenAPI spec) and code {string}")
     public void app_engine_sends_a_response_with_a_payload_containing_the_error_message_see_open_api_spec_and_code(String ResponseCode, String errorCode) throws JsonProcessingException {
-        Assertions.assertEquals(Integer.parseInt(ResponseCode), exception.getCode());
+        Assertions.assertEquals(persistedException.getStatusCode().value(),
+            Integer.parseInt(ResponseCode));
         ObjectMapper mapper = new ObjectMapper();
-        JsonNode errorJsonNodeFromServer = mapper.readTree(exception.getResponseBody());
+        JsonNode errorJsonNodeFromServer = mapper.readTree(persistedException.getResponseBodyAsString());
         Assertions.assertEquals(errorCode, errorJsonNodeFromServer.get("error_code").textValue());
     }
 
@@ -509,19 +519,30 @@ public class RunTaskStepDefinitions {
 
     @When("user calls the endpoint to post outputs with {string} HTTP method POST and the zip file as a binary payload")
     public void user_calls_the_endpoint_to_post_outputs_with_http_method_post_and_the_zip_file_as_a_binary_payload(String runId) {
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("outputs", new FileSystemResource(persistedZipFile));
+
+        HttpEntity<MultiValueMap<String, Object>> entity = new HttpEntity<>(body, headers);
+
+        String endpointUrl = buildAppEngineUrl() + "/task-runs/" + runId + "/" + secret + "/outputs.zip";
         try {
-            appEngineApi.uploadTaskRunOutputs(UUID.fromString(runId), persistedZipFile);
-        } catch (ApiException e) {
-            e.printStackTrace();
-            exception = e;
+            ResponseEntity<List<TaskRunParameterValue>> response = new RestTemplate().exchange(endpointUrl, HttpMethod.POST, entity, new ParameterizedTypeReference<List<TaskRunParameterValue>>() {});
+            outputs = response.getBody();
+        } catch (RestClientResponseException e) {
+            persistedException = e;
         }
+
     }
 
     @Then("App Engine sends a {string} Bad Request response with a payload containing the error message \\(see OpenAPI spec) and code {string}")
     public void app_engine_sends_a_bad_request_response_with_a_payload_containing_the_error_message_see_open_api_spec_and_code(String responseCode, String errorCode) throws JsonProcessingException {
-        Assertions.assertEquals(Integer.parseInt(responseCode), exception.getCode());
+        Assertions.assertTrue(persistedException.getStatusCode().is4xxClientError());
         ObjectMapper mapper = new ObjectMapper();
-        JsonNode errorJsonNodeFromServer = mapper.readTree(exception.getResponseBody());
+        JsonNode errorJsonNodeFromServer = mapper.readTree(persistedException.getResponseBodyAsString());
         Assertions.assertEquals(errorCode, errorJsonNodeFromServer.get("error_code").textValue());
     }
 
@@ -551,7 +572,7 @@ public class RunTaskStepDefinitions {
 
         HttpEntity<MultiValueMap<String, Object>> entity = new HttpEntity<>(body, headers);
 
-        String endpointUrl = buildAppEngineUrl() + "/task-runs/" + runId + "/outputs.zip";
+        String endpointUrl = buildAppEngineUrl() + "/task-runs/" + runId + "/" + secret + "/outputs.zip";
         try {
             ResponseEntity<List<TaskRunParameterValue>> response = new RestTemplate().exchange(endpointUrl, HttpMethod.POST, entity, new ParameterizedTypeReference<List<TaskRunParameterValue>>() {});
             outputs = response.getBody();
@@ -619,7 +640,7 @@ public class RunTaskStepDefinitions {
 
     @Then("App Engine sends a {string} OK response with a payload containing the success message \\(see OpenAPI spec)")
     public void app_engine_sends_a_ok_response_with_a_payload_containing_the_success_message_see_open_api_spec(String responseCode) {
-        Assertions.assertNotNull(persistedResponse);
+        Assertions.assertNotNull(persistedRunResponse);
     }
 
     @Then("App Engine moves the task run to a state different from {string}")

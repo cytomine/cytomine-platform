@@ -404,7 +404,7 @@ public class TaskProvisioningService {
         Run run = getRunIfValid(runId);
         if (!run.getSecret().equals(secret)) {
             AppEngineError error = ErrorBuilder
-                .build(ErrorCode.SCHEDULER_UNAUTHNTICATED_OUTPUT_PROVISIONING);
+                .build(ErrorCode.SCHEDULER_UNAUTHENTICATED_OUTPUT_PROVISIONING);
             throw new ProvisioningException(error);
         }
         if (notInOneOfSchedulerManagedStates(run)) {

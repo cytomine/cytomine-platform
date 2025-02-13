@@ -458,8 +458,7 @@ public class TaskService {
             );
         }
         log.info("tasks/{namespace}/{version}/runs: retrieved task...");
-        Run run = new Run(taskRunID, TaskRunState.CREATED, task);
-        run.setSecret(String.valueOf(UUID.randomUUID()));
+        Run run = new Run(taskRunID, TaskRunState.CREATED, task, String.valueOf(UUID.randomUUID()));
         runRepository.saveAndFlush(run);
         // create a storage for the inputs and outputs
         createRunStorages(taskRunID);
