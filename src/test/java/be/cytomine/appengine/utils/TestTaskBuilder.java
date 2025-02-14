@@ -84,6 +84,12 @@ public class TestTaskBuilder {
     output.setType(outputType);
     outputs.add(output);
     task.setOutputs(outputs);
+
+    // set resources
+    task.setCpus(1);
+    task.setRam("200Mi");
+    task.setGpus(0);
+
     return task;
   }
 

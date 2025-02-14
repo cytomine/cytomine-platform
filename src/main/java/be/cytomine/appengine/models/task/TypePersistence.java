@@ -10,15 +10,17 @@ import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import be.cytomine.appengine.models.BaseEntity;
 
-@Entity
-@Inheritance(strategy = InheritanceType.JOINED)
-@Data
+@EqualsAndHashCode(callSuper = true)
 @AllArgsConstructor
 @NoArgsConstructor
+@Data
+@Inheritance(strategy = InheritanceType.JOINED)
+@Entity
 public class TypePersistence extends BaseEntity {
     @Id
     @Column(name = "id", updatable = false, nullable = false)

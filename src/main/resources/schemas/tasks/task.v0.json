@@ -84,13 +84,8 @@
           "properties": {
             "ram": {
               "$ref": "#/$defs/types/memory",
-              "default": "1GiB",
+              "default": "1Gi",
               "description": "The minimum amount of RAM that the task requires."
-            },
-            "vram": {
-              "$ref": "#/$defs/types/memory",
-              "default": "8GiB",
-              "description": "The minimum amount of GPU VRAM that the task requires."
             },
             "gpus": {
               "type": "integer",
@@ -159,7 +154,7 @@
       },
       "memory": {
         "type": "string",
-        "pattern": "^(?:0|[1-9]\\d*)(?:\\.\\d+)?\\s*(?:Ki|Mi|Gi|Ti|Pi|Ei|Zi|Yi|k|M|G|T|P|E|Z|Y|R|Q)?(?:B|Byte|byte|b|bit)$"
+        "pattern": "^(?:0|[1-9]\\d*)(?:\\.\\d+)?\\s*(?:Ki|Mi|Gi|Ti|Pi|Ei|Zi|Yi|k|M|G|T|P|E|Z|Y|R|Q)"
       },
       "enum_item": {
         "type": "string",

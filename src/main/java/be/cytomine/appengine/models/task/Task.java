@@ -32,7 +32,7 @@ public class Task extends BaseEntity {
     private String namespace;
 
     private String version;
-    
+
     // the task descriptor file object reference (id) in the file storage
     private String descriptorFile;
 
@@ -50,6 +50,10 @@ public class Task extends BaseEntity {
     private String outputFolder;
 
     private String imageName;
+
+    private int cpus;
+    private int gpus;
+    private String ram;
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<Author> authors;
