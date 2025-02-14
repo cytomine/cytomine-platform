@@ -1,5 +1,6 @@
 package be.cytomine.appengine.handlers;
 
+import java.io.File;
 import java.util.LinkedList;
 import java.util.Objects;
 import java.util.Queue;
@@ -23,7 +24,7 @@ public class StorageData {
     }
 
     // useful to create files in StorageData
-    public StorageData(byte[] data, String name) {
+    public StorageData(File data, String name) {
         StorageDataEntry root = new StorageDataEntry(data, name, StorageDataType.FILE);
         queue = new LinkedList<>();
         queue.add(root);
@@ -37,7 +38,7 @@ public class StorageData {
         queue.add(root);
     }
 
-    public StorageData(byte[] fileData) {
+    public StorageData(File fileData) {
         StorageDataEntry root = new StorageDataEntry(fileData);
         queue = new LinkedList<>();
         queue.add(root);

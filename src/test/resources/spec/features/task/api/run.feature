@@ -29,8 +29,8 @@ Feature: [URS00003-TASK] Execute a task
     And App Engine does not initiate the process of executing this task run
 
     Examples:
-      | task_run_id                          | initial_state | error_code                         |
-      | acde070d-8c4c-4f0d-9d8a-162843c10333 | CREATED       | APPE-internal-task-run-state-error |
+      | task_run_id                          | initial_state | error_code                                  |
+      | acde070d-8c4c-4f0d-9d8a-162843c10333 | CREATED       | APPE-internal-task-run-provisions-not-found |
 
   @Scheduler
   Scenario Outline: unsuccessful run request for a task that was already launched
@@ -72,8 +72,8 @@ Feature: [URS00003-TASK] Execute a task
 
     Examples:
       | task_run_id                          | task_run_state | param1_name | param1_type | param1_value | param2_name | param2_type | param2_value |
-      | acde070d-8c4c-4f0d-9d8a-162843c10333 | FINISHED       | a           | IntegerType     | 5            | b           | IntegerType     | 10           |
-      | 123e4567-e89b-12d3-a456-426614174001 | RUNNING        | a           | IntegerType     | 25           | b           | IntegerType     | 54           |
+      | acde070d-8c4c-4f0d-9d8a-162843c10333 | FINISHED       | a           | IntegerType | 5            | b           | IntegerType | 10           |
+      | 123e4567-e89b-12d3-a456-426614174001 | RUNNING        | a           | IntegerType | 25           | b           | IntegerType | 54           |
 
   @Scheduler
   Scenario Outline: unsuccessful fetch of task run inputs archive in a created task run

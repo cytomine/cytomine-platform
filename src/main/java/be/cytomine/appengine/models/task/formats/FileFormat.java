@@ -1,12 +1,13 @@
 package be.cytomine.appengine.models.task.formats;
 
 import java.awt.Dimension;
+import java.io.File;
 
 public interface FileFormat {
-    boolean checkSignature(byte[] file);
+    boolean checkSignature(File file);
 
     /* Validate extra constraint */
-    boolean validate(byte[] file);
+    boolean validate(File file);
 
-    Dimension getDimensions(byte[] file);
+    Dimension getDimensions(File file);
 }

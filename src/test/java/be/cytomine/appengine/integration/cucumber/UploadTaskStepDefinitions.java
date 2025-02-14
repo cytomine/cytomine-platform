@@ -13,6 +13,7 @@ import be.cytomine.appengine.openapi.api.DefaultApi;
 import be.cytomine.appengine.openapi.invoker.ApiException;
 import be.cytomine.appengine.openapi.model.TaskDescription;
 import be.cytomine.appengine.repositories.TaskRepository;
+import be.cytomine.appengine.utils.FileHelper;
 import be.cytomine.appengine.utils.TestTaskBuilder;
 
 import com.cytomine.registry.client.RegistryClient;
@@ -249,7 +250,10 @@ public class UploadTaskStepDefinitions {
                 JsonNode descriptor = mapper.readTree(fileInputStream);
                 ((ObjectNode) descriptor).put("name_short", "must_not_have_changed");
 
-                StorageData fileData = new StorageData(mapper.writeValueAsBytes(descriptor), "descriptor.yml");
+                StorageData fileData = new StorageData(
+                    FileHelper.write("descriptor.yml", mapper.writeValueAsBytes(descriptor)),
+                    "descriptor.yml"
+                );
                 fileStorageHandler.saveStorageData(storage, fileData);
             }
         } catch (IOException | FileStorageException e) {

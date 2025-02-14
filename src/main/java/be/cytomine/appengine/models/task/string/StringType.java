@@ -1,5 +1,6 @@
 package be.cytomine.appengine.models.task.string;
 
+import java.io.File;
 import java.util.UUID;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -26,6 +27,7 @@ import be.cytomine.appengine.models.task.TypePersistence;
 import be.cytomine.appengine.models.task.ValueType;
 import be.cytomine.appengine.repositories.string.StringPersistenceRepository;
 import be.cytomine.appengine.utils.AppEngineApplicationContext;
+import be.cytomine.appengine.utils.FileHelper;
 
 @SuppressWarnings("checkstyle:LineLength")
 @Data
@@ -105,18 +107,17 @@ public class StringType extends Type {
     public void persistResult(Run run, Output currentOutput, StorageData outputValue) {
         StringPersistenceRepository stringPersistenceRepository = AppEngineApplicationContext.getBean(StringPersistenceRepository.class);
         StringPersistence result = stringPersistenceRepository.findStringPersistenceByParameterNameAndRunIdAndParameterType(currentOutput.getName(), run.getId(), ParameterType.OUTPUT);
-        String output = new String(outputValue.poll().getData(), getStorageCharset());
-        String trimmedOutput = output.trim();
+        String output = FileHelper.read(outputValue.poll().getData(), getStorageCharset());
         if (result == null) {
             result = new StringPersistence();
             result.setValueType(ValueType.STRING);
             result.setParameterType(ParameterType.OUTPUT);
             result.setParameterName(currentOutput.getName());
             result.setRunId(run.getId());
-            result.setValue(trimmedOutput);
+            result.setValue(output);
             stringPersistenceRepository.save(result);
         } else {
-            result.setValue(trimmedOutput);
+            result.setValue(output);
             stringPersistenceRepository.saveAndFlush(result);
         }
     }
@@ -125,9 +126,9 @@ public class StringType extends Type {
     public StorageData mapToStorageFileData(JsonNode provision) {
         String value = provision.get("value").asText();
         String parameterName = provision.get("param_name").asText();
-        byte[] inputFileData = value.getBytes(getStorageCharset());
-        StorageDataEntry storageDataEntry = new StorageDataEntry(inputFileData, parameterName, StorageDataType.FILE);
-        return new StorageData(storageDataEntry);
+        File data = FileHelper.write(parameterName, value.getBytes(getStorageCharset()));
+        StorageDataEntry entry = new StorageDataEntry(data, parameterName, StorageDataType.FILE);
+        return new StorageData(entry);
     }
 
     @Override
@@ -143,14 +144,13 @@ public class StringType extends Type {
 
     @Override
     public TaskRunParameterValue buildTaskRunParameterValue(StorageData output, UUID id, String outputName) {
-        String outputValue = new String(output.poll().getData(), getStorageCharset());
-        String trimmedOutput = outputValue.trim();
+        String outputValue = FileHelper.read(output.poll().getData(), getStorageCharset());
 
         StringValue value = new StringValue();
         value.setParameterName(outputName);
         value.setTaskRunId(id);
         value.setType(ValueType.STRING);
-        value.setValue(trimmedOutput);
+        value.setValue(outputValue);
 
         return value;
     }

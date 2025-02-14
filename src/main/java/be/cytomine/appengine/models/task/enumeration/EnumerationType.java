@@ -1,5 +1,6 @@
 package be.cytomine.appengine.models.task.enumeration;
 
+import java.io.File;
 import java.util.List;
 import java.util.UUID;
 
@@ -25,6 +26,7 @@ import be.cytomine.appengine.models.task.TypePersistence;
 import be.cytomine.appengine.models.task.ValueType;
 import be.cytomine.appengine.repositories.enumeration.EnumerationPersistenceRepository;
 import be.cytomine.appengine.utils.AppEngineApplicationContext;
+import be.cytomine.appengine.utils.FileHelper;
 
 @SuppressWarnings("checkstyle:LineLength")
 @Data
@@ -96,18 +98,17 @@ public class EnumerationType extends Type {
     public void persistResult(Run run, Output currentOutput, StorageData outputValue) {
         EnumerationPersistenceRepository enumerationPersistenceRepository = AppEngineApplicationContext.getBean(EnumerationPersistenceRepository.class);
         EnumerationPersistence result = enumerationPersistenceRepository.findEnumerationPersistenceByParameterNameAndRunIdAndParameterType(currentOutput.getName(), run.getId(), ParameterType.OUTPUT);
-        String output = new String(outputValue.poll().getData(), getStorageCharset());
-        String trimmedOutput = output.trim();
+        String output = FileHelper.read(outputValue.poll().getData(), getStorageCharset());
         if (result == null) {
             result = new EnumerationPersistence();
-            result.setValue(trimmedOutput);
+            result.setValue(output);
             result.setValueType(ValueType.INTEGER);
             result.setParameterType(ParameterType.OUTPUT);
             result.setRunId(run.getId());
             result.setParameterName(currentOutput.getName());
             enumerationPersistenceRepository.save(result);
         } else {
-            result.setValue(trimmedOutput);
+            result.setValue(output);
             enumerationPersistenceRepository.saveAndFlush(result);
         }
     }
@@ -116,9 +117,9 @@ public class EnumerationType extends Type {
     public StorageData mapToStorageFileData(JsonNode provision) {
         String value = provision.get("value").asText();
         String parameterName = provision.get("param_name").asText();
-        byte[] inputFileData = value.getBytes(getStorageCharset());
-        StorageDataEntry storageDataEntry = new StorageDataEntry(inputFileData, parameterName, StorageDataType.FILE);
-        return new StorageData(storageDataEntry);
+        File data = FileHelper.write(parameterName, value.getBytes(getStorageCharset()));
+        StorageDataEntry entry = new StorageDataEntry(data, parameterName, StorageDataType.FILE);
+        return new StorageData(entry);
     }
 
     @Override
@@ -133,14 +134,13 @@ public class EnumerationType extends Type {
 
     @Override
     public EnumerationValue buildTaskRunParameterValue(StorageData output, UUID id, String outputName) {
-        String outputValue = new String(output.poll().getData(), getStorageCharset());
-        String trimmedOutput = outputValue.trim();
+        String outputValue = FileHelper.read(output.poll().getData(), getStorageCharset());
 
         EnumerationValue enumerationValue = new EnumerationValue();
         enumerationValue.setParameterName(outputName);
         enumerationValue.setTaskRunId(id);
         enumerationValue.setType(ValueType.ENUMERATION);
-        enumerationValue.setValue(trimmedOutput);
+        enumerationValue.setValue(outputValue);
         return enumerationValue;
     }
 

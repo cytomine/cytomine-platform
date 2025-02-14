@@ -32,15 +32,21 @@ public class ProvisionTaskApiExceptionHandler {
         String runNotFoundErrorMessage = "APPE-internal-run-not-found-error";
         String parameterNotFoundErrorMessage = "APPE-internal-parameter-not-found";
 
-        if (e.getError().getErrorCode().equalsIgnoreCase(runNotFoundErrorMessage)
-            || e.getError().getErrorCode().equalsIgnoreCase(parameterNotFoundErrorMessage)) {
+        if (
+            e.getError().getErrorCode().equalsIgnoreCase(runNotFoundErrorMessage)
+            || e.getError().getErrorCode().equalsIgnoreCase(parameterNotFoundErrorMessage)
+        ) {
             log.info("not found 404 error [{}]", e.getMessage());
             return new ResponseEntity<AppEngineError>(e.getError(), HttpStatus.NOT_FOUND);
 
         }
 
-        String provisionsNotFound = "APPE-internal-task-run-state-error";
-        if (e.getError().getErrorCode().equalsIgnoreCase(provisionsNotFound)) {
+        String provisionsNotFound = "APPE-internal-task-run-provisions-not-found";
+        String invalidRunState = "APPE-internal-task-run-state-error";
+        if (
+            e.getError().getErrorCode().equalsIgnoreCase(provisionsNotFound)
+            || e.getError().getErrorCode().equalsIgnoreCase(invalidRunState)
+        ) {
             log.info("forbidden 403 error [{}]", e.getMessage());
             return new ResponseEntity<AppEngineError>(e.getError(), HttpStatus.FORBIDDEN);
         }

@@ -2,7 +2,8 @@ package be.cytomine.appengine.unit.services;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.Optional;
+import java.util.UUID;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -68,7 +69,7 @@ public class TaskServiceTest {
 
         UploadTaskArchive uploadTaskArchive = new UploadTaskArchive();
         uploadTaskArchive.setDockerImage(File.createTempFile("docker-image", ".tar"));
-        uploadTaskArchive.setDescriptorFile(new byte[]{});
+        uploadTaskArchive.setDescriptorFile(null);
         String descriptorYml = "name: Integers addition\n" +
                 "name_short: add_int\n" +
                 "version: 0.1.0\n" +

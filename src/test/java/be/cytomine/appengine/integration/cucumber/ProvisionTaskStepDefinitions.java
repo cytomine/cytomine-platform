@@ -43,6 +43,7 @@ import be.cytomine.appengine.repositories.wsi.WsiPersistenceRepository;
 import be.cytomine.appengine.repositories.RunRepository;
 import be.cytomine.appengine.repositories.TaskRepository;
 import be.cytomine.appengine.states.TaskRunState;
+import be.cytomine.appengine.utils.FileHelper;
 import be.cytomine.appengine.utils.TaskTestsUtils;
 import be.cytomine.appengine.utils.TestTaskBuilder;
 
@@ -443,7 +444,7 @@ public class ProvisionTaskStepDefinitions {
         StorageData descriptorMetaData = new StorageData(fileName, template + "inputs-" + persistedRun.getId().toString());
         StorageData descriptor = fileStorageHandler.readStorageData(descriptorMetaData);
         Assertions.assertNotNull(descriptor);
-        String fileContent = new String(descriptor.peek().getData(), StandardCharsets.UTF_8); // default encoding assumed
+        String fileContent = FileHelper.read(descriptor.peek().getData(), StandardCharsets.UTF_8);
         Assertions.assertTrue(fileContent.equalsIgnoreCase(content));
     }
 
@@ -609,7 +610,10 @@ public class ProvisionTaskStepDefinitions {
 
     @Given("the file named {string} in the task run storage {string}+UUID has content {string}")
     public void the_file_named_in_the_task_run_storage_has_content(String fileName, String template, String content) throws FileStorageException {
-        StorageData parameterFile = new StorageData(content.getBytes(StandardCharsets.UTF_8), fileName); // UTF_8 is assumed in tests
+        StorageData parameterFile = new StorageData(
+            FileHelper.write(fileName, content.getBytes(StandardCharsets.UTF_8)),
+            fileName
+        );
         Storage storage = new Storage(template + "inputs-" + persistedRun.getId().toString());
         fileStorageHandler.saveStorageData(storage, parameterFile);
     }
@@ -712,7 +716,7 @@ public class ProvisionTaskStepDefinitions {
         StorageData descriptorMetaData = new StorageData(fileName, template + "inputs-" + persistedRun.getId().toString());
         StorageData descriptor = fileStorageHandler.readStorageData(descriptorMetaData);
         Assertions.assertNotNull(descriptor);
-        String fileContent = new String(descriptor.peek().getData(), StandardCharsets.UTF_8); // default encoding assumed
+        String fileContent = FileHelper.read(descriptor.peek().getData(), StandardCharsets.UTF_8);
         Assertions.assertTrue(fileContent.equalsIgnoreCase(content));
     }
 }

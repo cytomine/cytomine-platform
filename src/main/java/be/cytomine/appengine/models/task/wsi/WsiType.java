@@ -1,7 +1,7 @@
 package be.cytomine.appengine.models.task.wsi;
 
 import java.awt.Dimension;
-import java.io.IOException;
+import java.io.File;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -72,7 +72,7 @@ public class WsiType extends Type {
         }
     }
 
-    private void validateImageFormat(byte[] file) throws TypeValidationException {
+    private void validateImageFormat(File file) throws TypeValidationException {
         if (formats == null || formats.isEmpty()) {
             this.format = WsiFormatFactory.getGenericFormat();
             return;
@@ -94,7 +94,7 @@ public class WsiType extends Type {
         }
     }
 
-    private void validateImageDimension(byte[] file) throws TypeValidationException {
+    private void validateImageDimension(File file) throws TypeValidationException {
         if (maxWidth == null && maxHeight == null) {
             return;
         }
@@ -113,7 +113,7 @@ public class WsiType extends Type {
         }
     }
 
-    private void validateImageSize(byte[] file) throws TypeValidationException {
+    private void validateImageSize(File file) throws TypeValidationException {
         if (maxFileSize == null) {
             return;
         }
@@ -125,18 +125,18 @@ public class WsiType extends Type {
         }
 
         Unit unit = new Unit(maxFileSize);
-        if (file.length > unit.getBytes()) {
+        if (file.length() > unit.getBytes()) {
             throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_INVALID_IMAGE_SIZE);
         }
     }
 
     @Override
     public void validate(Object valueObject) throws TypeValidationException {
-        if (!(valueObject instanceof byte[])) {
+        if (!(valueObject instanceof File)) {
             throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_TYPE_ERROR);
         }
 
-        byte[] file = (byte[]) valueObject;
+        File file = (File) valueObject;
 
         validateImageFormat(file);
 
@@ -183,16 +183,9 @@ public class WsiType extends Type {
     @Override
     public StorageData mapToStorageFileData(JsonNode provision) {
         String parameterName = provision.get("param_name").asText();
-        byte[] inputFileData = null;
-
-        try {
-            inputFileData = provision.get("value").binaryValue();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        StorageDataEntry storageDataEntry = new StorageDataEntry(inputFileData, parameterName, StorageDataType.FILE);
-        return new StorageData(storageDataEntry);
+        File data = new File(provision.get("value").asText());
+        StorageDataEntry entry = new StorageDataEntry(data, parameterName, StorageDataType.FILE);
+        return new StorageData(entry);
     }
 
     @Override

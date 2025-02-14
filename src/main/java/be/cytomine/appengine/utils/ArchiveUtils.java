@@ -3,6 +3,7 @@ package be.cytomine.appengine.utils;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.zip.ZipEntry;
 
 import lombok.extern.slf4j.Slf4j;
@@ -49,13 +50,13 @@ public class ArchiveUtils {
     }
 
     public UploadTaskArchive readZipArchive(MultipartFile archive) throws BundleArchiveException {
-        byte[] descriptorData = getDescriptorFileFromZip(archive);
+        File descriptorData = getDescriptorFileFromZip(archive);
         File imageData = getDockerImageFromZip(archive, getCustomImageName(descriptorData));
 
         return new UploadTaskArchive(descriptorData, imageData);
     }
 
-    private String getCustomImageName(byte[] descriptorData) {
+    private String getCustomImageName(File descriptorData) {
         try {
             return DescriptorHelper.parseDescriptor(descriptorData)
                 .get("configuration")
@@ -73,17 +74,22 @@ public class ArchiveUtils {
         return DEFAULT_IMAGE_NAME;
     }
 
-    private byte[] getDescriptorFileFromZip(MultipartFile archive) throws BundleArchiveException {
+    private File getDescriptorFileFromZip(MultipartFile archive) throws BundleArchiveException {
         log.info("ArchiveUtils: parse descriptor file...");
 
         ZipEntry entry;
         try (ZipArchiveInputStream zais = new ZipArchiveInputStream(archive.getInputStream())) {
             while ((entry = zais.getNextZipEntry()) != null) {
                 if (entry.getName().toLowerCase().matches("descriptor\\.(yml|yaml)")) {
-                    byte[] descriptorData = zais.readNBytes((int) entry.getSize());
+                    File tempFile = Files.createTempFile("descriptor-", ".yaml").toFile();
+                    tempFile.deleteOnExit(); 
+
+                    try (FileOutputStream fos = new FileOutputStream(tempFile)) {
+                        zais.transferTo(fos);
+                    }
 
                     log.info("ArchiveUtils: descriptor file successfully extracted");
-                    return descriptorData;
+                    return tempFile;
                 }
             }
         } catch (Exception e) {

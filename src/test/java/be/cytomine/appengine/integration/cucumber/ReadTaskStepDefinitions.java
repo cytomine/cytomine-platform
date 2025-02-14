@@ -16,6 +16,7 @@ import be.cytomine.appengine.repositories.TaskRepository;
 import be.cytomine.appengine.services.TaskService;
 import be.cytomine.appengine.exceptions.*;
 import be.cytomine.appengine.utils.DescriptorHelper;
+import be.cytomine.appengine.utils.FileHelper;
 import be.cytomine.appengine.utils.TaskTestsUtils;
 import be.cytomine.appengine.utils.TestTaskBuilder;
 
@@ -140,7 +141,10 @@ public class ReadTaskStepDefinitions {
         try (FileInputStream fis = new FileInputStream(persistedDescriptorFile)) {
             byte[] fileByteArray = new byte[(int) persistedDescriptorFile.length()];
             fileByteArray = fis.readAllBytes();
-            StorageData fileData = new StorageData(fileByteArray, "descriptor.yml");
+            StorageData fileData = new StorageData(
+                FileHelper.write("descriptor.yml", fileByteArray),
+                "descriptor.yml"
+            );
             fileStorageHandler.saveStorageData(storage, fileData);
         }
     }
@@ -291,11 +295,14 @@ public class ReadTaskStepDefinitions {
         // save it in file storage service
         Storage storage = new Storage(persistedTask.getStorageReference());
         Assertions.assertTrue(fileStorageHandler.checkStorageExists(storage));
-        StorageData emptyFile = new StorageData(new byte[0]);
+        StorageData emptyFile = new StorageData(
+            Files.createTempFile(descriptorFileName, null).toFile(),
+            descriptorFileName
+        );
         emptyFile.peek().setName("descriptor.yml");
         emptyFile.peek().setStorageId(storage.getIdStorage());
         fileStorageHandler.readStorageData(emptyFile);
-        Assertions.assertTrue(emptyFile.peek().getData().length > 0);
+        Assertions.assertTrue(Files.size(emptyFile.peek().getData().toPath()) > 0);
     }
 
     @When("user calls the download endpoint with {string} with HTTP method GET")
@@ -317,7 +324,7 @@ public class ReadTaskStepDefinitions {
     @Then("App Engine sends a {string} OK response with the descriptor file as a binary payload \\(see OpenAPI spec)")
     public void app_engine_sends_a_response_with_the_descriptor_file_as_a_binary_payload_see_open_api_spec(String string) throws IOException {
         Assertions.assertNotNull(persistedDescriptorYml);
-        JsonNode descriptorJson = DescriptorHelper.parseDescriptor(Files.readAllBytes(persistedDescriptorYml.toPath()));
+        JsonNode descriptorJson = DescriptorHelper.parseDescriptor(persistedDescriptorYml);
         Assertions.assertTrue(descriptorJson.has("namespace"));
         Assertions.assertTrue(descriptorJson.has("version"));
         Assertions.assertEquals(persistedTask.getNamespace(), descriptorJson.get("namespace").textValue());
