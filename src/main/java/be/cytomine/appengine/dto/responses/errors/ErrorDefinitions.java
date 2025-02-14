@@ -56,7 +56,7 @@ public class ErrorDefinitions {
         codes.put(ErrorCode.STORAGE_READING_FILE_FAILED, new MessageCode("APPE-storage-reading-file-error", "failed to read file from storage service"));
         codes.put(ErrorCode.STORAGE_STORING_INPUT_FAILED, new MessageCode("APPE-storage-storing-input-failed", "failed to store input file in storage service"));
         codes.put(ErrorCode.STORAGE_STORING_TASK_DEFINITION_FAILED, new MessageCode("APPE-storage-definition-storage-error", "storing task definition failed in storage service"));
-        codes.put(ErrorCode.UKNOWN_STATE, new MessageCode("APPE-internal-task-run-state-error", "unknown state in transition request"));
+        codes.put(ErrorCode.UNKNOWN_STATE, new MessageCode("APPE-internal-task-run-state-error", "unknown state in transition request"));
         codes.put(ErrorCode.SCHEDULER_UNAUTHENTICATED_OUTPUT_PROVISIONING, new MessageCode("APPE-scheduler-unauthenticated-output-provisioning", "unauthenticated task failed to provision outputs for this run"));
 
     }

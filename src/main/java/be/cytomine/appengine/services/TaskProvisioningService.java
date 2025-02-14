@@ -715,7 +715,7 @@ public class TaskProvisioningService {
             case PROVISIONED -> updateToProvisioned(run);
             case RUNNING -> run(run);
             // to safeguard against unknown state transition requests
-            default -> throw new ProvisioningException(ErrorBuilder.build(ErrorCode.UKNOWN_STATE));
+            default -> throw new ProvisioningException(ErrorBuilder.build(ErrorCode.UNKNOWN_STATE));
         };
     }
 
