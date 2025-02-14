@@ -113,6 +113,8 @@ public class RunTaskStepDefinitions {
     private StorageData param2FileData;
     private StorageData outputFileData;
 
+    private ResponseEntity<JsonNode> persistedRunResponse;
+
     @NotNull
     private static String removeWhitespacesFromPath(File file) {
         String absolutePath = file.getAbsolutePath();
@@ -418,21 +420,25 @@ public class RunTaskStepDefinitions {
 
     @When("When user calls the endpoint to run task with HTTP method POST")
     public void when_user_calls_the_endpoint_to_run_task_with_http_method_post() {
-        TaskRunStateAction taskRunStateAction = new TaskRunStateAction();
-        taskRunStateAction.desired(new TaskRunStateActionAllOfDesired("RUNNING"));
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        String runningRequest = "{\"desired\": \"RUNNING\"}";
+        HttpEntity<String> entity = new HttpEntity<>(runningRequest, headers);
+        String endpointUrl = buildAppEngineUrl() + "/task-runs/" + persistedRun.getId() + "/state-actions";
         try {
-            persistedResponse = appEngineApi.performStateActionAgainstTaskRun(persistedRun.getId(), taskRunStateAction);
-        } catch (ApiException e) {
+            persistedRunResponse = new RestTemplate().exchange(endpointUrl, HttpMethod.POST, entity, JsonNode.class);
+        } catch (RestClientResponseException e) {
             e.printStackTrace();
-            exception = e;
+            persistedException = e;
         }
     }
 
     @Then("App Engine sends a {string} Forbidden response with a payload containing the error message \\(see OpenAPI spec) and code {string}")
     public void app_engine_sends_a_response_with_a_payload_containing_the_error_message_see_open_api_spec_and_code(String ResponseCode, String errorCode) throws JsonProcessingException {
-        Assertions.assertEquals(Integer.parseInt(ResponseCode), exception.getCode());
+        Assertions.assertEquals(Integer.parseInt(ResponseCode), persistedException.getStatusCode().value());
         ObjectMapper mapper = new ObjectMapper();
-        JsonNode errorJsonNodeFromServer = mapper.readTree(exception.getResponseBody());
+        JsonNode errorJsonNodeFromServer = mapper.readTree(persistedException.getResponseBodyAsString());
         Assertions.assertEquals(errorCode, errorJsonNodeFromServer.get("error_code").textValue());
     }
 
@@ -614,12 +620,12 @@ public class RunTaskStepDefinitions {
 
         persistedRun.setState(TaskRunState.PROVISIONED);
         persistedRun = runRepository.saveAndFlush(persistedRun);
-        Assertions.assertEquals(persistedRun.getState(), TaskRunState.PROVISIONED);
+        Assertions.assertEquals(TaskRunState.PROVISIONED, persistedRun.getState());
     }
 
     @Then("App Engine sends a {string} OK response with a payload containing the success message \\(see OpenAPI spec)")
     public void app_engine_sends_a_ok_response_with_a_payload_containing_the_success_message_see_open_api_spec(String responseCode) {
-        Assertions.assertNotNull(persistedResponse);
+        Assertions.assertNotNull(persistedRunResponse);
     }
 
     @Then("App Engine moves the task run to a state different from {string}")

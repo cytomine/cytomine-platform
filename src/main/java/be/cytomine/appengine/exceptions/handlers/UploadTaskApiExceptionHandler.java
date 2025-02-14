@@ -86,7 +86,7 @@ public class UploadTaskApiExceptionHandler {
     @ExceptionHandler({ IllegalArgumentException.class })
     public final ResponseEntity<AppEngineError> handleMalformattedBundle(Exception e) {
         String message = "Bundle is not formatted correctly";
-        log.info("Bundle/Archive processing failure [{}]", message);
+        log.info("Bundle/Archive processing failure [{}]", e.getMessage());
 
         AppEngineError error = ErrorBuilder.build(ErrorCode.INTERNAL_INVALID_BUNDLE_FORMAT);
         return new ResponseEntity<AppEngineError>(error, HttpStatus.BAD_REQUEST);
