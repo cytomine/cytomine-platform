@@ -53,7 +53,7 @@ public class ProvisionTaskApiExceptionHandler {
     public final ResponseEntity<AppEngineError> handleProvisioningException(
         HttpMessageNotReadableException e
     ) {
-        AppEngineError error = ErrorBuilder.build(ErrorCode.UKNOWN_STATE);
+        AppEngineError error = ErrorBuilder.build(ErrorCode.UNKNOWN_STATE);
         log.info("bad request 400 error [{}]", e.getMessage());
         return new ResponseEntity<AppEngineError>(error, HttpStatus.BAD_REQUEST);
     }

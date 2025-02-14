@@ -188,17 +188,18 @@ public class TaskRunController {
         return new ResponseEntity<>(file.peek().getData(), headers, HttpStatus.OK);
     }
 
-    @PostMapping(value = "/task-runs/{run_id}/outputs.zip")
+    @PostMapping(value = "/task-runs/{run_id}/{secret}/outputs.zip")
     @ResponseStatus(code = HttpStatus.OK)
     public ResponseEntity<?> postOutputsProvisionsArchives(
         @PathVariable("run_id") String runId,
+        @PathVariable String secret,
         @RequestParam MultipartFile outputs
     ) throws ProvisioningException {
         log.info("/task-runs/{run_id}/outputs.zip POST");
         List<TaskRunParameterValue> taskOutputs = taskRunService.postOutputsZipArchive(
             runId,
-            outputs
-        );
+            secret,
+            outputs);
         log.info("/task-runs/{run_id}/outputs.zip POST Ended");
         return new ResponseEntity<>(taskOutputs, HttpStatus.OK);
     }

@@ -169,7 +169,7 @@ public class TaskProvisioningService {
             try {
                 ObjectMapper mapper = new ObjectMapper();
                 genericParameterProvision = mapper.treeToValue(
-                    provision, 
+                    provision,
                     GenericParameterProvision.class
                 );
                 genericParameterProvision.setRunId(runId);
@@ -397,10 +397,16 @@ public class TaskProvisioningService {
 
     public List<TaskRunParameterValue> postOutputsZipArchive(
         String runId,
+        String secret,
         MultipartFile outputs
     ) throws ProvisioningException {
         log.info("Posting Outputs Archive: posting...");
         Run run = getRunIfValid(runId);
+        if (!run.getSecret().equals(secret)) {
+            AppEngineError error = ErrorBuilder
+                .build(ErrorCode.SCHEDULER_UNAUTHENTICATED_OUTPUT_PROVISIONING);
+            throw new ProvisioningException(error);
+        }
         if (notInOneOfSchedulerManagedStates(run)) {
             AppEngineError error = ErrorBuilder.build(ErrorCode.INTERNAL_INVALID_TASK_RUN_STATE);
             throw new ProvisioningException(error);
@@ -451,7 +457,7 @@ public class TaskProvisioningService {
                     // remove the trailing slash
                     String noTrailingSlash = ze.getName().replace("/", "");
                     // assuming it's a directory
-                    if (currentOutput.getName().equals(noTrailingSlash)) { 
+                    if (currentOutput.getName().equals(noTrailingSlash)) {
                         currentOutput.setName(ze.getName()); // already contains the trailing /
                         remainingOutputs.remove(i);
                         isDirectory = true;
@@ -493,20 +499,20 @@ public class TaskProvisioningService {
 
             }
             // a compaction step
-            // order by the length of name 
+            // order by the length of name
             // to make sure deeper files and directories are merged first
             contentsOfZip = contentsOfZip
                 .stream()
                 .sorted((s1, s2) -> Integer.compare(
-                    s2.peek().getName().length(), 
+                    s2.peek().getName().length(),
                     s1.peek().getName().length())
                 )
                 .toList();
             // merge StorageData objects together
             for (StorageData storageData : contentsOfZip) {
                 for (StorageData compared : contentsOfZip) {
-                    if (storageData.equals(compared)) { 
-                        continue; 
+                    if (storageData.equals(compared)) {
+                        continue;
                     }
                     if (compared.peek().getName().startsWith(storageData.peek().getName())) {
                         storageData.merge(compared);
@@ -709,7 +715,7 @@ public class TaskProvisioningService {
             case PROVISIONED -> updateToProvisioned(run);
             case RUNNING -> run(run);
             // to safeguard against unknown state transition requests
-            default -> throw new ProvisioningException(ErrorBuilder.build(ErrorCode.UKNOWN_STATE));
+            default -> throw new ProvisioningException(ErrorBuilder.build(ErrorCode.UNKNOWN_STATE));
         };
     }
 

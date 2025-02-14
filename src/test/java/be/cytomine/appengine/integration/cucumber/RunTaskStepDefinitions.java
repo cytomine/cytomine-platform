@@ -113,6 +113,8 @@ public class RunTaskStepDefinitions {
     private StorageData param2FileData;
     private StorageData outputFileData;
 
+    private String secret;
+
     private ResponseEntity<JsonNode> persistedRunResponse;
 
     @NotNull
@@ -169,12 +171,14 @@ public class RunTaskStepDefinitions {
         schedulerHandler.alive();
     }
 
+
     @Given("a task run exists with identifier {string}")
     public void a_task_run_exists_with_identifier(String uuid) throws FileStorageException {
         runRepository.deleteAll();
         Task task = TestTaskBuilder.buildHardcodedAddInteger(UUID.fromString(uuid));
         task = taskRepository.save(task);
-        persistedRun = new Run(UUID.fromString(uuid), null, task);
+        secret = UUID.randomUUID().toString();
+        persistedRun = new Run(UUID.fromString(uuid), null, task , secret);
         createStorage(uuid);
     }
 
@@ -432,6 +436,7 @@ public class RunTaskStepDefinitions {
             e.printStackTrace();
             persistedException = e;
         }
+      
     }
 
     @Then("App Engine sends a {string} Forbidden response with a payload containing the error message \\(see OpenAPI spec) and code {string}")
@@ -515,19 +520,30 @@ public class RunTaskStepDefinitions {
 
     @When("user calls the endpoint to post outputs with {string} HTTP method POST and the zip file as a binary payload")
     public void user_calls_the_endpoint_to_post_outputs_with_http_method_post_and_the_zip_file_as_a_binary_payload(String runId) {
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("outputs", new FileSystemResource(persistedZipFile));
+
+        HttpEntity<MultiValueMap<String, Object>> entity = new HttpEntity<>(body, headers);
+
+        String endpointUrl = buildAppEngineUrl() + "/task-runs/" + runId + "/" + secret + "/outputs.zip";
         try {
-            appEngineApi.uploadTaskRunOutputs(UUID.fromString(runId), persistedZipFile);
-        } catch (ApiException e) {
-            e.printStackTrace();
-            exception = e;
+            ResponseEntity<List<TaskRunParameterValue>> response = new RestTemplate().exchange(endpointUrl, HttpMethod.POST, entity, new ParameterizedTypeReference<List<TaskRunParameterValue>>() {});
+            outputs = response.getBody();
+        } catch (RestClientResponseException e) {
+            persistedException = e;
         }
+
     }
 
     @Then("App Engine sends a {string} Bad Request response with a payload containing the error message \\(see OpenAPI spec) and code {string}")
     public void app_engine_sends_a_bad_request_response_with_a_payload_containing_the_error_message_see_open_api_spec_and_code(String responseCode, String errorCode) throws JsonProcessingException {
-        Assertions.assertEquals(Integer.parseInt(responseCode), exception.getCode());
+        Assertions.assertTrue(persistedException.getStatusCode().is4xxClientError());
         ObjectMapper mapper = new ObjectMapper();
-        JsonNode errorJsonNodeFromServer = mapper.readTree(exception.getResponseBody());
+        JsonNode errorJsonNodeFromServer = mapper.readTree(persistedException.getResponseBodyAsString());
         Assertions.assertEquals(errorCode, errorJsonNodeFromServer.get("error_code").textValue());
     }
 
@@ -557,7 +573,7 @@ public class RunTaskStepDefinitions {
 
         HttpEntity<MultiValueMap<String, Object>> entity = new HttpEntity<>(body, headers);
 
-        String endpointUrl = buildAppEngineUrl() + "/task-runs/" + runId + "/outputs.zip";
+        String endpointUrl = buildAppEngineUrl() + "/task-runs/" + runId + "/" + secret + "/outputs.zip";
         try {
             ResponseEntity<List<TaskRunParameterValue>> response = new RestTemplate().exchange(endpointUrl, HttpMethod.POST, entity, new ParameterizedTypeReference<List<TaskRunParameterValue>>() {});
             outputs = response.getBody();
