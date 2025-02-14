@@ -99,7 +99,16 @@ public class KubernetesScheduler implements SchedulerHandler {
     @Override
     public Schedule schedule(Schedule schedule) throws SchedulingException {
         log.info("Schedule: get Task parameters");
-      
+        Run run = schedule.getRun();
+        String runId = run.getId().toString();
+        Map<String, String> labels = new HashMap<>() {
+            {
+                put("runId", runId);
+            }};
+
+        Task task = run.getTask();
+        String podName = task.getName().toLowerCase().replaceAll("[^a-zA-Z0-9]", "") + "-" + runId;
+        String imageName = getRegistryAddress() + "/" + task.getImageName();
         String runSecret = String.valueOf(run.getSecret());
 
         // Pre container commands
@@ -120,17 +129,6 @@ public class KubernetesScheduler implements SchedulerHandler {
         wait += "| keys[0]' | grep -q -F \"terminated\"; do sleep 2; done";
         String and = " && ";
 
-
-        Run run = schedule.getRun();
-        String runId = run.getId().toString();
-        Map<String, String> labels = new HashMap<>() {
-            {
-                put("runId", runId);
-            }};
-
-        Task task = run.getTask();
-        String podName = task.getName().toLowerCase().replaceAll("[^a-zA-Z0-9]", "") + "-" + runId;
-        String imageName = getRegistryAddress() + "/" + task.getImageName();
 
         log.info("Schedule: create task pod...");
         PodBuilder podBuilder = new PodBuilder()
@@ -168,11 +166,6 @@ public class KubernetesScheduler implements SchedulerHandler {
 
         ResourceRequirements taskResources = taskResourcesBuilder.build();
 
-        String url = baseUrl + runId;
-        String fetchInputs = "curl -L -o inputs.zip " + url + "/inputs.zip";
-        String unzipInputs = "unzip -o inputs.zip -d " + task.getInputFolder();
-        String sendOutputs = "curl -X POST -F 'outputs=@outputs.zip' " + url + "/outputs.zip";
-        String zipOutputs = "zip -rj outputs.zip " + task.getOutputFolder();
         // Defining the pod image to run
         podBuilder
         .withNewSpec()
