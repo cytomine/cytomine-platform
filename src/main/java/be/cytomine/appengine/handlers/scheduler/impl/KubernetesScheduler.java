@@ -100,13 +100,7 @@ public class KubernetesScheduler implements SchedulerHandler {
     public Schedule schedule(Schedule schedule) throws SchedulingException {
         log.info("Schedule: get Task parameters");
       
-        Run run = schedule.getRun();
-        String runId = run.getId().toString();
         String runSecret = String.valueOf(run.getSecret());
-        Task task = run.getTask();
-
-        String podName = task.getName().toLowerCase().replaceAll("[^a-zA-Z0-9]", "") + "-" + runId;
-        String imageName = getRegistryAddress() + "/" + task.getImageName();
 
         // Pre container commands
         String url = baseUrl + runId;
