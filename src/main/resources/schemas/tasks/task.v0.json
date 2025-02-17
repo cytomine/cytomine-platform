@@ -438,9 +438,6 @@
             "max_size": {
               "type": "integer"
             },
-            "allow_missing": {
-              "type": "boolean"
-            },
             "subtype": {
               "oneOf": [
                 {"$ref": "#/$defs/io/type_specs/integer"},
