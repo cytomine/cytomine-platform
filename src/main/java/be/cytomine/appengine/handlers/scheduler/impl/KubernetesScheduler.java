@@ -5,6 +5,8 @@ import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
 
+import io.fabric8.kubernetes.api.model.Container;
+import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.HostPathVolumeSourceBuilder;
 import io.fabric8.kubernetes.api.model.PodBuilder;
 import io.fabric8.kubernetes.api.model.Quantity;
@@ -99,44 +101,18 @@ public class KubernetesScheduler implements SchedulerHandler {
     @Override
     public Schedule schedule(Schedule schedule) throws SchedulingException {
         log.info("Schedule: get Task parameters");
+
         Run run = schedule.getRun();
         String runId = run.getId().toString();
-        Map<String, String> labels = new HashMap<>() {
-            {
-                put("runId", runId);
-            }};
+        Map<String, String> labels = new HashMap<>();
+        labels.put("runId", runId);
 
         Task task = run.getTask();
         String podName = task.getName().toLowerCase().replaceAll("[^a-zA-Z0-9]", "") + "-" + runId;
         String imageName = getRegistryAddress() + "/" + task.getImageName();
         String runSecret = String.valueOf(run.getSecret());
 
-        // Pre container commands
-        String url = baseUrl + runId;
-        String fetchInputs = "curl -L -o inputs.zip " + url + "/inputs.zip";
-        String unzipInputs = "unzip -o inputs.zip -d " + task.getInputFolder();
-        String sendOutputs = "curl -X POST -F 'outputs=@outputs.zip' "
-            + url
-            + "/"
-            + runSecret
-            + "/outputs.zip";
-        String zipOutputs = "zip -rj outputs.zip " + task.getOutputFolder();
-
-        String wait = "export TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token); ";
-        wait += "while ! curl -k -H \"Authorization: Bearer $TOKEN\" ";
-        wait += "https://${KUBERNETES_SERVICE_HOST}:${KUBERNETES_SERVICE_PORT_HTTPS}/api/v1/namespaces/default/pods/${HOSTNAME}/status ";
-        wait += "| jq '.status | .containerStatuses[] | select(.name == \"task\") | .state ";
-        wait += "| keys[0]' | grep -q -F \"terminated\"; do sleep 2; done";
-        String and = " && ";
-
-
         log.info("Schedule: create task pod...");
-        PodBuilder podBuilder = new PodBuilder()
-            .withNewMetadata()
-            .withName(podName)
-            .withLabels(labels)
-            .endMetadata();
-
 
         // Define helper container resources
         ResourceRequirementsBuilder helperContainersResourcesBuilder =
@@ -148,6 +124,7 @@ public class KubernetesScheduler implements SchedulerHandler {
             .addToLimits("memory", new Quantity(helperContainerRam));
 
         ResourceRequirements helperContainersResources = helperContainersResourcesBuilder.build();
+
         // Define task resources for the task
         ResourceRequirementsBuilder taskResourcesBuilder =
             new ResourceRequirements()
@@ -166,76 +143,130 @@ public class KubernetesScheduler implements SchedulerHandler {
 
         ResourceRequirements taskResources = taskResourcesBuilder.build();
 
+        String url = baseUrl + runId;
+        String and = " && ";
+
+        String permissions = "chmod -R 777 " + task.getInputFolder() + " " + task.getOutputFolder();
+        Container permissionContainer = new ContainerBuilder()
+            .withName("permissions")
+            .withImage("cytomineuliege/alpine-task-utils:latest")
+            .withImagePullPolicy("IfNotPresent")
+            .withCommand("/bin/sh", "-c", permissions)
+
+            .withResources(helperContainersResources)
+
+            .addNewVolumeMount()
+            .withName("inputs")
+            .withMountPath(task.getInputFolder())
+            .endVolumeMount()
+            .addNewVolumeMount()
+            .withName("outputs")
+            .withMountPath(task.getOutputFolder())
+            .endVolumeMount()
+
+            .build();
+
+        String fetchInputs = "curl -L -o inputs.zip " + url + "/inputs.zip";
+        String unzipInputs = "unzip -o inputs.zip -d " + task.getInputFolder();
+
+        Container inputContainer = new ContainerBuilder()
+            .withName("inputs-provisioning")
+            .withImage("cytomineuliege/alpine-task-utils:latest")
+            .withImagePullPolicy("IfNotPresent")
+            .withCommand("/bin/sh", "-c", fetchInputs + and + unzipInputs)
+
+            // request and limit helper container resources
+            .withResources(helperContainersResources)
+
+            // Mount volume for inputs provisioning
+            .addNewVolumeMount()
+            .withName("inputs")
+            .withMountPath(task.getInputFolder())
+            .endVolumeMount()
+
+            .build();
+
+        Container taskContainer = new ContainerBuilder()
+            .withName("task")
+            .withImage(imageName)
+            .withImagePullPolicy("IfNotPresent")
+
+            // request and limit task resources
+            .withResources(taskResources)
+
+            // Mount volumes for inputs and outputs
+            .addNewVolumeMount()
+            .withName("inputs")
+            .withMountPath(task.getInputFolder())
+            .endVolumeMount()
+            .addNewVolumeMount()
+            .withName("outputs")
+            .withMountPath(task.getOutputFolder())
+            .endVolumeMount()
+
+            .build();
+
+        String sendOutputs = "curl -X POST -F 'outputs=@outputs.zip' ";
+        sendOutputs += url + "/" + runSecret + "/outputs.zip";
+        String zipOutputs = "zip -rj outputs.zip " + task.getOutputFolder();
+        String wait = "export TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token); ";
+        wait += "while ! curl -k -H \"Authorization: Bearer $TOKEN\" ";
+        wait += "https://${KUBERNETES_SERVICE_HOST}:${KUBERNETES_SERVICE_PORT_HTTPS}/api/v1/namespaces/default/pods/${HOSTNAME}/status ";
+        wait += "| jq '.status | .containerStatuses[] | select(.name == \"task\") | .state ";
+        wait += "| keys[0]' | grep -q -F \"terminated\"; do sleep 2; done";
+
+        Container outputContainer = new ContainerBuilder()
+            .withName("outputs-sending")
+            .withImage("cytomineuliege/alpine-task-utils:latest")
+            .withImagePullPolicy("IfNotPresent")
+            .withCommand("/bin/sh", "-c", wait + and + zipOutputs + and + sendOutputs)
+
+            // request and limit helper container resources
+            .withResources(helperContainersResources)
+
+            .addNewVolumeMount()
+            .withName("outputs")
+            .withMountPath(task.getOutputFolder())
+            .endVolumeMount()
+
+            .build();
+
         // Defining the pod image to run
-        podBuilder
-        .withNewSpec()
+        PodBuilder podBuilder = new PodBuilder()
+            .withNewMetadata()
+            .withName(podName)
+            .withLabels(labels)
+            .endMetadata()
 
-        // Pre-task for inputs provisioning
-        .addNewInitContainer()
-        .withName("inputs-provisioning")
-        .withImage("cytomineuliege/alpine-task-utils:latest")
-        .withImagePullPolicy("IfNotPresent")
-        .withCommand("/bin/sh", "-c", fetchInputs + and + unzipInputs)
+            .withNewSpec()
 
-        // request and limit helper container resources
-        .withResources(helperContainersResources)
+            .addNewInitContainerLike(permissionContainer)
+            .endInitContainer()
 
-        // Mount volume for inputs provisioning
-        .addNewVolumeMount()
-        .withName("inputs")
-        .withMountPath(task.getInputFolder())
-        .endVolumeMount()
-        .endInitContainer()
+            // Pre-task for inputs provisioning
+            .addNewInitContainerLike(inputContainer)
+            .endInitContainer()
 
-        // Task container
-        .addNewContainer()
-        .withName("task")
-        .withImage(imageName)
-        .withImagePullPolicy("IfNotPresent")
+            // Task container
+            .addNewContainerLike(taskContainer)
+            .endContainer()
 
-        // request and limit task resources
-        .withResources(taskResources)
+            // Post Task for outputs sending
+            .addNewContainerLike(outputContainer)
+            .endContainer()
 
-        // Mount volumes for inputs and outputs
-        .addNewVolumeMount()
-        .withName("inputs")
-        .withMountPath(task.getInputFolder())
-        .endVolumeMount()
-        .addNewVolumeMount()
-        .withName("outputs")
-        .withMountPath(task.getOutputFolder())
-        .endVolumeMount()
-        .endContainer()
-
-        // Post Task for outputs sending
-        .addNewContainer()
-        .withName("outputs-sending")
-        .withImage("cytomineuliege/alpine-task-utils:latest")
-        .withImagePullPolicy("IfNotPresent")
-        .withCommand("/bin/sh", "-c", wait + and + zipOutputs + and + sendOutputs)
-
-        // request and limit helper container resources
-        .withResources(helperContainersResources)
-
-        .addNewVolumeMount()
-        .withName("outputs")
-        .withMountPath(task.getOutputFolder())
-        .endVolumeMount()
-        .endContainer()
-
-        // Mount volumes from the scheduler file system
-        .addToVolumes(
-            new VolumeBuilder()
-                .withName("inputs")
-                .withHostPath(
-                    new HostPathVolumeSourceBuilder().withPath(baseInputPath + runId).build())
-                .build())
-        .addToVolumes(
-            new VolumeBuilder()
-                .withName("outputs")
-                .withHostPath(
-                    new HostPathVolumeSourceBuilder().withPath(baseOutputPath + runId).build())
-                .build())
+            // Mount volumes from the scheduler file system
+            .addToVolumes(new VolumeBuilder()
+            .withName("inputs")
+            .withHostPath(
+                new HostPathVolumeSourceBuilder().withPath(baseInputPath + runId).build())
+            .build())
+            .addToVolumes(new VolumeBuilder()
+            .withName("outputs")
+            .withHostPath(
+                new HostPathVolumeSourceBuilder().withPath(baseOutputPath + runId)
+            .build())
+            .build())
 
             // Never restart the pod
             .withRestartPolicy("Never")
