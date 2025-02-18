@@ -1,10 +1,8 @@
 package be.cytomine.appengine.unit.models;
 
 import java.awt.Dimension;
+import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -24,9 +22,10 @@ import be.cytomine.appengine.models.task.formats.TiffFormat;
 public class ImageFormatTest {
 
     private static final int EXPECTED_WIDTH = 680;
+
     private static final int EXPECTED_HEIGHT = 512;
 
-    private static Map<String, byte[]> images;
+    private static Map<String, File> images;
 
     @BeforeAll
     public static void setUp() throws IOException {
@@ -41,10 +40,8 @@ public class ImageFormatTest {
         images.clear();
     }
 
-    private static byte[] loadImage(String imagePath) throws IOException {
-        try (InputStream is = Files.newInputStream(Paths.get(imagePath))) {
-            return is.readAllBytes();
-        }
+    private static File loadImage(String imagePath) throws IOException {
+        return new File(imagePath);
     }
 
     private static Stream<Arguments> streamImageFormat() {
@@ -58,23 +55,32 @@ public class ImageFormatTest {
     @ParameterizedTest
     @MethodSource("streamImageFormat")
     public void testCheckSignature(FileFormat format, String formatKey) {
-        byte[] image = images.get(formatKey);
+        File image = images.get(formatKey);
         Assertions.assertTrue(format.checkSignature(image), "Image signature should be valid.");
     }
 
     @ParameterizedTest
     @MethodSource("streamImageFormat")
     public void testGetDimensions(FileFormat format, String formatKey) {
-        byte[] image = images.get(formatKey);
+        File image = images.get(formatKey);
         Dimension dimension = format.getDimensions(image);
-        Assertions.assertEquals(EXPECTED_WIDTH, dimension.getWidth(), "Width should be " + EXPECTED_WIDTH + " pixels.");
-        Assertions.assertEquals(EXPECTED_HEIGHT, dimension.getHeight(), "Height should be " + EXPECTED_HEIGHT + " pixels.");
+
+        Assertions.assertEquals(
+            EXPECTED_WIDTH,
+            dimension.getWidth(),
+            "Width should be " + EXPECTED_WIDTH + " pixels."
+        );
+        Assertions.assertEquals(
+            EXPECTED_HEIGHT,
+            dimension.getHeight(),
+            "Height should be " + EXPECTED_HEIGHT + " pixels."
+        );
     }
 
     @ParameterizedTest
     @MethodSource("streamImageFormat")
     public void testValidate(FileFormat format, String formatKey) {
-        byte[] image = images.get(formatKey);
+        File image = images.get(formatKey);
         Assertions.assertTrue(format.validate(image), "Validation should return true.");
     }
 }

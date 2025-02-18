@@ -1,5 +1,6 @@
 package be.cytomine.appengine.utils;
 
+import java.io.File;
 import java.io.IOException;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -9,7 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class DescriptorHelper {
-    public static JsonNode parseDescriptor(byte[] descriptorFile) {
+    public static JsonNode parseDescriptor(File descriptorFile) {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 
         try {

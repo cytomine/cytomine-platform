@@ -1,7 +1,8 @@
 package be.cytomine.appengine.models.task.formats;
 
 import java.awt.Dimension;
-import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Arrays;
 
@@ -14,23 +15,29 @@ public class DicomFormat implements FileFormat {
     public static final byte[] SIGNATURE = { (byte) 0x44, (byte) 0x49, (byte) 0x43, (byte) 0x4D };
 
     @Override
-    public boolean checkSignature(byte[] file) {
-        if (file.length < SIGNATURE.length) {
+    public boolean checkSignature(File file) {
+        if (file.length() < SIGNATURE.length) {
             return false;
         }
 
-        return Arrays.equals(Arrays.copyOf(file, SIGNATURE.length), SIGNATURE);
+        try (FileInputStream fis = new FileInputStream(file)) {
+            byte[] fileSignature = new byte[SIGNATURE.length];
+            int bytesRead = fis.read(fileSignature);
+
+            return bytesRead == SIGNATURE.length && Arrays.equals(fileSignature, SIGNATURE);
+        } catch (IOException e) {
+            return false;
+        }
     }
 
     @Override
-    public boolean validate(byte[] file) {
+    public boolean validate(File file) {
         return true;
     }
 
     @Override
-    public Dimension getDimensions(byte[] file) {
-        ByteArrayInputStream bis = new ByteArrayInputStream(file);
-        try (DicomInputStream dis = new DicomInputStream(bis)) {
+    public Dimension getDimensions(File file) {
+        try (DicomInputStream dis = new DicomInputStream(file)) {
             Attributes attributes = dis.readDataset();
 
             int width = attributes.getInt(Tag.Columns, -1);

@@ -40,6 +40,8 @@ public class Run extends BaseEntity {
 
     private LocalDateTime lastStateTransitionAt;
 
+    private String secret;
+
     @ManyToOne(cascade = CascadeType.ALL)
     private Task task;
 
@@ -51,6 +53,15 @@ public class Run extends BaseEntity {
         this.id = taskRunId;
         this.state = taskRunState;
         this.task = task;
+        this.provisions = new HashSet<>();
+    }
+
+    public Run(UUID taskRunId, TaskRunState taskRunState, Task task, String secret) {
+        super();
+        this.id = taskRunId;
+        this.state = taskRunState;
+        this.task = task;
+        this.secret = secret;
         this.provisions = new HashSet<>();
     }
 

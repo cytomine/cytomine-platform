@@ -1,5 +1,6 @@
 package be.cytomine.appengine.models.task.number;
 
+import java.io.File;
 import java.util.UUID;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -26,6 +27,7 @@ import be.cytomine.appengine.models.task.TypePersistence;
 import be.cytomine.appengine.models.task.ValueType;
 import be.cytomine.appengine.repositories.number.NumberPersistenceRepository;
 import be.cytomine.appengine.utils.AppEngineApplicationContext;
+import be.cytomine.appengine.utils.FileHelper;
 
 @SuppressWarnings("checkstyle:LineLength")
 @Data
@@ -84,6 +86,23 @@ public class NumberType extends Type {
     }
 
     @Override
+    public void validateFiles(
+        Run run,
+        Output currentOutput,
+        StorageData currentOutputStorageData)
+        throws TypeValidationException {
+
+        // validate file structure
+        File outputFile = getFileIfStructureIsValid(currentOutputStorageData);
+
+        // validate value
+        String rawValue = getContentIfValid(outputFile);
+
+        validate(Double.parseDouble(rawValue));
+
+    }
+
+    @Override
     public void validate(Object valueObject) throws TypeValidationException {
         if (valueObject == null) {
             return;
@@ -132,9 +151,8 @@ public class NumberType extends Type {
     public void persistResult(Run run, Output currentOutput, StorageData outputValue) {
         NumberPersistenceRepository numberPersistenceRepository = AppEngineApplicationContext.getBean(NumberPersistenceRepository.class);
         NumberPersistence result = numberPersistenceRepository.findNumberPersistenceByParameterNameAndRunIdAndParameterType(currentOutput.getName(), run.getId(), ParameterType.OUTPUT);
-        String output = new String(outputValue.poll().getData(), getStorageCharset());
-        String trimmedOutput = output.trim();
-        double value = Double.parseDouble(trimmedOutput);
+        String output = FileHelper.read(outputValue.peek().getData(), getStorageCharset());
+        double value = Double.parseDouble(output);
         if (result == null) {
             result = new NumberPersistence();
             result.setValueType(ValueType.NUMBER);
@@ -153,9 +171,9 @@ public class NumberType extends Type {
     public StorageData mapToStorageFileData(JsonNode provision) {
         String value = provision.get("value").asText();
         String parameterName = provision.get("param_name").asText();
-        byte[] inputFileData = value.getBytes(getStorageCharset());
-        StorageDataEntry storageDataEntry = new StorageDataEntry(inputFileData, parameterName, StorageDataType.FILE);
-        return new StorageData(storageDataEntry);
+        File data = FileHelper.write(parameterName, value.getBytes(getStorageCharset()));
+        StorageDataEntry entry = new StorageDataEntry(data, parameterName, StorageDataType.FILE);
+        return new StorageData(entry);
     }
 
     @Override
@@ -171,14 +189,13 @@ public class NumberType extends Type {
 
     @Override
     public TaskRunParameterValue buildTaskRunParameterValue(StorageData output, UUID id, String outputName) {
-        String outputValue = new String(output.poll().getData(), getStorageCharset());
-        String trimmedOutput = outputValue.trim();
+        String outputValue = FileHelper.read(output.peek().getData(), getStorageCharset());
 
         NumberValue value = new NumberValue();
         value.setParameterName(outputName);
         value.setTaskRunId(id);
         value.setType(ValueType.NUMBER);
-        value.setValue(Double.parseDouble(trimmedOutput));
+        value.setValue(Double.parseDouble(outputValue));
 
         return value;
     }

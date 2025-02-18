@@ -142,42 +142,44 @@ public class TaskTestsUtils {
         }
 
         switch (type) {
-            case "BooleanType":
+            case "boolean":
                 provision.setType(be.cytomine.appengine.dto.inputs.task.ParameterType.BOOLEAN);
                 provision.setValue(Boolean.parseBoolean(value));
                 break;
-            case "IntegerType":
+            case "integer":
                 provision.setType(be.cytomine.appengine.dto.inputs.task.ParameterType.INTEGER);
                 provision.setValue(Integer.parseInt(value));
                 break;
-            case "NumberType":
+            case "number":
                 provision.setType(be.cytomine.appengine.dto.inputs.task.ParameterType.NUMBER);
                 provision.setValue(Double.parseDouble(value));
                 break;
-            case "StringType":
+            case "string":
                 provision.setType(be.cytomine.appengine.dto.inputs.task.ParameterType.STRING);
                 provision.setValue(value);
                 break;
-            case "EnumerationType":
+            case "enumeration":
                 provision.setType(be.cytomine.appengine.dto.inputs.task.ParameterType.ENUMERATION);
                 provision.setValue(value);
                 break;
-            case "GeometryType":
+            case "geometry":
                 provision.setType(be.cytomine.appengine.dto.inputs.task.ParameterType.GEOMETRY);
                 provision.setValue(value);
                 break;
-            case "ImageType":
+            case "image":
                 provision.setType(be.cytomine.appengine.dto.inputs.task.ParameterType.IMAGE);
                 provision.setValue(value.getBytes());
                 break;
-            case "WsiType":
+            case "wsi":
                 provision.setType(be.cytomine.appengine.dto.inputs.task.ParameterType.WSI);
                 provision.setValue(value.getBytes());
                 break;
-            case "FileType":
+            case "file":
                 provision.setType(be.cytomine.appengine.dto.inputs.task.ParameterType.FILE);
                 provision.setValue(value.getBytes());
                 break;
+            default:
+                throw new RuntimeException("Unknown type: " + type);
         }
 
         return provision;

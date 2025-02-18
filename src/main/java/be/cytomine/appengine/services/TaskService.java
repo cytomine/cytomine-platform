@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -72,10 +73,15 @@ public class TaskService {
     @Value("${storage.input.charset}")
     private String charset;
 
+    @Value("${scheduler.task-resources.ram}")
+    private String defaultRam;
+
+    @Value("${scheduler.task-resources.cpus}")
+    private int defaultCpus;
+
     @Transactional
-    public Optional<TaskDescription> uploadTask(
-        MultipartFile taskArchive
-    ) throws BundleArchiveException, TaskServiceException, ValidationException {
+    public Optional<TaskDescription> uploadTask(MultipartFile taskArchive)
+        throws BundleArchiveException, TaskServiceException, ValidationException {
 
         log.info("UploadTask: building archive...");
         UploadTaskArchive uploadTaskArchive = archiveUtils.readArchive(taskArchive);
@@ -99,8 +105,7 @@ public class TaskService {
         try {
             fileStorageHandler.saveStorageData(
                 storage,
-                new StorageData(uploadTaskArchive.getDescriptorFile(),
-                "descriptor.yml")
+                new StorageData(uploadTaskArchive.getDescriptorFile(), "descriptor.yml")
             );
             log.info("UploadTask: descriptor.yml is stored in object storage");
         } catch (FileStorageException e) {
@@ -111,19 +116,18 @@ public class TaskService {
                 log.info("UploadTask: storage deleted");
             } catch (FileStorageException ex) {
                 log.error("UploadTask: file storage service is failing [{}]", ex.getMessage());
-                AppEngineError error = ErrorBuilder.build(
-                    ErrorCode.STORAGE_STORING_TASK_DEFINITION_FAILED
-                );
+                AppEngineError error = ErrorBuilder
+                    .build(ErrorCode.STORAGE_STORING_TASK_DEFINITION_FAILED);
                 throw new TaskServiceException(error);
             }
             return Optional.empty();
         }
 
         log.info("UploadTask: pushing task image...");
-        DockerImage image = new DockerImage(
+        DockerImage image =
+            new DockerImage(
             uploadTaskArchive.getDockerImage(),
-            taskIdentifiers.getImageRegistryCompliantName()
-        );
+            taskIdentifiers.getImageRegistryCompliantName());
         try {
             registryHandler.pushImage(image);
         } catch (RegistryException e) {
@@ -134,9 +138,8 @@ public class TaskService {
                 log.info("UploadTask: storage deleted");
             } catch (FileStorageException ex) {
                 log.error("UploadTask: file storage service is failing [{}]", ex.getMessage());
-                AppEngineError error = ErrorBuilder.build(
-                    ErrorCode.REGISTRY_PUSHING_TASK_IMAGE_FAILED
-                );
+                AppEngineError error = ErrorBuilder
+                    .build(ErrorCode.REGISTRY_PUSHING_TASK_IMAGE_FAILED);
                 throw new TaskServiceException(error);
             }
         } finally {
@@ -144,17 +147,18 @@ public class TaskService {
         }
         log.info("UploadTask: image pushed to registry");
 
+        // save task info
         Task task = new Task();
         task.setIdentifier(taskIdentifiers.getLocalTaskIdentifier());
         task.setStorageReference(taskIdentifiers.getStorageIdentifier());
         task.setImageName(taskIdentifiers.getImageRegistryCompliantName());
         task.setName(uploadTaskArchive.getDescriptorFileAsJson().get("name").textValue());
-        task.setNameShort(
-            uploadTaskArchive.getDescriptorFileAsJson().get("name_short").textValue()
-        );
+        task.setNameShort(uploadTaskArchive
+            .getDescriptorFileAsJson()
+            .get("name_short")
+            .textValue());
         task.setDescriptorFile(
-            uploadTaskArchive.getDescriptorFileAsJson().get("namespace").textValue()
-        );
+            uploadTaskArchive.getDescriptorFileAsJson().get("namespace").textValue());
         task.setNamespace(uploadTaskArchive.getDescriptorFileAsJson().get("namespace").textValue());
         task.setVersion(uploadTaskArchive.getDescriptorFileAsJson().get("version").textValue());
         task.setInputFolder(
@@ -162,22 +166,25 @@ public class TaskService {
             .getDescriptorFileAsJson()
             .get("configuration")
             .get("input_folder")
-            .textValue()
-        );
+            .textValue());
         task.setOutputFolder(
             uploadTaskArchive
             .getDescriptorFileAsJson()
             .get("configuration")
             .get("output_folder")
-            .textValue()
-        );
+            .textValue());
 
-        if (uploadTaskArchive.getDescriptorFileAsJson().get("description") != null) {
-            task.setDescription(uploadTaskArchive
-                .getDescriptorFileAsJson()
-                .get("description")
-                .textValue()
-            );
+        // resources
+        JsonNode resources =
+            uploadTaskArchive.getDescriptorFileAsJson().get("configuration").get("resources");
+
+        if (!Objects.nonNull(resources)) {
+            task.setRam(defaultRam);
+            task.setCpus(defaultCpus);
+        } else {
+            task.setRam(resources.path("ram").asText(defaultRam));
+            task.setCpus(resources.path("cpus").asInt(defaultCpus));
+            task.setGpus(resources.path("gpus").asInt(0));
         }
 
         task.setAuthors(getAuthors(uploadTaskArchive));
@@ -261,9 +268,8 @@ public class TaskService {
                 JsonNode derivedFrom = dependencies.get("derived_from");
                 String inputName = derivedFrom.textValue().substring("inputs/".length());
                 inputs.stream()
-                      .filter(input -> input.getName().equals(inputName))
-                      .findFirst()
-                      .ifPresent(output::setDerivedFrom);
+                .filter(input -> input.getName().equals(inputName))
+                .findFirst().ifPresent(output::setDerivedFrom);
             }
 
             outputs.add(output);
@@ -292,36 +298,30 @@ public class TaskService {
         return authors;
     }
 
-    private void validateTaskBundle(
-        UploadTaskArchive uploadTaskArchive
-    ) throws ValidationException {
+    private void validateTaskBundle(UploadTaskArchive uploadTaskArchive)
+        throws ValidationException {
         taskValidationService.validateDescriptorFile(uploadTaskArchive);
         taskValidationService.checkIsNotDuplicate(uploadTaskArchive);
         taskValidationService.validateImage(uploadTaskArchive);
     }
 
-    private TaskIdentifiers generateTaskIdentifiers(UploadTaskArchive uploadTaskArchive) {
+    private TaskIdentifiers generateTaskIdentifiers(
+        UploadTaskArchive uploadTaskArchive) {
         UUID taskLocalIdentifier = UUID.randomUUID();
         String storageIdentifier = "task-" + taskLocalIdentifier + "-def";
-        String imageIdentifierFromDescriptor = uploadTaskArchive
-            .getDescriptorFileAsJson()
-            .get("namespace")
-            .textValue();
+        String imageIdentifierFromDescriptor =
+            uploadTaskArchive.getDescriptorFileAsJson().get("namespace").textValue();
         String version = uploadTaskArchive.getDescriptorFileAsJson().get("version").textValue();
         String imageRegistryCompliantName = imageIdentifierFromDescriptor.replace(".", "/");
         imageRegistryCompliantName += ":" + version;
 
-        return new TaskIdentifiers(
-            taskLocalIdentifier,
+        return new TaskIdentifiers(taskLocalIdentifier,
             storageIdentifier,
-            imageRegistryCompliantName
-        );
+            imageRegistryCompliantName);
     }
 
-    public StorageData retrieveYmlDescriptor(
-        String namespace,
-        String version
-    ) throws TaskServiceException, TaskNotFoundException {
+    public StorageData retrieveYmlDescriptor(String namespace, String version)
+        throws TaskServiceException, TaskNotFoundException {
         log.info("Storage : retrieving descriptor.yml...");
         Task task = taskRepository.findByNamespaceAndVersion(namespace, version);
         if (task == null) {
@@ -338,9 +338,8 @@ public class TaskService {
         return file;
     }
 
-    public StorageData retrieveYmlDescriptor(
-        String id
-    ) throws TaskServiceException, TaskNotFoundException {
+    public StorageData retrieveYmlDescriptor(String id)
+        throws TaskServiceException, TaskNotFoundException {
         log.info("Storage : retrieving descriptor.yml...");
         Optional<Task> task = taskRepository.findById(UUID.fromString(id));
         if (task.isEmpty()) {
@@ -377,22 +376,22 @@ public class TaskService {
     }
 
     public TaskDescription makeTaskDescription(Task task) {
-        TaskDescription taskDescription = new TaskDescription(
+        TaskDescription taskDescription =
+            new TaskDescription(
             task.getIdentifier(),
             task.getName(),
             task.getNamespace(),
             task.getVersion(),
-            task.getDescription()
-        );
+            task.getDescription());
         Set<TaskAuthor> descriptionAuthors = new HashSet<>();
         for (Author author : task.getAuthors()) {
-            TaskAuthor taskAuthor = new TaskAuthor(
+            TaskAuthor taskAuthor =
+                new TaskAuthor(
                 author.getFirstName(),
                 author.getLastName(),
                 author.getOrganization(),
                 author.getEmail(),
-                author.isContact()
-            );
+                author.isContact());
             descriptionAuthors.add(taskAuthor);
         }
         taskDescription.setAuthors(descriptionAuthors);
@@ -437,10 +436,8 @@ public class TaskService {
     }
 
     @Transactional
-    public TaskRun createRunForTask(
-        String namespace,
-        String version
-    ) throws RunTaskServiceException {
+    public TaskRun createRunForTask(String namespace, String version)
+        throws RunTaskServiceException {
         log.info("tasks/{namespace}/{version}/runs: creating run...");
         // find associated task
         log.info("tasks/{namespace}/{version}/runs: retrieving associated task...");
@@ -450,16 +447,14 @@ public class TaskService {
         UUID taskRunID = UUID.randomUUID();
         if (task == null) {
             throw new RunTaskServiceException(
-                "task {" + namespace + ":" + version + "} not found to associate with this run"
-            );
+                "task {" + namespace + ":" + version + "} not found to associate with this run");
         }
         if (task.getInputs().isEmpty()) {
-            throw new RunTaskServiceException(
-                "task {" + namespace + ":" + version + "} has no inputs"
-            );
+            throw new RunTaskServiceException("task {"
+                + namespace + ":" + version + "} has no inputs");
         }
         log.info("tasks/{namespace}/{version}/runs: retrieved task...");
-        Run run = new Run(taskRunID, TaskRunState.CREATED, task);
+        Run run = new Run(taskRunID, TaskRunState.CREATED, task, String.valueOf(UUID.randomUUID()));
         runRepository.saveAndFlush(run);
         // create a storage for the inputs and outputs
         createRunStorages(taskRunID);
@@ -470,33 +465,33 @@ public class TaskService {
 
     @Transactional
     public TaskRun createRunForTask(String taskId) throws RunTaskServiceException {
-        log.info("tasks/{id}/runs: creating run...");
+        log.info("tasks/{id}/runs : creating run...");
         // find associated task
-        log.info("tasks/{namespace}/{version}/runs: retrieving associated task...");
+        log.info("tasks/{namespace}/{version}/runs : retrieving associated task...");
         Optional<Task> task = taskRepository.findById(UUID.fromString(taskId));
         // update task to have a new task run
         UUID taskRunID = UUID.randomUUID();
         if (task.isEmpty()) {
             throw new RunTaskServiceException(
-                "task {" + taskId + "} not found to associate with this run"
-            );
+                "task {" + taskId + "} not found to associate with this run");
         }
         if (task.get().getInputs().isEmpty()) {
             throw new RunTaskServiceException("task {" + taskId + "} has no inputs");
         }
-        log.info("tasks/{namespace}/{version}/runs: retrieved task...");
+        log.info("tasks/{namespace}/{version}/runs : retrieved task...");
         Run run = new Run(taskRunID, TaskRunState.CREATED, task.get(), LocalDateTime.now());
+        run.setSecret(String.valueOf(UUID.randomUUID()));
         runRepository.saveAndFlush(run);
         // create a storage for the inputs and outputs
         createRunStorages(taskRunID);
         // build response dto
-        log.info("tasks/{id}/runs: run created...");
+        log.info("tasks/{id}/runs : run created...");
         return new TaskRun(taskRunID, makeTaskDescription(task.get()), TaskRunState.CREATED);
     }
 
     private void createRunStorages(UUID taskRunID) throws RunTaskServiceException {
-        String inputStorageIdentifier = "task-run-inputs-" + taskRunID.toString();
-        String outputsStorageIdentifier = "task-run-outputs-" + taskRunID.toString();
+        String inputStorageIdentifier = "task-run-inputs-" + taskRunID;
+        String outputsStorageIdentifier = "task-run-outputs-" + taskRunID;
         Storage inputStorage = new Storage(inputStorageIdentifier);
         Storage outputStorage = new Storage(outputsStorageIdentifier);
         try {
@@ -504,10 +499,8 @@ public class TaskService {
             fileStorageHandler.createStorage(outputStorage);
             log.info("tasks/{namespace}/{version}/runs: Storage is created for task");
         } catch (FileStorageException e) {
-            log.error(
-                "tasks/{namespace}/{version}/runs: failed to create storage [{}]",
-                e.getMessage()
-            );
+            log.error("tasks/{namespace}/{version}/runs: failed to create storage [{}]",
+                e.getMessage());
             throw new RunTaskServiceException(e);
         }
     }

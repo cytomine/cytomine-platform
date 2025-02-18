@@ -1,6 +1,6 @@
 package be.cytomine.appengine.models.task.file;
 
-import java.io.IOException;
+import java.io.File;
 import java.util.List;
 import java.util.UUID;
 
@@ -53,8 +53,22 @@ public class FileType extends Type {
     }
 
     @Override
+    public void validateFiles(
+        Run run,
+        Output currentOutput,
+        StorageData currentOutputStorageData)
+        throws TypeValidationException {
+
+        // validate file structure
+        File outputFile = getFileIfStructureIsValid(currentOutputStorageData);
+
+        validate(outputFile);
+
+    }
+
+    @Override
     public void validate(Object valueObject) throws TypeValidationException {
-        if (!(valueObject instanceof byte[])) {
+        if (!(valueObject instanceof File)) {
             throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_TYPE_ERROR);
         }
     }
@@ -96,14 +110,9 @@ public class FileType extends Type {
     @Override
     public StorageData mapToStorageFileData(JsonNode provision) {
         String parameterName = provision.get("param_name").asText();
-        byte[] inputFileData = null;
-        try {
-            inputFileData = provision.get("value").binaryValue();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        StorageDataEntry storageDataEntry = new StorageDataEntry(inputFileData, parameterName, StorageDataType.FILE);
-        return new StorageData(storageDataEntry);
+        File data = new File(provision.get("value").asText());
+        StorageDataEntry entry = new StorageDataEntry(data, parameterName, StorageDataType.FILE);
+        return new StorageData(entry);
     }
 
     @Override

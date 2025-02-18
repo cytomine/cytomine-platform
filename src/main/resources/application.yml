@@ -50,6 +50,12 @@ scheduler:
   master-url: ${SCHEDULER_MASTER_URL:http://scheduler:16443}
   oauth-token: ${SCHEDULER_OAUTH_TOKEN:token}
   username: ${SCHEDULER_USERNAME:admin}
+  task-resources:
+    cpus: 1
+    ram: 4Gi
+  helper-containers-resources:
+    cpu: 200m
+    ram: 200Mi
 registry-client:
   authenticated: false
   user: user #ignored

@@ -21,7 +21,7 @@ public class ErrorDefinitions {
         codes.put(ErrorCode.INTERNAL_INVALID_TASK_RUN_STATE, new MessageCode("APPE-internal-task-run-state-error", "run is in invalid state"));
         codes.put(ErrorCode.INTERNAL_MAX_UPLOAD_SIZE_EXCEEDED, new MessageCode("APPE-internal-bundle-validation-error", "maximum upload size for bundle exceeded"));
         codes.put(ErrorCode.INTERNAL_MISSING_OUTPUTS, new MessageCode("APPE-internal-task-run-missing-outputs", "some outputs are missing in the archive"));
-        codes.put(ErrorCode.INTERNAL_NOT_PROVISIONED, new MessageCode("APPE-internal-task-run-state-error", "not provisioned"));
+        codes.put(ErrorCode.INTERNAL_NOT_PROVISIONED, new MessageCode("APPE-internal-task-run-provisions-not-found", "not provisioned"));
         codes.put(ErrorCode.INTERNAL_PARAMETER_DOES_NOT_EXIST, new MessageCode("APPE-internal-parameter-not-found", "parameter not found"));
         codes.put(ErrorCode.INTERNAL_PARAMETER_GEOJSON_PROCESSING_ERROR, new MessageCode("APPE-internal-request-validation-error", "failed to parse the given GeoJSON object"));
         codes.put(ErrorCode.INTERNAL_PARAMETER_GEOJSON_SUBTYPE_ERROR, new MessageCode("APPE-internal-request-validation-error", "unsupported GeoJSON subtype"));
@@ -43,6 +43,7 @@ public class ErrorDefinitions {
         codes.put(ErrorCode.INTERNAL_PARAMETER_UNSUPPORTED_GEOMETRY_SUBTYPE, new MessageCode("APPE-internal-request-validation-error", "unsupported geometry subtype"));
         codes.put(ErrorCode.INTERNAL_PARAMETER_UNSUPPORTED_GEOMETRY_TYPE, new MessageCode("APPE-internal-request-validation-error", "unsupported geometry type"));
         codes.put(ErrorCode.INTERNAL_PARAMETER_VALIDATION_ERROR, new MessageCode("APPE-internal-request-validation-error", "value does not match defined constraint."));
+        codes.put(ErrorCode.INTERNAL_PROVISIONS_NOT_FOUND, new MessageCode("APPE-internal-task-run-provisions-not-found", "provisions not found"));
         codes.put(ErrorCode.INTERNAL_SCHEMA_VALIDATION_ERROR, new MessageCode("APPE-internal-bundle-schema-validation-error", "schema validation failed for descriptor.yml"));
         codes.put(ErrorCode.INTERNAL_SERVER_ERROR, new MessageCode("APPE-internal-server-error", "Server error."));
         codes.put(ErrorCode.INTERNAL_UNKNOWN_BUNDLE_ARCHIVE_FORAMT, new MessageCode("APPE-internal-bundle-validation-error", "unknown task bundle archive format"));
@@ -56,7 +57,12 @@ public class ErrorDefinitions {
         codes.put(ErrorCode.STORAGE_READING_FILE_FAILED, new MessageCode("APPE-storage-reading-file-error", "failed to read file from storage service"));
         codes.put(ErrorCode.STORAGE_STORING_INPUT_FAILED, new MessageCode("APPE-storage-storing-input-failed", "failed to store input file in storage service"));
         codes.put(ErrorCode.STORAGE_STORING_TASK_DEFINITION_FAILED, new MessageCode("APPE-storage-definition-storage-error", "storing task definition failed in storage service"));
-        codes.put(ErrorCode.UKNOWN_STATE, new MessageCode("APPE-internal-task-run-state-error", "unknown state in transition request"));
+        codes.put(ErrorCode.UNKNOWN_STATE, new MessageCode("APPE-internal-task-run-state-error", "unknown state in transition request"));
+        codes.put(ErrorCode.SCHEDULER_UNAUTHENTICATED_OUTPUT_PROVISIONING, new MessageCode("APPE-scheduler-unauthenticated-output-provisioning", "unauthenticated task failed to provision outputs for this run"));
+        codes.put(ErrorCode.INTERNAL_MISSING_OUTPUT_FILE_FOR_PARAMETER, new MessageCode("APPE-internal-missing-output-files", "file structure for primitive parameter is missing"));
+        codes.put(ErrorCode.INTERNAL_OUTPUT_FILE_FOR_PARAMETER_IS_DIRECTORY, new MessageCode("APPE-internal-is-directory", "file structure for primitive parameter is a directory"));
+        codes.put(ErrorCode.INTERNAL_EXTRA_OUTPUT_FILES_FOR_PARAMETER, new MessageCode("APPE-internal-extra-output-files", "file structure for parameter contains extra files"));
+        codes.put(ErrorCode.INTERNAL_OUTPUT_FILE_FOR_PARAMETER_IS_BLANK, new MessageCode("APPE-internal-is-blank", "file for parameter is blank"));
     }
 
     public static MessageCode fromCode(ErrorCode code) {

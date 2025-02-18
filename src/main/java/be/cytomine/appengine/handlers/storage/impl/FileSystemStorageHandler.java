@@ -1,10 +1,13 @@
 package be.cytomine.appengine.handlers.storage.impl;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.Comparator;
 
 import lombok.AllArgsConstructor;
@@ -35,8 +38,7 @@ public class FileSystemStorageHandler implements StorageHandler {
             return;
         }
 
-        while (!storageData.isEmpty()) {
-            StorageDataEntry current = storageData.poll();
+        for (StorageDataEntry current : storageData.getEntryList()) {
             String filename = current.getName();
             String storageId = storage.getIdStorage();
             // process the node here
@@ -44,7 +46,10 @@ public class FileSystemStorageHandler implements StorageHandler {
                 try {
                     Path filePath = Paths.get(basePath, storageId, filename);
                     Files.createDirectories(filePath.getParent());
-                    Files.write(filePath, current.getData());
+
+                    try (InputStream inputStream = new FileInputStream(current.getData())) {
+                        Files.copy(inputStream, filePath, StandardCopyOption.REPLACE_EXISTING);
+                    }
                 } catch (IOException e) {
                     String error = "Failed to create file " + filename;
                     error += " in storage " + storageId + ": " + e.getMessage();
@@ -120,28 +125,24 @@ public class FileSystemStorageHandler implements StorageHandler {
 
     @Override
     public StorageData readStorageData(StorageData emptyFile) throws FileStorageException {
-        StorageDataEntry current = emptyFile.poll();
+        StorageDataEntry current = emptyFile.peek();
         String filename = current.getName();
         Path filePath = Paths.get(basePath, current.getStorageId(), filename);
         try {
             Files.walk(filePath).forEach(path -> {
                 if (Files.isRegularFile(path)) {
-                    try {
-                        current.setData(Files.readAllBytes(path));
-                        current.setStorageDataType(StorageDataType.FILE);
-                        emptyFile.add(current);
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
+                    current.setData(path.toFile());
+                    current.setStorageDataType(StorageDataType.FILE);
                 }
+
                 if (Files.isDirectory(path)) {
                     current.setStorageDataType(StorageDataType.DIRECTORY);
-                    emptyFile.add(current);
                 }
             });
+
             return emptyFile;
-        } catch (IOException | RuntimeException e) {
-            emptyFile.getQueue().clear();
+        } catch (IOException e) {
+            emptyFile.getEntryList().clear();
             throw new FileStorageException("Failed to read file " + filename);
         }
     }
