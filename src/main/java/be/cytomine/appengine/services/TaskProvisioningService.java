@@ -25,7 +25,6 @@ import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -76,9 +75,6 @@ public class TaskProvisioningService {
     private final StorageHandler fileStorageHandler;
 
     private final SchedulerHandler schedulerHandler;
-
-    @Value("${storage.input.charset}")
-    private String charset;
 
     public JsonNode provisionRunParameter(
         String runId,
@@ -348,15 +344,17 @@ public class TaskProvisioningService {
                 new StorageData(provision.getParameterName(), "task-run-" + io + "-" + run.getId())
             );
 
-            while (!provisionFileData.isEmpty()) {
-                StorageDataEntry current = provisionFileData.poll();
+            for (StorageDataEntry current : provisionFileData.getEntryList()) {
                 ZipEntry zipEntry = new ZipEntry(current.getName());
                 zipOut.putNextEntry(zipEntry);
+
                 if (current.getStorageDataType().equals(StorageDataType.FILE)) {
                     Files.copy(current.getData().toPath(), zipOut);
                 }
+
                 zipOut.closeEntry();
             }
+
         }
         zipOut.close();
 
@@ -483,41 +481,76 @@ public class TaskProvisioningService {
                     if (storageData.equals(compared)) {
                         continue;
                     }
-                    if (compared.peek().getName().startsWith(storageData.peek().getName())) {
+                    if (compared
+                        .peek()
+                        .getName()
+                        .startsWith(storageData.peek().getName())) {
                         storageData.merge(compared);
                         contentsOfZip.remove(compared);
                     }
                 }
             }
+
+            // prepare error list just in case
+            List<AppEngineError> multipleErrors = new ArrayList<>();
+
             // processing of files
             for (Output currentOutput : remainingUnStoredOutputs) {
                 Optional<StorageData> currentOutputStorageDataOptional = contentsOfZip
                     .stream()
-                    .filter(s -> s.peek().getName().equals(currentOutput.getName()))
+                    .filter(s -> s
+                    .peek()
+                    .getName()
+                    .equals(currentOutput.getName()))
                     .findFirst();
                 StorageData currentOutputStorageData = null;
                 if (currentOutputStorageDataOptional.isPresent()) {
                     currentOutputStorageData = currentOutputStorageDataOptional.get();
                 }
-                StorageData copyForStorageData = new StorageData(currentOutputStorageData);
-                StorageData copyForOutputResponse = new StorageData(currentOutputStorageData);
                 // read file
                 String outputName = currentOutput.getName();
+                // validate files/directories contents and structure
+                try {
+                    validateFiles(run, currentOutput, currentOutputStorageData);
+                } catch (TypeValidationException e) {
+                    log.info(
+                        "ProcessOutputFiles: "
+                        + "output provision is invalid value validation failed"
+                    );
+                    ParameterError parameterError = new ParameterError(outputName);
+                    AppEngineError error = ErrorBuilder.build(e.getErrorCode(), parameterError);
+                    multipleErrors.add(error);
+                    continue;
+                }
                 // saving to database does not care about the type
                 saveOutput(run, currentOutput, currentOutputStorageData);
                 // saving to the storage does not care about the type
-                storeOutputInFileStorage(run, copyForStorageData, outputName);
+                storeOutputInFileStorage(run, currentOutputStorageData, outputName);
                 // based on parsed type build the response
                 taskRunParameterValues.add(currentOutput.getType().buildTaskRunParameterValue(
-                    copyForOutputResponse,
+                    currentOutputStorageData,
                     run.getId(),
                     outputName)
                 );
             }
 
+            // throw multiple errors if exist
+            if (!multipleErrors.isEmpty()) {
+                AppEngineError error = ErrorBuilder.buildBatchError(multipleErrors);
+                throw new ProvisioningException(error);
+            }
+
             log.info("Posting Outputs Archive: posted");
             return taskRunParameterValues;
         }
+    }
+
+    private void validateFiles(Run run, Output currentOutput, StorageData currentOutputStorageData)
+        throws TypeValidationException {
+        log.info("Posting Outputs Archive: "
+            + "validating files and directories contents and structure...");
+        currentOutput.getType().validateFiles(run, currentOutput, currentOutputStorageData);
+        log.info("Posting Outputs Archive: validated finished...");
     }
 
     public Charset getStorageCharset(String charset) {

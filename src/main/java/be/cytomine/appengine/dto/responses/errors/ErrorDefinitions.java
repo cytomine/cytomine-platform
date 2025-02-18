@@ -59,7 +59,10 @@ public class ErrorDefinitions {
         codes.put(ErrorCode.STORAGE_STORING_TASK_DEFINITION_FAILED, new MessageCode("APPE-storage-definition-storage-error", "storing task definition failed in storage service"));
         codes.put(ErrorCode.UNKNOWN_STATE, new MessageCode("APPE-internal-task-run-state-error", "unknown state in transition request"));
         codes.put(ErrorCode.SCHEDULER_UNAUTHENTICATED_OUTPUT_PROVISIONING, new MessageCode("APPE-scheduler-unauthenticated-output-provisioning", "unauthenticated task failed to provision outputs for this run"));
-
+        codes.put(ErrorCode.INTERNAL_MISSING_OUTPUT_FILE_FOR_PARAMETER, new MessageCode("APPE-internal-missing-output-files", "file structure for primitive parameter is missing"));
+        codes.put(ErrorCode.INTERNAL_OUTPUT_FILE_FOR_PARAMETER_IS_DIRECTORY, new MessageCode("APPE-internal-is-directory", "file structure for primitive parameter is a directory"));
+        codes.put(ErrorCode.INTERNAL_EXTRA_OUTPUT_FILES_FOR_PARAMETER, new MessageCode("APPE-internal-extra-output-files", "file structure for parameter contains extra files"));
+        codes.put(ErrorCode.INTERNAL_OUTPUT_FILE_FOR_PARAMETER_IS_BLANK, new MessageCode("APPE-internal-is-blank", "file for parameter is blank"));
     }
 
     public static MessageCode fromCode(ErrorCode code) {

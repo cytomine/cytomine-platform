@@ -87,6 +87,23 @@ public class IntegerType extends Type {
         }
     }
 
+    @Override
+    public void validateFiles(
+        Run run,
+        Output currentOutput,
+        StorageData currentOutputStorageData)
+        throws TypeValidationException {
+
+        // validate file structure
+        File outputFile = getFileIfStructureIsValid(currentOutputStorageData);
+
+        // validate value
+        String rawValue = getContentIfValid(outputFile);
+
+        validate(Integer.parseInt(rawValue));
+
+    }
+
     public boolean hasConstraint(IntegerTypeConstraint constraint) {
         return switch (constraint) {
             case GREATER_EQUAL -> this.geq != null;
@@ -161,7 +178,7 @@ public class IntegerType extends Type {
 
     @Override
     public IntegerValue buildTaskRunParameterValue(StorageData output, UUID id, String outputName) {
-        String outputValue = FileHelper.read(output.poll().getData(), getStorageCharset());
+        String outputValue = FileHelper.read(output.peek().getData(), getStorageCharset());
 
         IntegerValue integerValue = new IntegerValue();
         integerValue.setParameterName(outputName);

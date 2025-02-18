@@ -146,6 +146,18 @@ public class WsiType extends Type {
     }
 
     @Override
+    public void validateFiles(
+        Run run,
+        Output currentOutput,
+        StorageData currentOutputStorageData)
+        throws TypeValidationException {
+
+        File outputFile = getFileIfStructureIsValid(currentOutputStorageData);
+        validate(outputFile);
+
+    }
+
+    @Override
     public void persistProvision(JsonNode provision, UUID runId) {
         String parameterName = provision.get("param_name").asText();
         WsiPersistenceRepository wsiPersistenceRepository = AppEngineApplicationContext.getBean(WsiPersistenceRepository.class);

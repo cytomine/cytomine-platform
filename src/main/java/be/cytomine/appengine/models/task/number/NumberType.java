@@ -86,6 +86,23 @@ public class NumberType extends Type {
     }
 
     @Override
+    public void validateFiles(
+        Run run,
+        Output currentOutput,
+        StorageData currentOutputStorageData)
+        throws TypeValidationException {
+
+        // validate file structure
+        File outputFile = getFileIfStructureIsValid(currentOutputStorageData);
+
+        // validate value
+        String rawValue = getContentIfValid(outputFile);
+
+        validate(Double.parseDouble(rawValue));
+
+    }
+
+    @Override
     public void validate(Object valueObject) throws TypeValidationException {
         if (valueObject == null) {
             return;
@@ -134,7 +151,7 @@ public class NumberType extends Type {
     public void persistResult(Run run, Output currentOutput, StorageData outputValue) {
         NumberPersistenceRepository numberPersistenceRepository = AppEngineApplicationContext.getBean(NumberPersistenceRepository.class);
         NumberPersistence result = numberPersistenceRepository.findNumberPersistenceByParameterNameAndRunIdAndParameterType(currentOutput.getName(), run.getId(), ParameterType.OUTPUT);
-        String output = FileHelper.read(outputValue.poll().getData(), getStorageCharset());
+        String output = FileHelper.read(outputValue.peek().getData(), getStorageCharset());
         double value = Double.parseDouble(output);
         if (result == null) {
             result = new NumberPersistence();
@@ -172,7 +189,7 @@ public class NumberType extends Type {
 
     @Override
     public TaskRunParameterValue buildTaskRunParameterValue(StorageData output, UUID id, String outputName) {
-        String outputValue = FileHelper.read(output.poll().getData(), getStorageCharset());
+        String outputValue = FileHelper.read(output.peek().getData(), getStorageCharset());
 
         NumberValue value = new NumberValue();
         value.setParameterName(outputName);

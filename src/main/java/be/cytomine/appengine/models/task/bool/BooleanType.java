@@ -34,6 +34,23 @@ import be.cytomine.appengine.utils.FileHelper;
 public class BooleanType extends Type {
 
     @Override
+    public void validateFiles(
+        Run run,
+        Output currentOutput,
+        StorageData currentOutputStorageData)
+        throws TypeValidationException {
+
+        // validate file structure
+        File outputFile = getFileIfStructureIsValid(currentOutputStorageData);
+
+        // validate value
+        String rawValue = getContentIfValid(outputFile);
+
+        validate(Boolean.parseBoolean(rawValue));
+
+    }
+
+    @Override
     public void validate(Object valueObject) throws TypeValidationException {
         if (valueObject == null) {
             return;
@@ -68,7 +85,7 @@ public class BooleanType extends Type {
     public void persistResult(Run run, Output currentOutput, StorageData outputValue) {
         BooleanPersistenceRepository booleanPersistenceRepository = AppEngineApplicationContext.getBean(BooleanPersistenceRepository.class);
         BooleanPersistence result = booleanPersistenceRepository.findBooleanPersistenceByParameterNameAndRunIdAndParameterType(currentOutput.getName(), run.getId(), ParameterType.OUTPUT);
-        String output = FileHelper.read(outputValue.poll().getData(), getStorageCharset());
+        String output = FileHelper.read(outputValue.peek().getData(), getStorageCharset());
         if (result == null) {
             result = new BooleanPersistence();
             result.setValue(Boolean.parseBoolean(output));
@@ -105,7 +122,7 @@ public class BooleanType extends Type {
 
     @Override
     public TaskRunParameterValue buildTaskRunParameterValue(StorageData output, UUID id, String outputName) {
-        String outputValue = FileHelper.read(output.poll().getData(), getStorageCharset());
+        String outputValue = FileHelper.read(output.peek().getData(), getStorageCharset());
 
         BooleanValue booleanValue = new BooleanValue();
         booleanValue.setParameterName(outputName);

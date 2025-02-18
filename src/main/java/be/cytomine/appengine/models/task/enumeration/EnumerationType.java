@@ -50,6 +50,23 @@ public class EnumerationType extends Type {
     }
 
     @Override
+    public void validateFiles(
+        Run run,
+        Output currentOutput,
+        StorageData currentOutputStorageData)
+        throws TypeValidationException {
+
+        // validate file structure
+        File outputFile = getFileIfStructureIsValid(currentOutputStorageData);
+
+        // validate value
+        String rawValue = getContentIfValid(outputFile);
+
+        validate(rawValue);
+
+    }
+
+    @Override
     public void validate(Object valueObject) throws TypeValidationException {
         if (valueObject == null) {
             return;
@@ -98,7 +115,7 @@ public class EnumerationType extends Type {
     public void persistResult(Run run, Output currentOutput, StorageData outputValue) {
         EnumerationPersistenceRepository enumerationPersistenceRepository = AppEngineApplicationContext.getBean(EnumerationPersistenceRepository.class);
         EnumerationPersistence result = enumerationPersistenceRepository.findEnumerationPersistenceByParameterNameAndRunIdAndParameterType(currentOutput.getName(), run.getId(), ParameterType.OUTPUT);
-        String output = FileHelper.read(outputValue.poll().getData(), getStorageCharset());
+        String output = FileHelper.read(outputValue.peek().getData(), getStorageCharset());
         if (result == null) {
             result = new EnumerationPersistence();
             result.setValue(output);
@@ -134,7 +151,7 @@ public class EnumerationType extends Type {
 
     @Override
     public EnumerationValue buildTaskRunParameterValue(StorageData output, UUID id, String outputName) {
-        String outputValue = FileHelper.read(output.poll().getData(), getStorageCharset());
+        String outputValue = FileHelper.read(output.peek().getData(), getStorageCharset());
 
         EnumerationValue enumerationValue = new EnumerationValue();
         enumerationValue.setParameterName(outputName);

@@ -1,5 +1,6 @@
 package be.cytomine.appengine.models.task;
 
+import java.io.File;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -10,7 +11,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.Column;
-import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
@@ -19,11 +19,14 @@ import jakarta.persistence.InheritanceType;
 import jakarta.persistence.Table;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.apache.logging.log4j.util.Strings;
 
 import be.cytomine.appengine.dto.inputs.task.TaskRunParameterValue;
+import be.cytomine.appengine.dto.responses.errors.ErrorCode;
 import be.cytomine.appengine.exceptions.TypeValidationException;
 import be.cytomine.appengine.handlers.StorageData;
 import be.cytomine.appengine.models.BaseEntity;
+import be.cytomine.appengine.utils.FileHelper;
 
 @Entity
 @Table(name = "type")
@@ -39,9 +42,6 @@ public class Type extends BaseEntity {
     private String id;  // as found in the descriptor
 
     private String charset;
-
-    @ElementCollection
-    private List<String> constraints;
 
     /**
      * Parse a string representation of a list of string to a list of strings
@@ -98,5 +98,46 @@ public class Type extends BaseEntity {
         TypePersistence typePersistence
     ) {
         return null;
+    }
+
+    public void validateFiles(
+        Run run,
+        Output currentOutput,
+        StorageData currentOutputStorageData)
+        throws TypeValidationException {}
+
+    public static File getFileIfStructureIsValid(StorageData currentOutputStorageData)
+        throws TypeValidationException {
+        // validate file structure
+        File outputFile = currentOutputStorageData.peek().getData();
+        if (!outputFile.exists()) {
+            throw new TypeValidationException(
+                ErrorCode.INTERNAL_MISSING_OUTPUT_FILE_FOR_PARAMETER
+            );
+        }
+
+        if (outputFile.isDirectory()) {
+            throw new TypeValidationException(
+                ErrorCode.INTERNAL_OUTPUT_FILE_FOR_PARAMETER_IS_DIRECTORY
+            );
+        }
+
+        if (currentOutputStorageData.getEntryList().size() > 1) {
+            throw new TypeValidationException(
+                ErrorCode.INTERNAL_EXTRA_OUTPUT_FILES_FOR_PARAMETER
+            );
+        }
+        return outputFile;
+    }
+
+    public String getContentIfValid(File outputFile) throws TypeValidationException {
+        String rawValue = FileHelper.read(outputFile, getStorageCharset());
+
+        if (Strings.isBlank(rawValue)) { // not isEmpty()
+            throw new TypeValidationException(
+                ErrorCode.INTERNAL_OUTPUT_FILE_FOR_PARAMETER_IS_BLANK
+            );
+        }
+        return rawValue;
     }
 }

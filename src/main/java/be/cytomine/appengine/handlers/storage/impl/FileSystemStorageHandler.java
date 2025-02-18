@@ -38,8 +38,7 @@ public class FileSystemStorageHandler implements StorageHandler {
             return;
         }
 
-        while (!storageData.isEmpty()) {
-            StorageDataEntry current = storageData.poll();
+        for (StorageDataEntry current : storageData.getEntryList()) {
             String filename = current.getName();
             String storageId = storage.getIdStorage();
             // process the node here
@@ -126,7 +125,7 @@ public class FileSystemStorageHandler implements StorageHandler {
 
     @Override
     public StorageData readStorageData(StorageData emptyFile) throws FileStorageException {
-        StorageDataEntry current = emptyFile.poll();
+        StorageDataEntry current = emptyFile.peek();
         String filename = current.getName();
         Path filePath = Paths.get(basePath, current.getStorageId(), filename);
         try {
@@ -134,18 +133,16 @@ public class FileSystemStorageHandler implements StorageHandler {
                 if (Files.isRegularFile(path)) {
                     current.setData(path.toFile());
                     current.setStorageDataType(StorageDataType.FILE);
-                    emptyFile.add(current);
                 }
 
                 if (Files.isDirectory(path)) {
                     current.setStorageDataType(StorageDataType.DIRECTORY);
-                    emptyFile.add(current);
                 }
             });
 
             return emptyFile;
         } catch (IOException e) {
-            emptyFile.getQueue().clear();
+            emptyFile.getEntryList().clear();
             throw new FileStorageException("Failed to read file " + filename);
         }
     }

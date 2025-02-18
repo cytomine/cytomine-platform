@@ -317,7 +317,7 @@ public class RunTaskStepDefinitions {
         if (paramName.equalsIgnoreCase("a")) {
             testValue = Integer.parseInt(paramValue);
             fileValue = Integer.parseInt(FileHelper.read(
-                param1FileData.poll().getData(),
+                param1FileData.peek().getData(),
                 StandardCharsets.UTF_8
             ));
             Assertions.assertEquals(fileValue, testValue);
@@ -325,7 +325,7 @@ public class RunTaskStepDefinitions {
         if (paramName.equalsIgnoreCase("b")) {
             testValue = Integer.parseInt(paramValue);
             fileValue = Integer.parseInt(FileHelper.read(
-                param2FileData.poll().getData(),
+                param2FileData.peek().getData(),
                 StandardCharsets.UTF_8
             ));
             Assertions.assertEquals(fileValue, testValue);
