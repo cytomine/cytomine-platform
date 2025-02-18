@@ -1,5 +1,24 @@
 package be.cytomine.appengine.integration.cucumber;
 
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import io.cucumber.java.Before;
+import io.cucumber.java.en.Given;
+import io.cucumber.java.en.Then;
+import io.cucumber.java.en.When;
+import org.junit.jupiter.api.Assertions;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootContextLoader;
+import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.web.client.RestClientResponseException;
 import be.cytomine.appengine.AppEngineApplication;
 import be.cytomine.appengine.dto.handlers.filestorage.Storage;
 import be.cytomine.appengine.dto.inputs.task.GenericParameterProvision;
@@ -8,28 +27,15 @@ import be.cytomine.appengine.handlers.StorageData;
 import be.cytomine.appengine.handlers.StorageHandler;
 import be.cytomine.appengine.models.task.*;
 import be.cytomine.appengine.models.task.bool.BooleanPersistence;
-import be.cytomine.appengine.models.task.bool.BooleanType;
 import be.cytomine.appengine.models.task.enumeration.EnumerationPersistence;
-import be.cytomine.appengine.models.task.enumeration.EnumerationType;
 import be.cytomine.appengine.models.task.file.FilePersistence;
-import be.cytomine.appengine.models.task.file.FileType;
 import be.cytomine.appengine.models.task.geometry.GeometryPersistence;
-import be.cytomine.appengine.models.task.geometry.GeometryType;
 import be.cytomine.appengine.models.task.image.ImagePersistence;
-import be.cytomine.appengine.models.task.image.ImageType;
 import be.cytomine.appengine.models.task.integer.IntegerPersistence;
 import be.cytomine.appengine.models.task.integer.IntegerType;
 import be.cytomine.appengine.models.task.number.NumberPersistence;
-import be.cytomine.appengine.models.task.number.NumberType;
 import be.cytomine.appengine.models.task.string.StringPersistence;
-import be.cytomine.appengine.models.task.string.StringType;
 import be.cytomine.appengine.models.task.wsi.WsiPersistence;
-import be.cytomine.appengine.models.task.wsi.WsiType;
-import be.cytomine.appengine.openapi.api.DefaultApi;
-import be.cytomine.appengine.openapi.invoker.ApiClient;
-import be.cytomine.appengine.openapi.invoker.ApiException;
-import be.cytomine.appengine.openapi.invoker.Configuration;
-import be.cytomine.appengine.openapi.model.TaskRun;
 import be.cytomine.appengine.repositories.TypePersistenceRepository;
 import be.cytomine.appengine.repositories.bool.BooleanPersistenceRepository;
 import be.cytomine.appengine.repositories.enumeration.EnumerationPersistenceRepository;
@@ -43,37 +49,10 @@ import be.cytomine.appengine.repositories.wsi.WsiPersistenceRepository;
 import be.cytomine.appengine.repositories.RunRepository;
 import be.cytomine.appengine.repositories.TaskRepository;
 import be.cytomine.appengine.states.TaskRunState;
+import be.cytomine.appengine.utils.ApiClient;
 import be.cytomine.appengine.utils.FileHelper;
 import be.cytomine.appengine.utils.TaskTestsUtils;
 import be.cytomine.appengine.utils.TestTaskBuilder;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
-import io.cucumber.java.en.Given;
-import io.cucumber.java.en.Then;
-import io.cucumber.java.en.When;
-
-import org.junit.jupiter.api.Assertions;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootContextLoader;
-import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.RestClientResponseException;
-import org.springframework.web.client.RestTemplate;
-
-import java.nio.charset.StandardCharsets;
-import java.util.*;
 
 @ContextConfiguration(classes = AppEngineApplication.class, loader = SpringBootContextLoader.class)
 public class ProvisionTaskStepDefinitions {
@@ -82,16 +61,16 @@ public class ProvisionTaskStepDefinitions {
     private String port;
 
     @Autowired
-    private DefaultApi appEngineApi;
-
-    @Autowired
-    private StorageHandler fileStorageHandler;
-
-    @Autowired
-    private TaskRepository taskRepository;
+    private ApiClient apiClient;
 
     @Autowired
     private RunRepository taskRunRepository;
+
+    @Autowired
+    private StorageHandler storageHandler;
+
+    @Autowired
+    private TaskRepository taskRepository;
 
     @Autowired
     private BooleanPersistenceRepository booleanProvisionRepository;
@@ -129,15 +108,16 @@ public class ProvisionTaskStepDefinitions {
     @Value("${app-engine.api_version}")
     private String apiVersion;
 
-    private ApiException exception;
     private RestClientResponseException persistedException;
 
     private Run persistedRun;
-    private Task persistedTask;
-    private TaskRun taskRun;
 
-    private String buildAppEngineUrl() {
-        return "http://localhost:" + port + apiPrefix + apiVersion;
+    private Task persistedTask;
+
+    @Before
+    public void setUp() {
+        apiClient.setBaseUrl("http://localhost:" + port + apiPrefix + apiVersion);
+        apiClient.setPort(port);
     }
 
     @Given("a task has been successfully uploaded")
@@ -160,19 +140,19 @@ public class ProvisionTaskStepDefinitions {
 
     @When("user calls the endpoint {string} with HTTP method POST")
     public void user_calls_the_endpoint_excluding_version_prefix_e_g_with_http_method_post(String endpoint) {
-        ApiClient defaultClient = Configuration.getDefaultApiClient();
-        defaultClient.setBasePath(buildAppEngineUrl());
-        appEngineApi = new DefaultApi(defaultClient);
         try {
-            if (endpoint.equalsIgnoreCase("/task/namespace/version/runs")) {
-                taskRun = appEngineApi.createTaskRunByNamespaceVersion(persistedTask.getNamespace(), persistedTask.getVersion());
+            switch (endpoint) {
+                case "/task/namespace/version/runs":
+                    apiClient.createTaskRun(persistedTask.getNamespace(), persistedTask.getVersion());
+                    break;
+                case "/task/id/runs":
+                    apiClient.createTaskRun(persistedTask.getIdentifier().toString());
+                    break;
+                default:
+                    throw new RuntimeException("Unknown endpoint: " + endpoint);
             }
-            if (endpoint.equalsIgnoreCase("/task/id/runs")) {
-                taskRun = appEngineApi.createTaskRunByUUID(persistedTask.getIdentifier());
-            }
-        } catch (ApiException e) {
-            e.printStackTrace();
-            exception = e;
+        } catch (RestClientResponseException e) {
+            persistedException = e;
         }
     }
 
@@ -180,6 +160,7 @@ public class ProvisionTaskStepDefinitions {
     public void a_task_run_is_created_on_the_app_engine() {
         List<Run> runs = taskRunRepository.findAll();
         Assertions.assertFalse(runs.isEmpty());
+
         persistedRun = runs.get(0);
         Assertions.assertNotNull(persistedRun);
     }
@@ -196,15 +177,16 @@ public class ProvisionTaskStepDefinitions {
 
     @Then("a storage for the task run is created in the file service under name {string}+UUID")
     public void a_storage_for_the_task_run_is_created_in_the_file_service_under_name(String template) throws FileStorageException {
-        boolean storageExists = fileStorageHandler.checkStorageExists(template + "inputs-" + persistedRun.getId().toString());
+        boolean storageExists = storageHandler.checkStorageExists(template + "inputs-" + persistedRun.getId().toString());
         Assertions.assertTrue(storageExists);
-        storageExists = fileStorageHandler.checkStorageExists(template + "outputs-" + persistedRun.getId().toString());
+
+        storageExists = storageHandler.checkStorageExists(template + "outputs-" + persistedRun.getId().toString());
         Assertions.assertTrue(storageExists);
     }
 
     @Then("the App Engine returns a {string} HTTP response with the updated task run information as JSON payload")
     public void the_app_engine_returns_a_http_response_with_the_updated_task_run_information_as_json_payload(String string) {
-        Assertions.assertNull(exception);
+        Assertions.assertNull(persistedException);
     }
 
     // ONE INPUT PARAMETER TESTS
@@ -212,28 +194,7 @@ public class ProvisionTaskStepDefinitions {
     @Given("this task has only one input parameter {string} of type {string}")
     public void this_task_has_only_one_input_parameter_of_type(String paramName, String type) {
         persistedTask.getInputs().removeIf(input -> {
-            switch (input.getType().getClass().getSimpleName()) {
-                case "BooleanType":
-                    return !(((BooleanType) input.getType()).getId().equals(type) && input.getName().equals(paramName));
-                case "IntegerType":
-                    return !(((IntegerType) input.getType()).getId().equals(type) && input.getName().equals(paramName));
-                case "NumberType":
-                    return !(((NumberType) input.getType()).getId().equals(type) && input.getName().equals(paramName));
-                case "StringType":
-                    return !(((StringType) input.getType()).getId().equals(type) && input.getName().equals(paramName));
-                case "EnumerationType":
-                    return !(((EnumerationType) input.getType()).getId().equals(type) && input.getName().equals(paramName));
-                case "GeometryType":
-                    return !(((GeometryType) input.getType()).getId().equals(type) && input.getName().equals(paramName));
-                case "ImageType":
-                    return !(((ImageType) input.getType()).getId().equals(type) && input.getName().equals(paramName));
-                case "WsiType":
-                    return !(((WsiType) input.getType()).getId().equals(type) && input.getName().equals(paramName));
-                case "FileType":
-                    return !(((FileType) input.getType()).getId().equals(type) && input.getName().equals(paramName));
-                default:
-                    return false;
-            }
+            return !(input.getType().getId().equals(type) && input.getName().equals(paramName));
         });
         persistedTask = taskRepository.saveAndFlush(persistedTask);
         Assertions.assertEquals(persistedTask.getInputs().size(), 1);
@@ -249,9 +210,9 @@ public class ProvisionTaskStepDefinitions {
         persistedRun = new Run(UUID.randomUUID(), TaskRunState.CREATED, persistedTask);
         persistedRun = taskRunRepository.saveAndFlush(persistedRun);
         Storage runStorage = new Storage("task-run-inputs-" + persistedRun.getId().toString());
-        fileStorageHandler.createStorage(runStorage);
+        storageHandler.createStorage(runStorage);
         runStorage = new Storage("task-run-outputs-" + persistedRun.getId().toString());
-        fileStorageHandler.createStorage(runStorage);
+        storageHandler.createStorage(runStorage);
     }
 
     @Given("a task run has been created and provisioned with parameter {string} value {string} for this task")
@@ -259,11 +220,11 @@ public class ProvisionTaskStepDefinitions {
         persistedRun = new Run(UUID.randomUUID(), TaskRunState.CREATED, persistedTask);
 
         Input input = persistedTask
-                .getInputs()
-                .stream()
-                .filter(i -> i.getName().equals(parameterName))
-                .findFirst()
-                .orElse(null);
+            .getInputs()
+            .stream()
+            .filter(i -> i.getName().equals(parameterName))
+            .findFirst()
+            .orElse(null);
         Assertions.assertNotNull(input);
 
         TypePersistence provision = new TypePersistence();
@@ -313,6 +274,8 @@ public class ProvisionTaskStepDefinitions {
                 provision.setValueType(ValueType.FILE);
                 ((FilePersistence) provision).setValue(initialValue.getBytes());
                 break;
+            default:
+                throw new RuntimeException("Unknown type: " + input.getType().getId());
         }
 
         provision.setRunId(persistedRun.getId());
@@ -340,7 +303,7 @@ public class ProvisionTaskStepDefinitions {
 
         persistedRun = taskRunRepository.save(persistedRun);
         Storage runStorage = new Storage("task-run-inputs-" + persistedRun.getId().toString());
-        fileStorageHandler.createStorage(runStorage);
+        storageHandler.createStorage(runStorage);
     }
 
     @Given("this task run has not been provisioned yet and is therefore in state {string}")
@@ -352,43 +315,15 @@ public class ProvisionTaskStepDefinitions {
 
     @When("a user calls the provisioning endpoint with {string} to provision parameter {string} with {string} of type {string}")
     public void a_user_calls_the_batch_provisioning_endpoint_put_task_runs_input_provisions_with_json_to_provision_parameter_my_input_with(String payload, String parameterName, String value, String type) {
-        String endpointUrl = buildAppEngineUrl() + "/task-runs/" + persistedRun.getId() + "/input-provisions/" + parameterName;
         Input input = persistedTask
-                .getInputs()
-                .stream()
-                .filter(i -> i.getName().equals(parameterName))
-                .findFirst()
-                .orElse(null);
-
-        HttpEntity<?> entity = null;
-        if (type.equals("image") || type.equals("wsi") || type.equals("file")) {
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-
-            MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-            ByteArrayResource fileResource = new ByteArrayResource(value.getBytes()) {
-                @Override
-                public String getFilename() {
-                    return "file.txt";
-                }
-            };
-            body.add("file", fileResource);
-
-            entity = new HttpEntity<>(body, headers);
-        } else {
-            ObjectMapper mapper = new ObjectMapper();
-            ObjectNode jsonNode = mapper.valueToTree(
-                TaskTestsUtils.createProvision(parameterName, input == null ? "" : input.getType().getClass().getSimpleName(), value)
-            );
-
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-
-            entity = new HttpEntity<>(jsonNode, headers);
-        }
+            .getInputs()
+            .stream()
+            .filter(i -> i.getName().equals(parameterName))
+            .findFirst()
+            .orElse(null);
 
         try {
-            new RestTemplate().exchange(endpointUrl, HttpMethod.PUT, entity, JsonNode.class);
+            apiClient.provisionInput(persistedRun.getId().toString(), parameterName, input == null ? "" : type, value);
         } catch (RestClientResponseException e) {
             persistedException = e;
         }
@@ -397,35 +332,35 @@ public class ProvisionTaskStepDefinitions {
     @Then("the value {string} is saved and associated parameter {string} in the database")
     public void the_value_is_saved_and_associated_parameter_in_the_database(String value, String parameterName) {
         Input input = persistedTask
-                .getInputs()
-                .stream()
-                .filter(i -> i.getName().equals(parameterName))
-                .findFirst()
-                .orElse(null);
+            .getInputs()
+            .stream()
+            .filter(i -> i.getName().equals(parameterName))
+            .findFirst()
+            .orElse(null);
         Assertions.assertNotNull(input);
 
         TypePersistence provision = null;
         switch (input.getType().getClass().getSimpleName()) {
             case "BooleanType":
-                provision = booleanProvisionRepository.findBooleanPersistenceByParameterNameAndRunIdAndParameterType(parameterName, persistedRun.getId() , ParameterType.INPUT);
+                provision = booleanProvisionRepository.findBooleanPersistenceByParameterNameAndRunIdAndParameterType(parameterName, persistedRun.getId(), ParameterType.INPUT);
                 break;
             case "IntegerType":
-                provision = integerProvisionRepository.findIntegerPersistenceByParameterNameAndRunIdAndParameterType(parameterName, persistedRun.getId() , ParameterType.INPUT);
+                provision = integerProvisionRepository.findIntegerPersistenceByParameterNameAndRunIdAndParameterType(parameterName, persistedRun.getId(), ParameterType.INPUT);
                 break;
             case "NumberType":
-                provision = numberProvisionRepository.findNumberPersistenceByParameterNameAndRunIdAndParameterType(parameterName, persistedRun.getId() , ParameterType.INPUT);
+                provision = numberProvisionRepository.findNumberPersistenceByParameterNameAndRunIdAndParameterType(parameterName, persistedRun.getId(), ParameterType.INPUT);
                 break;
             case "StringType":
-                provision = stringProvisionRepository.findStringPersistenceByParameterNameAndRunIdAndParameterType(parameterName, persistedRun.getId() , ParameterType.INPUT);
+                provision = stringProvisionRepository.findStringPersistenceByParameterNameAndRunIdAndParameterType(parameterName, persistedRun.getId(), ParameterType.INPUT);
                 break;
             case "EnumerationType":
-                provision = enumerationProvisionRepository.findEnumerationPersistenceByParameterNameAndRunIdAndParameterType(parameterName, persistedRun.getId() , ParameterType.INPUT);
+                provision = enumerationProvisionRepository.findEnumerationPersistenceByParameterNameAndRunIdAndParameterType(parameterName, persistedRun.getId(), ParameterType.INPUT);
                 break;
             case "GeometryType":
-                provision = geometryProvisionRepository.findGeometryPersistenceByParameterNameAndRunIdAndParameterType(parameterName, persistedRun.getId() , ParameterType.INPUT);
+                provision = geometryProvisionRepository.findGeometryPersistenceByParameterNameAndRunIdAndParameterType(parameterName, persistedRun.getId(), ParameterType.INPUT);
                 break;
             case "ImageType":
-                provision = imageProvisionRepository.findImagePersistenceByParameterNameAndRunIdAndParameterType(parameterName, persistedRun.getId() , ParameterType.INPUT);
+                provision = imageProvisionRepository.findImagePersistenceByParameterNameAndRunIdAndParameterType(parameterName, persistedRun.getId(), ParameterType.INPUT);
                 break;
             case "WsiType":
                 provision = wsiPersistenceRepository.findWsiPersistenceByParameterNameAndRunIdAndParameterType(parameterName, persistedRun.getId(), ParameterType.INPUT);
@@ -433,6 +368,8 @@ public class ProvisionTaskStepDefinitions {
             case "FileType":
                 provision = filePersistenceRepository.findFilePersistenceByParameterNameAndRunIdAndParameterType(parameterName, persistedRun.getId(), ParameterType.INPUT);
                 break;
+            default:
+                throw new RuntimeException("Unknown type: " + input.getType().getId());
         }
 
         Assertions.assertNotNull(provision);
@@ -442,8 +379,9 @@ public class ProvisionTaskStepDefinitions {
     @Then("a input file named {string} is created in the task run storage {string}+UUID with content {string}")
     public void a_input_file_named_is_created_in_the_task_run_storage_with_content(String fileName, String template, String content) throws FileStorageException {
         StorageData descriptorMetaData = new StorageData(fileName, template + "inputs-" + persistedRun.getId().toString());
-        StorageData descriptor = fileStorageHandler.readStorageData(descriptorMetaData);
+        StorageData descriptor = storageHandler.readStorageData(descriptorMetaData);
         Assertions.assertNotNull(descriptor);
+
         String fileContent = FileHelper.read(descriptor.peek().getData(), StandardCharsets.UTF_8);
         Assertions.assertTrue(fileContent.equalsIgnoreCase(content));
     }
@@ -465,13 +403,13 @@ public class ProvisionTaskStepDefinitions {
     @Given("the first parameter is {string} of type {string} without a validation rule")
     public void the_first_parameter_is_of_type_without_a_validation_rule(String parameterName, String type) {
         Assertions.assertTrue(persistedTask.getInputs().stream()
-          .anyMatch(input -> ((IntegerType)input.getType()).getId().equals(type) && input.getName().equals(parameterName)));
+          .anyMatch(input -> input.getType().getId().equals(type) && input.getName().equals(parameterName)));
     }
 
     @Given("the second parameter is {string} of type {string} without a validation rule")
     public void the_second_parameter_is_of_type_without_a_validation_rule(String parameterName, String type) {
         Assertions.assertTrue(persistedTask.getInputs().stream()
-          .anyMatch(input -> ((IntegerType)input.getType()).getId().equals(type) && input.getName().equals(parameterName)));
+          .anyMatch(input -> input.getType().getId().equals(type) && input.getName().equals(parameterName)));
     }
 
     @Given("no validation rules are defined for these parameters")
@@ -481,8 +419,6 @@ public class ProvisionTaskStepDefinitions {
 
     @When("a user calls the endpoint with JSON {string}")
     public void a_user_calls_the_endpoint_with_json(String jsonPayload) throws JsonProcessingException {
-        String endpointUrl = buildAppEngineUrl() + "/task-runs/" + persistedRun.getId() + "/input-provisions";
-
         ObjectMapper mapper = new ObjectMapper();
         JsonNode payload = mapper.readTree(jsonPayload);
 
@@ -490,27 +426,22 @@ public class ProvisionTaskStepDefinitions {
         for (JsonNode parameter : payload) {
             String parameterName = parameter.get("param_name").textValue();
             Input input = persistedTask
-                    .getInputs()
-                    .stream()
-                    .filter(i -> i.getName().equals(parameterName))
-                    .findFirst()
-                    .orElse(null);
+                .getInputs()
+                .stream()
+                .filter(i -> i.getName().equals(parameterName))
+                .findFirst()
+                .orElse(null);
 
             GenericParameterProvision provision = TaskTestsUtils.createProvision(
                 parameterName,
-                input == null ? "" : input.getType().getClass().getSimpleName(),
+                input == null ? "" : input.getType().getId(),
                 parameter.get("value").asText()
             );
             provisions.add(mapper.valueToTree(provision));
         }
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-
-        HttpEntity<List<ObjectNode>> entity = new HttpEntity<>(provisions, headers);
-
         try {
-            new RestTemplate().exchange(endpointUrl, HttpMethod.PUT, entity, JsonNode.class);
+            apiClient.provisionMultipleInputs(persistedRun.getId().toString(), provisions);
         } catch (RestClientResponseException e) {
             persistedException = e;
         }
@@ -609,13 +540,13 @@ public class ProvisionTaskStepDefinitions {
     }
 
     @Given("the file named {string} in the task run storage {string}+UUID has content {string}")
-    public void the_file_named_in_the_task_run_storage_has_content(String fileName, String template, String content) throws FileStorageException {
+    public void the_file_named_in_the_task_run_storage_has_content(String filename, String template, String content) throws FileStorageException {
         StorageData parameterFile = new StorageData(
-            FileHelper.write(fileName, content.getBytes(StandardCharsets.UTF_8)),
-            fileName
+            FileHelper.write(filename, content.getBytes(StandardCharsets.UTF_8)),
+            filename
         );
         Storage storage = new Storage(template + "inputs-" + persistedRun.getId().toString());
-        fileStorageHandler.saveStorageData(storage, parameterFile);
+        storageHandler.saveStorageData(storage, parameterFile);
     }
 
     @Given("this task has at least one input parameter {string} of type {string}")
@@ -623,32 +554,11 @@ public class ProvisionTaskStepDefinitions {
         // Check if the set contains an object matching the conditions
         // Will raise an error if the persisted task is not valid with the test
         boolean hasInput = persistedTask
-                .getInputs()
-                .stream()
-                .anyMatch(input -> {
-                    switch (type) {
-                        case "boolean":
-                            return ((BooleanType) input.getType()).getId().equals(type) && input.getName().equals(paramName);
-                        case "integer":
-                            return ((IntegerType) input.getType()).getId().equals(type) && input.getName().equals(paramName);
-                        case "number":
-                            return ((NumberType) input.getType()).getId().equals(type) && input.getName().equals(paramName);
-                        case "string":
-                            return ((StringType) input.getType()).getId().equals(type) && input.getName().equals(paramName);
-                        case "enumeration":
-                            return ((EnumerationType) input.getType()).getId().equals(type) && input.getName().equals(paramName);
-                        case "geometry":
-                            return ((GeometryType) input.getType()).getId().equals(type) && input.getName().equals(paramName);
-                        case "image":
-                            return ((ImageType) input.getType()).getId().equals(type) && input.getName().equals(paramName);
-                        case "wsi":
-                            return ((WsiType) input.getType()).getId().equals(type) && input.getName().equals(paramName);
-                        case "file":
-                            return ((FileType) input.getType()).getId().equals(type) && input.getName().equals(paramName);
-                        default:
-                            return false;
-                    }
-                });
+            .getInputs()
+            .stream()
+            .anyMatch(input -> {
+                return input.getType().getId().equals(type) && input.getName().equals(paramName);
+            });
 
         Assertions.assertTrue(hasInput);
     }
@@ -663,11 +573,11 @@ public class ProvisionTaskStepDefinitions {
     @Then("the value of parameter {string} is updated to {string} in the database")
     public void the_value_of_parameter_is_updated_to_in_the_database(String parameterName, String newValue) {
         Input input = persistedTask
-                .getInputs()
-                .stream()
-                .filter(i -> i.getName().equals(parameterName))
-                .findFirst()
-                .orElse(null);
+            .getInputs()
+            .stream()
+            .filter(i -> i.getName().equals(parameterName))
+            .findFirst()
+            .orElse(null);
         Assertions.assertNotNull(input);
 
         TypePersistence provision = null;
@@ -712,10 +622,11 @@ public class ProvisionTaskStepDefinitions {
     }
 
     @Then("the input file named {string} is updated in the task run storage {string}+UUID with content {string}")
-    public void the_input_file_named_is_updated_in_the_task_run_storage_with_content(String fileName, String template, String content) throws FileStorageException {
-        StorageData descriptorMetaData = new StorageData(fileName, template + "inputs-" + persistedRun.getId().toString());
-        StorageData descriptor = fileStorageHandler.readStorageData(descriptorMetaData);
+    public void the_input_file_named_is_updated_in_the_task_run_storage_with_content(String filename, String template, String content) throws FileStorageException {
+        StorageData descriptorMetaData = new StorageData(filename, template + "inputs-" + persistedRun.getId().toString());
+        StorageData descriptor = storageHandler.readStorageData(descriptorMetaData);
         Assertions.assertNotNull(descriptor);
+
         String fileContent = FileHelper.read(descriptor.peek().getData(), StandardCharsets.UTF_8);
         Assertions.assertTrue(fileContent.equalsIgnoreCase(content));
     }

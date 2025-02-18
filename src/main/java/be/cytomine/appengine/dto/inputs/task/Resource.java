@@ -6,11 +6,13 @@ import java.util.UUID;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import be.cytomine.appengine.states.TaskRunState;
 
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
 public class Resource {
     private UUID id;
 

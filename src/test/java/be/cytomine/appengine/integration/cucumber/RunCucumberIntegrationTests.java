@@ -8,13 +8,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 @RunWith(Cucumber.class)
 @CucumberOptions(
-        plugin = {"pretty" , "html:build/reports/tests/cucumber/cucmber-report.html"},
-        features = {"src/test/resources"},
-        glue = {"be.cytomine.appengine.integration.cucumber"}
-        //,tags = "not @Scheduler"
-
+    plugin = {"pretty", "html:build/reports/tests/cucumber/cucumber-report.html"},
+    features = {"src/test/resources"},
+    glue = {"be.cytomine.appengine.integration.cucumber"}
+    //,tags = "not @Scheduler"
 )
 @CucumberContextConfiguration
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class RunCucmberIntegrationTests {
-}
+public class RunCucumberIntegrationTests {}
