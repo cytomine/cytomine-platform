@@ -195,6 +195,7 @@ public class TaskService {
         log.info("UploadTask: getting inputs...");
         Set<Input> inputs = new HashSet<>();
         JsonNode inputsNode = uploadTaskArchive.getDescriptorFileAsJson().get("inputs");
+        JsonNode outputsNode = uploadTaskArchive.getDescriptorFileAsJson().get("outputs");
         if (inputsNode.isObject()) {
             Iterator<String> fieldNames = inputsNode.fieldNames();
             while (fieldNames.hasNext()) {
@@ -206,7 +207,7 @@ public class TaskService {
                 input.setDisplayName(inputValue.get("display_name").textValue());
                 input.setDescription(inputValue.get("description").textValue());
                 // use type factory to generate the correct type
-                input.setType(TypeFactory.createType(inputValue, charset));
+                input.setType(TypeFactory.createType(inputValue, inputsNode, outputsNode, charset));
 
                 // Set default value
                 JsonNode defaultNode = inputValue.get("default");
@@ -236,7 +237,7 @@ public class TaskService {
 
     private Set<Output> getOutputs(UploadTaskArchive uploadTaskArchive, Set<Input> inputs) {
         log.info("UploadTask: getting outputs...");
-
+        JsonNode inputsNode = uploadTaskArchive.getDescriptorFileAsJson().get("inputs");
         JsonNode outputsNode = uploadTaskArchive.getDescriptorFileAsJson().get("outputs");
         if (!outputsNode.isObject()) {
             return new HashSet<>();
@@ -253,8 +254,8 @@ public class TaskService {
             output.setDisplayName(inputValue.get("display_name").textValue());
             output.setDescription(inputValue.get("description").textValue());
             // use type factory to generate the correct type
-            output.setType(TypeFactory.createType(inputValue, charset));
-
+            output.setType(TypeFactory.createType(inputValue, inputsNode, outputsNode, charset));
+            // todo : which other type uses dependencies ????
             JsonNode dependencies = inputValue.get("dependencies");
             if (dependencies != null && dependencies.isObject()) {
                 JsonNode derivedFrom = dependencies.get("derived_from");

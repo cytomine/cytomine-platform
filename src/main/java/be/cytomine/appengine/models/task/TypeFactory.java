@@ -2,6 +2,9 @@ package be.cytomine.appengine.models.task;
 
 import java.util.Arrays;
 
+import be.cytomine.appengine.dto.inputs.task.types.collection.CollectionGenericTypeConstraint;
+import be.cytomine.appengine.dto.inputs.task.types.collection.CollectionGenericTypeDependency;
+import be.cytomine.appengine.models.task.collection.CollectionType;
 import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.validation.constraints.NotNull;
 
@@ -32,8 +35,9 @@ public class TypeFactory {
         }
     }
 
-    public static Type createType(JsonNode node, String charset) {
+    public static Type createType(JsonNode node, JsonNode inputsNode, JsonNode outputsNode, String charset) {
         JsonNode typeNode = node.get("type");
+        JsonNode dependenciesNode = node.get("dependencies");
         // add new types here
         String typeId = getTypeId(typeNode);
         return switch (typeId) {
@@ -46,8 +50,49 @@ public class TypeFactory {
             case "image" -> createImageType(typeNode, typeId, charset);
             case "wsi" -> createWsiType(typeNode, typeId, charset);
             case "file" -> createFileType(typeNode, typeId, charset);
+            case "collection" -> createCollectionType(typeNode, dependenciesNode, inputsNode, outputsNode, typeId, charset);
             default -> new Type();
         };
+    }
+
+    private static Type createCollectionType(
+        JsonNode typeNode,
+        JsonNode dependenciesNode,
+        JsonNode inputsNode,
+        JsonNode outputsNode,
+        String typeId,
+        String charset)
+    {
+        CollectionType type = new CollectionType();
+        type.setId(typeId);
+        type.setCharset(charset);
+        type.setDependencies(dependenciesNode);
+        type.setInputs(inputsNode);
+        type.setOutputs(outputsNode);
+
+        // set constraints
+        Arrays.stream(CollectionGenericTypeConstraint.values())
+            .map(CollectionGenericTypeConstraint::getStringKey)
+            .filter(typeNode::has)
+            .forEach(key -> {
+                type.setConstraint(
+                    CollectionGenericTypeConstraint.getConstraint(key),
+                    typeNode.get(key).asText()
+                );
+            });
+
+        // set dependencies
+        Arrays.stream(CollectionGenericTypeDependency.values())
+            .map(CollectionGenericTypeDependency::getStringKey)
+            .filter(typeNode::has)
+            .forEach(key -> {
+                type.setDependency(
+                    CollectionGenericTypeDependency.getDependency(key),
+                    typeNode.get(key).asText()
+                );
+            });
+
+        return type;
     }
 
     @NotNull

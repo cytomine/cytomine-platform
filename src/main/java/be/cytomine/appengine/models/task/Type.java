@@ -40,6 +40,7 @@ public class Type extends BaseEntity {
 
     private String charset;
 
+    // todo : this was supposed to be used to overcome the confusion of default values in constraints
     @ElementCollection
     private List<String> constraints;
 
