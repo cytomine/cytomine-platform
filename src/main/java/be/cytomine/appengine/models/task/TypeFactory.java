@@ -1,6 +1,7 @@
 package be.cytomine.appengine.models.task;
 
 import java.util.Arrays;
+import java.util.Optional;
 
 import be.cytomine.appengine.dto.inputs.task.types.collection.CollectionGenericTypeConstraint;
 import be.cytomine.appengine.dto.inputs.task.types.collection.CollectionGenericTypeDependency;
@@ -36,7 +37,8 @@ public class TypeFactory {
     }
 
     public static Type createType(JsonNode node, JsonNode inputsNode, JsonNode outputsNode, String charset) {
-        JsonNode typeNode = node.get("type");
+        JsonNode typeNode = Optional.ofNullable(node.get("type"))
+            .orElse(node.get("subtype"));
         JsonNode dependenciesNode = node.get("dependencies");
         // add new types here
         String typeId = getTypeId(typeNode);
@@ -50,7 +52,7 @@ public class TypeFactory {
             case "image" -> createImageType(typeNode, typeId, charset);
             case "wsi" -> createWsiType(typeNode, typeId, charset);
             case "file" -> createFileType(typeNode, typeId, charset);
-            case "collection" -> createCollectionType(typeNode, dependenciesNode, inputsNode, outputsNode, typeId, charset);
+            case "array" -> createCollectionType(typeNode, dependenciesNode, inputsNode, outputsNode, typeId, charset);
             default -> new Type();
         };
     }
@@ -66,7 +68,6 @@ public class TypeFactory {
         CollectionType type = new CollectionType();
         type.setId(typeId);
         type.setCharset(charset);
-        type.setDependencies(dependenciesNode);
         type.setInputs(inputsNode);
         type.setOutputs(outputsNode);
 
@@ -81,17 +82,30 @@ public class TypeFactory {
                 );
             });
 
-        // set dependencies
-        Arrays.stream(CollectionGenericTypeDependency.values())
-            .map(CollectionGenericTypeDependency::getStringKey)
-            .filter(typeNode::has)
-            .forEach(key -> {
+    // set dependencies
+    Arrays.stream(CollectionGenericTypeDependency.values())
+        .map(CollectionGenericTypeDependency::getStringKey)
+        .filter(dependenciesNode::has)
+        .forEach(
+            key -> {
+              if ("matching".equals(key)) {
+                  dependenciesNode
+                    .get(key)
+                    .forEach(
+                        item ->
+                            type.setDependency(
+                                CollectionGenericTypeDependency.getDependency(key), item.asText()));
+              } else if ("derived_from".equals(key)) {
                 type.setDependency(
                     CollectionGenericTypeDependency.getDependency(key),
-                    typeNode.get(key).asText()
-                );
+                    dependenciesNode.get(key).asText());
+              }
             });
-
+        // handle nested type
+        JsonNode subtype = typeNode.get("subtype");
+        String subTypeId = getTypeId(subtype);;
+        type.setSubTypeId(subTypeId);
+        type.setSubType(TypeFactory.createType(subtype, inputsNode, outputsNode, charset));
         return type;
     }
 

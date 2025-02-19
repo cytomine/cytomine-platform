@@ -1,5 +1,6 @@
 package be.cytomine.appengine.models.task;
 
+import java.io.File;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;

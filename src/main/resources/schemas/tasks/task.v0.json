@@ -131,7 +131,7 @@
     "dependencies": {
       "derived_from": {
         "type": "string",
-        "pattern": "^inputs/[a-zA-Z0-9_]+$"
+        "pattern": "^inputs(?:/[a-zA-Z0-9_]+)+$"
 
       },
       "matching": {
@@ -139,7 +139,7 @@
         "min_size": 1,
         "items": {
           "type": "string",
-          "pattern": "^(inputs|outputs)/[a-zA-Z0-9_]+$"
+          "pattern": "^(inputs|outputs)(?:/[a-zA-Z0-9_]+)+$"
         }
       }
     },

@@ -263,14 +263,14 @@ public class TaskService {
             // use type factory to generate the correct type
             output.setType(TypeFactory.createType(inputValue, inputsNode, outputsNode, charset));
             // todo : which other type uses dependencies ????
-            JsonNode dependencies = inputValue.get("dependencies");
-            if (dependencies != null && dependencies.isObject()) {
-                JsonNode derivedFrom = dependencies.get("derived_from");
-                String inputName = derivedFrom.textValue().substring("inputs/".length());
-                inputs.stream()
-                .filter(input -> input.getName().equals(inputName))
-                .findFirst().ifPresent(output::setDerivedFrom);
-            }
+//            JsonNode dependencies = inputValue.get("dependencies");
+//            if (dependencies != null && dependencies.isObject()) {
+//                JsonNode derivedFrom = dependencies.get("derived_from");
+//                String inputName = derivedFrom.textValue().substring("inputs/".length());
+//                inputs.stream()
+//                .filter(input -> input.getName().equals(inputName))
+//                .findFirst().ifPresent(output::setDerivedFrom);
+//            }
 
             outputs.add(output);
         }

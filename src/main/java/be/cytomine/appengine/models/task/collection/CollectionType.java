@@ -2,29 +2,31 @@ package be.cytomine.appengine.models.task.collection;
 
 import be.cytomine.appengine.dto.inputs.task.types.collection.CollectionGenericTypeConstraint;
 import be.cytomine.appengine.dto.inputs.task.types.collection.CollectionGenericTypeDependency;
-import be.cytomine.appengine.dto.inputs.task.types.enumeration.EnumerationTypeConstraint;
 import be.cytomine.appengine.dto.inputs.task.types.enumeration.EnumerationValue;
-import be.cytomine.appengine.dto.responses.errors.ErrorCode;
 import be.cytomine.appengine.exceptions.TypeValidationException;
 import be.cytomine.appengine.handlers.StorageData;
 import be.cytomine.appengine.handlers.StorageDataEntry;
 import be.cytomine.appengine.handlers.StorageDataType;
 import be.cytomine.appengine.models.task.Output;
-import be.cytomine.appengine.models.task.ParameterType;
 import be.cytomine.appengine.models.task.Run;
 import be.cytomine.appengine.models.task.Type;
 import be.cytomine.appengine.models.task.TypePersistence;
 import be.cytomine.appengine.models.task.ValueType;
-import be.cytomine.appengine.repositories.enumeration.EnumerationPersistenceRepository;
-import be.cytomine.appengine.utils.AppEngineApplicationContext;
+import be.cytomine.appengine.utils.FileHelper;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.ElementCollection;
+
+import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Transient;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -45,16 +47,20 @@ public class CollectionType extends Type {
     private String derivedFrom;
 
     @Column(nullable = true)
-    private String matching;
+    private String subTypeId ;
+
+    @ElementCollection
+    @Column(nullable = true)
+    private List<String> matching;
+
+    @OneToOne(optional = true)
+    private Type subType;
 
     @Transient
     private JsonNode inputs;
 
     @Transient
     private JsonNode outputs;
-
-    @Transient
-    private JsonNode dependencies;
 
 
   public void setConstraint(CollectionGenericTypeConstraint constraint, String value) {
@@ -72,7 +78,10 @@ public class CollectionType extends Type {
   public void setDependency(CollectionGenericTypeDependency dependency, String value) {
         switch (dependency) {
             case MATCHING:
-                this.setMatching(value);
+                if (Objects.isNull(this.matching) || this.matching.isEmpty()){
+                    this.matching = new ArrayList<>();
+                }
+                this.matching.add(value);
                 break;
             case DERIVED_FROM:
                 this.setDerivedFrom(value);
@@ -150,9 +159,9 @@ public class CollectionType extends Type {
     public StorageData mapToStorageFileData(JsonNode provision) {
         String value = provision.get("value").asText();
         String parameterName = provision.get("param_name").asText();
-        byte[] inputFileData = value.getBytes(getStorageCharset());
-        StorageDataEntry storageDataEntry = new StorageDataEntry(inputFileData, parameterName, StorageDataType.FILE);
-        return new StorageData(storageDataEntry);
+        File data = FileHelper.write(parameterName, value.getBytes(getStorageCharset()));
+        StorageDataEntry entry = new StorageDataEntry(data, parameterName, StorageDataType.FILE);
+        return new StorageData(entry);
     }
 
     @Override
@@ -167,7 +176,7 @@ public class CollectionType extends Type {
 
     @Override
     public EnumerationValue buildTaskRunParameterValue(StorageData output, UUID id, String outputName) {
-        String outputValue = new String(output.poll().getData(), getStorageCharset());
+        String outputValue = FileHelper.read(output.peek().getData(), getStorageCharset());
         String trimmedOutput = outputValue.trim();
 
         EnumerationValue enumerationValue = new EnumerationValue();
@@ -182,10 +191,11 @@ public class CollectionType extends Type {
     public EnumerationValue buildTaskRunParameterValue(TypePersistence typePersistence) {
         CollectionPersistence enumerationPersistence = (CollectionPersistence) typePersistence;
         EnumerationValue enumerationValue = new EnumerationValue();
-        enumerationValue.setParameterName(enumerationPersistence.getParameterName());
-        enumerationValue.setTaskRunId(enumerationPersistence.getRunId());
-        enumerationValue.setType(ValueType.ENUMERATION);
-        enumerationValue.setValue(enumerationPersistence.getValue());
+//        enumerationValue.setParameterName(enumerationPersistence.getParameterName());
+//        enumerationValue.setTaskRunId(enumerationPersistence.getRunId());
+//        enumerationValue.setType(ValueType.ENUMERATION);
+//        EnumerationValue.setValue(enumerationPersistence.getValue());
+
         return enumerationValue;
     }
 }
