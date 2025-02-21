@@ -1,6 +1,7 @@
 package be.cytomine.appengine.models.task;
 
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.Optional;
 
 import be.cytomine.appengine.dto.inputs.task.types.collection.CollectionGenericTypeConstraint;
@@ -36,10 +37,9 @@ public class TypeFactory {
         }
     }
 
-    public static Type createType(JsonNode node, JsonNode inputsNode, JsonNode outputsNode, String charset) {
+    public static Type createType(JsonNode node, String charset) {
         JsonNode typeNode = Optional.ofNullable(node.get("type"))
-            .orElse(node.get("subtype"));
-        JsonNode dependenciesNode = node.get("dependencies");
+            .orElse(node);
         // add new types here
         String typeId = getTypeId(typeNode);
         return switch (typeId) {
@@ -52,24 +52,19 @@ public class TypeFactory {
             case "image" -> createImageType(typeNode, typeId, charset);
             case "wsi" -> createWsiType(typeNode, typeId, charset);
             case "file" -> createFileType(typeNode, typeId, charset);
-            case "array" -> createCollectionType(typeNode, dependenciesNode, inputsNode, outputsNode, typeId, charset);
+            case "array" -> createCollectionType(typeNode, typeId, charset);
             default -> new Type();
         };
     }
 
     private static Type createCollectionType(
         JsonNode typeNode,
-        JsonNode dependenciesNode,
-        JsonNode inputsNode,
-        JsonNode outputsNode,
         String typeId,
         String charset)
     {
         CollectionType type = new CollectionType();
         type.setId(typeId);
         type.setCharset(charset);
-        type.setInputs(inputsNode);
-        type.setOutputs(outputsNode);
 
         // set constraints
         Arrays.stream(CollectionGenericTypeConstraint.values())
@@ -82,30 +77,11 @@ public class TypeFactory {
                 );
             });
 
-    // set dependencies
-    Arrays.stream(CollectionGenericTypeDependency.values())
-        .map(CollectionGenericTypeDependency::getStringKey)
-        .filter(dependenciesNode::has)
-        .forEach(
-            key -> {
-              if ("matching".equals(key)) {
-                  dependenciesNode
-                    .get(key)
-                    .forEach(
-                        item ->
-                            type.setDependency(
-                                CollectionGenericTypeDependency.getDependency(key), item.asText()));
-              } else if ("derived_from".equals(key)) {
-                type.setDependency(
-                    CollectionGenericTypeDependency.getDependency(key),
-                    dependenciesNode.get(key).asText());
-              }
-            });
         // handle nested type
         JsonNode subtype = typeNode.get("subtype");
         String subTypeId = getTypeId(subtype);;
         type.setSubTypeId(subTypeId);
-        type.setSubType(TypeFactory.createType(subtype, inputsNode, outputsNode, charset));
+        type.setSubType(TypeFactory.createType(subtype, charset));
         return type;
     }
 

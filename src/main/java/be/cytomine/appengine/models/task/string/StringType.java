@@ -19,7 +19,7 @@ import be.cytomine.appengine.exceptions.TypeValidationException;
 import be.cytomine.appengine.handlers.StorageData;
 import be.cytomine.appengine.handlers.StorageDataEntry;
 import be.cytomine.appengine.handlers.StorageDataType;
-import be.cytomine.appengine.models.task.Output;
+import be.cytomine.appengine.models.task.Parameter;
 import be.cytomine.appengine.models.task.ParameterType;
 import be.cytomine.appengine.models.task.Run;
 import be.cytomine.appengine.models.task.Type;
@@ -63,7 +63,7 @@ public class StringType extends Type {
     @Override
     public void validateFiles(
         Run run,
-        Output currentOutput,
+        Parameter currentOutput,
         StorageData currentOutputStorageData)
         throws TypeValidationException {
 
@@ -121,7 +121,7 @@ public class StringType extends Type {
     }
 
     @Override
-    public void persistResult(Run run, Output currentOutput, StorageData outputValue) {
+    public void persistResult(Run run, Parameter currentOutput, StorageData outputValue) {
         StringPersistenceRepository stringPersistenceRepository = AppEngineApplicationContext.getBean(StringPersistenceRepository.class);
         StringPersistence result = stringPersistenceRepository.findStringPersistenceByParameterNameAndRunIdAndParameterType(currentOutput.getName(), run.getId(), ParameterType.OUTPUT);
         String output = FileHelper.read(outputValue.peek().getData(), getStorageCharset());

@@ -7,7 +7,7 @@ import be.cytomine.appengine.exceptions.TypeValidationException;
 import be.cytomine.appengine.handlers.StorageData;
 import be.cytomine.appengine.handlers.StorageDataEntry;
 import be.cytomine.appengine.handlers.StorageDataType;
-import be.cytomine.appengine.models.task.Output;
+import be.cytomine.appengine.models.task.Parameter;
 import be.cytomine.appengine.models.task.Run;
 import be.cytomine.appengine.models.task.Type;
 import be.cytomine.appengine.models.task.TypePersistence;
@@ -16,6 +16,7 @@ import be.cytomine.appengine.utils.FileHelper;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.ElementCollection;
@@ -34,7 +35,7 @@ import lombok.EqualsAndHashCode;
 @SuppressWarnings("checkstyle:LineLength")
 @Data
 @Entity
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(callSuper = false)
 public class CollectionType extends Type {
 
     @Column(nullable = true)
@@ -44,24 +45,10 @@ public class CollectionType extends Type {
     private Integer maxSize;
 
     @Column(nullable = true)
-    private String derivedFrom;
-
-    @Column(nullable = true)
     private String subTypeId ;
 
-    @ElementCollection
-    @Column(nullable = true)
-    private List<String> matching;
-
-    @OneToOne(optional = true)
+    @OneToOne(cascade = CascadeType.ALL, optional = false)
     private Type subType;
-
-    @Transient
-    private JsonNode inputs;
-
-    @Transient
-    private JsonNode outputs;
-
 
   public void setConstraint(CollectionGenericTypeConstraint constraint, String value) {
     switch (constraint) {
@@ -75,20 +62,20 @@ public class CollectionType extends Type {
     }
   }
 
-  public void setDependency(CollectionGenericTypeDependency dependency, String value) {
-        switch (dependency) {
-            case MATCHING:
-                if (Objects.isNull(this.matching) || this.matching.isEmpty()){
-                    this.matching = new ArrayList<>();
-                }
-                this.matching.add(value);
-                break;
-            case DERIVED_FROM:
-                this.setDerivedFrom(value);
-                break;
-            default:
-        }
-    }
+//  public void setDependency(CollectionGenericTypeDependency dependency, String value) {
+//        switch (dependency) {
+//            case MATCHING:
+//                if (Objects.isNull(this.matching) || this.matching.isEmpty()){
+//                    this.matching = new ArrayList<>();
+//                }
+//                this.matching.add(value);
+//                break;
+//            case DERIVED_FROM:
+//                this.setDerivedFrom(value);
+//                break;
+//            default:
+//        }
+//    }
 
     @Override
     public void validate(Object valueObject) throws TypeValidationException {
@@ -136,7 +123,7 @@ public class CollectionType extends Type {
     }
 
     @Override
-    public void persistResult(Run run, Output currentOutput, StorageData outputValue) {
+    public void persistResult(Run run, Parameter currentOutput, StorageData outputValue) {
 //        EnumerationPersistenceRepository enumerationPersistenceRepository = AppEngineApplicationContext.getBean(EnumerationPersistenceRepository.class);
 //        CollectionPersistence result = enumerationPersistenceRepository.findEnumerationPersistenceByParameterNameAndRunIdAndParameterType(currentOutput.getName(), run.getId(), ParameterType.OUTPUT);
 //        String output = new String(outputValue.poll().getData(), getStorageCharset());

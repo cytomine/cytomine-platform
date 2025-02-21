@@ -32,7 +32,7 @@ import be.cytomine.appengine.utils.FileHelper;
 @Table(name = "type")
 @Inheritance(strategy = InheritanceType.JOINED)
 @Data
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(callSuper = false)
 public class Type extends BaseEntity {
     @Id
     @Column(name = "identifier", updatable = false, nullable = false)
@@ -62,7 +62,7 @@ public class Type extends BaseEntity {
 
     public void persistProvision(JsonNode provision, UUID runId) {}
 
-    public void persistResult(Run runOptional, Output currentOutput, StorageData outputValue) {}
+    public void persistResult(Run runOptional, Parameter currentOutput, StorageData outputValue) {}
 
     public StorageData mapToStorageFileData(JsonNode provision) {
         return null;
@@ -102,7 +102,7 @@ public class Type extends BaseEntity {
 
     public void validateFiles(
         Run run,
-        Output currentOutput,
+        Parameter currentOutput,
         StorageData currentOutputStorageData)
         throws TypeValidationException {}
 

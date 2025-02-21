@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import be.cytomine.appengine.models.Match;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -52,20 +53,25 @@ public class Task extends BaseEntity {
     private String imageName;
 
     private int cpus;
+
     private int gpus;
+
     private String ram;
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<Author> authors;
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    private Set<Input> inputs;
+//    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+//    private Set<Parameter> inputs;
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<Output> outputs;
+    private Set<Parameter> parameters;
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<Run> runs;
+
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private List<Match> matches;
 
     public Task(
         UUID identifier,
