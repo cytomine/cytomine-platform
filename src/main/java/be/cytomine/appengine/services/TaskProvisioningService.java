@@ -14,9 +14,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import be.cytomine.appengine.models.task.Parameter;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -52,8 +54,7 @@ import be.cytomine.appengine.handlers.StorageDataEntry;
 import be.cytomine.appengine.handlers.StorageDataType;
 import be.cytomine.appengine.handlers.StorageHandler;
 import be.cytomine.appengine.models.task.Author;
-import be.cytomine.appengine.models.task.Input;
-import be.cytomine.appengine.models.task.Output;
+import be.cytomine.appengine.models.task.Parameter;
 import be.cytomine.appengine.models.task.ParameterType;
 import be.cytomine.appengine.models.task.Run;
 import be.cytomine.appengine.models.task.Task;
@@ -139,7 +140,13 @@ public class TaskProvisioningService {
         saveInDatabase(name, provision, run);
         log.info("ProvisionParameter: saved");
 
-        if (run.getTask().getInputs().size() == 1) {
+        Set<Parameter> inputParameters = run.getTask()
+            .getParameters()
+            .stream()
+            .filter(parameter -> parameter.getParameterType().equals(ParameterType.INPUT))
+            .collect(Collectors.toSet());
+
+        if (inputParameters.size() == 1) {
             changeStateToProvisioned(run);
         }
 
@@ -233,7 +240,14 @@ public class TaskProvisioningService {
             AppEngineError error = ErrorBuilder.buildBatchError(multipleErrors);
             throw new ProvisioningException(error);
         }
-        if (provisions.size() == run.getTask().getInputs().size()) {
+
+        Set<Parameter> inputParameters = run.getTask()
+            .getParameters()
+            .stream()
+            .filter(parameter -> parameter.getParameterType().equals(ParameterType.INPUT))
+            .collect(Collectors.toSet());
+
+        if (provisions.size() == inputParameters.size()) {
             changeStateToProvisioned(run);
         }
         log.info("ProvisionMultipleParameter: return collection");
@@ -242,12 +256,7 @@ public class TaskProvisioningService {
 
     @NotNull
     private void saveInDatabase(String parameterName, JsonNode provision, Run run) {
-        Set<Input> inputs = run.getTask().getInputs();
-        Input inputForType = inputs
-            .stream()
-            .filter(input -> input.getName().equalsIgnoreCase(parameterName))
-            .findFirst()
-            .get();
+        Parameter inputForType = getParameter(parameterName, ParameterType.INPUT, run);
 
         inputForType
             .getType()
@@ -255,12 +264,8 @@ public class TaskProvisioningService {
     }
 
     private Type getInputParameterType(String parameterName, Run run) {
-        Set<Input> inputs = run.getTask().getInputs();
-        Input inputForType = inputs
-            .stream()
-            .filter(input -> input.getName().equalsIgnoreCase(parameterName))
-            .findFirst()
-            .get();
+        Parameter inputForType = getParameter(parameterName, ParameterType.INPUT, run);
+
         return inputForType.getType();
     }
 
@@ -269,12 +274,7 @@ public class TaskProvisioningService {
         JsonNode provision,
         Run run
     ) throws ProvisioningException {
-        Set<Input> inputs = run.getTask().getInputs();
-        Input inputForType = inputs
-            .stream()
-            .filter(input -> input.getName().equalsIgnoreCase(parameterName))
-            .findFirst()
-            .get();
+        Parameter inputForType = getParameter(parameterName, ParameterType.INPUT, run);
 
         Storage runStorage = new Storage("task-run-inputs-" + run.getId());
         StorageData inputProvisionFileData = inputForType.getType().mapToStorageFileData(provision);
@@ -290,17 +290,34 @@ public class TaskProvisioningService {
         }
     }
 
+    private static Parameter getParameter(String parameterName, ParameterType parameterType, Run run)
+    {
+        return run
+            .getTask()
+            .getParameters()
+            .stream()
+            .filter(param -> param.getName().equalsIgnoreCase(parameterName)
+            && param.getParameterType().equals(parameterType))
+            .findFirst()
+            .get();
+    }
+
     private static void validateProvisionValuesAgainstTaskType(
         GenericParameterProvision provision,
         Run run
     ) throws TypeValidationException {
         Task task = run.getTask();
-        Set<Input> inputs = task.getInputs();
+        Set<Parameter> inputs = task
+            .getParameters()
+            .stream()
+            .filter(parameter -> parameter.getParameterType().equals(ParameterType.INPUT))
+            .collect(Collectors.toSet());
+
         boolean inputFound = false;
-        for (Input input : inputs) {
-            if (input.getName().equalsIgnoreCase(provision.getParameterName())) {
+        for (Parameter parameter : inputs) {
+            if (parameter.getName().equalsIgnoreCase(provision.getParameterName())) {
                 inputFound = true;
-                input.getType().validate(provision.getValue());
+                parameter.getType().validate(provision.getValue());
             }
         }
         if (!inputFound) {
@@ -378,7 +395,13 @@ public class TaskProvisioningService {
             AppEngineError error = ErrorBuilder.build(ErrorCode.INTERNAL_INVALID_TASK_RUN_STATE);
             throw new ProvisioningException(error);
         }
-        Set<Output> runTaskOutputs = run.getTask().getOutputs();
+        Set<Parameter> runTaskOutputs = run
+            .getTask()
+            .getParameters()
+            .stream()
+            .filter(parameter -> parameter.getParameterType().equals(ParameterType.OUTPUT))
+            .collect(Collectors.toSet());
+
         new ArrayList<>();
         log.info("Posting Outputs Archive: unzipping...");
         try {
@@ -400,21 +423,21 @@ public class TaskProvisioningService {
     // to the type implementer to return complex types
     private List<TaskRunParameterValue> processOutputFiles(
         MultipartFile outputs,
-        Set<Output> runTaskOutputs,
+        Set<Parameter> runTaskOutputs,
         Run run
     ) throws IOException, ProvisioningException {
         // read files from the archive
         try (ZipArchiveInputStream zais = new ZipArchiveInputStream(outputs.getInputStream())) {
             log.info("Posting Outputs Archive: unzipped");
-            List<Output> remainingOutputs = new ArrayList<>(runTaskOutputs);
+            List<Parameter> remainingOutputs = new ArrayList<>(runTaskOutputs);
             List<TaskRunParameterValue> taskRunParameterValues = new ArrayList<>();
             List<StorageData> contentsOfZip = new ArrayList<>();
-            List<Output> remainingUnStoredOutputs = new ArrayList<>(runTaskOutputs);
+            List<Parameter> remainingUnStoredOutputs = new ArrayList<>(runTaskOutputs);
             ZipEntry ze;
             while ((ze = zais.getNextZipEntry()) != null) {
                 // look for output matching file name
                 boolean isDirectory = false;
-                Output currentOutput = null;
+                Parameter currentOutput = null;
                 for (int i = 0; i < remainingOutputs.size(); i++) {
                     currentOutput = remainingOutputs.get(i);
                     if (currentOutput.getName().equals(ze.getName())) { // assuming it's a file
@@ -495,7 +518,7 @@ public class TaskProvisioningService {
             List<AppEngineError> multipleErrors = new ArrayList<>();
 
             // processing of files
-            for (Output currentOutput : remainingUnStoredOutputs) {
+            for (Parameter currentOutput : remainingUnStoredOutputs) {
                 Optional<StorageData> currentOutputStorageDataOptional = contentsOfZip
                     .stream()
                     .filter(s -> s
@@ -545,7 +568,7 @@ public class TaskProvisioningService {
         }
     }
 
-    private void validateFiles(Run run, Output currentOutput, StorageData currentOutputStorageData)
+    private void validateFiles(Run run, Parameter currentOutput, StorageData currentOutputStorageData)
         throws TypeValidationException {
         log.info("Posting Outputs Archive: "
             + "validating files and directories contents and structure...");
@@ -587,7 +610,7 @@ public class TaskProvisioningService {
         log.info("Posting Outputs Archive: stored");
     }
 
-    private void saveOutput(Run run, Output currentOutput, StorageData outputValue) {
+    private void saveOutput(Run run, Parameter currentOutput, StorageData outputValue) {
         log.info("Posting Outputs Archive: saving...");
         currentOutput.getType().persistResult(run, currentOutput, outputValue);
         log.info("Posting Outputs Archive: saved...");
@@ -680,23 +703,35 @@ public class TaskProvisioningService {
         @SuppressWarnings("checkstyle:LineLength")
         List<TypePersistence> results = typePersistenceRepository.findTypePersistenceByRunIdAndParameterType(run.getId(), type);
         if (type.equals(ParameterType.INPUT)) {
-            Set<Input> inputs = run.getTask().getInputs();
+            Set<Parameter> inputs = run
+                .getTask()
+                .getParameters()
+                .stream()
+                .filter(parameter -> parameter.getParameterType().equals(ParameterType.INPUT))
+                .collect(Collectors.toSet());
+
             for (TypePersistence result : results) {
                 // based on the type of the parameter assign the type
-                Input inputForType = inputs
+                Parameter inputForType = inputs
                     .stream()
-                    .filter(input -> input.getName().equalsIgnoreCase(result.getParameterName()))
+                    .filter(parameter -> parameter.getName().equalsIgnoreCase(result.getParameterName()))
                     .findFirst()
                     .get();
                 parameterValues.add(inputForType.getType().buildTaskRunParameterValue(result));
             }
         } else {
-            Set<Output> outputs = run.getTask().getOutputs();
+            Set<Parameter> outputs = run
+                .getTask()
+                .getParameters()
+                .stream()
+                .filter(parameter -> parameter.getParameterType().equals(ParameterType.OUTPUT))
+                .collect(Collectors.toSet());
+
             for (TypePersistence result : results) {
                 // based on the type of the parameter assign the type
-                Output outputForType = outputs
+                Parameter outputForType = outputs
                     .stream()
-                    .filter(output -> output.getName().equalsIgnoreCase(result.getParameterName()))
+                    .filter(parameter -> parameter.getName().equalsIgnoreCase(result.getParameterName()))
                     .findFirst()
                     .get();
                 parameterValues.add(outputForType.getType().buildTaskRunParameterValue(result));
