@@ -54,22 +54,22 @@ public class NumberType extends Type {
     public void setConstraint(NumberTypeConstraint constraint, String value) {
         switch (constraint) {
             case GREATER_EQUAL:
-                this.setGeq(Double.parseDouble(value));
+                setGeq(Double.parseDouble(value));
                 break;
             case GREATER_THAN:
-                this.setGt(Double.parseDouble(value));
+                setGt(Double.parseDouble(value));
                 break;
             case LOWER_EQUAL:
-                this.setLeq(Double.parseDouble(value));
+                setLeq(Double.parseDouble(value));
                 break;
             case LOWER_THAN:
-                this.setLt(Double.parseDouble(value));
+                setLt(Double.parseDouble(value));
                 break;
             case INFINITY_ALLOWED:
-                this.setInfinityAllowed(Boolean.parseBoolean(value));
+                setInfinityAllowed(Boolean.parseBoolean(value));
                 break;
             case NAN_ALLOWED:
-                this.setNanAllowed(Boolean.parseBoolean(value));
+                setNanAllowed(Boolean.parseBoolean(value));
                 break;
             default:
         }
@@ -77,10 +77,12 @@ public class NumberType extends Type {
 
     public boolean hasConstraint(NumberTypeConstraint constraint) {
         return switch (constraint) {
-            case GREATER_EQUAL -> this.geq != null;
-            case GREATER_THAN -> this.gt != null;
-            case LOWER_EQUAL -> this.leq != null;
-            case LOWER_THAN -> this.lt != null;
+            case GREATER_EQUAL -> geq != null;
+            case GREATER_THAN -> gt != null;
+            case LOWER_EQUAL -> leq != null;
+            case LOWER_THAN -> lt != null;
+            case INFINITY_ALLOWED -> true;
+            case NAN_ALLOWED -> true;
             default -> false;
         };
     }
@@ -110,20 +112,28 @@ public class NumberType extends Type {
 
         Double value = (Double) valueObject;
 
-        if (this.hasConstraint(NumberTypeConstraint.GREATER_THAN) && value <= this.getGt()) {
+        if (hasConstraint(NumberTypeConstraint.GREATER_THAN) && value <= gt) {
             throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_GT_VALIDATION_ERROR);
         }
 
-        if (this.hasConstraint(NumberTypeConstraint.GREATER_EQUAL) && value < this.getGeq()) {
+        if (hasConstraint(NumberTypeConstraint.GREATER_EQUAL) && value < geq) {
             throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_GEQ_VALIDATION_ERROR);
         }
 
-        if (this.hasConstraint(NumberTypeConstraint.LOWER_THAN) && value >= this.getLt()) {
+        if (hasConstraint(NumberTypeConstraint.LOWER_THAN) && value >= lt) {
             throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_LT_VALIDATION_ERROR);
         }
 
-        if (this.hasConstraint(NumberTypeConstraint.LOWER_EQUAL) && value > this.getLeq()) {
+        if (hasConstraint(NumberTypeConstraint.LOWER_EQUAL) && value > leq) {
             throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_LEQ_VALIDATION_ERROR);
+        }
+
+        if (!hasConstraint(NumberTypeConstraint.INFINITY_ALLOWED) && Double.isInfinite(value)) {
+            throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_INFINITY_ERROR);
+        }
+
+        if (!hasConstraint(NumberTypeConstraint.NAN_ALLOWED) && Double.isNaN(value)) {
+            throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_NAN_ERROR);
         }
     }
 

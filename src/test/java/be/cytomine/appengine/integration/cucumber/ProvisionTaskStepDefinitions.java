@@ -2,6 +2,7 @@ package be.cytomine.appengine.integration.cucumber;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.function.Function;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -22,7 +23,13 @@ import org.springframework.web.client.RestClientResponseException;
 import be.cytomine.appengine.AppEngineApplication;
 import be.cytomine.appengine.dto.handlers.filestorage.Storage;
 import be.cytomine.appengine.dto.inputs.task.GenericParameterProvision;
+import be.cytomine.appengine.dto.inputs.task.types.image.ImageTypeConstraint;
+import be.cytomine.appengine.dto.inputs.task.types.integer.IntegerTypeConstraint;
+import be.cytomine.appengine.dto.inputs.task.types.number.NumberTypeConstraint;
+import be.cytomine.appengine.dto.inputs.task.types.string.StringTypeConstraint;
+import be.cytomine.appengine.dto.inputs.task.types.wsi.WsiTypeConstraint;
 import be.cytomine.appengine.exceptions.FileStorageException;
+import be.cytomine.appengine.exceptions.TypeValidationException;
 import be.cytomine.appengine.handlers.StorageData;
 import be.cytomine.appengine.handlers.StorageHandler;
 import be.cytomine.appengine.models.task.*;
@@ -31,11 +38,15 @@ import be.cytomine.appengine.models.task.enumeration.EnumerationPersistence;
 import be.cytomine.appengine.models.task.file.FilePersistence;
 import be.cytomine.appengine.models.task.geometry.GeometryPersistence;
 import be.cytomine.appengine.models.task.image.ImagePersistence;
+import be.cytomine.appengine.models.task.image.ImageType;
 import be.cytomine.appengine.models.task.integer.IntegerPersistence;
 import be.cytomine.appengine.models.task.integer.IntegerType;
 import be.cytomine.appengine.models.task.number.NumberPersistence;
+import be.cytomine.appengine.models.task.number.NumberType;
 import be.cytomine.appengine.models.task.string.StringPersistence;
+import be.cytomine.appengine.models.task.string.StringType;
 import be.cytomine.appengine.models.task.wsi.WsiPersistence;
+import be.cytomine.appengine.models.task.wsi.WsiType;
 import be.cytomine.appengine.repositories.TypePersistenceRepository;
 import be.cytomine.appengine.repositories.bool.BooleanPersistenceRepository;
 import be.cytomine.appengine.repositories.enumeration.EnumerationPersistenceRepository;
@@ -629,5 +640,50 @@ public class ProvisionTaskStepDefinitions {
 
         String fileContent = FileHelper.read(descriptor.peek().getData(), StandardCharsets.UTF_8);
         Assertions.assertTrue(fileContent.equalsIgnoreCase(content));
+    }
+
+    // Constraint validations
+
+    @Given("the parameter {string} has validation rules")
+    public void parameterHasValidationRules(String parameterName) {
+        Input input = persistedTask
+            .getInputs()
+            .stream()
+            .filter(i -> i.getName().equals(parameterName))
+            .findFirst()
+            .orElse(null);
+        Assertions.assertNotNull(input);
+
+        Map<String, Function<Type, Boolean>> typeConstraintCheckers = Map.of(
+            "integer", t -> Arrays.stream(IntegerTypeConstraint.values()).anyMatch(((IntegerType) t)::hasConstraint),
+            "number", t -> Arrays.stream(NumberTypeConstraint.values()).anyMatch(((NumberType) t)::hasConstraint),
+            "string", t -> Arrays.stream(StringTypeConstraint.values()).anyMatch(((StringType) t)::hasConstraint),
+            "image", t -> Arrays.stream(ImageTypeConstraint.values()).anyMatch(((ImageType) t)::hasConstraint),
+            "wsi", t -> Arrays.stream(WsiTypeConstraint.values()).anyMatch(((WsiType) t)::hasConstraint)
+        );
+
+        Type type = input.getType();
+        Boolean hasValidationRules = typeConstraintCheckers.getOrDefault(type.getId(), t -> {
+            throw new RuntimeException("Unknown type: " + t.getId());
+        }).apply(type);
+
+        Assertions.assertTrue(hasValidationRules);
+    }
+
+    @Then("the value {string} provisioned for parameter {string} pass the validation rules")
+    public void valuePassesValidationRules(String value, String parameterName) {
+        Input input = persistedTask
+            .getInputs()
+            .stream()
+            .filter(i -> i.getName().equals(parameterName))
+            .findFirst()
+            .orElse(null);
+        Assertions.assertNotNull(input);
+
+        try {
+            input.getType().validate(TaskTestsUtils.parseValue(value, input));
+        } catch (TypeValidationException e) {
+            Assertions.fail("Validation failed for value '" + value + "' and parameter '" + parameterName + "': " + e.getMessage());
+        }
     }
 }
