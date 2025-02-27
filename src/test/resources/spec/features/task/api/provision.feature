@@ -231,19 +231,19 @@ Feature: [URS00003-TASK] Provision a task run
     And the App Engine returns a '200 OK' HTTP response with the updated task run information as JSON payload
 
     Examples:
-      | task_namespace                                  | task_version | parameter_name | parameter_value | parameter_type | payload                                  |
-      | com.cytomine.dummy.constrained.integer.addition | 0.1.0        | a              | -1              | integer        | {\"param_name\": \"a\", \"value\": -1}   |
-      | com.cytomine.dummy.constrained.integer.addition | 0.1.0        | b              | 0               | integer        | {\"param_name\": \"b\", \"value\": 0}    |
-      | com.cytomine.dummy.constrained.integer.addition | 0.1.0        | b              | -2              | integer        | {\"param_name\": \"b\", \"value\": -2}   |
-      | com.cytomine.dummy.constrained.integer.addition | 0.1.0        | c              | 1               | integer        | {\"param_name\": \"c\", \"value\": 1}    |
-      | com.cytomine.dummy.constrained.integer.addition | 0.1.0        | d              | 0               | integer        | {\"param_name\": \"d\", \"value\": 0}    |
-      | com.cytomine.dummy.constrained.number.addition  | 0.1.0        | a              | -5.5            | number         | {\"param_name\": \"a\", \"value\": -5.5} |
-      | com.cytomine.dummy.constrained.number.addition  | 0.1.0        | b              | 4.21            | number         | {\"param_name\": \"b\", \"value\": 4.21} |
-      | com.cytomine.dummy.constrained.number.addition  | 0.1.0        | c              | 17.7            | number         | {\"param_name\": \"c\", \"value\": 17.7} |
-      | com.cytomine.dummy.constrained.number.addition  | 0.1.0        | d              | nan             | number         | {\"param_name\": \"d\", \"value\": nan}  |
-      | com.cytomine.dummy.constrained.number.addition  | 0.1.0        | d              | inf             | number         | {\"param_name\": \"d\", \"value\": inf}  |
-      | com.cytomine.dummy.constrained.number.addition  | 0.1.0        | d              | -inf            | number         | {\"param_name\": \"d\", \"value\": -inf} |
-
+      | task_namespace                                  | task_version | parameter_name | parameter_value | parameter_type | payload                                               |
+      | com.cytomine.dummy.constrained.integer.addition | 0.1.0        | a              | -1              | integer        | {\"param_name\": \"a\", \"value\": -1}                |
+      | com.cytomine.dummy.constrained.integer.addition | 0.1.0        | b              | 0               | integer        | {\"param_name\": \"b\", \"value\": 0}                 |
+      | com.cytomine.dummy.constrained.integer.addition | 0.1.0        | b              | -2              | integer        | {\"param_name\": \"b\", \"value\": -2}                |
+      | com.cytomine.dummy.constrained.integer.addition | 0.1.0        | c              | 1               | integer        | {\"param_name\": \"c\", \"value\": 1}                 |
+      | com.cytomine.dummy.constrained.integer.addition | 0.1.0        | d              | 0               | integer        | {\"param_name\": \"d\", \"value\": 0}                 |
+      | com.cytomine.dummy.constrained.number.addition  | 0.1.0        | a              | -5.5            | number         | {\"param_name\": \"a\", \"value\": -5.5}              |
+      | com.cytomine.dummy.constrained.number.addition  | 0.1.0        | b              | 4.21            | number         | {\"param_name\": \"b\", \"value\": 4.21}              |
+      | com.cytomine.dummy.constrained.number.addition  | 0.1.0        | c              | 17.7            | number         | {\"param_name\": \"c\", \"value\": 17.7}              |
+      | com.cytomine.dummy.constrained.number.addition  | 0.1.0        | d              | nan             | number         | {\"param_name\": \"d\", \"value\": nan}               |
+      | com.cytomine.dummy.constrained.number.addition  | 0.1.0        | d              | inf             | number         | {\"param_name\": \"d\", \"value\": inf}               |
+      | com.cytomine.dummy.constrained.number.addition  | 0.1.0        | d              | -inf            | number         | {\"param_name\": \"d\", \"value\": -inf}              |
+      | com.cytomine.dummy.constrained.string.identity  | 0.1.0        | input          | valid str       | string         | {\"param_name\": \"input\", \"value\": \"valid str\"} |
 
   Scenario Outline: failed provisioning of a parameter with constraints
 
@@ -259,15 +259,17 @@ Feature: [URS00003-TASK] Provision a task run
     And the App Engine returns a '400 Bad Request' HTTP response with the updated task run information as JSON payload
 
     Examples:
-      | task_namespace                                  | task_version | parameter_name | parameter_value | parameter_type | payload                                   |
-      | com.cytomine.dummy.constrained.integer.addition | 0.1.0        | a              | 0               | integer        | {\"param_name\": \"a\", \"value\": 0}     |
-      | com.cytomine.dummy.constrained.integer.addition | 0.1.0        | b              | 1               | integer        | {\"param_name\": \"b\", \"value\": 1}     |
-      | com.cytomine.dummy.constrained.integer.addition | 0.1.0        | c              | 0               | integer        | {\"param_name\": \"c\", \"value\": 0}     |
-      | com.cytomine.dummy.constrained.integer.addition | 0.1.0        | d              | -1              | integer        | {\"param_name\": \"d\", \"value\": -1}    |
-      | com.cytomine.dummy.constrained.number.addition  | 0.1.0        | a              | 5.5             | number         | {\"param_name\": \"a\", \"value\": 5.5}   |
-      | com.cytomine.dummy.constrained.number.addition  | 0.1.0        | a              | -15.5           | number         | {\"param_name\": \"a\", \"value\": -15.5} |
-      | com.cytomine.dummy.constrained.number.addition  | 0.1.0        | b              | 14.21           | number         | {\"param_name\": \"b\", \"value\": 14.21} |
-      | com.cytomine.dummy.constrained.number.addition  | 0.1.0        | b              | -7.21           | number         | {\"param_name\": \"b\", \"value\": -7.21} |
-      | com.cytomine.dummy.constrained.number.addition  | 0.1.0        | c              | nan             | number         | {\"param_name\": \"c\", \"value\": nan}   |
-      | com.cytomine.dummy.constrained.number.addition  | 0.1.0        | c              | inf             | number         | {\"param_name\": \"c\", \"value\": inf}   |
-      | com.cytomine.dummy.constrained.number.addition  | 0.1.0        | c              | -inf            | number         | {\"param_name\": \"c\", \"value\": -inf}  |
+      | task_namespace                                  | task_version | parameter_name | parameter_value | parameter_type | payload                                                 |
+      | com.cytomine.dummy.constrained.integer.addition | 0.1.0        | a              | 0               | integer        | {\"param_name\": \"a\", \"value\": 0}                   |
+      | com.cytomine.dummy.constrained.integer.addition | 0.1.0        | b              | 1               | integer        | {\"param_name\": \"b\", \"value\": 1}                   |
+      | com.cytomine.dummy.constrained.integer.addition | 0.1.0        | c              | 0               | integer        | {\"param_name\": \"c\", \"value\": 0}                   |
+      | com.cytomine.dummy.constrained.integer.addition | 0.1.0        | d              | -1              | integer        | {\"param_name\": \"d\", \"value\": -1}                  |
+      | com.cytomine.dummy.constrained.number.addition  | 0.1.0        | a              | 5.5             | number         | {\"param_name\": \"a\", \"value\": 5.5}                 |
+      | com.cytomine.dummy.constrained.number.addition  | 0.1.0        | a              | -15.5           | number         | {\"param_name\": \"a\", \"value\": -15.5}               |
+      | com.cytomine.dummy.constrained.number.addition  | 0.1.0        | b              | 14.21           | number         | {\"param_name\": \"b\", \"value\": 14.21}               |
+      | com.cytomine.dummy.constrained.number.addition  | 0.1.0        | b              | -7.21           | number         | {\"param_name\": \"b\", \"value\": -7.21}               |
+      | com.cytomine.dummy.constrained.number.addition  | 0.1.0        | c              | nan             | number         | {\"param_name\": \"c\", \"value\": nan}                 |
+      | com.cytomine.dummy.constrained.number.addition  | 0.1.0        | c              | inf             | number         | {\"param_name\": \"c\", \"value\": inf}                 |
+      | com.cytomine.dummy.constrained.number.addition  | 0.1.0        | c              | -inf            | number         | {\"param_name\": \"c\", \"value\": -inf}                |
+      | com.cytomine.dummy.constrained.string.identity  | 0.1.0        | input          | invalid str     | string         | {\"param_name\": \"input\", \"value\": \"invalid str\"} |
+      | com.cytomine.dummy.constrained.string.identity  | 0.1.0        | input          |                 | string         | {\"param_name\": \"input\", \"value\": \"\"}            |

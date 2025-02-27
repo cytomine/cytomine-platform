@@ -210,8 +210,6 @@ public class TaskTestsUtils {
             throw new RuntimeException("Unknown type: " + input.getType().getId());
         });
 
-        System.out.println("PArse: " + parser.apply(value));
-
         return parser.apply(value);
     }
 }
