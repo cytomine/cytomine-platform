@@ -34,4 +34,6 @@ public class TypePersistence extends BaseEntity {
     protected ValueType valueType;
 
     protected ParameterType parameterType;
+
+    protected String collectionIndex;
 }
