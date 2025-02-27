@@ -253,7 +253,7 @@ public class ProvisionTaskStepDefinitions {
             case "NumberType":
                 provision = new NumberPersistence();
                 provision.setValueType(ValueType.NUMBER);
-                ((NumberPersistence) provision).setValue(Double.parseDouble(initialValue));
+                ((NumberPersistence) provision).setValue(NumberType.parseDouble(initialValue));
                 break;
             case "StringType":
                 provision = new StringPersistence();
@@ -603,7 +603,7 @@ public class ProvisionTaskStepDefinitions {
                 break;
             case "NumberType":
                 provision = numberProvisionRepository.findNumberPersistenceByParameterNameAndRunIdAndParameterType(parameterName, persistedRun.getId(), ParameterType.INPUT);
-                Assertions.assertEquals(Double.parseDouble(newValue), ((NumberPersistence) provision).getValue());
+                Assertions.assertEquals(NumberType.parseDouble(newValue), ((NumberPersistence) provision).getValue());
                 break;
             case "StringType":
                 provision = stringProvisionRepository.findStringPersistenceByParameterNameAndRunIdAndParameterType(parameterName, persistedRun.getId(), ParameterType.INPUT);

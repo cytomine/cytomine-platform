@@ -25,6 +25,7 @@ import be.cytomine.appengine.dto.inputs.task.types.string.StringValue;
 import be.cytomine.appengine.dto.inputs.task.types.wsi.WsiValue;
 import be.cytomine.appengine.models.BaseEntity;
 import be.cytomine.appengine.models.task.Input;
+import be.cytomine.appengine.models.task.number.NumberType;
 
 public class TaskTestsUtils {
 
@@ -154,7 +155,7 @@ public class TaskTestsUtils {
                 break;
             case "number":
                 provision.setType(ParameterType.NUMBER);
-                provision.setValue(Double.parseDouble(value));
+                provision.setValue(NumberType.parseDouble(value));
                 break;
             case "string":
                 provision.setType(ParameterType.STRING);
@@ -199,7 +200,7 @@ public class TaskTestsUtils {
 
         Map<String, Function<String, Object>> parsers = Map.of(
             "integer", v -> Integer.parseInt(v),
-            "number", v -> Double.parseDouble(v),
+            "number", v -> NumberType.parseDouble(v),
             "string", v -> value,
             "image", v -> file,
             "wsi", v -> file
@@ -208,6 +209,8 @@ public class TaskTestsUtils {
         Function<String, Object> parser = parsers.getOrDefault(input.getType().getId(), v -> {
             throw new RuntimeException("Unknown type: " + input.getType().getId());
         });
+
+        System.out.println("PArse: " + parser.apply(value));
 
         return parser.apply(value);
     }

@@ -235,11 +235,13 @@ Feature: [URS00003-TASK] Provision a task run
       | com.cytomine.dummy.constrained.integer.addition | 0.1.0        | a              | -1              | integer        | {\"param_name\": \"a\", \"value\": -1}   |
       | com.cytomine.dummy.constrained.integer.addition | 0.1.0        | b              | 0               | integer        | {\"param_name\": \"b\", \"value\": 0}    |
       | com.cytomine.dummy.constrained.integer.addition | 0.1.0        | b              | -2              | integer        | {\"param_name\": \"b\", \"value\": -2}   |
-      | com.cytomine.dummy.constrained.integer.addition | 0.1.0        | c              | 1               | integer        | {\"param_name\": \"a\", \"value\": 1}    |
-      | com.cytomine.dummy.constrained.integer.addition | 0.1.0        | d              | 0               | integer        | {\"param_name\": \"a\", \"value\": 0}    |
+      | com.cytomine.dummy.constrained.integer.addition | 0.1.0        | c              | 1               | integer        | {\"param_name\": \"c\", \"value\": 1}    |
+      | com.cytomine.dummy.constrained.integer.addition | 0.1.0        | d              | 0               | integer        | {\"param_name\": \"d\", \"value\": 0}    |
       | com.cytomine.dummy.constrained.number.addition  | 0.1.0        | a              | -5.5            | number         | {\"param_name\": \"a\", \"value\": -5.5} |
-      | com.cytomine.dummy.constrained.number.addition  | 0.1.0        | b              | 4.21            | number         | {\"param_name\": \"a\", \"value\": 4.21} |
-      | com.cytomine.dummy.constrained.number.addition  | 0.1.0        | c              | 17.7            | number         | {\"param_name\": \"a\", \"value\": 17.7} |
-      | com.cytomine.dummy.constrained.number.addition  | 0.1.0        | d              | nan             | number         | {\"param_name\": \"a\", \"value\": nan}  |
-      | com.cytomine.dummy.constrained.number.addition  | 0.1.0        | d              | inf             | number         | {\"param_name\": \"a\", \"value\": inf}  |
-      | com.cytomine.dummy.constrained.number.addition  | 0.1.0        | d              | -inf            | number         | {\"param_name\": \"a\", \"value\": -inf} |
+      | com.cytomine.dummy.constrained.number.addition  | 0.1.0        | b              | 4.21            | number         | {\"param_name\": \"b\", \"value\": 4.21} |
+      | com.cytomine.dummy.constrained.number.addition  | 0.1.0        | c              | 17.7            | number         | {\"param_name\": \"c\", \"value\": 17.7} |
+      | com.cytomine.dummy.constrained.number.addition  | 0.1.0        | d              | nan             | number         | {\"param_name\": \"d\", \"value\": nan}  |
+      | com.cytomine.dummy.constrained.number.addition  | 0.1.0        | d              | inf             | number         | {\"param_name\": \"d\", \"value\": inf}  |
+      | com.cytomine.dummy.constrained.number.addition  | 0.1.0        | d              | -inf            | number         | {\"param_name\": \"d\", \"value\": -inf} |
+
+

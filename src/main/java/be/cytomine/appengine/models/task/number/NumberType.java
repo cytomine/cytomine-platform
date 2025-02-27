@@ -51,19 +51,28 @@ public class NumberType extends Type {
 
     private boolean nanAllowed = false;
 
+    public static Double parseDouble(String s) {
+        return switch (s.toLowerCase()) {
+            case "nan" -> Double.NaN;
+            case "inf" -> Double.POSITIVE_INFINITY;
+            case "-inf" -> Double.NEGATIVE_INFINITY;
+            default -> Double.parseDouble(s);
+        };
+    }
+
     public void setConstraint(NumberTypeConstraint constraint, String value) {
         switch (constraint) {
             case GREATER_EQUAL:
-                setGeq(Double.parseDouble(value));
+                setGeq(parseDouble(value));
                 break;
             case GREATER_THAN:
-                setGt(Double.parseDouble(value));
+                setGt(parseDouble(value));
                 break;
             case LOWER_EQUAL:
-                setLeq(Double.parseDouble(value));
+                setLeq(parseDouble(value));
                 break;
             case LOWER_THAN:
-                setLt(Double.parseDouble(value));
+                setLt(parseDouble(value));
                 break;
             case INFINITY_ALLOWED:
                 setInfinityAllowed(Boolean.parseBoolean(value));
@@ -100,8 +109,7 @@ public class NumberType extends Type {
         // validate value
         String rawValue = getContentIfValid(outputFile);
 
-        validate(Double.parseDouble(rawValue));
-
+        validate(parseDouble(rawValue));
     }
 
     @Override
@@ -110,7 +118,14 @@ public class NumberType extends Type {
             return;
         }
 
-        Double value = (Double) valueObject;
+        Double value = null;
+        if (valueObject instanceof Double) {
+            value = (Double) valueObject;
+        } else if (valueObject instanceof String) {
+            value = parseDouble((String) valueObject);
+        } else {
+            throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_TYPE_ERROR);
+        }
 
         if (hasConstraint(NumberTypeConstraint.GREATER_THAN) && value <= gt) {
             throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_GT_VALIDATION_ERROR);
@@ -128,11 +143,11 @@ public class NumberType extends Type {
             throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_LEQ_VALIDATION_ERROR);
         }
 
-        if (!hasConstraint(NumberTypeConstraint.INFINITY_ALLOWED) && Double.isInfinite(value)) {
+        if (!infinityAllowed && Double.isInfinite(value)) {
             throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_INFINITY_ERROR);
         }
 
-        if (!hasConstraint(NumberTypeConstraint.NAN_ALLOWED) && Double.isNaN(value)) {
+        if (!nanAllowed && Double.isNaN(value)) {
             throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_NAN_ERROR);
         }
     }
@@ -162,7 +177,7 @@ public class NumberType extends Type {
         NumberPersistenceRepository numberPersistenceRepository = AppEngineApplicationContext.getBean(NumberPersistenceRepository.class);
         NumberPersistence result = numberPersistenceRepository.findNumberPersistenceByParameterNameAndRunIdAndParameterType(currentOutput.getName(), run.getId(), ParameterType.OUTPUT);
         String output = FileHelper.read(outputValue.peek().getData(), getStorageCharset());
-        double value = Double.parseDouble(output);
+        double value = parseDouble(output);
         if (result == null) {
             result = new NumberPersistence();
             result.setValueType(ValueType.NUMBER);
@@ -205,7 +220,7 @@ public class NumberType extends Type {
         value.setParameterName(outputName);
         value.setTaskRunId(id);
         value.setType(ValueType.NUMBER);
-        value.setValue(Double.parseDouble(outputValue));
+        value.setValue(parseDouble(outputValue));
 
         return value;
     }
