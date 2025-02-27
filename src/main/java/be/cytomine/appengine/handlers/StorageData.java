@@ -1,6 +1,7 @@
 package be.cytomine.appengine.handlers;
 
 import java.io.File;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
@@ -78,5 +79,24 @@ public class StorageData {
         entryList.addAll(other.getEntryList());
 
         return entryList.size() == (sizeBeforeMerge + other.getEntryList().size());
+    }
+
+    public StorageDataEntry get(String name) {
+        return entryList.stream().filter(entry -> Objects.equals(entry.getName(), name)).findFirst().orElse(null);
+    }
+
+    public void sortShallowToDeep()
+    {
+        entryList.sort(Comparator.comparingInt(entry -> countSlashes(entry.getName())));
+    }
+
+    private int countSlashes(String path) {
+        int count = 0;
+        for (char ch : path.toCharArray()) {
+            if (ch == '/') {
+                count++;
+            }
+        }
+        return count;
     }
 }
