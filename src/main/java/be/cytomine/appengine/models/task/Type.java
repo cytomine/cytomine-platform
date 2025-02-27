@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import be.cytomine.appengine.exceptions.FileStorageException;
+import be.cytomine.appengine.exceptions.ProvisioningException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -60,11 +62,14 @@ public class Type extends BaseEntity {
 
     public void validate(Object value) throws TypeValidationException {}
 
-    public void persistProvision(JsonNode provision, UUID runId) {}
+    public void persistProvision(JsonNode provision, UUID runId) throws ProvisioningException {}
 
-    public void persistResult(Run runOptional, Parameter currentOutput, StorageData outputValue) {}
+    public void persistResult(Run runOptional, Parameter currentOutput, StorageData outputValue)
+        throws ProvisioningException
+    {}
 
-    public StorageData mapToStorageFileData(JsonNode provision) {
+    public StorageData mapToStorageFileData(JsonNode provision) throws FileStorageException
+    {
         return null;
     }
 
@@ -89,14 +94,16 @@ public class Type extends BaseEntity {
         StorageData outputData,
         UUID id,
         String outputName
-    ) {
+    ) throws ProvisioningException
+    {
         return null;
     }
 
     // Todo : rename
     public TaskRunParameterValue buildTaskRunParameterValue(
         TypePersistence typePersistence
-    ) {
+    ) throws ProvisioningException
+    {
         return null;
     }
 
