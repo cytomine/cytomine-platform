@@ -197,16 +197,7 @@ public class ProvisionTaskStepDefinitions {
 
     @Then("the App Engine returns a {string} HTTP response with the updated task run information as JSON payload")
     public void the_app_engine_returns_a_http_response_with_the_updated_task_run_information_as_json_payload(String responseCode) {
-        switch (responseCode) {
-            case "200 OK":
-                Assertions.assertNull(persistedException);
-                break;
-            case "400 Bad Request":
-                Assertions.assertNotNull(persistedException);
-                break;
-            default:
-                Assertions.fail("Unexpected response code: " + responseCode);
-        }
+        Assertions.assertNull(persistedException);
     }
 
     // ONE INPUT PARAMETER TESTS
@@ -487,8 +478,10 @@ public class ProvisionTaskStepDefinitions {
 
     @Given("the first parameter is {string} of type {string} with a validation rule {string}")
     public void the_first_parameter_is_of_type_with_a_validation_rule(String parameterName, String type, String validationRule) {
-        Optional<Input> parameterOptional = persistedTask.getInputs().stream().filter(input -> ((IntegerType)input.getType()).getId().equals(type) && input.getName().equals(parameterName)).findFirst();
-
+        Optional<Input> parameterOptional = persistedTask.getInputs()
+            .stream()
+            .filter(input -> input.getType().getId().equals(type) && input.getName().equals(parameterName))
+            .findFirst();
         Assertions.assertTrue(parameterOptional.isPresent());
 
         // adding constraint to the existing unconstrainted parameter
@@ -677,39 +670,5 @@ public class ProvisionTaskStepDefinitions {
         }).apply(type);
 
         Assertions.assertTrue(hasValidationRules);
-    }
-
-    @Then("the value {string} provisioned for parameter {string} passed the validation rules")
-    public void valuePassesValidationRules(String value, String parameterName) {
-        Input input = persistedTask
-            .getInputs()
-            .stream()
-            .filter(i -> i.getName().equals(parameterName))
-            .findFirst()
-            .orElse(null);
-        Assertions.assertNotNull(input);
-
-        try {
-            input.getType().validate(TaskTestsUtils.parseValue(value, input));
-        } catch (TypeValidationException e) {
-            Assertions.fail("Validation failed for value '" + value + "' and parameter '" + parameterName + "': " + e.getMessage());
-        }
-    }
-
-    @Then("the value {string} provisioned for parameter {string} failed the validation rules")
-    public void valueFailsValidationRules(String value, String parameterName) {
-        Input input = persistedTask
-            .getInputs()
-            .stream()
-            .filter(i -> i.getName().equals(parameterName))
-            .findFirst()
-            .orElse(null);
-        Assertions.assertNotNull(input);
-
-        try {
-            input.getType().validate(TaskTestsUtils.parseValue(value, input));
-        } catch (TypeValidationException e) {
-            Assertions.assertNotNull(e);
-        }
     }
 }

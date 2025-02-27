@@ -1,12 +1,10 @@
 package be.cytomine.appengine.utils;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.function.Function;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -24,7 +22,6 @@ import be.cytomine.appengine.dto.inputs.task.types.integer.IntegerValue;
 import be.cytomine.appengine.dto.inputs.task.types.string.StringValue;
 import be.cytomine.appengine.dto.inputs.task.types.wsi.WsiValue;
 import be.cytomine.appengine.models.BaseEntity;
-import be.cytomine.appengine.models.task.Input;
 import be.cytomine.appengine.models.task.number.NumberType;
 
 public class TaskTestsUtils {
@@ -186,30 +183,5 @@ public class TaskTestsUtils {
         }
 
         return provision;
-    }
-
-    public static Object parseValue(String value, Input input) {
-        final File file;
-        Set<String> binaryType = Set.of("image", "wsi");
-        if (binaryType.contains(input.getType().getId())) {
-            file = FileHelper.write(input.getName(), value.getBytes());
-            file.deleteOnExit();
-        } else {
-            file = null;
-        }
-
-        Map<String, Function<String, Object>> parsers = Map.of(
-            "integer", v -> Integer.parseInt(v),
-            "number", v -> NumberType.parseDouble(v),
-            "string", v -> value,
-            "image", v -> file,
-            "wsi", v -> file
-        );
-
-        Function<String, Object> parser = parsers.getOrDefault(input.getType().getId(), v -> {
-            throw new RuntimeException("Unknown type: " + input.getType().getId());
-        });
-
-        return parser.apply(value);
     }
 }

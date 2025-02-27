@@ -107,6 +107,7 @@ Feature: [URS00003-TASK] Provision a task run
       | com.cytomine.dummy.arithmetic.integer.addition    | 1.0.0        | a           | integer     | 5            | b           | integer     | [{\"param_name\": \"a\", \"value\": \"5\"}] | CREATED                | 5                  |
       | com.cytomine.dummy.arithmetic.integer.subtraction | 1.0.0        | a           | integer     | 5            | b           | integer     | [{\"param_name\": \"a\", \"value\": \"5\"}] | CREATED                | 5                  |
 
+
   Scenario Outline: successful batch provisioning of a task run two parameters one of which one has a validation rule
 
   See "src/main/resources/spec/api/openapi_spec_v0.1.0.yml" file, in particular the paths:
@@ -132,6 +133,7 @@ Feature: [URS00003-TASK] Provision a task run
       | task_namespace                                             | task_version | param1_name | param1_type | param1_value | param1_validation_rule | param2_name | param2_type | param2_value | payload                                                                          | task_run_initial_state | task_run_new_state | param1_file_content | param2_file_content |
       | com.cytomine.dummy.arithmetic.integer.addition.constrained | 1.0.0        | a           | integer     | 25           | lt: 53                 | b           | integer     | 30           | [{\"param_name\": \"a\", \"value\": 25}, {\"param_name\": \"b\", \"value\": 30}] | CREATED                | PROVISIONED        | 25                  | 30                  |
 
+
   Scenario Outline: failed batch provisioning of a task run with invalid parameter value
 
   See "src/main/resources/spec/api/openapi_spec_v0.1.0.yml" file, in particular the paths:
@@ -153,6 +155,7 @@ Feature: [URS00003-TASK] Provision a task run
     Examples:
       | task_namespace                                 | task_version | param1_name | param1_type  | param1_validation_rule | param2_name | param2_type  | payload                                                                          | task_run_initial_state | error_payload                                                                                                                                                                                                                                                                                                                    | param1_value | param2_value|
       | com.cytomine.dummy.arithmetic.integer.addition | 1.0.0        | a           | integer      | lt: 53                 | b           | integer      | [{\"param_name\": \"a\", \"value\": 75}, {\"param_name\": \"b\", \"value\": 30}] | CREATED                | {\"error_code\": \"APPE-internal-batch-request-error\", \"message\": \"Error(s) occurred during a handling of a batch request.\", \"details\": {\"errors\": [{\"error_code\": \"APPE-internal-request-validation-error\", \"message\": \"value must be less than defined constraint\", \"details\": { \"param_name\": \"a\"}}]}} | 75           | 30          |
+
 
   Scenario Outline: failed single parameter provisioning with unknown parameter name
 
@@ -214,8 +217,8 @@ Feature: [URS00003-TASK] Provision a task run
       | com.cytomine.dummy.identity.wsi                | 1.0.0        | input      | wsi         | binary (content 1)                                 | binary (content 2)                                 | binary (content 2)                                                                         | PROVISIONED    | binary (content 1)                                 | binary (content 2)                                 |
       | com.cytomine.dummy.identity.file               | 1.0.0        | input      | file        | binary (content 1)                                 | binary (content 2)                                 | binary (content 2)                                                                         | PROVISIONED    | binary (content 1)                                 | binary (content 2)                                 |
 
-
   # TODO failed re-provisioning of a task of which the state is not one of {'CREATED', 'PROVISIONED'}
+
 
   Scenario Outline: successful provisioning of a parameter with constraints
 
@@ -227,8 +230,7 @@ Feature: [URS00003-TASK] Provision a task run
     And the parameter "<parameter_name>" has validation rules
     And a task run has been created for this task
     When a user calls the provisioning endpoint with "<payload>" to provision parameter "<parameter_name>" with "<parameter_value>" of type "<parameter_type>"
-    Then the value "<parameter_value>" provisioned for parameter "<parameter_name>" passed the validation rules
-    And the App Engine returns a '200 OK' HTTP response with the updated task run information as JSON payload
+    Then the App Engine returns a '200 OK' HTTP response with the updated task run information as JSON payload
 
     Examples:
       | task_namespace                                  | task_version | parameter_name | parameter_value | parameter_type | payload                                               |
@@ -245,6 +247,7 @@ Feature: [URS00003-TASK] Provision a task run
       | com.cytomine.dummy.constrained.number.addition  | 0.1.0        | d              | -inf            | number         | {\"param_name\": \"d\", \"value\": -inf}              |
       | com.cytomine.dummy.constrained.string.identity  | 0.1.0        | input          | valid str       | string         | {\"param_name\": \"input\", \"value\": \"valid str\"} |
 
+
   Scenario Outline: failed provisioning of a parameter with constraints
 
   See "src/main/resources/schemas/tasks/task.v0.json" file for the constraints
@@ -255,21 +258,20 @@ Feature: [URS00003-TASK] Provision a task run
     And the parameter "<parameter_name>" has validation rules
     And a task run has been created for this task
     When a user calls the provisioning endpoint with "<payload>" to provision parameter "<parameter_name>" with "<parameter_value>" of type "<parameter_type>"
-    Then the value "<parameter_value>" provisioned for parameter "<parameter_name>" failed the validation rules
-    And the App Engine returns a '400 Bad Request' HTTP response with the updated task run information as JSON payload
+    Then the App Engine returns an "400" bad request error response with "<error_payload>"
 
     Examples:
-      | task_namespace                                  | task_version | parameter_name | parameter_value | parameter_type | payload                                                 |
-      | com.cytomine.dummy.constrained.integer.addition | 0.1.0        | a              | 0               | integer        | {\"param_name\": \"a\", \"value\": 0}                   |
-      | com.cytomine.dummy.constrained.integer.addition | 0.1.0        | b              | 1               | integer        | {\"param_name\": \"b\", \"value\": 1}                   |
-      | com.cytomine.dummy.constrained.integer.addition | 0.1.0        | c              | 0               | integer        | {\"param_name\": \"c\", \"value\": 0}                   |
-      | com.cytomine.dummy.constrained.integer.addition | 0.1.0        | d              | -1              | integer        | {\"param_name\": \"d\", \"value\": -1}                  |
-      | com.cytomine.dummy.constrained.number.addition  | 0.1.0        | a              | 5.5             | number         | {\"param_name\": \"a\", \"value\": 5.5}                 |
-      | com.cytomine.dummy.constrained.number.addition  | 0.1.0        | a              | -15.5           | number         | {\"param_name\": \"a\", \"value\": -15.5}               |
-      | com.cytomine.dummy.constrained.number.addition  | 0.1.0        | b              | 14.21           | number         | {\"param_name\": \"b\", \"value\": 14.21}               |
-      | com.cytomine.dummy.constrained.number.addition  | 0.1.0        | b              | -7.21           | number         | {\"param_name\": \"b\", \"value\": -7.21}               |
-      | com.cytomine.dummy.constrained.number.addition  | 0.1.0        | c              | nan             | number         | {\"param_name\": \"c\", \"value\": nan}                 |
-      | com.cytomine.dummy.constrained.number.addition  | 0.1.0        | c              | inf             | number         | {\"param_name\": \"c\", \"value\": inf}                 |
-      | com.cytomine.dummy.constrained.number.addition  | 0.1.0        | c              | -inf            | number         | {\"param_name\": \"c\", \"value\": -inf}                |
-      | com.cytomine.dummy.constrained.string.identity  | 0.1.0        | input          | invalid str     | string         | {\"param_name\": \"input\", \"value\": \"invalid str\"} |
-      | com.cytomine.dummy.constrained.string.identity  | 0.1.0        | input          |                 | string         | {\"param_name\": \"input\", \"value\": \"\"}            |
+      | task_namespace                                  | task_version | parameter_name | parameter_value | parameter_type | payload                                                 | error_payload                                                                                                                                                               |
+      | com.cytomine.dummy.constrained.integer.addition | 0.1.0        | a              | 0               | integer        | {\"param_name\": \"a\", \"value\": 0}                   | {\"message\":\"value must be less than defined constraint\",\"details\":{\"param_name\":\"a\"},\"error_code\":\"APPE-internal-request-validation-error\"}                   |
+      | com.cytomine.dummy.constrained.integer.addition | 0.1.0        | b              | 1               | integer        | {\"param_name\": \"b\", \"value\": 1}                   | {\"message\":\"value must be less than or equal to defined constraint\",\"details\":{\"param_name\":\"b\"},\"error_code\":\"APPE-internal-request-validation-error\"}       |
+      | com.cytomine.dummy.constrained.integer.addition | 0.1.0        | c              | 0               | integer        | {\"param_name\": \"c\", \"value\": 0}                   | {\"message\":\"value must be greater than defined constraint\",\"details\":{\"param_name\":\"c\"},\"error_code\":\"APPE-internal-request-validation-error\"}                |
+      | com.cytomine.dummy.constrained.integer.addition | 0.1.0        | d              | -1              | integer        | {\"param_name\": \"d\", \"value\": -1}                  | {\"message\":\"value must be greater than or equal to define constraint\",\"details\":{\"param_name\":\"d\"},\"error_code\":\"APPE-internal-request-validation-error\"}     |
+      | com.cytomine.dummy.constrained.number.addition  | 0.1.0        | a              | 5.5             | number         | {\"param_name\": \"a\", \"value\": 5.5}                 | {\"message\":\"value must be less than defined constraint\",\"details\":{\"param_name\":\"a\"},\"error_code\":\"APPE-internal-request-validation-error\"}                   |
+      | com.cytomine.dummy.constrained.number.addition  | 0.1.0        | a              | -15.5           | number         | {\"param_name\": \"a\", \"value\": -15.5}               | {\"message\":\"value must be greater than defined constraint\",\"details\":{\"param_name\":\"a\"},\"error_code\":\"APPE-internal-request-validation-error\"}                |
+      | com.cytomine.dummy.constrained.number.addition  | 0.1.0        | b              | 14.21           | number         | {\"param_name\": \"b\", \"value\": 14.21}               | {\"message\":\"value must be less than or equal to defined constraint\",\"details\":{\"param_name\":\"b\"},\"error_code\":\"APPE-internal-request-validation-error\"}       |
+      | com.cytomine.dummy.constrained.number.addition  | 0.1.0        | b              | -7.21           | number         | {\"param_name\": \"b\", \"value\": -7.21}               | {\"message\":\"value must be greater than or equal to define constraint\",\"details\":{\"param_name\":\"b\"},\"error_code\":\"APPE-internal-request-validation-error\"}     |
+      | com.cytomine.dummy.constrained.number.addition  | 0.1.0        | c              | nan             | number         | {\"param_name\": \"c\", \"value\": nan}                 | {\"message\":\"value cannot be nan\",\"details\":{\"param_name\":\"c\"},\"error_code\":\"APPE-internal-request-validation-error\"}                                          |
+      | com.cytomine.dummy.constrained.number.addition  | 0.1.0        | c              | inf             | number         | {\"param_name\": \"c\", \"value\": inf}                 | {\"message\":\"value cannot be infinity\",\"details\":{\"param_name\":\"c\"},\"error_code\":\"APPE-internal-request-validation-error\"}                                     |
+      | com.cytomine.dummy.constrained.number.addition  | 0.1.0        | c              | -inf            | number         | {\"param_name\": \"c\", \"value\": -inf}                | {\"message\":\"value cannot be infinity\",\"details\":{\"param_name\":\"c\"},\"error_code\":\"APPE-internal-request-validation-error\"}                                     |
+      | com.cytomine.dummy.constrained.string.identity  | 0.1.0        | input          | invalid str     | string         | {\"param_name\": \"input\", \"value\": \"invalid str\"} | {\"message\":\"value must be greater than or equal to define constraint\",\"details\":{\"param_name\":\"input\"},\"error_code\":\"APPE-internal-request-validation-error\"} |
+      | com.cytomine.dummy.constrained.string.identity  | 0.1.0        | input          |                 | string         | {\"param_name\": \"input\", \"value\": \"\"}            | {\"message\":\"value must be greater than defined constraint\",\"details\":{\"param_name\":\"input\"},\"error_code\":\"APPE-internal-request-validation-error\"}            |
