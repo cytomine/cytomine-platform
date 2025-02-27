@@ -196,8 +196,17 @@ public class ProvisionTaskStepDefinitions {
     }
 
     @Then("the App Engine returns a {string} HTTP response with the updated task run information as JSON payload")
-    public void the_app_engine_returns_a_http_response_with_the_updated_task_run_information_as_json_payload(String string) {
-        Assertions.assertNull(persistedException);
+    public void the_app_engine_returns_a_http_response_with_the_updated_task_run_information_as_json_payload(String responseCode) {
+        switch (responseCode) {
+            case "200 OK":
+                Assertions.assertNull(persistedException);
+                break;
+            case "400 Bad Request":
+                Assertions.assertNotNull(persistedException);
+                break;
+            default:
+                Assertions.fail("Unexpected response code: " + responseCode);
+        }
     }
 
     // ONE INPUT PARAMETER TESTS
@@ -670,7 +679,7 @@ public class ProvisionTaskStepDefinitions {
         Assertions.assertTrue(hasValidationRules);
     }
 
-    @Then("the value {string} provisioned for parameter {string} pass the validation rules")
+    @Then("the value {string} provisioned for parameter {string} passed the validation rules")
     public void valuePassesValidationRules(String value, String parameterName) {
         Input input = persistedTask
             .getInputs()
@@ -684,6 +693,23 @@ public class ProvisionTaskStepDefinitions {
             input.getType().validate(TaskTestsUtils.parseValue(value, input));
         } catch (TypeValidationException e) {
             Assertions.fail("Validation failed for value '" + value + "' and parameter '" + parameterName + "': " + e.getMessage());
+        }
+    }
+
+    @Then("the value {string} provisioned for parameter {string} failed the validation rules")
+    public void valueFailsValidationRules(String value, String parameterName) {
+        Input input = persistedTask
+            .getInputs()
+            .stream()
+            .filter(i -> i.getName().equals(parameterName))
+            .findFirst()
+            .orElse(null);
+        Assertions.assertNotNull(input);
+
+        try {
+            input.getType().validate(TaskTestsUtils.parseValue(value, input));
+        } catch (TypeValidationException e) {
+            Assertions.assertNotNull(e);
         }
     }
 }

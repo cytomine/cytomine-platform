@@ -114,7 +114,7 @@ public class TaskProvisioningService {
             validateProvisionValuesAgainstTaskType(genericParameterProvision, run);
         } catch (TypeValidationException e) {
             AppEngineError error = ErrorBuilder.build(
-                ErrorCode.INTERNAL_PARAMETER_DOES_NOT_EXIST,
+                e.getErrorCode(),
                 new ParameterError(name)
             );
             throw new ProvisioningException(error);
@@ -294,22 +294,15 @@ public class TaskProvisioningService {
         GenericParameterProvision provision,
         Run run
     ) throws TypeValidationException {
-        Task task = run.getTask();
-        Set<Input> inputs = task.getInputs();
-        boolean inputFound = false;
+        Set<Input> inputs = run.getTask().getInputs();
         for (Input input : inputs) {
             if (input.getName().equalsIgnoreCase(provision.getParameterName())) {
-                inputFound = true;
                 input.getType().validate(provision.getValue());
+                return;
             }
         }
-        if (!inputFound) {
-            throw new TypeValidationException(
-                "unknown parameter ["
-                + provision.getParameterName()
-                + "], not found in task descriptor"
-                );
-        }
+
+        throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_DOES_NOT_EXIST);
     }
 
     public StorageData retrieveIOZipArchive(
