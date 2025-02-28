@@ -19,7 +19,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.cucumber.datatable.DataTable;
 import io.cucumber.java.Before;
+import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
@@ -108,6 +110,8 @@ public class RunTaskStepDefinitions {
     private File persistedZipFile;
 
     private Run persistedRun;
+
+    private Task persistedTask;
 
     private TaskRun persistedTaskRun;
 
@@ -643,5 +647,32 @@ public class RunTaskStepDefinitions {
     @Then("App Engine initiates the process of executing the task run")
     public void app_engine_initiates_the_process_of_executing_the_task_run() {
         // TODO : How?
+    }
+
+    @Given("a task with {string} and {string} has been uploaded")
+    public void uploadTask(String namespace, String version) {
+        String bundleFilename = namespace + "-" + version + ".zip";
+        persistedTask = TestTaskBuilder.buildTaskFromResource(bundleFilename);
+        persistedTask = taskRepository.save(persistedTask);
+    }
+
+    @And("the task has requested {string} ram with {string} cpus, and {string} gpus")
+    public void checkResourceRequested(String ram, String cpus, String gpus) {
+        
+    }
+
+    @And("a task run has been created")
+    public void createTaskRun(DataTable table) {
+
+    }
+
+    @And("a user provisioned all the parameters")
+    public void provisionInputs(DataTable table) {
+
+    }
+
+    @Then("the requested {string} ram with {string} cpus, and {string} gpus are allocated by the cluster")
+    public void checkResourceAllocation(String ram, String cpus, String gpus) {
+
     }
 }

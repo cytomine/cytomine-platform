@@ -224,8 +224,7 @@ Feature: [URS00003-TASK] Provision a task run
 
   See "src/main/resources/schemas/tasks/task.v0.json" file for the constraints
 
-    Given a task has been successfully uploaded
-    And this task has "<task_namespace>" and "<task_version>"
+    Given this task has "<task_namespace>" and "<task_version>"
     And this task has at least one input parameter "<parameter_name>" of type "<parameter_type>"
     And the parameter "<parameter_name>" has validation rules
     And a task run has been created for this task
@@ -252,8 +251,7 @@ Feature: [URS00003-TASK] Provision a task run
 
   See "src/main/resources/schemas/tasks/task.v0.json" file for the constraints
 
-    Given a task has been successfully uploaded
-    And this task has "<task_namespace>" and "<task_version>"
+    Given this task has "<task_namespace>" and "<task_version>"
     And this task has at least one input parameter "<parameter_name>" of type "<parameter_type>"
     And the parameter "<parameter_name>" has validation rules
     And a task run has been created for this task
@@ -279,8 +277,7 @@ Feature: [URS00003-TASK] Provision a task run
 
   Scenario Outline: successful provisioning of multiple parameters
 
-    Given a task has been successfully uploaded
-    And this task has "<task_namespace>" and "<task_version>"
+    Given this task has "<task_namespace>" and "<task_version>"
     And a task run has been created for this task
     When a user calls the provisioning endpoint for provisioning all the parameters
       | parameter_name | parameter_type | parameter_value                               |

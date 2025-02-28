@@ -179,3 +179,23 @@ Feature: [URS00003-TASK] Execute a task
       | task_run_id                          |
       | acde070d-8c4c-4f0d-9d8a-162843c10333 |
       | 123e4567-e89b-12d3-a456-426614174001 |
+
+
+  @Scheduler @Kubernetes
+  Scenario Outline: successful allocation of resources for a task run
+
+    Given a task with "<task_namespace>" and "<task_version>" has been uploaded
+    And the task has requested "<resource_ram>" ram with "<resource_cpu>" cpus, and "<resource_gpu>" gpus
+    And a task run has been created
+      | task_run_id                          |
+      | 17cee067-9752-48da-ab38-39fe7344f423 |
+    And a user provisioned all the parameters
+      | parameter_name | parameter_type | parameter_value |
+      | verbosity      | boolean        | true            |
+    When When user calls the endpoint to run task with HTTP method POST
+    Then the requested "<resource_ram>" ram with "<resource_cpu>" cpus, and "<resource_gpu>" gpus are allocated by the cluster
+
+    Examples:
+      | task_namespace                         | task_version | resource_ram | resource_cpu | resource_gpu |
+      | com.cytomine.dummy.resource.allocation | 0.1.0        | 2Gi          | 1            | 1            |
+      | com.cytomine.dummy.resource.allocation | 0.1.0        | 200Mi        | 2            | 0            |
