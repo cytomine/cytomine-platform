@@ -1,7 +1,13 @@
 package be.cytomine.appengine.integration.cucumber;
 
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import java.util.function.Function;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -9,6 +15,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import io.cucumber.datatable.DataTable;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
@@ -669,5 +676,24 @@ public class ProvisionTaskStepDefinitions {
         }).apply(type);
 
         Assertions.assertTrue(hasValidationRules);
+    }
+
+    // Multiple different types
+
+    @When("a user calls the provisioning endpoint for provisioning all the parameters")
+    public void provisionTaskParameters(DataTable table) {
+        List<Map<String, String>> parameters = table.asMaps(String.class, String.class);
+
+        for (Map<String, String> param : parameters) {
+            String name = param.get("parameter_name");
+            String type = param.get("parameter_type");
+            String value = param.get("parameter_value");
+
+            try {
+                apiClient.provisionInput(persistedRun.getId().toString(), name, type, value);
+            } catch (RestClientResponseException e) {
+                Assertions.fail("Provisioning for " + name + " failed: " + e.getMessage());
+            }
+        }
     }
 }

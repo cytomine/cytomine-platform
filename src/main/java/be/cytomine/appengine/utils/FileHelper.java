@@ -15,7 +15,7 @@ public class FileHelper {
         }
     }
 
-    public static File write(String filename, byte[] content) {
+    public static File write(String filename, String suffix, byte[] content) {
         try {
             File data = Files.createTempFile(filename, null).toFile();
             try (FileOutputStream fos = new FileOutputStream(data)) {
@@ -25,5 +25,9 @@ public class FileHelper {
         } catch (IOException e) {
             throw new RuntimeException("Failed to write content to file", e);
         }
+    }
+
+    public static File write(String filename, byte[] content) {
+        return write(filename, null, content);
     }
 }

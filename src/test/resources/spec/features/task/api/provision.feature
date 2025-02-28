@@ -275,3 +275,22 @@ Feature: [URS00003-TASK] Provision a task run
       | com.cytomine.dummy.constrained.number.addition  | 0.1.0        | c              | -inf            | number         | {\"param_name\": \"c\", \"value\": -inf}                | {\"message\":\"value cannot be infinity\",\"details\":{\"param_name\":\"c\"},\"error_code\":\"APPE-internal-request-validation-error\"}                                     |
       | com.cytomine.dummy.constrained.string.identity  | 0.1.0        | input          | invalid str     | string         | {\"param_name\": \"input\", \"value\": \"invalid str\"} | {\"message\":\"value must be greater than or equal to define constraint\",\"details\":{\"param_name\":\"input\"},\"error_code\":\"APPE-internal-request-validation-error\"} |
       | com.cytomine.dummy.constrained.string.identity  | 0.1.0        | input          |                 | string         | {\"param_name\": \"input\", \"value\": \"\"}            | {\"message\":\"value must be greater than defined constraint\",\"details\":{\"param_name\":\"input\"},\"error_code\":\"APPE-internal-request-validation-error\"}            |
+
+
+  Scenario Outline: successful provisioning of multiple parameters
+
+    Given a task has been successfully uploaded
+    And this task has "<task_namespace>" and "<task_version>"
+    And a task run has been created for this task
+    When a user calls the provisioning endpoint for provisioning all the parameters
+      | parameter_name | parameter_type | parameter_value                               |
+      | int_input      | integer        | 1                                             |
+      | number_input   | number         | 1.1                                           |
+      | string_input   | string         | this is a string                              |
+      | enum_input     | enumeration    | A                                             |
+      | geometry_input | geometry       | { "type": "Point", "coordinates": [1.0, 1.0]} |
+    Then the App Engine returns a '200 OK' HTTP response with the updated task run information as JSON payload
+
+    Examples:
+      | task_namespace                             | task_version |
+      | com.cytomine.dummy.identity.multiple.types | 0.1.0        |
