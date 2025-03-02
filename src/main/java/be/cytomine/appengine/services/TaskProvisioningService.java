@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -301,9 +302,9 @@ public class TaskProvisioningService {
             .getParameters()
             .stream()
             .filter(param -> param.getName().equalsIgnoreCase(parameterName)
-            && param.getParameterType().equals(parameterType))
+                && param.getParameterType().equals(parameterType))
             .findFirst()
-            .get();
+            .orElse(null);
     }
 
     private static void validateProvisionValuesAgainstTaskType(
@@ -361,12 +362,23 @@ public class TaskProvisioningService {
         Path tempFile = Files.createTempFile(io + "-archive-", runId);
         ZipOutputStream zipOut = new ZipOutputStream(Files.newOutputStream(tempFile));
         for (TypePersistence provision : provisions) {
+            // check that this type persistence is actually associated with a parameter
+            Parameter parameter = getParameter(provision.getParameterName(), provision.getParameterType(), run);
+            if (Objects.isNull(parameter)) {
+                continue;
+            }
             StorageData provisionFileData = fileStorageHandler.readStorageData(
                 new StorageData(provision.getParameterName(), "task-run-" + io + "-" + run.getId())
             );
 
             for (StorageDataEntry current : provisionFileData.getEntryList()) {
-                ZipEntry zipEntry = new ZipEntry(current.getName());
+                String entryName ;
+                if (current.getStorageDataType().equals(StorageDataType.FILE)) {
+                    entryName = current.getName();
+                } else {
+                    entryName = current.getName() + "/";
+                }
+                ZipEntry zipEntry = new ZipEntry(entryName);
                 zipOut.putNextEntry(zipEntry);
 
                 if (current.getStorageDataType().equals(StorageDataType.FILE)) {
@@ -441,7 +453,6 @@ public class TaskProvisioningService {
             ZipEntry ze;
             while ((ze = zais.getNextZipEntry()) != null) {
                 // look for output matching file name
-//                boolean isDirectory = false;
                 Parameter currentOutput = null;
                 for (int i = 0; i < remainingOutputs.size(); i++) {
                     currentOutput = remainingOutputs.get(i);
