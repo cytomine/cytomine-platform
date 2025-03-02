@@ -61,9 +61,6 @@ public class Task extends BaseEntity {
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<Author> authors;
 
-//    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-//    private Set<Parameter> inputs;
-
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<Parameter> parameters;
 
