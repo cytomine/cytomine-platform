@@ -209,7 +209,7 @@ public class KubernetesScheduler implements SchedulerHandler {
 
         String sendOutputs = "curl -X POST -F 'outputs=@outputs.zip' ";
         sendOutputs += url + "/" + runSecret + "/outputs.zip";
-        String zipOutputs = "zip -rj outputs.zip " + task.getOutputFolder();
+        String zipOutputs = "cd " + task.getOutputFolder() + and + " zip -r outputs.zip .";
         String wait = "export TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token); ";
         wait += "while ! curl -k -H \"Authorization: Bearer $TOKEN\" ";
         wait += "https://${KUBERNETES_SERVICE_HOST}:${KUBERNETES_SERVICE_PORT_HTTPS}/api/v1/namespaces/default/pods/${HOSTNAME}/status ";
