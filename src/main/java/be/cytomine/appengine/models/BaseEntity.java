@@ -8,6 +8,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
+import jakarta.persistence.Version;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -15,16 +16,14 @@ import lombok.Setter;
 @Getter
 @Setter
 public class BaseEntity implements Serializable {
-    //    @Id
-    //    @Column(name = "id", updatable = false, nullable = false)
-    //    @GeneratedValue(generator = "UUID")
-    //    protected UUID id;
 
     @Column(updatable = false)
     protected Date createdDate;
 
     protected Date lastModifiedDate;
 
+    @Version
+    protected Long vrsn;
 
     @Override
     public boolean equals(Object o) {
