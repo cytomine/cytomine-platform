@@ -31,6 +31,7 @@ import be.cytomine.appengine.repositories.RunRepository;
 import be.cytomine.appengine.states.TaskRunState;
 
 @Slf4j
+@Component
 public class KubernetesScheduler implements SchedulerHandler {
 
     @Autowired
