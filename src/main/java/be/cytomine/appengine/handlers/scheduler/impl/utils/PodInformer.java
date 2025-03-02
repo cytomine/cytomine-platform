@@ -2,6 +2,7 @@ package be.cytomine.appengine.handlers.scheduler.impl.utils;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -10,6 +11,7 @@ import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.client.informers.ResourceEventHandler;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Component;
 
 import be.cytomine.appengine.models.task.Run;
@@ -52,28 +54,81 @@ public class PodInformer implements ResourceEventHandler<Pod> {
 
     @Override
     public void onAdd(Pod pod) {
-        Run run = getRun(pod);
-        if (run == null || FINAL_STATES.contains(run.getState())) {
-            return;
+        int maxAttempts = 3;
+        int attempts = 0;
+        while (attempts < maxAttempts) {
+            try{
+                Run run = getRun(pod);
+                if (run == null || FINAL_STATES.contains(run.getState())) {
+                    return;
+                }
+
+                run.setState(TaskRunState.PENDING);
+                run = runRepository.saveAndFlush(run);
+                log.info("Pod Informer: set Run {} to {}", run.getId(), run.getState());
+                return;
+            }catch(ObjectOptimisticLockingFailureException ex){
+                attempts++;
+                if (attempts >= maxAttempts) {
+                    // After maxAttempts, rethrow the exception.
+                    throw ex;
+                }
+                // Optionally, wait a short time before retrying.
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw new RuntimeException("Retry interrupted", e);
+                }
+            }
         }
 
-        run.setState(TaskRunState.PENDING);
-        run = runRepository.saveAndFlush(run);
-        log.info("Pod Informer: set Run {} to {}", run.getId(), run.getState());
+        // This line should never be reached.
+        throw new IllegalStateException("Failed to update run after retries");
+
     }
 
     @Override
     public void onUpdate(Pod oldPod, Pod newPod) {
-        Run run = getRun(newPod);
-        boolean isFinalState = FINAL_STATES.contains(run.getState());
-        boolean isPending = newPod.getStatus().getPhase().equals("Pending");
-        if (isFinalState || isPending) {
-            return;
+        int maxAttempts = 3;
+        int attempts = 0;
+        while (attempts < maxAttempts) {
+            try{
+                Run run = getRun(newPod);
+                if (Objects.isNull(run)){
+                    return;
+                }
+
+                boolean isFinalState = FINAL_STATES.contains(run.getState());
+                boolean isPending = newPod.getStatus().getPhase().equals("Pending");
+                boolean isRunning = newPod.getStatus().getPhase().equals("Running");
+                if (isFinalState || isPending || isRunning) {
+                    return;
+                }
+
+                run.setState(STATUS.getOrDefault(newPod.getStatus().getPhase(), TaskRunState.FAILED));
+                run = runRepository.saveAndFlush(run);
+                log.info("Pod Informer: update Run {} to {}", run.getId(), run.getState());
+                return;
+            }catch(ObjectOptimisticLockingFailureException ex){
+                attempts++;
+                if (attempts >= maxAttempts) {
+                    // After maxAttempts, rethrow the exception.
+                    throw ex;
+                }
+                // Optionally, wait a short time before retrying.
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw new RuntimeException("Retry interrupted", e);
+                }
+            }
         }
 
-        run.setState(STATUS.getOrDefault(newPod.getStatus().getPhase(), TaskRunState.FAILED));
-        run = runRepository.saveAndFlush(run);
-        log.info("Pod Informer: update Run {} to {}", run.getId(), run.getState());
+        // This line should never be reached.
+        throw new IllegalStateException("Failed to update run after retries");
+
     }
 
     @Override
