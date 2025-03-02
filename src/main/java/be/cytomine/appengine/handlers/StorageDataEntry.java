@@ -2,9 +2,13 @@ package be.cytomine.appengine.handlers;
 
 import java.io.File;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class StorageDataEntry {
 
     private File data;
@@ -15,17 +19,6 @@ public class StorageDataEntry {
 
     private StorageDataType storageDataType;
 
-    public StorageDataEntry(
-        File data,
-        String name,
-        String storageId,
-        StorageDataType storageDataType
-    ) {
-        this.data = data;
-        this.name = name;
-        this.storageId = storageId;
-        this.storageDataType = storageDataType;
-    }
 
     public StorageDataEntry(File data) {
         this.data = data;
@@ -56,4 +49,5 @@ public class StorageDataEntry {
         this.name = name;
         this.storageId = storageId;
     }
+
 }
