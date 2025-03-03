@@ -96,6 +96,7 @@ public class CollectionType extends Type {
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public void validateFiles(
       Run run,
       Parameter currentOutput,
@@ -127,7 +128,11 @@ public class CollectionType extends Type {
           }
         } else {
           if (entryName.endsWith("array.yml")){
-            arrayDotYmlFound = true;
+            String parentListName = entryName.substring(0, entryName.lastIndexOf('/') + 1);
+            Map<String,Object> item = new LinkedHashMap<>();
+            String arrayDotYmlContent = FileHelper.read(entry.getData(), getStorageCharset());
+            item.put("array.yml", arrayDotYmlContent);
+            ((List<Object>) lists.get(parentListName)).add(item);
             continue;
           }
           String parentListName = entryName.substring(0, entryName.lastIndexOf('/') + 1);
@@ -155,9 +160,17 @@ public class CollectionType extends Type {
           ((List<Object>) lists.get(parentListName)).add(item);
         }
     }
-
-    if (!arrayDotYmlFound) {
-      throw new RuntimeException("missing array.yml file");
+    // check that every list (collection or nested collection has array.yml)
+    for (String key : lists.keySet()) {
+      List<Object> collection = (List<Object>) lists.get(key);
+      boolean arrayYmlFound = false;
+      for (Object item : collection) {
+        Map<String, Object> itemMap = (Map<String, Object>) item;
+        arrayYmlFound = itemMap.containsKey("array.yml");
+        }
+      if (!arrayYmlFound) {
+          throw new TypeValidationException("array.yml not found in collection " + key);
+        }
     }
 
     validate(lists.get(currentOutput.getName()+"/"));
@@ -173,12 +186,12 @@ public class CollectionType extends Type {
     if (!(valueObject instanceof ArrayList)) {
       throw new TypeValidationException("wrong provision structure");
     }
-    validateCollection((ArrayList) valueObject);
+    validateCollection((ArrayList<?>) valueObject);
     // validate items
 
   }
 
-  private void validateCollection(List value) throws TypeValidationException
+  private void validateCollection(List<?> value) throws TypeValidationException
   {
     validateNode(value);
   }
@@ -744,8 +757,7 @@ public class CollectionType extends Type {
       {
           throw new ProvisioningException("array.yml is malformed");
       }
-    int outputSize = arrayYml.get("size").asInt();
-    return outputSize;
+      return arrayYml.get("size").asInt();
   }
 
   @Override
@@ -816,5 +828,7 @@ public class CollectionType extends Type {
     this.maxSize = copy.getMaxSize();
     this.minSize = copy.getMinSize();
     this.subTypeId = copy.getSubTypeId();
+    this.parentType = copy.getParentType();
+    this.trackingType = copy.getTrackingType();
   }
 }
