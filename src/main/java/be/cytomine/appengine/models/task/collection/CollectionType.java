@@ -96,6 +96,75 @@ public class CollectionType extends Type {
   }
 
   @Override
+  public void validateFiles(
+      Run run,
+      Parameter currentOutput,
+      StorageData currentOutputStorageData)
+      throws TypeValidationException
+  {
+    // make sure we have the right file structure
+    Type currentType = new CollectionType(this);
+    while (currentType instanceof CollectionType) {
+      currentType = ((CollectionType) currentType).getSubType();
+    }
+    String leafType = currentType.getClass().getCanonicalName();
+
+    if (Objects.isNull(currentOutputStorageData)
+        || Objects.isNull(currentOutputStorageData.getEntryList())
+        || currentOutputStorageData.getEntryList().isEmpty()) {
+        throw new RuntimeException("invalid collection dimensions");
+    }
+    boolean arrayDotYmlFound = false;
+    Map<String,Object> lists = new LinkedHashMap<>();
+    for (StorageDataEntry entry : currentOutputStorageData.getEntryList()) {
+        String entryName = entry.getName();
+        if (entryName.endsWith("/")){ // this is a directory
+          boolean relatedToOutputParameter = entryName.startsWith(currentOutput.getName() + "/");
+          boolean isOutputParameterMainDirectory = entryName.equals(currentOutput.getName() + "/");
+          if (relatedToOutputParameter && isOutputParameterMainDirectory){
+            List<Object> nestedItems = new ArrayList<>();
+            lists.put(entryName, nestedItems);
+          }
+        } else {
+          if (entryName.endsWith("array.yml")){
+            arrayDotYmlFound = true;
+            continue;
+          }
+          String parentListName = entryName.substring(0, entryName.lastIndexOf('/') + 1);
+          Map<String,Object> item = new LinkedHashMap<>();
+          String index = entryName.substring(entryName.lastIndexOf('/') + 1);
+          item.put("index", Integer.parseInt(index));
+          String value = FileHelper.read(entry.getData(), getStorageCharset());
+          switch (leafType){
+            case "be.cytomine.appengine.models.task.integer.IntegerType":
+              item.put("value" , Integer.parseInt(value));
+              break;
+            case "be.cytomine.appengine.models.task.string.StringType",
+                 "be.cytomine.appengine.models.task.geometry.GeometryType",
+                 "be.cytomine.appengine.models.task.enumeration.EnumerationType":
+              item.put("value" , value);
+              break;
+            case "be.cytomine.appengine.models.task.number.NumberType":
+              item.put("value" , Double.parseDouble(value));
+              break;
+            case "be.cytomine.appengine.models.task.bool.BooleanType":
+              item.put("value" , Boolean.parseBoolean(value));
+              break;
+            default: throw new TypeValidationException("unknown leaf type: " + leafType);
+          }
+          ((List<Object>) lists.get(parentListName)).add(item);
+        }
+    }
+
+    if (!arrayDotYmlFound) {
+      throw new RuntimeException("missing array.yml file");
+    }
+
+    validate(lists.get(currentOutput.getName()+"/"));
+
+  }
+
+  @Override
   public void validate(Object valueObject) throws TypeValidationException {
     if (valueObject == null) {
       return;
@@ -104,9 +173,7 @@ public class CollectionType extends Type {
     if (!(valueObject instanceof ArrayList)) {
       throw new TypeValidationException("wrong provision structure");
     }
-      // validate structure
     validateCollection((ArrayList) valueObject);
-    // validate collection
     // validate items
 
   }
@@ -133,12 +200,13 @@ public class CollectionType extends Type {
     }
     if (obj instanceof List<?>) {
       List<?> list = (List<?>) obj;
-      CollectionType currentType = (CollectionType) trackingType;
+        assert trackingType instanceof CollectionType;
+        CollectionType currentType = (CollectionType) trackingType;
       if (list.size() < currentType.getMinSize() || list.size() > currentType.getMaxSize()) {
         throw new RuntimeException("invalid collection dimensions");
       }
-      for (int i = 0; i < list.size(); i++) {
-        validateNode(list.get(i));
+      for (Object o : list){
+          validateNode(o);
       }
     } else {
       Map<String, Object> map = null;
@@ -160,8 +228,8 @@ public class CollectionType extends Type {
         if (list.size() < currentType.getMinSize() || list.size() > currentType.getMaxSize()) {
           throw new TypeValidationException("invalid collection dimensions");
         }
-        for (int i = 0; i < list.size(); i++) {
-          validateNode(list.get(i));
+        for (Object o : list){
+            validateNode(o);
         }
         trackingType = parentType;
       }
