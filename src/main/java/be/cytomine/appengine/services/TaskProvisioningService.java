@@ -605,17 +605,6 @@ public class TaskProvisioningService {
         log.info("Posting Outputs Archive: validated finished...");
     }
 
-    public Charset getStorageCharset(String charset) {
-        return switch (charset.toUpperCase()) {
-            case "US_ASCII" -> StandardCharsets.US_ASCII;
-            case "ISO_8859_1" -> StandardCharsets.ISO_8859_1;
-            case "UTF_16LE" -> StandardCharsets.UTF_16LE;
-            case "UTF_16BE" -> StandardCharsets.UTF_16BE;
-            case "UTF_16" -> StandardCharsets.UTF_16;
-            default -> StandardCharsets.UTF_8;
-        };
-    }
-
     private void storeOutputInFileStorage(
         Run run,
         StorageData outputFileData,
