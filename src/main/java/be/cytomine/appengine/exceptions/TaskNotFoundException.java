@@ -1,6 +1,5 @@
 package be.cytomine.appengine.exceptions;
 
-
 public class TaskNotFoundException extends Exception {
 
     public TaskNotFoundException(Exception e) {

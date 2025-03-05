@@ -1,83 +1,59 @@
 package be.cytomine.appengine.integration.cucumber;
 
-import be.cytomine.appengine.AppEngineApplication;
-import be.cytomine.appengine.dto.handlers.filestorage.Storage;
-import be.cytomine.appengine.dto.responses.errors.ErrorCode;
-import be.cytomine.appengine.dto.responses.errors.ErrorDefinitions;
-import be.cytomine.appengine.exceptions.FileStorageException;
-import be.cytomine.appengine.handlers.FileData;
-import be.cytomine.appengine.handlers.FileStorageHandler;
-import be.cytomine.appengine.handlers.RegistryHandler;
-import be.cytomine.appengine.models.task.*;
-import be.cytomine.appengine.openapi.api.DefaultApi;
-import be.cytomine.appengine.openapi.invoker.ApiException;
-import be.cytomine.appengine.openapi.model.TaskDescription;
-import be.cytomine.appengine.repositories.TaskRepository;
-import be.cytomine.appengine.utils.TestTaskBuilder;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.Objects;
 
 import com.cytomine.registry.client.RegistryClient;
 import com.cytomine.registry.client.http.resp.CatalogResp;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import io.cucumber.java.Before;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
-
 import org.junit.jupiter.api.Assertions;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootContextLoader;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.http.*;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClientResponseException;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.*;
+import be.cytomine.appengine.AppEngineApplication;
+import be.cytomine.appengine.dto.handlers.filestorage.Storage;
+import be.cytomine.appengine.dto.inputs.task.TaskDescription;
+import be.cytomine.appengine.dto.responses.errors.ErrorCode;
+import be.cytomine.appengine.dto.responses.errors.ErrorDefinitions;
+import be.cytomine.appengine.exceptions.FileStorageException;
+import be.cytomine.appengine.handlers.StorageData;
+import be.cytomine.appengine.handlers.StorageHandler;
+import be.cytomine.appengine.models.task.Task;
+import be.cytomine.appengine.repositories.TaskRepository;
+import be.cytomine.appengine.utils.ApiClient;
+import be.cytomine.appengine.utils.FileHelper;
+import be.cytomine.appengine.utils.TestTaskBuilder;
 
 @ContextConfiguration(classes = AppEngineApplication.class, loader = SpringBootContextLoader.class)
 public class UploadTaskStepDefinitions {
 
-    Logger logger = LoggerFactory.getLogger(UploadTaskStepDefinitions.class);
-
-
     @LocalServerPort
-    String port;
+    private String port;
 
     @Autowired
-    TaskRepository taskRepository;
-
-    ResponseEntity<String> persistedResponse;
-
-    String persistedNamespace;
-    String persistedVersion;
-    Task persistedTask;
-    TaskDescription persistedUploadResponse;
-    ApiException persistedAPIException;
-    private ClassPathResource persistedBundle;
-    private Task uploaded;
+    private ApiClient apiClient;
 
     @Autowired
-    RegistryHandler dockerRegistryHandler;
-
-    @Value("${registry-client.host}")
-    private String registry;
+    private StorageHandler storageHandler;
 
     @Autowired
-    DefaultApi appEngineAPI;
-
-    @Autowired
-    FileStorageHandler fileStorageHandler;
+    private TaskRepository taskRepository;
 
     @Value("${app-engine.api_prefix}")
     private String apiPrefix;
@@ -85,13 +61,32 @@ public class UploadTaskStepDefinitions {
     @Value("${app-engine.api_version}")
     private String apiVersion;
 
-    private String buildAppEngineUrl() {
-        return "http://localhost:" + port + apiPrefix + apiVersion;
+    @Value("${registry-client.host}")
+    private String registry;
+
+    private String persistedNamespace;
+
+    private String persistedVersion;
+
+    private ClassPathResource persistedBundle;
+
+    private RestClientResponseException persistedException;
+
+    private TaskDescription persistedUploadResponse;
+
+    private Task persistedTask;
+
+    private Task uploaded;
+
+    @Before
+    public void setUp() {
+        apiClient.setBaseUrl("http://localhost:" + port + apiPrefix + apiVersion);
+        apiClient.setPort(port);
     }
 
     @Given("App Engine is up and running")
     public void app_engine_is_up_and_running() {
-        ResponseEntity<String> health = new RestTemplate().exchange("http://localhost:" + port + "/actuator/health", HttpMethod.GET, null, String.class);
+        ResponseEntity<String> health = apiClient.checkHealth();
         Assertions.assertTrue(health.getStatusCode().is2xxSuccessful());
         taskRepository.deleteAll();
     }
@@ -99,15 +94,16 @@ public class UploadTaskStepDefinitions {
     @Given("File storage service is up and running")
     public void file_storage_service_is_up_and_running() throws FileStorageException {
         // ping the file storage service health endpoint and make sure we get no errors
-//      // as long as it responds it means it's up and running
-        fileStorageHandler.checkStorageExists("random");
+        // as long as it responds it means it's up and running
+        storageHandler.checkStorageExists("random");
     }
 
     @Given("Registry service is up and running")
     public void registry_service_is_up_and_running() throws IOException {
         try {
             RegistryClient.delete("registry:5000/img@sha256:d53ef00848a227ce64ce71cd7cceb7184fd1f116e0202289b26a576cf87dc4cb");
-        } catch (Exception e) {
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -120,7 +116,6 @@ public class UploadTaskStepDefinitions {
     @Given("this task identified by an {string} and a {string} is not yet known to the App Engine")
     public void this_task_identified_by_an_and_a_is_not_yet_known_to_the_app_engine(String namespace, String version) {
         taskRepository.deleteAll();
-
     }
 
     @Given("this task is represented by a zip archive containing a task descriptor file and a docker image")
@@ -149,13 +144,13 @@ public class UploadTaskStepDefinitions {
     @When("user calls POST on endpoint with the zip archive as a multipart file parameter")
     public void user_calls_post_on_endpoint_with_the_zip_archive_as_a_multipart_file_parameter() {
         try {
-            persistedUploadResponse = appEngineAPI.uploadTask(persistedBundle.getFile());
+            persistedUploadResponse = apiClient.uploadTask(persistedBundle.getFile());
             Assertions.assertNotNull(persistedUploadResponse);
         } catch (IOException e) {
             Assertions.assertTrue(false, "bundle '" + persistedBundle.getFilename() + "' not found, cannot upload");
-        } catch (ApiException e) {
-            persistedAPIException = e;
-            Assertions.assertNotNull(persistedAPIException);
+        } catch (RestClientResponseException e) {
+            persistedException = e;
+            Assertions.assertNotNull(persistedException);
         }
     }
 
@@ -184,7 +179,7 @@ public class UploadTaskStepDefinitions {
     public void app_engine_creates_a_task_storage_e_g_a_bucket_reserved_for_the_in_the_file_storage_service_with_a_unique_as_follows(String string, String string2) throws FileStorageException {
         // retrieve from file storage
         String bucketName = uploaded.getStorageReference();
-        boolean found = fileStorageHandler.checkStorageExists(bucketName);
+        boolean found = storageHandler.checkStorageExists(bucketName);
         Assertions.assertTrue(found);
     }
 
@@ -193,8 +188,8 @@ public class UploadTaskStepDefinitions {
         // retrieve from file storage
         String bucket = uploaded.getStorageReference();
         String object = "descriptor.yml";
-        FileData descriptorFileData = new FileData(object, bucket);
-        FileData descriptor = fileStorageHandler.readFile(descriptorFileData);
+        StorageData descriptorFileData = new StorageData(object, bucket);
+        StorageData descriptor = storageHandler.readStorageData(descriptorFileData);
         Assertions.assertNotNull(descriptor);
     }
 
@@ -216,7 +211,7 @@ public class UploadTaskStepDefinitions {
 
     @Then("App Engine returns an HTTP {string} OK response")
     public void app_engine_returns_an_http_response(String responseCode) {
-        Assertions.assertNull(persistedAPIException);
+        Assertions.assertNull(persistedException);
     }
 
     @Then("App Engine cleans up any temporary file created during the process \\(e.g. uploaded zip file, etc)")
@@ -234,37 +229,34 @@ public class UploadTaskStepDefinitions {
     @Given("this task is already registered by the App Engine")
     public void this_task_is_already_registered_by_the_app_engine() {
         // store task in database
-        persistedTask = TestTaskBuilder.buildHardcodedAddInteger();
-        taskRepository.save(persistedTask);
+        String bundleFilename = persistedNamespace + "-" + persistedVersion + ".zip";
+        persistedTask = TestTaskBuilder.buildTaskFromResource(bundleFilename);
+
         Assertions.assertNotNull(persistedTask);
+        taskRepository.save(persistedTask);
 
         // create bucket
         try {
-            boolean bucketExists = fileStorageHandler.checkStorageExists(persistedTask.getStorageReference());
-            if (!bucketExists) {
-                Storage storage = new Storage(persistedTask.getStorageReference());
-                fileStorageHandler.createStorage(storage);
-
+            Storage storage = new Storage(persistedTask.getStorageReference());
+            if (!storageHandler.checkStorageExists(storage)) {
+                storageHandler.createStorage(storage);
             }
 
             // save file using defined storage reference
+            File file = TestTaskBuilder.getDescriptorFromBundleResource(bundleFilename);
 
-            ClassPathResource descriptor = new ClassPathResource("/artifacts/descriptorduplicate.yml");
-            Assertions.assertNotNull(descriptor);
+            try (FileInputStream fileInputStream = new FileInputStream(file)) {
+                ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+                JsonNode descriptor = mapper.readTree(fileInputStream);
+                ((ObjectNode) descriptor).put("name_short", "must_not_have_changed");
 
-            File file = descriptor.getFile();
-            FileInputStream fileInputStream = new FileInputStream(file);
-
-            Storage storage = new Storage(persistedTask.getStorageReference());
-            byte[] fileByteArray = new byte[(int) file.length()];
-            fileByteArray = fileInputStream.readAllBytes();
-            FileData fileData = new FileData(fileByteArray, "descriptor.yml");
-            fileStorageHandler.createFile(storage, fileData);
-
-
-        } catch (IOException e) {
-
-        } catch (FileStorageException e) {
+                StorageData fileData = new StorageData(
+                    FileHelper.write("descriptor.yml", mapper.writeValueAsBytes(descriptor)),
+                    "descriptor.yml"
+                );
+                storageHandler.saveStorageData(storage, fileData);
+            }
+        } catch (IOException | FileStorageException e) {
             throw new RuntimeException(e);
         }
     }
@@ -279,8 +271,8 @@ public class UploadTaskStepDefinitions {
     @Then("App Engine returns an HTTP {string} conflict error because this version of the task exists already")
     public void app_engine_returns_an_http_conflict_error_because_this_version_of_the_task_exists_already(String conflictCode) throws JsonProcessingException {
         // failure
-        Assertions.assertEquals(Integer.parseInt(conflictCode), persistedAPIException.getCode());
-        JsonNode jsonPayLoad = new ObjectMapper().readTree(persistedAPIException.getMessage());
+        Assertions.assertEquals(Integer.parseInt(conflictCode), persistedException.getStatusCode().value());
+        JsonNode jsonPayLoad = new ObjectMapper().readTree(persistedException.getResponseBodyAsString());
         // doesn't reply with parsing failure
         Assertions.assertEquals(jsonPayLoad.get("error_code").textValue(), ErrorDefinitions.fromCode(ErrorCode.INTERNAL_TASK_EXISTS).code);
     }
@@ -293,14 +285,15 @@ public class UploadTaskStepDefinitions {
 
         // and storage service
         String object = "descriptor.yml";
-        FileData fileData = new FileData(object, persistedTask.getStorageReference());
-        fileData = fileStorageHandler.readFile(fileData);
+        StorageData fileData = new StorageData(object, persistedTask.getStorageReference());
+        fileData = storageHandler.readStorageData(fileData);
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-        JsonNode descriptor = mapper.readTree(fileData.getFileData());
+        JsonNode descriptor = mapper.readTree(fileData.peek().getData());
 
         Assertions.assertNotNull(fileData);
         String shortName = descriptor.get("name_short").textValue();
         Assertions.assertTrue(shortName.equalsIgnoreCase("must_not_have_changed"));
+
         // and registry
         CatalogResp response = RegistryClient.catalog("http://" + registry + ":5000", 2, "");
         boolean repoFound = false;
@@ -353,7 +346,7 @@ public class UploadTaskStepDefinitions {
 
     @Then("App Engine returns an HTTP {string} bad request error because the descriptor is incorrectly structured")
     public void app_engine_returns_an_http_bad_request_error_because_the_descriptor_is_incorrectly_structured(String responseCode) {
-        Assertions.assertEquals(400, persistedAPIException.getCode());
+        Assertions.assertEquals(400, persistedException.getStatusCode().value());
     }
 
     @Then("App Engine fails to validate the task descriptor for task {string} against the descriptor schema")
@@ -370,7 +363,7 @@ public class UploadTaskStepDefinitions {
             default:
                 throw new RuntimeException("invalid test task");
         }
-        JsonNode jsonPayLoad = new ObjectMapper().readTree(persistedAPIException.getMessage());
+        JsonNode jsonPayLoad = new ObjectMapper().readTree(persistedException.getResponseBodyAsString());
         Assertions.assertTrue(jsonPayLoad.get("error_code").textValue().equals(ErrorDefinitions.fromCode(code).code));
     }
 }

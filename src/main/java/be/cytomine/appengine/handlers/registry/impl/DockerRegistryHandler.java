@@ -1,53 +1,62 @@
 package be.cytomine.appengine.handlers.registry.impl;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+
+import com.cytomine.registry.client.RegistryClient;
+import lombok.extern.slf4j.Slf4j;
+
 import be.cytomine.appengine.dto.handlers.registry.DockerImage;
 import be.cytomine.appengine.exceptions.RegistryException;
 import be.cytomine.appengine.handlers.RegistryHandler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import com.cytomine.registry.client.RegistryClient;
 
+@Slf4j
 public class DockerRegistryHandler implements RegistryHandler {
 
-    private String password;
-    private String user;
-    private boolean authenticated;
-    private String port;
-    private String host;
-    private String scheme;
-    Logger logger = LoggerFactory.getLogger(DockerRegistryHandler.class);
-
-    public DockerRegistryHandler(String registryHost, String registryPort, String registryScheme, boolean authenticated, String registryUsername, String registryPassword) throws IOException {
+    public DockerRegistryHandler(
+        String registryHost,
+        String registryPort,
+        String registryScheme,
+        boolean authenticated,
+        String registryUsername,
+        String registryPassword
+    ) throws IOException {
         RegistryClient.config(registryScheme, registryHost, registryPort);
-        if (authenticated)
+        if (authenticated) {
             RegistryClient.authenticate(registryUsername, registryPassword);
-        logger.info("Image Registry Handler : Docker Registry initialized");
+        }
+
+        log.info("Docker Registry Handler: initialised");
     }
 
     @Override
     public boolean checkImage(DockerImage image) throws RegistryException {
-        // TODO implement image validation by registry if exists
         return false;
     }
 
     @Override
     public void pushImage(DockerImage image) throws RegistryException {
-        logger.info("Image Registry Handler : pushing image...");
-        byte[] imageTarData = image.getDockerImageData();
-        InputStream imageTarDataInputStream = new ByteArrayInputStream(imageTarData);
-        String imageNameWithRegistry = image.getImageName();
-        try {
-            RegistryClient.push(imageTarDataInputStream, imageNameWithRegistry);
+        log.info("Docker Registry Handler: pushing image...");
+
+        String imageName = image.getImageName();
+        File imageData = image.getImageData();
+
+        try (InputStream inputStream = new FileInputStream(imageData)) {
+            RegistryClient.push(inputStream, imageName);
+            log.info("Docker Registry Handler: image pushed");
+        } catch (FileNotFoundException e) {
+            log.error("Image data file not found: {}", imageData.getAbsolutePath(), e);
+            throw new RegistryException("Docker Registry Handler: image data file not found");
         } catch (IOException e) {
-            e.printStackTrace();
-            throw new RegistryException("Docker Registry Handler : failed to push image to registry");
+            log.error("Error reading image data from file: {}", imageData.getAbsolutePath(), e);
+            throw new RegistryException("Docker Registry Handler: failed to read image data");
+        } catch (Exception e) {
+            log.error("Failed to push image: {}", imageName, e);
+            String message = "Docker Registry Handler: failed to push the image to registry";
+            throw new RegistryException(message);
         }
-        logger.info("Image Registry Handler : image pushed");
-
     }
-
-
 }

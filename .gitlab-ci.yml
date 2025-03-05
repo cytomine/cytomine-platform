@@ -2,6 +2,12 @@ stages:
 - prepare
 - test
 - build
+- release
+
+
+default:
+  tags:
+    - docker
 
 
 variables:
@@ -10,8 +16,15 @@ variables:
   TESTS_IMAGE_POSTGIS: 'cytomine/postgis:1.4.0-dev.2'
   APPENGINE_TASKS_PATH: GitLab/Artifacts/AppEngine/Tasks
   ADD_INTEGER_TASK_NAME: com.cytomine.dummy.arithmetic.integer.addition-1.0.0.zip
+  ADD_CONSTRAINED_INTEGER_TASK_NAME: com.cytomine.dummy.arithmetic.integer.addition.constrained-1.0.0.zip
   IDENTITY_BOOLEAN_TASK_NAME: com.cytomine.dummy.identity.boolean-1.0.0.zip
   IDENTITY_DATETIME_TASK_NAME: com.cytomine.dummy.identity.datetime-1.0.0.zip
+  IDENTITY_ENUMERATION_TASK_NAME: com.cytomine.dummy.identity.enumeration-1.0.0.zip
+  IDENTITY_NUMBER_TASK_NAME: com.cytomine.dummy.identity.number-1.0.0.zip
+  IDENTITY_STRING_TASK_NAME: com.cytomine.dummy.identity.string-1.0.0.zip
+  IDENTITY_GEOMETRY_TASK_NAME: com.cytomine.dummy.identity.geometry-1.0.0.zip
+  IDENTITY_IMAGE_TASK_NAME: com.cytomine.dummy.identity.image-1.0.0.zip
+  SUB_INTEGER_TASK_NAME: com.cytomine.dummy.arithmetic.integer.subtraction-1.0.0.zip
   TEST_ARTIFACT_PATH: ./src/test/resources/artifacts
 
 
@@ -24,6 +37,11 @@ include:
       job-name: download-task-integer-addition
   - component: gitlab.cytom.in/cm/rnd/cicd/component-nextcloud/download-file@1.1.0
     inputs:
+      source-filepath: ${APPENGINE_TASKS_PATH}/${ADD_CONSTRAINED_INTEGER_TASK_NAME}
+      target-directory: ${TEST_ARTIFACT_PATH}
+      job-name: download-task-constrained-integer-addition
+  - component: gitlab.cytom.in/cm/rnd/cicd/component-nextcloud/download-file@1.1.0
+    inputs:
       source-filepath: ${APPENGINE_TASKS_PATH}/${IDENTITY_BOOLEAN_TASK_NAME}
       target-directory: ${TEST_ARTIFACT_PATH}
       job-name: download-task-boolean-identity
@@ -32,12 +50,56 @@ include:
       source-filepath: ${APPENGINE_TASKS_PATH}/${IDENTITY_DATETIME_TASK_NAME}
       target-directory: ${TEST_ARTIFACT_PATH}
       job-name: download-task-datetime-identity
+  - component: gitlab.cytom.in/cm/rnd/cicd/component-nextcloud/download-file@1.1.0
+    inputs:
+      source-filepath: ${APPENGINE_TASKS_PATH}/${IDENTITY_ENUMERATION_TASK_NAME}
+      target-directory: ${TEST_ARTIFACT_PATH}
+      job-name: download-task-enumeration-identity
+  - component: gitlab.cytom.in/cm/rnd/cicd/component-nextcloud/download-file@1.1.0
+    inputs:
+      source-filepath: ${APPENGINE_TASKS_PATH}/${IDENTITY_NUMBER_TASK_NAME}
+      target-directory: ${TEST_ARTIFACT_PATH}
+      job-name: download-task-number-identity
+  - component: gitlab.cytom.in/cm/rnd/cicd/component-nextcloud/download-file@1.1.0
+    inputs:
+      source-filepath: ${APPENGINE_TASKS_PATH}/${IDENTITY_STRING_TASK_NAME}
+      target-directory: ${TEST_ARTIFACT_PATH}
+      job-name: download-task-string-identity
+  - component: gitlab.cytom.in/cm/rnd/cicd/component-nextcloud/download-file@1.1.0
+    inputs:
+      source-filepath: ${APPENGINE_TASKS_PATH}/${SUB_INTEGER_TASK_NAME}
+      target-directory: ${TEST_ARTIFACT_PATH}
+      job-name: download-task-integer-subtraction
+  - component: gitlab.cytom.in/cm/rnd/cicd/component-nextcloud/download-file@1.1.0
+    inputs:
+      source-filepath: ${APPENGINE_TASKS_PATH}/${IDENTITY_GEOMETRY_TASK_NAME}
+      target-directory: ${TEST_ARTIFACT_PATH}
+      job-name: download-task-geometry-identity
+  - component: gitlab.cytom.in/cm/rnd/cicd/component-nextcloud/download-file@1.1.0
+    inputs:
+      source-filepath: ${APPENGINE_TASKS_PATH}/${IDENTITY_IMAGE_TASK_NAME}
+      target-directory: ${TEST_ARTIFACT_PATH}
+      job-name: download-task-image-identity
+
+  - component: $CI_SERVER_FQDN/cm/rnd/cicd/component-docker/build-docker-image@2.0.0
+    inputs:
+      docker-image-name: ${CI_REGISTRY_IMAGE}
+      dockerfile-path: docker/Dockerfile
+  - component: $CI_SERVER_FQDN/cm/rnd/cicd/component-docker/push-image-to-registry@2.0.0
+    inputs:
+      push-latest-tag: "true"
 
 
 download-task-integer-addition:
   artifacts:
     paths:
       - ${TEST_ARTIFACT_PATH}/${ADD_INTEGER_TASK_NAME}
+
+
+download-task-constrained-integer-addition:
+  artifacts:
+    paths:
+      - ${TEST_ARTIFACT_PATH}/${ADD_CONSTRAINED_INTEGER_TASK_NAME}
 
 
 download-task-boolean-identity:
@@ -52,13 +114,43 @@ download-task-datetime-identity:
       - ${TEST_ARTIFACT_PATH}/${IDENTITY_DATETIME_TASK_NAME}
 
 
-default:
-  tags:
-    - docker
+download-task-enumeration-identity:
+  artifacts:
+    paths:
+      - ${TEST_ARTIFACT_PATH}/${IDENTITY_ENUMERATION_TASK_NAME}
+
+
+download-task-number-identity:
+  artifacts:
+    paths:
+      - ${TEST_ARTIFACT_PATH}/${IDENTITY_NUMBER_TASK_NAME}
+
+
+download-task-string-identity:
+  artifacts:
+    paths:
+      - ${TEST_ARTIFACT_PATH}/${IDENTITY_STRING_TASK_NAME}
+
+download-task-geometry-identity:
+  artifacts:
+    paths:
+      - ${TEST_ARTIFACT_PATH}/${IDENTITY_GEOMETRY_TASK_NAME}
+
+
+download-task-image-identity:
+  artifacts:
+    paths:
+      - ${TEST_ARTIFACT_PATH}/${IDENTITY_IMAGE_TASK_NAME}
+
+
+download-task-integer-subtraction:
+  artifacts:
+    paths:
+      - ${TEST_ARTIFACT_PATH}/${SUB_INTEGER_TASK_NAME}
 
 
 lint-dockerfiles:
-  stage: prepare
+  stage: test
   image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/hadolint/hadolint:latest-alpine
   # Uncomment to silent some warnings if needed
   #variables:
@@ -72,25 +164,6 @@ lint-dockerfiles:
     # If the Dockerfile has not been changed, this job can be skipped
     - when: never
       allow_failure: true
-
-
-make-version-name:
-  stage: prepare
-  # regex check does not work with /bin/sh because of parenthesis so we need /bin/bash here
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/bash:5.2.15-alpine3.16
-  script:
-    # TODO: reuse the tag regexp common job/rule
-    - | # If no tag has been pushed ($CI_COMMIT_TAG is empty), name it as SNAPSHOT
-      if [ -z ${CI_COMMIT_TAG} ]; then
-        echo "CM_VERSION=${CI_COMMIT_BRANCH}" > .env
-      else
-        # Else use the tag
-        echo "CM_VERSION=${CI_COMMIT_TAG}" > .env
-      fi
-    - cat .env
-  artifacts:
-    reports:
-      dotenv: .env
 
 
 validate-descriptor-schema:
@@ -142,9 +215,23 @@ tests-storage-registry:
   needs:
     - job: download-task-integer-addition
       artifacts: true
+    - job: download-task-constrained-integer-addition
+      artifacts: true
     - job: download-task-boolean-identity
       artifacts: true
     - job: download-task-datetime-identity
+      artifacts: true
+    - job: download-task-enumeration-identity
+      artifacts: true
+    - job: download-task-number-identity
+      artifacts: true
+    - job: download-task-string-identity
+      artifacts: true
+    - job: download-task-geometry-identity
+      artifacts: true
+    - job: download-task-image-identity
+      artifacts: true
+    - job: download-task-integer-subtraction
       artifacts: true
   services:
     - alias: postgres
@@ -185,35 +272,22 @@ tests-storage-registry:
     paths:
       - build/reports/tests/cucumber/*.html
 
-
-build-push-docker-image:
-  stage: build
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:latest
+build-docker-image:
+  rules:
+    - if: $CI_COMMIT_TAG
   variables:
     OPENJDK_VERSION: 17-slim-bullseye
     GRADLE_VERSION: 8.5.0-jdk17-alpine
     ENTRYPOINT_SCRIPTS_VERSION: 1.3.2
-    DOCKER_IMAGE_NAME: cytomine/app-engine
+    DOCKER_TAG: ${CI_COMMIT_TAG}
+  before_script:
+    - ARGS="${ARGS} --build-arg APP_ENGINE_VERSION=${CI_COMMIT_TAG}"
+    - ARGS="${ARGS} --build-arg APP_ENGINE_REVISION=${CI_COMMIT_SHORT_SHA}"
+    - ARGS="${ARGS} --build-arg ENTRYPOINT_SCRIPTS_VERSION=${ENTRYPOINT_SCRIPTS_VERSION}"
+    - ARGS="${ARGS} --build-arg GRADLE_VERSION=${GRADLE_VERSION}"
+    - ARGS="${ARGS} --build-arg OPENJDK_VERSION=${OPENJDK_VERSION}"
+
+push-image-to-registry:
   rules:
-    # - if: $CI_COMMIT_TAG
-    - when: never  # disable waiting for actual OS release
-  script:
-    # Use credential helper (see https://docs.docker.com/engine/reference/commandline/login/#credentials-store)
-    - mkdir -p $HOME/.docker && echo $DOCKER_HUB_AUTH_CONFIG > $HOME/.docker/config.json
-    - echo "Registry credentials configured at $HOME/.docker/config.json"
+    - if: $CI_COMMIT_TAG
 
-    - echo "Build the docker image ${DOCKER_IMAGE_NAME}:${CM_VERSION}"
-    - |
-      docker build \
-        --build-arg APP_ENGINE_VERSION=${CM_VERSION} \
-        --build-arg APP_ENGINE_REVISION=${CI_COMMIT_SHORT_SHA} \
-        --build-arg ENTRYPOINT_SCRIPTS_VERSION=${ENTRYPOINT_SCRIPTS_VERSION} \
-        --build-arg GRADLE_VERSION=${GRADLE_VERSION} \
-        --build-arg OPENJDK_VERSION=${OPENJDK_VERSION} \
-        -t ${DOCKER_IMAGE_NAME}:${CM_VERSION} \
-        -f docker/Dockerfile \
-        .
-
-    - echo "Pushing docker image ${DOCKER_IMAGE_NAME}:${CM_VERSION}"
-    - docker push ${DOCKER_IMAGE_NAME}:${CM_VERSION}
-    - echo "Successfully pushed docker image ${DOCKER_IMAGE_NAME}:${CM_VERSION}"

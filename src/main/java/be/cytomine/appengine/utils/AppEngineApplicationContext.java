@@ -13,8 +13,8 @@ public class AppEngineApplicationContext implements ApplicationContextAware {
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
         context = applicationContext;
     }
-    public  static <T> T getBean(Class<T> beanClass)
-    {
+
+    public static <T> T getBean(Class<T> beanClass) {
         return context.getBean(beanClass);
     }
 }

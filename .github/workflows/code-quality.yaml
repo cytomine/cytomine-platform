@@ -1,0 +1,38 @@
+name: Code Quality
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "src/**/*.java"
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set up the repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ vars.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: ${{ vars.JAVA_DIST }}
+          java-version: ${{ vars.JAVA_VERSION }}
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: ${{ vars.GRADLE_VERSION }}
+
+      - name: Check lint
+        run: gradle checkstyleMain
+
+      - name: Upload test reports
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: reports
+          path: build/reports/checkstyle
+          retention-days: 30

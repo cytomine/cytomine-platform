@@ -1,38 +1,51 @@
 package be.cytomine.appengine.models.task.integer;
 
+import java.io.File;
+import java.util.UUID;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
 import be.cytomine.appengine.dto.inputs.task.TaskRunParameterValue;
 import be.cytomine.appengine.dto.inputs.task.types.integer.IntegerTypeConstraint;
 import be.cytomine.appengine.dto.inputs.task.types.integer.IntegerValue;
 import be.cytomine.appengine.dto.responses.errors.ErrorCode;
 import be.cytomine.appengine.exceptions.TypeValidationException;
-import be.cytomine.appengine.handlers.FileData;
-import be.cytomine.appengine.models.task.*;
+import be.cytomine.appengine.handlers.StorageData;
+import be.cytomine.appengine.handlers.StorageDataEntry;
+import be.cytomine.appengine.handlers.StorageDataType;
+import be.cytomine.appengine.models.task.Output;
+import be.cytomine.appengine.models.task.ParameterType;
+import be.cytomine.appengine.models.task.Run;
+import be.cytomine.appengine.models.task.Type;
+import be.cytomine.appengine.models.task.TypePersistence;
+import be.cytomine.appengine.models.task.ValueType;
 import be.cytomine.appengine.repositories.integer.IntegerPersistenceRepository;
 import be.cytomine.appengine.utils.AppEngineApplicationContext;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import jakarta.persistence.*;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import be.cytomine.appengine.utils.FileHelper;
 
-
-import java.util.UUID;
-
-@Entity
+@SuppressWarnings("checkstyle:LineLength")
 @Data
+@Entity
 @EqualsAndHashCode(callSuper = true)
 public class IntegerType extends Type {
 
     @Column(nullable = true)
     private Integer gt;
+
     @Column(nullable = true)
     private Integer lt;
+
     @Column(nullable = true)
     private Integer geq;
+
     @Column(nullable = true)
     private Integer leq;
-
 
     public void setConstraint(IntegerTypeConstraint constraint, Integer value) {
         switch (constraint) {
@@ -48,20 +61,47 @@ public class IntegerType extends Type {
             case LOWER_THAN:
                 this.setLt(value);
                 break;
+            default:
+                break;
         }
     }
 
     @Override
     public void validate(Object valueObject) throws TypeValidationException {
+        if (valueObject == null) {
+            return;
+        }
+
         Integer value = (Integer) valueObject;
-        if (this.hasConstraint(IntegerTypeConstraint.GREATER_THAN) && value <= this.getGt())
+        if (this.hasConstraint(IntegerTypeConstraint.GREATER_THAN) && value <= this.getGt()) {
             throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_GT_VALIDATION_ERROR);
-        if (this.hasConstraint(IntegerTypeConstraint.GREATER_EQUAL) && value < this.getGeq())
+        }
+        if (this.hasConstraint(IntegerTypeConstraint.GREATER_EQUAL) && value < this.getGeq()) {
             throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_GEQ_VALIDATION_ERROR);
-        if (this.hasConstraint(IntegerTypeConstraint.LOWER_THAN) && value >= this.getLt())
+        }
+        if (this.hasConstraint(IntegerTypeConstraint.LOWER_THAN) && value >= this.getLt()) {
             throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_LT_VALIDATION_ERROR);
-        if (this.hasConstraint(IntegerTypeConstraint.LOWER_EQUAL) && value > this.getLeq())
+        }
+        if (this.hasConstraint(IntegerTypeConstraint.LOWER_EQUAL) && value > this.getLeq()) {
             throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_LEQ_VALIDATION_ERROR);
+        }
+    }
+
+    @Override
+    public void validateFiles(
+        Run run,
+        Output currentOutput,
+        StorageData currentOutputStorageData)
+        throws TypeValidationException {
+
+        // validate file structure
+        File outputFile = getFileIfStructureIsValid(currentOutputStorageData);
+
+        // validate value
+        String rawValue = getContentIfValid(outputFile);
+
+        validate(Integer.parseInt(rawValue));
+
     }
 
     public boolean hasConstraint(IntegerTypeConstraint constraint) {
@@ -93,38 +133,38 @@ public class IntegerType extends Type {
             persistedProvision.setValue(value);
             integerPersistenceRepository.save(persistedProvision);
         } else {
-
             persistedProvision.setValue(value);
             integerPersistenceRepository.saveAndFlush(persistedProvision);
         }
     }
 
     @Override
-    public void persistResult(Run run, Output currentOutput, String outputValue) {
+    public void persistResult(Run run, Output currentOutput, StorageData outputValue) {
         IntegerPersistenceRepository integerPersistenceRepository = AppEngineApplicationContext.getBean(IntegerPersistenceRepository.class);
-        IntegerPersistence result = integerPersistenceRepository.findIntegerPersistenceByParameterNameAndRunIdAndParameterType(currentOutput.getName(), run.getId(), ParameterType.INPUT);
+        IntegerPersistence result = integerPersistenceRepository.findIntegerPersistenceByParameterNameAndRunIdAndParameterType(currentOutput.getName(), run.getId(), ParameterType.OUTPUT);
+        String output = FileHelper.read(outputValue.peek().getData(), getStorageCharset());
         if (result == null) {
             result = new IntegerPersistence();
-            result.setValue(Integer.parseInt(outputValue));
+            result.setValue(Integer.parseInt(output));
             result.setValueType(ValueType.INTEGER);
             result.setParameterType(ParameterType.OUTPUT);
             result.setRunId(run.getId());
             result.setParameterName(currentOutput.getName());
             integerPersistenceRepository.save(result);
         } else {
-            result.setValue(Integer.parseInt(outputValue));
+            result.setValue(Integer.parseInt(output));
             integerPersistenceRepository.saveAndFlush(result);
         }
     }
 
     @Override
-    public FileData mapToStorageFileData(JsonNode provision, String charset) {
+    public StorageData mapToStorageFileData(JsonNode provision) {
         String value = provision.get("value").asText();
         String parameterName = provision.get("param_name").asText();
-        byte[] inputFileData = value.getBytes(getStorageCharset(charset));
-        return new FileData(inputFileData, parameterName);
+        File data = FileHelper.write(parameterName, value.getBytes(getStorageCharset()));
+        StorageDataEntry entry = new StorageDataEntry(data, parameterName, StorageDataType.FILE);
+        return new StorageData(entry);
     }
-
 
     @Override
     public JsonNode createTypedParameterResponse(JsonNode provision, Run run) {
@@ -137,11 +177,15 @@ public class IntegerType extends Type {
     }
 
     @Override
-    public IntegerValue buildTaskRunParameterValue(String output, UUID id, String outputName) {
+    public IntegerValue buildTaskRunParameterValue(StorageData output, UUID id, String outputName) {
+        String outputValue = FileHelper.read(output.peek().getData(), getStorageCharset());
+
         IntegerValue integerValue = new IntegerValue();
-        integerValue.setTask_run_id(id);
-        integerValue.setValue(Integer.parseInt(output));
-        integerValue.setParam_name(outputName);
+        integerValue.setParameterName(outputName);
+        integerValue.setTaskRunId(id);
+        integerValue.setType(ValueType.INTEGER);
+        integerValue.setValue(Integer.parseInt(outputValue));
+
         return integerValue;
     }
 
@@ -149,9 +193,10 @@ public class IntegerType extends Type {
     public TaskRunParameterValue buildTaskRunParameterValue(TypePersistence typePersistence) {
         IntegerPersistence integerPersistence = (IntegerPersistence) typePersistence;
         IntegerValue integerValue = new IntegerValue();
-        integerValue.setTask_run_id(integerPersistence.getRunId());
+        integerValue.setParameterName(integerPersistence.getParameterName());
+        integerValue.setTaskRunId(integerPersistence.getRunId());
+        integerValue.setType(ValueType.INTEGER);
         integerValue.setValue(integerPersistence.getValue());
-        integerValue.setParam_name(integerPersistence.getParameterName());
         return integerValue;
     }
 }

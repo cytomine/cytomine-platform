@@ -1,11 +1,12 @@
 package be.cytomine.appengine.dto.responses.errors.details;
 
-import be.cytomine.appengine.dto.responses.errors.AppEngineError;
+import java.util.List;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import java.util.List;
+import be.cytomine.appengine.dto.responses.errors.AppEngineError;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
