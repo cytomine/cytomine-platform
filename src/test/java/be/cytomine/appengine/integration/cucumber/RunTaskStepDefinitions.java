@@ -673,9 +673,10 @@ public class RunTaskStepDefinitions {
 
     @And("a task run has been created")
     public void createTaskRun(DataTable table) {
-        List<String> data = table.asList(String.class);
+        List<Map<String, String>> data = table.asMaps(String.class, String.class);
+        String taskRunId = data.get(0).get("task_run_id");
 
-        persistedRun = new Run(UUID.fromString(data.get(0)), TaskRunState.CREATED, persistedTask);
+        persistedRun = new Run(UUID.fromString(taskRunId), TaskRunState.CREATED, persistedTask);
         persistedRun = runRepository.save(persistedRun);
     }
 

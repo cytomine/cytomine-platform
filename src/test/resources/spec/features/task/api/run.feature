@@ -172,7 +172,6 @@ Feature: [URS00003-TASK] Execute a task
   Scenario Outline: unsuccessful upload of task run outputs as a valid zip file in a non-running non-pending state state
     Given a task run exists with identifier "<task_run_id>"
     And the task run is not in one of the following state
-      | task_run_state |
       | RUNNING        |
       | PENDING        |
       | QUEUING        |
