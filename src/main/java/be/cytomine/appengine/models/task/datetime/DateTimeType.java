@@ -72,16 +72,16 @@ public class DateTimeType extends Type {
 
         String rawValue = getContentIfValid(outputFile);
 
-        validate(Instant.parse(rawValue));
+        validate(rawValue);
     }
 
     @Override
     public void validate(Object valueObject) throws TypeValidationException {
-        if (!(valueObject instanceof Instant)) {
+        if (!(valueObject instanceof String)) {
             throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_TYPE_ERROR);
         }
 
-        Instant value = (Instant) valueObject;
+        Instant value = Instant.parse((String) valueObject);
 
         if (hasConstraint(DateTimeTypeConstraint.BEFORE) && value.isBefore(before)) {
             throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_BEFORE_ERROR);

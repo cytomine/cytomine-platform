@@ -44,7 +44,7 @@ public class TypeFactory {
             case "number" -> createNumberType(typeNode, typeId, charset);
             case "string" -> createStringType(typeNode, typeId, charset);
             case "enumeration" -> createEnumerationType(typeNode, typeId, charset);
-            case "datetime" -> createDateTimeType(typeNode, typeId);
+            case "datetime" -> createDateTimeType(typeNode, typeId, charset);
             case "geometry" -> createGeometryType(typeId, charset);
             case "image" -> createImageType(typeNode, typeId, charset);
             case "wsi" -> createWsiType(typeNode, typeId, charset);
@@ -143,9 +143,10 @@ public class TypeFactory {
     }
 
     @NotNull
-    private static DateTimeType createDateTimeType(JsonNode typeNode, String typeId) {
+    private static DateTimeType createDateTimeType(JsonNode typeNode, String typeId, String charset) {
         DateTimeType type = new DateTimeType();
         type.setId(typeId);
+        type.setCharset(charset);
 
         Arrays.stream(DateTimeTypeConstraint.values())
             .map(DateTimeTypeConstraint::getStringKey)

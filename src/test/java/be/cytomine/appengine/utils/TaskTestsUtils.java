@@ -1,6 +1,7 @@
 package be.cytomine.appengine.utils;
 
 import java.lang.reflect.InvocationTargetException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +16,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import be.cytomine.appengine.dto.inputs.task.GenericParameterProvision;
 import be.cytomine.appengine.dto.inputs.task.TaskRunParameterValue;
 import be.cytomine.appengine.dto.inputs.task.types.bool.BooleanValue;
+import be.cytomine.appengine.dto.inputs.task.types.datetime.DateTimeValue;
 import be.cytomine.appengine.dto.inputs.task.types.enumeration.EnumerationValue;
 import be.cytomine.appengine.dto.inputs.task.types.file.FileValue;
 import be.cytomine.appengine.dto.inputs.task.types.geometry.GeometryValue;
@@ -96,6 +98,14 @@ public class TaskTestsUtils {
                     parameterValues.add(enumerationValue);
                     break;
 
+                case "datetime":
+                    DateTimeValue datetimeValue = new DateTimeValue();
+                    datetimeValue.setParameterName((String) entity.get("param_name"));
+                    datetimeValue.setTaskRunId(UUID.fromString((String) entity.get("task_run_id")));
+                    datetimeValue.setValue(Instant.parse((String) entity.get("value")));
+                    parameterValues.add(datetimeValue);
+                    break;
+
                 case "geometry":
                     GeometryValue geometryValue = new GeometryValue();
                     geometryValue.setParameterName((String) entity.get("param_name"));
@@ -160,6 +170,10 @@ public class TaskTestsUtils {
                 break;
             case "enumeration":
                 provision.setType(be.cytomine.appengine.dto.inputs.task.ParameterType.ENUMERATION);
+                provision.setValue(value);
+                break;
+            case "datetime":
+                provision.setType(be.cytomine.appengine.dto.inputs.task.ParameterType.DATETIME);
                 provision.setValue(value);
                 break;
             case "geometry":
