@@ -23,6 +23,8 @@ public class ErrorDefinitions {
         codes.put(ErrorCode.INTERNAL_MISSING_OUTPUTS, new MessageCode("APPE-internal-task-run-missing-outputs", "some outputs are missing in the archive"));
         codes.put(ErrorCode.INTERNAL_NOT_PROVISIONED, new MessageCode("APPE-internal-task-run-provisions-not-found", "not provisioned"));
         codes.put(ErrorCode.INTERNAL_PARAMETER_DOES_NOT_EXIST, new MessageCode("APPE-internal-parameter-not-found", "parameter not found"));
+        codes.put(ErrorCode.INTERNAL_PARAMETER_AFTER_ERROR, new MessageCode("APPE-internal-request-validation-error", "date must be after the defined constraint"));
+        codes.put(ErrorCode.INTERNAL_PARAMETER_BEFORE_ERROR, new MessageCode("APPE-internal-request-validation-error", "date must be before the defined constraint"));
         codes.put(ErrorCode.INTERNAL_PARAMETER_GEOJSON_PROCESSING_ERROR, new MessageCode("APPE-internal-request-validation-error", "failed to parse the given GeoJSON object"));
         codes.put(ErrorCode.INTERNAL_PARAMETER_GEOJSON_SUBTYPE_ERROR, new MessageCode("APPE-internal-request-validation-error", "unsupported GeoJSON subtype"));
         codes.put(ErrorCode.INTERNAL_PARAMETER_GEQ_VALIDATION_ERROR, new MessageCode("APPE-internal-request-validation-error", "value must be greater than or equal to define constraint"));

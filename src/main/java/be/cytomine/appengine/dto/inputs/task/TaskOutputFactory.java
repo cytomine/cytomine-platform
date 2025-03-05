@@ -1,6 +1,7 @@
 package be.cytomine.appengine.dto.inputs.task;
 
 import be.cytomine.appengine.dto.inputs.task.types.bool.TaskParameterBooleanType;
+import be.cytomine.appengine.dto.inputs.task.types.datetime.TaskParameterDateTimeType;
 import be.cytomine.appengine.dto.inputs.task.types.enumeration.TaskParameterEnumerationType;
 import be.cytomine.appengine.dto.inputs.task.types.file.TaskParameterFileType;
 import be.cytomine.appengine.dto.inputs.task.types.geometry.TaskParameterGeometryType;
@@ -11,6 +12,7 @@ import be.cytomine.appengine.dto.inputs.task.types.string.TaskParameterStringTyp
 import be.cytomine.appengine.dto.inputs.task.types.wsi.TaskParameterWsiType;
 import be.cytomine.appengine.models.task.Output;
 import be.cytomine.appengine.models.task.bool.BooleanType;
+import be.cytomine.appengine.models.task.datetime.DateTimeType;
 import be.cytomine.appengine.models.task.enumeration.EnumerationType;
 import be.cytomine.appengine.models.task.file.FileType;
 import be.cytomine.appengine.models.task.geometry.GeometryType;
@@ -57,6 +59,12 @@ public class TaskOutputFactory {
             taskParameterType = new TaskParameterEnumerationType(
                 type.getId(),
                 type.getValues()
+            );
+        } else if (output.getType() instanceof DateTimeType type) {
+            taskParameterType = new TaskParameterDateTimeType(
+                type.getId(),
+                type.getBefore(),
+                type.getAfter()
             );
         } else if (output.getType() instanceof GeometryType type) {
             taskParameterType = new TaskParameterGeometryType(

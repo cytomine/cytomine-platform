@@ -5,6 +5,7 @@ import java.util.Arrays;
 import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.validation.constraints.NotNull;
 
+import be.cytomine.appengine.dto.inputs.task.types.datetime.DateTimeTypeConstraint;
 import be.cytomine.appengine.dto.inputs.task.types.enumeration.EnumerationTypeConstraint;
 import be.cytomine.appengine.dto.inputs.task.types.file.FileTypeConstraint;
 import be.cytomine.appengine.dto.inputs.task.types.image.ImageTypeConstraint;
@@ -13,6 +14,7 @@ import be.cytomine.appengine.dto.inputs.task.types.number.NumberTypeConstraint;
 import be.cytomine.appengine.dto.inputs.task.types.string.StringTypeConstraint;
 import be.cytomine.appengine.dto.inputs.task.types.wsi.WsiTypeConstraint;
 import be.cytomine.appengine.models.task.bool.BooleanType;
+import be.cytomine.appengine.models.task.datetime.DateTimeType;
 import be.cytomine.appengine.models.task.enumeration.EnumerationType;
 import be.cytomine.appengine.models.task.file.FileType;
 import be.cytomine.appengine.models.task.geometry.GeometryType;
@@ -42,6 +44,7 @@ public class TypeFactory {
             case "number" -> createNumberType(typeNode, typeId, charset);
             case "string" -> createStringType(typeNode, typeId, charset);
             case "enumeration" -> createEnumerationType(typeNode, typeId, charset);
+            case "datetime" -> createDateTimeType(typeNode, typeId);
             case "geometry" -> createGeometryType(typeId, charset);
             case "image" -> createImageType(typeNode, typeId, charset);
             case "wsi" -> createWsiType(typeNode, typeId, charset);
@@ -132,6 +135,24 @@ public class TypeFactory {
             .forEach(key -> {
                 type.setConstraint(
                     EnumerationTypeConstraint.getConstraint(key),
+                    typeNode.get(key).toString()
+                );
+            });
+
+        return type;
+    }
+
+    @NotNull
+    private static DateTimeType createDateTimeType(JsonNode typeNode, String typeId) {
+        DateTimeType type = new DateTimeType();
+        type.setId(typeId);
+
+        Arrays.stream(DateTimeTypeConstraint.values())
+            .map(DateTimeTypeConstraint::getStringKey)
+            .filter(typeNode::has)
+            .forEach(key -> {
+                type.setConstraint(
+                    DateTimeTypeConstraint.getConstraint(key),
                     typeNode.get(key).toString()
                 );
             });
