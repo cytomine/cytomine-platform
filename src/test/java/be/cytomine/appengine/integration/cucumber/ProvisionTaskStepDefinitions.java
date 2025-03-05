@@ -692,7 +692,7 @@ public class ProvisionTaskStepDefinitions {
             try {
                 apiClient.provisionInput(persistedRun.getId().toString(), name, type, value);
             } catch (RestClientResponseException e) {
-                Assertions.fail("Provisioning for " + name + " failed: " + e.getMessage());
+                Assertions.fail("Provisioning '" + name + "' failed: " + e.getMessage());
             }
         }
     }

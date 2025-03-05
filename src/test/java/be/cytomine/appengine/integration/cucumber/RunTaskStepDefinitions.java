@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -543,15 +544,14 @@ public class RunTaskStepDefinitions {
     }
 
     // unsuccessful upload of task run outputs as a valid zip file in a non-running non-pending non-queuing non-queued state state
-    @Given("the task run is not in state {string} or {string} or {string} or {string}")
-    public void the_task_run_is_not_in_state_or(String state1, String state2, String state3, String state4) {
+    @Given("the task run is not in one of the following state")
+    public void checkTaskRunNotInState(DataTable table) {
+        List<String> allowedStates = table.asList(String.class);
+
         persistedRun.setState(TaskRunState.PROVISIONED);
         persistedRun = runService.update(persistedRun);
 
-        Assertions.assertNotEquals(persistedRun.getState(), TaskRunState.valueOf(state1));
-        Assertions.assertNotEquals(persistedRun.getState(), TaskRunState.valueOf(state2));
-        Assertions.assertNotEquals(persistedRun.getState(), TaskRunState.valueOf(state3));
-        Assertions.assertNotEquals(persistedRun.getState(), TaskRunState.valueOf(state4));
+        Assertions.assertTrue(!allowedStates.contains(persistedRun.getState().toString()));
     }
 
     @When("user calls the endpoint to post outputs with {string} HTTP method POST and a valid outputs zip file")
@@ -656,19 +656,44 @@ public class RunTaskStepDefinitions {
         persistedTask = taskRepository.save(persistedTask);
     }
 
-    @And("the task has requested {string} ram with {string} cpus, and {string} gpus")
+    @And("The task is assigned {string} RAM, {string} CPUs, and {string} GPUs")
+    public void setTaskResources(String ram, String cpus, String gpus) {
+        persistedTask.setRam(ram);
+        persistedTask.setCpus(Integer.parseInt(cpus));
+        persistedTask.setGpus(Integer.parseInt(gpus));
+        persistedTask = taskRepository.save(persistedTask);
+    }
+
+    @And("the task has requested {string} RAM, {string} CPUs, and {string} GPUs")
     public void checkResourceRequested(String ram, String cpus, String gpus) {
-        
+        Assertions.assertEquals(ram, persistedTask.getRam());
+        Assertions.assertEquals(Integer.parseInt(cpus), persistedTask.getCpus());
+        Assertions.assertEquals(Integer.parseInt(gpus), persistedTask.getGpus());
     }
 
     @And("a task run has been created")
     public void createTaskRun(DataTable table) {
+        List<String> data = table.asList(String.class);
 
+        persistedRun = new Run(UUID.fromString(data.get(0)), TaskRunState.CREATED, persistedTask);
+        persistedRun = runRepository.save(persistedRun);
     }
 
     @And("a user provisioned all the parameters")
     public void provisionInputs(DataTable table) {
+        List<Map<String, String>> parameters = table.asMaps(String.class, String.class);
 
+        for (Map<String, String> param : parameters) {
+            String name = param.get("parameter_name");
+            String type = param.get("parameter_type");
+            String value = param.get("parameter_value");
+
+            try {
+                apiClient.provisionInput(persistedRun.getId().toString(), name, type, value);
+            } catch (RestClientResponseException e) {
+                Assertions.fail("Provisioning '" + name + "' failed: " + e.getMessage());
+            }
+        }
     }
 
     @Then("the requested {string} ram with {string} cpus, and {string} gpus are allocated by the cluster")

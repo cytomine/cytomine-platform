@@ -171,7 +171,12 @@ Feature: [URS00003-TASK] Execute a task
   @Scheduler
   Scenario Outline: unsuccessful upload of task run outputs as a valid zip file in a non-running non-pending state state
     Given a task run exists with identifier "<task_run_id>"
-    And the task run is not in state "RUNNING" or "PENDING" or "QUEUING" or "QUEUED"
+    And the task run is not in one of the following state
+      | task_run_state |
+      | RUNNING        |
+      | PENDING        |
+      | QUEUING        |
+      | QUEUED         |
     When user calls the endpoint to post outputs with "<task_run_id>" HTTP method POST and a valid outputs zip file
     Then App Engine sends a "403" forbidden response with a payload containing the error message (see OpenAPI spec) and code "APPE-internal-task-run-state-error"
 
@@ -181,17 +186,18 @@ Feature: [URS00003-TASK] Execute a task
       | 123e4567-e89b-12d3-a456-426614174001 |
 
 
-  @Scheduler @Kubernetes
+  @Scheduler
   Scenario Outline: successful allocation of resources for a task run
 
     Given a task with "<task_namespace>" and "<task_version>" has been uploaded
-    And the task has requested "<resource_ram>" ram with "<resource_cpu>" cpus, and "<resource_gpu>" gpus
+    And The task is assigned "<resource_ram>" RAM, "<resource_cpu>" CPUs, and "<resource_gpu>" GPUs
+    And the task has requested "<resource_ram>" RAM, "<resource_cpu>" CPUs, and "<resource_gpu>" GPUs
     And a task run has been created
       | task_run_id                          |
       | 17cee067-9752-48da-ab38-39fe7344f423 |
     And a user provisioned all the parameters
       | parameter_name | parameter_type | parameter_value |
-      | verbosity      | boolean        | true            |
+      | verbose        | boolean        | true            |
     When When user calls the endpoint to run task with HTTP method POST
     Then the requested "<resource_ram>" ram with "<resource_cpu>" cpus, and "<resource_gpu>" gpus are allocated by the cluster
 
@@ -199,3 +205,4 @@ Feature: [URS00003-TASK] Execute a task
       | task_namespace                         | task_version | resource_ram | resource_cpu | resource_gpu |
       | com.cytomine.dummy.resource.allocation | 0.1.0        | 2Gi          | 1            | 1            |
       | com.cytomine.dummy.resource.allocation | 0.1.0        | 200Mi        | 2            | 0            |
+      | com.cytomine.dummy.resource.allocation | 0.1.0        | 500P         | 5            | 3            |
