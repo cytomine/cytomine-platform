@@ -17,6 +17,6 @@ import be.cytomine.appengine.models.task.TypePersistence;
 @EqualsAndHashCode(callSuper = true)
 @AllArgsConstructor
 @NoArgsConstructor
-public class DateTimePersistence extends TypePersistence{
+public class DateTimePersistence extends TypePersistence {
     private Instant value;
 }

@@ -143,18 +143,18 @@ public class TypeFactory {
     }
 
     @NotNull
-    private static DateTimeType createDateTimeType(JsonNode typeNode, String typeId, String charset) {
+    private static DateTimeType createDateTimeType(JsonNode node, String id, String charset) {
         DateTimeType type = new DateTimeType();
-        type.setId(typeId);
+        type.setId(id);
         type.setCharset(charset);
 
         Arrays.stream(DateTimeTypeConstraint.values())
             .map(DateTimeTypeConstraint::getStringKey)
-            .filter(typeNode::has)
+            .filter(node::has)
             .forEach(key -> {
                 type.setConstraint(
                     DateTimeTypeConstraint.getConstraint(key),
-                    typeNode.get(key).toString()
+                    node.get(key).toString()
                 );
             });
 

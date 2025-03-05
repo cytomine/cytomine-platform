@@ -49,6 +49,7 @@ public class DateTimeType extends Type {
                 break;
             case AFTER:
                 setAfter(Instant.parse(value));
+                break;
             default:
                 throw new RuntimeException("Invalid value: " + value);
         }
