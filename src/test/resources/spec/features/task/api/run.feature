@@ -191,17 +191,15 @@ Feature: [URS00003-TASK] Execute a task
     Given a task with "<task_namespace>" and "<task_version>" has been uploaded
     And The task is assigned "<resource_ram>" RAM, "<resource_cpu>" CPUs, and "<resource_gpu>" GPUs
     And the task has requested "<resource_ram>" RAM, "<resource_cpu>" CPUs, and "<resource_gpu>" GPUs
-    And a task run has been created
-      | task_run_id                          |
-      | 17cee067-9752-48da-ab38-39fe7344f423 |
+    And a task run has been created with "<task_run_id>"
     And a user provisioned all the parameters
       | parameter_name | parameter_type | parameter_value |
       | verbose        | boolean        | true            |
     When When user calls the endpoint to run task with HTTP method POST
-    Then the requested "<resource_ram>" ram with "<resource_cpu>" cpus, and "<resource_gpu>" gpus are allocated by the cluster
+    Then the cluster has allocated "<resource_ram>" RAM, "<resource_cpu>" CPUs, and "<resource_gpu>" GPUs as requested.
 
     Examples:
-      | task_namespace                         | task_version | resource_ram | resource_cpu | resource_gpu |
-      | com.cytomine.dummy.resource.allocation | 0.1.0        | 2Gi          | 1            | 1            |
-      | com.cytomine.dummy.resource.allocation | 0.1.0        | 200Mi        | 2            | 0            |
-      | com.cytomine.dummy.resource.allocation | 0.1.0        | 500P         | 5            | 3            |
+      | task_namespace                         | task_version | task_run_id                          | resource_ram | resource_cpu | resource_gpu |
+      | com.cytomine.dummy.resource.allocation | 0.1.0        | 17cee067-9752-48da-ab38-39fe7344f423 | 2Gi          | 1            | 1            |
+      | com.cytomine.dummy.resource.allocation | 0.1.0        | b0ac3cba-2c6c-4fce-afbb-745ef75c4bcd | 200Mi        | 2            | 0            |
+      | com.cytomine.dummy.resource.allocation | 0.1.0        | 63907109-4472-4cc2-82d3-c78f2903f1ec | 500P         | 5            | 3            |

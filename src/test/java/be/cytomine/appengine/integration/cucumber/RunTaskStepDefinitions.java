@@ -56,6 +56,7 @@ import be.cytomine.appengine.repositories.TaskRepository;
 import be.cytomine.appengine.services.RunService;
 import be.cytomine.appengine.states.TaskRunState;
 import be.cytomine.appengine.utils.ApiClient;
+import be.cytomine.appengine.utils.ClusterClient;
 import be.cytomine.appengine.utils.FileHelper;
 import be.cytomine.appengine.utils.TaskTestsUtils;
 import be.cytomine.appengine.utils.TestTaskBuilder;
@@ -68,6 +69,9 @@ public class RunTaskStepDefinitions {
 
     @Autowired
     private ApiClient apiClient;
+
+    @Autowired
+    private ClusterClient clusterClient;
 
     @Autowired
     private StorageHandler storageHandler;
@@ -651,6 +655,8 @@ public class RunTaskStepDefinitions {
 
     @Given("a task with {string} and {string} has been uploaded")
     public void uploadTask(String namespace, String version) {
+        taskRepository.deleteAll();
+
         String bundleFilename = namespace + "-" + version + ".zip";
         persistedTask = TestTaskBuilder.buildTaskFromResource(bundleFilename);
         persistedTask = taskRepository.save(persistedTask);
@@ -671,12 +677,9 @@ public class RunTaskStepDefinitions {
         Assertions.assertEquals(Integer.parseInt(gpus), persistedTask.getGpus());
     }
 
-    @And("a task run has been created")
-    public void createTaskRun(DataTable table) {
-        List<Map<String, String>> data = table.asMaps(String.class, String.class);
-        String taskRunId = data.get(0).get("task_run_id");
-
-        persistedRun = new Run(UUID.fromString(taskRunId), TaskRunState.CREATED, persistedTask);
+    @And("a task run has been created with {string}")
+    public void createTaskRun(String uuid) {
+        persistedRun = new Run(UUID.fromString(uuid), TaskRunState.CREATED, persistedTask);
         persistedRun = runRepository.save(persistedRun);
     }
 
@@ -697,8 +700,13 @@ public class RunTaskStepDefinitions {
         }
     }
 
-    @Then("the requested {string} ram with {string} cpus, and {string} gpus are allocated by the cluster")
+    @Then("the cluster has allocated {string} RAM, {string} CPUs, and {string} GPUs as requested.")
     public void checkResourceAllocation(String ram, String cpus, String gpus) {
+        String uuid = persistedTask.getName().toLowerCase().replaceAll("[^a-zA-Z0-9]", "") + "-" + persistedRun.getId();
+        Map<String, String> resources = clusterClient.getAllocatedResources(uuid);
 
+        Assertions.assertEquals(ram, resources.get("ram"));
+        Assertions.assertEquals(cpus, resources.get("cpu"));
+        Assertions.assertEquals(gpus, resources.get("gpu"));
     }
 }
