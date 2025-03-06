@@ -4,8 +4,11 @@ import be.cytomine.appengine.dto.inputs.task.TaskRunParameterValue;
 import be.cytomine.appengine.dto.inputs.task.types.collection.CollectionGenericTypeConstraint;
 import be.cytomine.appengine.dto.inputs.task.types.collection.CollectionItemValue;
 import be.cytomine.appengine.dto.inputs.task.types.collection.CollectionValue;
+import be.cytomine.appengine.dto.inputs.task.types.collection.GeoCollectionValue;
 import be.cytomine.appengine.dto.inputs.task.types.enumeration.EnumerationValue;
+import be.cytomine.appengine.dto.responses.errors.ErrorCode;
 import be.cytomine.appengine.exceptions.FileStorageException;
+import be.cytomine.appengine.exceptions.ParseException;
 import be.cytomine.appengine.exceptions.ProvisioningException;
 import be.cytomine.appengine.exceptions.TypeValidationException;
 import be.cytomine.appengine.handlers.StorageData;
@@ -20,6 +23,7 @@ import be.cytomine.appengine.models.task.ValueType;
 import be.cytomine.appengine.models.task.bool.BooleanPersistence;
 import be.cytomine.appengine.models.task.enumeration.EnumerationPersistence;
 import be.cytomine.appengine.models.task.geometry.GeometryPersistence;
+import be.cytomine.appengine.models.task.geometry.GeometryType;
 import be.cytomine.appengine.models.task.integer.IntegerPersistence;
 import be.cytomine.appengine.models.task.number.NumberPersistence;
 import be.cytomine.appengine.models.task.string.StringPersistence;
@@ -58,6 +62,10 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.GeometryCollection;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.io.geojson.GeoJsonReader;
 
 @SuppressWarnings("checkstyle:LineLength")
 @Data
@@ -82,6 +90,94 @@ public class CollectionType extends Type {
   @Transient private Type trackingType;
 
   @Transient private Type parentType;
+
+  public void validateFeatureCollection(String json, GeometryType geometryType)
+      throws TypeValidationException {
+      ObjectMapper objectMapper = new ObjectMapper();
+
+      JsonNode rootNode = null;
+      try {
+          rootNode = objectMapper.readTree(json);
+      } catch (JsonProcessingException e)
+      {
+        throw new TypeValidationException("invalid feature collection");
+      }
+
+      // Validate "type"
+      if (!rootNode.has("type") || !rootNode.get("type").asText().equals("FeatureCollection")) {
+        throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_INVALID_GEOJSON);
+      }
+
+      // Validate "features" array
+      if (!rootNode.has("features") || !rootNode.get("features").isArray()) {
+        throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_INVALID_GEOJSON);
+      }
+
+      // validate against constraints
+      int size = rootNode.get("features").size();
+      if (size < minSize || size > maxSize) {
+        throw new TypeValidationException("invalid collection dimensions");
+      }
+
+      // Validate each feature
+      for (JsonNode feature : rootNode.get("features")) {
+        if (!feature.has("type") || !feature.get("type").asText().equals("Feature")) {
+          throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_INVALID_GEOJSON);
+        }
+        if (!feature.has("geometry")) {
+          throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_INVALID_GEOJSON);
+        }
+
+        // Validate the geometry using GeometryType
+        JsonNode geometryNode = feature.get("geometry");
+          try
+          {
+              geometryType.validate(objectMapper.writeValueAsString(geometryNode));
+          } catch (JsonProcessingException e)
+          {
+            throw new TypeValidationException("invalid feature collection");
+          }
+
+      }
+  }
+
+  public void validateGeometryCollection(String json, GeometryType geometryType)
+      throws TypeValidationException
+  {
+      ObjectMapper objectMapper = new ObjectMapper();
+      JsonNode rootNode = null;
+      try {
+          rootNode = objectMapper.readTree(json);
+      } catch (JsonProcessingException e) {
+        throw new TypeValidationException("invalid geometry collection");
+      }
+
+      // Validate "type"
+      if (!rootNode.has("type") || !rootNode.get("type").asText().equals("GeometryCollection")) {
+        throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_INVALID_GEOJSON);
+      }
+
+      // Validate "geometries" array
+      if (!rootNode.has("geometries") || !rootNode.get("geometries").isArray()) {
+        throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_INVALID_GEOJSON);
+      }
+
+      // validate against constraints
+      int size = rootNode.get("geometries").size();
+      if (size < minSize || size > maxSize) {
+        throw new TypeValidationException("invalid collection dimensions");
+      }
+
+      // Validate each geometry using GeometryType
+      for (JsonNode geometryNode : rootNode.get("geometries")) {
+          try
+          {
+              geometryType.validate(objectMapper.writeValueAsString(geometryNode));
+          } catch (JsonProcessingException e){
+            throw new TypeValidationException("invalid geometry collection");
+          }
+      }
+  }
 
   public void setConstraint(CollectionGenericTypeConstraint constraint, String value) {
     switch (constraint) {
@@ -182,17 +278,40 @@ public class CollectionType extends Type {
     if (valueObject == null) {
       return;
     }
-
-    if (!(valueObject instanceof ArrayList)) {
+    //
+    if (!(valueObject instanceof ArrayList)
+        && !(valueObject instanceof String)
+        && !(valueObject instanceof LinkedHashMap)) {
       throw new TypeValidationException("wrong provision structure");
     }
-    validateCollection((ArrayList<?>) valueObject);
-    // validate items
+    if (valueObject instanceof ArrayList) {
+       validateNativeCollection((ArrayList<?>) valueObject);
+    }
+    // validate a GeoJSON collection like FeatureCollection or GeometryCollection
+    if (valueObject instanceof String) {
+      validateGeoJSONCollection((String) valueObject);
+    }
+
+    // validate collection item
+    if (valueObject instanceof LinkedHashMap) {
+      validateCollectionItem((LinkedHashMap<?,?>) valueObject);
+    }
 
   }
 
-  private void validateCollection(List<?> value) throws TypeValidationException
+  private void validateCollectionItem(LinkedHashMap<?,?> valueObject) {
+  }
+
+  private void validateGeoJSONCollection(String valueObject) throws TypeValidationException
   {
+    // todo : this is not correct I need to redo it
+    GeometryType geometryType = new GeometryType();
+    validateFeatureCollection(valueObject, geometryType);
+    validateGeometryCollection(valueObject,geometryType);
+
+  }
+
+  private void validateNativeCollection(List<?> value) throws TypeValidationException {
     validateNode(value);
   }
 
@@ -258,6 +377,7 @@ public class CollectionType extends Type {
   public void persistProvision(JsonNode provision, UUID runId) throws ProvisioningException
   {
     persistCollection(provision, runId);
+
   }
 
   private void persistCollection(JsonNode provision, UUID runId) throws ProvisioningException
@@ -326,7 +446,26 @@ public class CollectionType extends Type {
       } else {
         paramName = parameterName+"["+node.get("index").asText()+"]";
       }
-      return persistNode(node.get("value"), runId, paramName, leafType);
+      // check if this is GeoJSON collection
+      if (node.has("type")
+          && (node.get("type").asText().equals("GeometryCollection")
+          || node.get("type").asText().equals("FeatureCollection"))){
+        CollectionPersistence persistedProvision =
+            collectionRepo.findCollectionPersistenceByParameterNameAndRunIdAndParameterType(
+                parameterName, runId, ParameterType.INPUT);
+        if (persistedProvision == null) {
+          persistedProvision = new CollectionPersistence();
+          persistedProvision.setValueType(ValueType.ARRAY);
+          persistedProvision.setParameterType(ParameterType.INPUT);
+          persistedProvision.setParameterName(paramName);
+          persistedProvision.setRunId(runId);
+          persistedProvision.setCompactValue(node.get("value").asText());
+          return persistedProvision;
+        }
+      } else {
+        return persistNode(node.get("value"), runId, paramName, leafType);
+      }
+
     }
 
     if (node.isNull()){
@@ -524,21 +663,54 @@ public class CollectionType extends Type {
       }
       if (entry.getStorageDataType().equals(StorageDataType.FILE)){
         String parentName = entry.getName().substring(0,entry.getName().lastIndexOf("/")+1);
+
         if (entry.getName().endsWith("array.yml")){
           CollectionPersistence parentPersistence = (CollectionPersistence) parameterNameToTypePersistence.get(parentName);
             parentPersistence.setSize(getCollectionSize(entry));
             continue;
         }
+
         String[] nameParts = entry.getName().trim().split("/");
         for(int i = 0; i < nameParts.length; i++) {
           if (i != 0){
             nameParts[i] = "[" + nameParts[i] + "]";
           }
         }
-
         CollectionPersistence parentCollection =
             (CollectionPersistence) parameterNameToTypePersistence.get(parentName);
         String entryValue = FileHelper.read(entry.getData(), getStorageCharset());
+
+        if (entry.getName().endsWith(".geojson")){
+        // todo handle this file and store it in a CollectionPersistence object then attach it to the parent
+          ObjectMapper objectMapper = new ObjectMapper();
+          JsonNode geoJsonCollectionFileContent;
+          try {
+                geoJsonCollectionFileContent = objectMapper.readTree(entryValue);
+          } catch (JsonProcessingException e) {
+              throw new ProvisioningException("invalid format of geojson file " + entry.getName());
+          }
+          int geoJsonCollectionSize = 0;
+          if (geoJsonCollectionFileContent.has("features") && geoJsonCollectionFileContent.get("features").isArray()){
+            geoJsonCollectionSize = geoJsonCollectionFileContent.get("features").size();
+          }
+          if (geoJsonCollectionFileContent.has("geometries") && geoJsonCollectionFileContent.get("geometries").isArray()){
+            geoJsonCollectionSize = geoJsonCollectionFileContent.get("geometries").size();
+          }
+          CollectionPersistence geoJsonCollection = new CollectionPersistence();
+          geoJsonCollection.setValueType(ValueType.ARRAY);
+          geoJsonCollection.setParameterType(ParameterType.OUTPUT);
+          geoJsonCollection.setParameterName(currentOutput.getName());
+          geoJsonCollection.setRunId(run.getId());
+          geoJsonCollection.setCollectionIndex(Arrays.stream(nameParts, 1, nameParts.length).collect(
+              Collectors.joining()));
+          geoJsonCollection.setSize(geoJsonCollectionSize);
+          geoJsonCollection.setCompactValue(entryValue);
+
+          parentCollection.getItems().add(geoJsonCollection);
+
+          continue;
+        }
+
         switch (leafType){
           case "be.cytomine.appengine.models.task.integer.IntegerType":
             IntegerPersistence integerPersistence = new IntegerPersistence();
@@ -647,6 +819,12 @@ public class CollectionType extends Type {
       }
     }
     if (value.isObject() || value.isValueNode()) {
+      // todo : check if the object is geojson collection
+      if (value.has("type")
+          && (value.get("type").asText().equals("GeometryCollection")
+          || value.get("type").asText().equals("FeatureCollection"))){
+        path += ".geojson";
+      }
       StorageDataEntry itemFileEntry = new StorageDataEntry(
           FileHelper.write(path.substring(path.lastIndexOf("/")+1), value.asText().getBytes(StandardCharsets.UTF_8)),
           path,
@@ -706,9 +884,34 @@ public class CollectionType extends Type {
         if (entry.getName().endsWith("array.yml")){
           continue;
         }
+
         String entryValue = FileHelper.read(entry.getData(), getStorageCharset());
-        CollectionItemValue collectionItemValue = new CollectionItemValue();
         String fileName = entry.getName().substring(entry.getName().lastIndexOf("/") + 1);
+        String fileNameWithoutExtension = fileName.substring(0, fileName.lastIndexOf("."));
+
+        // todo : check if this is a geojson collection file
+        if (entry.getName().endsWith(".geojson")){
+          String outerDirectoryName = outputName + "/";
+          if (entry.getName().equals(outerDirectoryName)){
+             GeoCollectionValue geoJsonCollection = new GeoCollectionValue();
+             geoJsonCollection.setTaskRunId(id);
+             geoJsonCollection.setType(ValueType.ARRAY);
+             geoJsonCollection.setParameterName(outputName);
+             geoJsonCollection.setValue(entryValue);
+
+             return geoJsonCollection;
+          } else {
+            CollectionItemValue geoCollectionAsSubCollection = new CollectionItemValue();
+            geoCollectionAsSubCollection.setIndex(Integer.parseInt(fileNameWithoutExtension));
+            geoCollectionAsSubCollection.setValue(entryValue);
+
+            itemListsDictionary.get(entry.getName().substring(0,entry.getName().lastIndexOf("/") + 1))
+                .add(geoCollectionAsSubCollection);
+          }
+          continue;
+        }
+
+        CollectionItemValue collectionItemValue = new CollectionItemValue();
         collectionItemValue.setIndex(Integer.parseInt(fileName));
         switch (leafType){
           case "be.cytomine.appengine.models.task.integer.IntegerType":
@@ -778,18 +981,32 @@ public class CollectionType extends Type {
 
     if (typePersistence instanceof CollectionPersistence){
       CollectionPersistence collectionPersistence = (CollectionPersistence) typePersistence;
-      CollectionValue collectionValue = new CollectionValue();
-      collectionValue.setType(ValueType.ARRAY);
-      collectionValue.setParameterName(collectionPersistence.getParameterName());
-      collectionValue.setTaskRunId(collectionPersistence.getRunId());
+      // either items or compact value but not both
+      // todo : check whether data saved as items or compact value
+      if (Objects.nonNull(collectionPersistence.getItems())
+          && !collectionPersistence.getItems().isEmpty()
+          && Objects.isNull(collectionPersistence.getCompactValue())){
 
-      List<TaskRunParameterValue> items = new ArrayList<>();
-      collectionValue.setValue(items);
+        CollectionValue collectionValue = new CollectionValue();
+        collectionValue.setType(ValueType.ARRAY);
+        collectionValue.setParameterName(collectionPersistence.getParameterName());
+        collectionValue.setTaskRunId(collectionPersistence.getRunId());
 
-      for (TypePersistence persistence: collectionPersistence.getItems()){
-        items.add(buildNode(persistence));
+        List<TaskRunParameterValue> items = new ArrayList<>();
+        collectionValue.setValue(items);
+        for (TypePersistence persistence: collectionPersistence.getItems()){
+          items.add(buildNode(persistence));
+        } return collectionValue;
+      } else {
+        GeoCollectionValue geoCollectionValue = new GeoCollectionValue();
+        geoCollectionValue.setType(ValueType.ARRAY);
+        geoCollectionValue.setParameterName(collectionPersistence.getParameterName());
+        geoCollectionValue.setTaskRunId(collectionPersistence.getRunId());
+        geoCollectionValue.setValue(collectionPersistence.getCompactValue());
+
+        return geoCollectionValue;
       }
-      return collectionValue;
+
     } else {
       CollectionItemValue collectionItemValue = new CollectionItemValue();
       String fileName = typePersistence.getParameterName().substring(typePersistence.getParameterName().lastIndexOf("[") + 1).replace("]" , "");
