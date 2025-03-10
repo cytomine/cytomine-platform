@@ -2,8 +2,6 @@ package be.cytomine.appengine.services;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -20,6 +18,7 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import be.cytomine.appengine.dto.inputs.task.GenericParameterCollectionItemProvision;
 import be.cytomine.appengine.models.task.Parameter;
 import be.cytomine.appengine.models.task.collection.CollectionType;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -152,7 +151,7 @@ public class TaskProvisioningService {
             changeStateToProvisioned(run);
         }
 
-        return getInputParameterType(name, run).createTypedParameterResponse(provision, run);
+        return getInputParameterType(name, run).createInputProvisioningEndpointResponse(provision, run);
     }
 
     private void changeStateToProvisioned(Run run) {
@@ -235,7 +234,7 @@ public class TaskProvisioningService {
             saveInDatabase(parameterName, provision, run);
             log.info("ProvisionMultipleParameter: saved");
             JsonNode responseItem = getInputParameterType(parameterName, run)
-                .createTypedParameterResponse(provision, run);
+                .createInputProvisioningEndpointResponse(provision, run);
             response.add(responseItem);
         }
         if (!multipleErrors.isEmpty()) {
@@ -331,6 +330,34 @@ public class TaskProvisioningService {
                 + provision.getParameterName()
                 + "], not found in task descriptor"
                 );
+        }
+    }
+
+    private static void validateProvisionValuesAgainstTaskType(
+        GenericParameterCollectionItemProvision provision,
+        Run run,
+        String[] indexesArray
+    ) throws TypeValidationException {
+        Task task = run.getTask();
+        Set<Parameter> inputs = task
+            .getParameters()
+            .stream()
+            .filter(parameter -> parameter.getParameterType().equals(ParameterType.INPUT))
+            .collect(Collectors.toSet());
+
+        boolean inputFound = false;
+        for (Parameter parameter : inputs) {
+            if (parameter.getName().equalsIgnoreCase(provision.getParameterName())) {
+                inputFound = true;
+                parameter.getType().validate(provision.getValue());
+            }
+        }
+        if (!inputFound) {
+            throw new TypeValidationException(
+                "unknown parameter ["
+                    + provision.getParameterName()
+                    + "], not found in task descriptor"
+            );
         }
     }
 
@@ -579,7 +606,7 @@ public class TaskProvisioningService {
                 // saving to the storage does not care about the type
                 storeOutputInFileStorage(run, currentOutputStorageData, outputName);
                 // based on parsed type build the response
-                taskRunParameterValues.add(currentOutput.getType().buildTaskRunParameterValue(
+                taskRunParameterValues.add(currentOutput.getType().createOutputProvisioningEndpointResponse(
                     currentOutputStorageData,
                     run.getId(),
                     outputName)
@@ -739,7 +766,7 @@ public class TaskProvisioningService {
                     .filter(parameter -> parameter.getName().equalsIgnoreCase(result.getParameterName()))
                     .findFirst();
                 if (inputForTypeOptional.isPresent()) {
-                    parameterValues.add(inputForTypeOptional.get().getType().buildTaskRunParameterValue(result));
+                    parameterValues.add(inputForTypeOptional.get().getType().createOutputProvisioningEndpointResponse(result));
                 }
 
             }
@@ -758,7 +785,7 @@ public class TaskProvisioningService {
                     .filter(parameter -> parameter.getName().equalsIgnoreCase(result.getParameterName()))
                     .findFirst();
                 if (outputForTypeOptional.isPresent()) {
-                    parameterValues.add(outputForTypeOptional.get().getType().buildTaskRunParameterValue(result));
+                    parameterValues.add(outputForTypeOptional.get().getType().createOutputProvisioningEndpointResponse(result));
                 }
 
             }
@@ -884,5 +911,97 @@ public class TaskProvisioningService {
             run.getUpdatedAt(),
             run.getLastStateTransitionAt()
         );
+    }
+
+    // todo : refactor this to be merged with provisionRunParameter() because these are quite similar
+    public JsonNode provisionCollectionItem(String runId, String name, Object value, String[] indexesArray)
+        throws ProvisioningException, TypeValidationException
+    {
+        // get run and make sure it is valid
+        log.info("ProvisionCollectionItem: finding associated task run...");
+        Run run = getRunIfValid(runId);
+        log.info("ProvisionCollectionItem: found");
+
+        // create the collection or get if valid
+        Parameter parameter = getParameter(name, ParameterType.INPUT, run);
+        if (Objects.isNull(parameter)) {
+            log.info("ProvisionCollectionItem: parameter does not exist");
+            AppEngineError error = ErrorBuilder.build(
+                ErrorCode.INTERNAL_PARAMETER_DOES_NOT_EXIST,
+                new ParameterError(name)
+            );
+            throw new ProvisioningException(error);
+        }
+        if (!(parameter.getType() instanceof CollectionType)) {
+            log.info("ProvisionCollectionItem: parameter is not a collection ");
+            AppEngineError error = ErrorBuilder.build(
+                ErrorCode.INTERNAL_PARAMETER_TYPE_ERROR,
+                new ParameterError(name)
+            );
+            throw new ProvisioningException(error);
+        }
+
+        log.info("ProvisionCollectionItem: preparing generic provision...");
+
+        // prepare item as generic provision
+        GenericParameterCollectionItemProvision genericParameterProvision = new GenericParameterCollectionItemProvision();
+
+        if (value instanceof JsonNode) {
+            try {
+                ObjectMapper mapper = new ObjectMapper();
+                genericParameterProvision = mapper.treeToValue(
+                    (JsonNode) value,
+                    GenericParameterCollectionItemProvision.class
+                );
+                genericParameterProvision.setParameterName(name);
+            } catch (JsonProcessingException e) {
+                log.info("ProvisionCollectionItem: item provision is not valid");
+                AppEngineError error = ErrorBuilder.build(
+                    ErrorCode.INTERNAL_JSON_PROCESSING_ERROR,
+                    new ParameterError(name)
+                );
+                throw new ProvisioningException(error);
+            }
+        } else if (value instanceof File) {
+            genericParameterProvision.setParameterName(name);
+            genericParameterProvision.setValue(value);
+        }
+
+        genericParameterProvision.setRunId(runId);
+        log.info("ProvisionCollectionItem: generic provision prepared");
+
+        // todo: nested collections are still not covered
+        log.info("ProvisionCollectionItem: validating item...");
+        validateProvisionValuesAgainstTaskType(genericParameterProvision, run, indexesArray);
+        log.info("ProvisionCollectionItem: item validated");
+
+        JsonNode provision = null;
+        if (value instanceof JsonNode) {
+            provision = (JsonNode) value;
+            ObjectNode objectNode = (new ObjectMapper()).createObjectNode();
+            objectNode.put("index", name + "/" + String.join("/", indexesArray));
+            objectNode.set("value", provision.get("value"));
+            provision = objectNode;
+        } else if (value instanceof File) {
+            ObjectNode objectNode = (new ObjectMapper()).createObjectNode();
+            objectNode.put("index", name + "/" + String.join("/", indexesArray));
+            objectNode.put("value", ((File) value).getAbsolutePath());
+            provision = objectNode;
+        }
+
+        // store item in storage -> crawl indexes and store
+        log.info("ProvisionParameter: storing provision to storage...");
+        saveProvisionInStorage(name, provision, run);
+        log.info("ProvisionParameter: stored");
+
+        // store item in the database
+        log.info("ProvisionCollectionItem: validating item...");
+        saveInDatabase(name, provision, run);
+        log.info("ProvisionCollectionItem: item validated");
+
+        // todo : how to decide whether to change the run status to provisioned or not?
+        // CHECK IF THIS IS THE LAST ITEM IN THE LAST/ONLY PARAMETER then change to PROVISIONED
+
+        return getInputParameterType(name, run).createInputProvisioningEndpointResponse(provision, run);
     }
 }
