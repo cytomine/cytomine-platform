@@ -5,10 +5,8 @@ import be.cytomine.appengine.dto.inputs.task.types.collection.CollectionGenericT
 import be.cytomine.appengine.dto.inputs.task.types.collection.CollectionItemValue;
 import be.cytomine.appengine.dto.inputs.task.types.collection.CollectionValue;
 import be.cytomine.appengine.dto.inputs.task.types.collection.GeoCollectionValue;
-import be.cytomine.appengine.dto.inputs.task.types.enumeration.EnumerationValue;
 import be.cytomine.appengine.dto.responses.errors.ErrorCode;
 import be.cytomine.appengine.exceptions.FileStorageException;
-import be.cytomine.appengine.exceptions.ParseException;
 import be.cytomine.appengine.exceptions.ProvisioningException;
 import be.cytomine.appengine.exceptions.TypeValidationException;
 import be.cytomine.appengine.handlers.StorageData;
@@ -22,11 +20,17 @@ import be.cytomine.appengine.models.task.TypePersistence;
 import be.cytomine.appengine.models.task.ValueType;
 import be.cytomine.appengine.models.task.bool.BooleanPersistence;
 import be.cytomine.appengine.models.task.enumeration.EnumerationPersistence;
+import be.cytomine.appengine.models.task.file.FilePersistence;
+import be.cytomine.appengine.models.task.file.FileType;
 import be.cytomine.appengine.models.task.geometry.GeometryPersistence;
 import be.cytomine.appengine.models.task.geometry.GeometryType;
+import be.cytomine.appengine.models.task.image.ImagePersistence;
+import be.cytomine.appengine.models.task.image.ImageType;
 import be.cytomine.appengine.models.task.integer.IntegerPersistence;
+import be.cytomine.appengine.models.task.integer.IntegerType;
 import be.cytomine.appengine.models.task.number.NumberPersistence;
 import be.cytomine.appengine.models.task.string.StringPersistence;
+import be.cytomine.appengine.models.task.wsi.WsiPersistence;
 import be.cytomine.appengine.repositories.bool.BooleanPersistenceRepository;
 import be.cytomine.appengine.repositories.collection.CollectionPersistenceRepository;
 import be.cytomine.appengine.repositories.enumeration.EnumerationPersistenceRepository;
@@ -45,6 +49,7 @@ import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 
+import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -53,6 +58,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import jakarta.persistence.OneToOne;
@@ -62,10 +69,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.locationtech.jts.geom.Geometry;
-import org.locationtech.jts.geom.GeometryCollection;
-import org.locationtech.jts.geom.GeometryFactory;
-import org.locationtech.jts.io.geojson.GeoJsonReader;
+
 
 @SuppressWarnings("checkstyle:LineLength")
 @Data
@@ -281,25 +285,57 @@ public class CollectionType extends Type {
     //
     if (!(valueObject instanceof ArrayList)
         && !(valueObject instanceof String)
-        && !(valueObject instanceof LinkedHashMap)) {
+        && !(valueObject instanceof Integer)
+        && !(valueObject instanceof Double)
+        && !(valueObject instanceof Boolean)
+        && !(valueObject instanceof LinkedHashMap)
+        && !(valueObject instanceof File)) {
       throw new TypeValidationException("wrong provision structure");
     }
     if (valueObject instanceof ArrayList) {
        validateNativeCollection((ArrayList<?>) valueObject);
     }
-    // validate a GeoJSON collection like FeatureCollection or GeometryCollection
-    if (valueObject instanceof String) {
-      validateGeoJSONCollection((String) valueObject);
-    }
 
     // validate collection item
-    if (valueObject instanceof LinkedHashMap) {
-      validateCollectionItem((LinkedHashMap<?,?>) valueObject);
+    if (valueObject instanceof String
+        || valueObject instanceof Integer
+        || valueObject instanceof Double
+        || valueObject instanceof Boolean
+        || valueObject instanceof File) {
+
+      ObjectMapper objectMapper = new ObjectMapper();
+      // validate a GeoJSON collection like FeatureCollection or GeometryCollection
+      if (valueObject instanceof String stringValueObject) {
+          try
+          {
+              JsonNode rootNode = objectMapper.readTree(stringValueObject);
+            if (rootNode.has("type")) {
+              validateGeoJSONCollection(stringValueObject);
+            } else {
+              validatePrimitiveCollectionItem(stringValueObject);
+            }
+          } catch (JsonProcessingException e)
+          {
+            throw new TypeValidationException("invalid feature collection");
+          }
+
+      } else {
+        validatePrimitiveCollectionItem(valueObject);
+      }
     }
 
   }
 
-  private void validateCollectionItem(LinkedHashMap<?,?> valueObject) {
+  private void validatePrimitiveCollectionItem(Object valueObject) throws TypeValidationException
+  {
+    Type currentType = new CollectionType(this);
+    while (currentType instanceof CollectionType collectionType) {
+      currentType = collectionType.getSubType();
+      if (!(currentType instanceof CollectionType)){
+            currentType.validate(valueObject);
+      }
+    }
+
   }
 
   private void validateGeoJSONCollection(String valueObject) throws TypeValidationException
@@ -376,8 +412,209 @@ public class CollectionType extends Type {
   @Override
   public void persistProvision(JsonNode provision, UUID runId) throws ProvisioningException
   {
-    persistCollection(provision, runId);
+    if (provision.has("index")) {
+      persistCollectionItem(provision, runId);
+    } else {
+      persistCollection(provision, runId);
+    }
 
+  }
+
+  private void persistCollectionItem(JsonNode provision, UUID runId)
+  {
+    Type currentType = new CollectionType(this);
+    CollectionPersistenceRepository collectionRepo =
+        AppEngineApplicationContext.getBean(CollectionPersistenceRepository.class);
+    String leafType;
+    String[] indexes = provision.get("index").textValue().split("/");
+    CollectionPersistence persistedProvision = new CollectionPersistence();
+    for (int i = 0; i < indexes.length; i++) { // [input,0]
+      if (currentType instanceof CollectionType) {
+        if (i == 0) { // first item
+          persistedProvision =
+              collectionRepo.findCollectionPersistenceByParameterNameAndRunIdAndParameterType(
+                  indexes[i], runId, ParameterType.INPUT);
+          if (Objects.isNull(persistedProvision)) {
+            persistedProvision = new CollectionPersistence();
+            persistedProvision.setRunId(runId);
+            persistedProvision.setParameterType(ParameterType.INPUT);
+            persistedProvision.setParameterName(indexes[i]);
+            persistedProvision.setValueType(ValueType.ARRAY);
+            persistedProvision.setItems(new ArrayList<>());
+            persistedProvision = collectionRepo.save(persistedProvision);
+          }
+          currentType = ((CollectionType) currentType).getSubType();
+          continue;
+        } else {
+          List<TypePersistence> items = persistedProvision.getItems();
+          for (TypePersistence item : items) {
+            if (indexes[i].equalsIgnoreCase(getNumberAtPosition(item.getCollectionIndex(), i))) {
+              persistedProvision = (CollectionPersistence) item;
+              break;
+            }
+          }
+          currentType = ((CollectionType) currentType).getSubType();
+        }
+
+      } else { // reached the end of crawling the subtypes then insert into the items of persisted provision
+        leafType = currentType.getClass().getCanonicalName();
+        String collectionItemParameterName;
+        switch (leafType) {
+          case "be.cytomine.appengine.models.task.integer.IntegerType":
+            IntegerPersistence integerPersistence = new IntegerPersistence();
+            integerPersistence.setParameterType(ParameterType.INPUT);
+            collectionItemParameterName = transform(provision.get("index").textValue());
+            integerPersistence.setParameterName(collectionItemParameterName);
+            integerPersistence.setRunId(runId);
+            integerPersistence.setValueType(ValueType.INTEGER);
+            integerPersistence.setValue(provision.get("value").asInt());
+            integerPersistence.setCollectionIndex(collectionItemParameterName.substring(collectionItemParameterName.indexOf("[")));
+            persistedProvision.getItems().add(integerPersistence);
+            persistedProvision.setSize(persistedProvision.getItems().size());
+            collectionRepo.saveAndFlush(persistedProvision);
+            break;
+          case "be.cytomine.appengine.models.task.string.StringType":
+            StringPersistence stringPersistence = new StringPersistence();
+            stringPersistence.setParameterType(ParameterType.INPUT);
+            collectionItemParameterName = transform(provision.get("index").textValue());
+            stringPersistence.setParameterName(collectionItemParameterName);
+            stringPersistence.setRunId(runId);
+            stringPersistence.setValueType(ValueType.STRING);
+            stringPersistence.setValue(provision.get("value").asText());
+            stringPersistence.setCollectionIndex(collectionItemParameterName.substring(collectionItemParameterName.indexOf("[")));
+            persistedProvision.getItems().add(stringPersistence);
+            persistedProvision.setSize(persistedProvision.getItems().size());
+            collectionRepo.saveAndFlush(persistedProvision);
+            break;
+          case "be.cytomine.appengine.models.task.number.NumberType":
+            NumberPersistence numberPersistence = new NumberPersistence();
+            numberPersistence.setParameterType(ParameterType.INPUT);
+            collectionItemParameterName = transform(provision.get("index").textValue());
+            numberPersistence.setParameterName(collectionItemParameterName);
+            numberPersistence.setRunId(runId);
+            numberPersistence.setValueType(ValueType.NUMBER);
+            numberPersistence.setValue(provision.get("value").asDouble());
+            numberPersistence.setCollectionIndex(collectionItemParameterName.substring(collectionItemParameterName.indexOf("[")));
+            persistedProvision.getItems().add(numberPersistence);
+            persistedProvision.setSize(persistedProvision.getItems().size());
+            collectionRepo.saveAndFlush(persistedProvision);
+            break;
+          case "be.cytomine.appengine.models.task.bool.BooleanType":
+            BooleanPersistence booleanPersistence = new BooleanPersistence();
+            booleanPersistence.setParameterType(ParameterType.INPUT);
+            collectionItemParameterName = transform(provision.get("index").textValue());
+            booleanPersistence.setParameterName(collectionItemParameterName);
+            booleanPersistence.setRunId(runId);
+            booleanPersistence.setValueType(ValueType.BOOLEAN);
+            booleanPersistence.setValue(provision.get("value").asBoolean());
+            booleanPersistence.setCollectionIndex(collectionItemParameterName.substring(collectionItemParameterName.indexOf("[")));
+            persistedProvision.getItems().add(booleanPersistence);
+            persistedProvision.setSize(persistedProvision.getItems().size());
+            collectionRepo.saveAndFlush(persistedProvision);
+            break;
+          case "be.cytomine.apentryValuepengine.models.task.enumeration.EnumerationType":
+            EnumerationPersistence enumPersistence = new EnumerationPersistence();
+            enumPersistence.setParameterType(ParameterType.INPUT);
+            collectionItemParameterName = transform(provision.get("index").textValue());
+            enumPersistence.setParameterName(collectionItemParameterName);
+            enumPersistence.setRunId(runId);
+            enumPersistence.setValueType(ValueType.ENUMERATION);
+            enumPersistence.setValue(provision.get("value").asText());
+            enumPersistence.setCollectionIndex(collectionItemParameterName.substring(collectionItemParameterName.indexOf("[")));
+            persistedProvision.getItems().add(enumPersistence);
+            persistedProvision.setSize(persistedProvision.getItems().size());
+            collectionRepo.saveAndFlush(persistedProvision);
+            break;
+          case "be.cytomine.appengine.models.task.geometry.GeometryType":
+            GeometryPersistence geoPersistence = new GeometryPersistence();
+            geoPersistence.setParameterType(ParameterType.INPUT);
+            collectionItemParameterName = transform(provision.get("index").textValue());
+            geoPersistence.setParameterName(collectionItemParameterName);
+            geoPersistence.setRunId(runId);
+            geoPersistence.setValueType(ValueType.GEOMETRY);
+            geoPersistence.setValue(provision.get("value").asText());
+            geoPersistence.setCollectionIndex(collectionItemParameterName.substring(collectionItemParameterName.indexOf("[")));
+            persistedProvision.getItems().add(geoPersistence);
+            persistedProvision.setSize(persistedProvision.getItems().size());
+            collectionRepo.saveAndFlush(persistedProvision);
+            break;
+          case "be.cytomine.appengine.models.task.file.FileType":
+            FilePersistence filePersistence = new FilePersistence();
+            filePersistence.setParameterType(ParameterType.INPUT);
+            collectionItemParameterName = transform(provision.get("index").textValue());
+            filePersistence.setParameterName(collectionItemParameterName);
+            filePersistence.setRunId(runId);
+            filePersistence.setValueType(ValueType.FILE);
+            filePersistence.setCollectionIndex(collectionItemParameterName.substring(collectionItemParameterName.indexOf("[")));
+            persistedProvision.getItems().add(filePersistence);
+            persistedProvision.setSize(persistedProvision.getItems().size());
+            collectionRepo.saveAndFlush(persistedProvision);
+            break;
+          case "be.cytomine.appengine.models.task.image.ImageType":
+            ImagePersistence imagePersistence = new ImagePersistence();
+            imagePersistence.setParameterType(ParameterType.INPUT);
+            collectionItemParameterName = transform(provision.get("index").textValue());
+            imagePersistence.setParameterName(collectionItemParameterName);
+            imagePersistence.setRunId(runId);
+            imagePersistence.setValueType(ValueType.IMAGE);
+            imagePersistence.setCollectionIndex(collectionItemParameterName.substring(collectionItemParameterName.indexOf("[")));
+            persistedProvision.getItems().add(imagePersistence);
+            persistedProvision.setSize(persistedProvision.getItems().size());
+            collectionRepo.saveAndFlush(persistedProvision);
+            break;
+          case "be.cytomine.appengine.models.task.wsi.WsiType":
+            WsiPersistence wsiPersistence = new WsiPersistence();
+            wsiPersistence.setParameterType(ParameterType.INPUT);
+            collectionItemParameterName = transform(provision.get("index").textValue());
+            wsiPersistence.setParameterName(collectionItemParameterName);
+            wsiPersistence.setRunId(runId);
+            wsiPersistence.setValueType(ValueType.WSI);
+            wsiPersistence.setCollectionIndex(collectionItemParameterName.substring(collectionItemParameterName.indexOf("[")));
+            persistedProvision.getItems().add(wsiPersistence);
+            persistedProvision.setSize(persistedProvision.getItems().size());
+            collectionRepo.saveAndFlush(persistedProvision);
+            break;
+          // todo : add nested collection here maybe!
+        }
+      }
+    }
+  }
+
+  public String transform(String input) {
+    int firstSlashIndex = input.indexOf('/');
+
+    // If there's no slash, return input as is
+    if (firstSlashIndex == -1) {
+      return input;
+    }
+
+    // Split the string into prefix and numeric parts
+    String prefix = input.substring(0, firstSlashIndex); // "input"
+    String[] parts = input.substring(firstSlashIndex + 1).split("/"); // ["0", "4"]
+
+    // Reconstruct the transformed string
+    StringBuilder result = new StringBuilder(prefix);
+    for (String part : parts) {
+      result.append("[").append(part).append("]");
+    }
+
+    return result.toString();
+  }
+
+  public String getNumberAtPosition(String input, int position) {
+    Pattern pattern = Pattern.compile("\\d+"); // Regex to match numbers
+    Matcher matcher = pattern.matcher(input);
+
+    List<String> numbers = new ArrayList<>();
+    while (matcher.find()) {
+      numbers.add(matcher.group()); // Extract and parse numbers
+    }
+
+    // Ensure the position is valid
+    if (position > 0 && position <= numbers.size()) {
+      return numbers.get(position - 1); // Return number at the requested position
+    }
+    return null; // Invalid position
   }
 
   private void persistCollection(JsonNode provision, UUID runId) throws ProvisioningException
@@ -386,9 +623,10 @@ public class CollectionType extends Type {
     while (currentType instanceof CollectionType) {
       currentType = ((CollectionType) currentType).getSubType();
     }
+    String leafType = currentType.getClass().getCanonicalName();
+
     CollectionPersistenceRepository collectionRepo =
         AppEngineApplicationContext.getBean(CollectionPersistenceRepository.class);
-    String leafType = currentType.getClass().getCanonicalName();
     String parameterName = provision.get("param_name").asText();
 
     CollectionPersistence collectionPersistence = (CollectionPersistence) persistNode(provision,
@@ -797,7 +1035,16 @@ public class CollectionType extends Type {
   @Override
   public StorageData mapToStorageFileData(JsonNode provision) throws FileStorageException
   {
-      return mapNode("/"+provision.get("param_name").asText(), provision.get("value"),
+      String name = null;
+      // if provision is an item
+      if (provision.has("index")) {
+          name = provision.get("index").asText();
+      } else {
+        name = provision.get("param_name").asText();
+      }
+
+      // if provision is full collection
+      return mapNode("/"+name, provision.get("value"),
           new StorageData());
   }
 
@@ -836,17 +1083,33 @@ public class CollectionType extends Type {
   }
 
   @Override
-  public JsonNode createTypedParameterResponse(JsonNode provision, Run run) {
+  public JsonNode createInputProvisioningEndpointResponse(JsonNode provision, Run run) {
+
+    Type currentType = new CollectionType(this);
+    while (currentType instanceof CollectionType) {
+      currentType = ((CollectionType) currentType).getSubType();
+    }
+
     ObjectMapper mapper = new ObjectMapper();
     ObjectNode provisionedParameter = mapper.createObjectNode();
-    provisionedParameter.put("param_name", provision.get("param_name").asText());
-    provisionedParameter.set("value", provision.get("value"));
+    // if json has param_name then it's a collection
+    if (provision.has("param_name")) {
+      provisionedParameter.put("param_name", provision.get("param_name").asText());
+    } else {
+      provisionedParameter.put("index", provision.get("index").asText());
+    }
+    if (!(currentType instanceof ImageType)
+    && !(currentType instanceof GeometryType)
+    && !(currentType instanceof FileType)) {
+      provisionedParameter.set("value", provision.get("value"));
+    }
+
     provisionedParameter.put("task_run_id", String.valueOf(run.getId()));
     return provisionedParameter;
   }
 
   @Override
-  public CollectionValue buildTaskRunParameterValue(
+  public TaskRunParameterValue createOutputProvisioningEndpointResponse(
       StorageData output, UUID id, String outputName) throws ProvisioningException
   {
     Type currentType = new CollectionType(this);
@@ -964,7 +1227,7 @@ public class CollectionType extends Type {
   }
 
   @Override
-  public CollectionValue buildTaskRunParameterValue(TypePersistence typePersistence)
+  public CollectionValue createOutputProvisioningEndpointResponse(TypePersistence typePersistence)
       throws ProvisioningException
   {
     return (CollectionValue) buildNode(typePersistence);
