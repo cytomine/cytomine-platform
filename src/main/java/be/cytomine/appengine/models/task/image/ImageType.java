@@ -206,7 +206,7 @@ public class ImageType extends Type {
     }
 
     @Override
-    public JsonNode createTypedParameterResponse(JsonNode provision, Run run) {
+    public JsonNode createInputProvisioningEndpointResponse(JsonNode provision, Run run) {
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode provisionedParameter = mapper.createObjectNode();
         provisionedParameter.put("param_name", provision.get("param_name").asText());
@@ -215,7 +215,7 @@ public class ImageType extends Type {
     }
 
     @Override
-    public ImageValue buildTaskRunParameterValue(StorageData output, UUID id, String outputName) {
+    public ImageValue createOutputProvisioningEndpointResponse(StorageData output, UUID id, String outputName) {
         ImageValue imageValue = new ImageValue();
         imageValue.setParameterName(outputName);
         imageValue.setTaskRunId(id);
@@ -224,7 +224,7 @@ public class ImageType extends Type {
     }
 
     @Override
-    public ImageValue buildTaskRunParameterValue(TypePersistence typePersistence) {
+    public ImageValue createOutputProvisioningEndpointResponse(TypePersistence typePersistence) {
         ImagePersistence imagePersistence = (ImagePersistence) typePersistence;
         ImageValue imageValue = new ImageValue();
         imageValue.setParameterName(imagePersistence.getParameterName());

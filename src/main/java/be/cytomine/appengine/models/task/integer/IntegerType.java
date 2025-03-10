@@ -167,7 +167,7 @@ public class IntegerType extends Type {
     }
 
     @Override
-    public JsonNode createTypedParameterResponse(JsonNode provision, Run run) {
+    public JsonNode createInputProvisioningEndpointResponse(JsonNode provision, Run run) {
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode provisionedParameter = mapper.createObjectNode();
         provisionedParameter.put("param_name", provision.get("param_name").asText());
@@ -177,7 +177,7 @@ public class IntegerType extends Type {
     }
 
     @Override
-    public IntegerValue buildTaskRunParameterValue(StorageData output, UUID id, String outputName) {
+    public IntegerValue createOutputProvisioningEndpointResponse(StorageData output, UUID id, String outputName) {
         String outputValue = FileHelper.read(output.peek().getData(), getStorageCharset());
 
         IntegerValue integerValue = new IntegerValue();
@@ -190,7 +190,7 @@ public class IntegerType extends Type {
     }
 
     @Override
-    public TaskRunParameterValue buildTaskRunParameterValue(TypePersistence typePersistence) {
+    public TaskRunParameterValue createOutputProvisioningEndpointResponse(TypePersistence typePersistence) {
         IntegerPersistence integerPersistence = (IntegerPersistence) typePersistence;
         IntegerValue integerValue = new IntegerValue();
         integerValue.setParameterName(integerPersistence.getParameterName());

@@ -116,7 +116,7 @@ public class FileType extends Type {
     }
 
     @Override
-    public JsonNode createTypedParameterResponse(JsonNode provision, Run run) {
+    public JsonNode createInputProvisioningEndpointResponse(JsonNode provision, Run run) {
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode provisionedParameter = mapper.createObjectNode();
         provisionedParameter.put("param_name", provision.get("param_name").asText());
@@ -125,7 +125,7 @@ public class FileType extends Type {
     }
 
     @Override
-    public FileValue buildTaskRunParameterValue(StorageData output, UUID id, String outputName) {
+    public FileValue createOutputProvisioningEndpointResponse(StorageData output, UUID id, String outputName) {
         FileValue fileValue = new FileValue();
         fileValue.setParameterName(outputName);
         fileValue.setTaskRunId(id);
@@ -134,7 +134,7 @@ public class FileType extends Type {
     }
 
     @Override
-    public FileValue buildTaskRunParameterValue(TypePersistence typePersistence) {
+    public FileValue createOutputProvisioningEndpointResponse(TypePersistence typePersistence) {
         FilePersistence filePersistence = (FilePersistence) typePersistence;
         FileValue fileValue = new FileValue();
         fileValue.setParameterName(filePersistence.getParameterName());

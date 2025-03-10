@@ -186,7 +186,7 @@ public class GeometryType extends Type {
     }
 
     @Override
-    public JsonNode createTypedParameterResponse(JsonNode provision, Run run) {
+    public JsonNode createInputProvisioningEndpointResponse(JsonNode provision, Run run) {
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode provisionedParameter = mapper.createObjectNode();
         provisionedParameter.put("param_name", provision.get("param_name").asText());
@@ -197,7 +197,7 @@ public class GeometryType extends Type {
     }
 
     @Override
-    public TaskRunParameterValue buildTaskRunParameterValue(StorageData output, UUID id, String outputName) {
+    public TaskRunParameterValue createOutputProvisioningEndpointResponse(StorageData output, UUID id, String outputName) {
         String outputValue = FileHelper.read(output.peek().getData(), getStorageCharset());
 
         GeometryValue geometryValue = new GeometryValue();
@@ -210,7 +210,7 @@ public class GeometryType extends Type {
     }
 
     @Override
-    public TaskRunParameterValue buildTaskRunParameterValue(TypePersistence typePersistence) {
+    public TaskRunParameterValue createOutputProvisioningEndpointResponse(TypePersistence typePersistence) {
         GeometryPersistence geometryPersistence = (GeometryPersistence) typePersistence;
         GeometryValue geometryValue = new GeometryValue();
         geometryValue.setParameterName(geometryPersistence.getParameterName());

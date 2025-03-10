@@ -140,7 +140,7 @@ public class EnumerationType extends Type {
     }
 
     @Override
-    public JsonNode createTypedParameterResponse(JsonNode provision, Run run) {
+    public JsonNode createInputProvisioningEndpointResponse(JsonNode provision, Run run) {
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode provisionedParameter = mapper.createObjectNode();
         provisionedParameter.put("param_name", provision.get("param_name").asText());
@@ -150,7 +150,7 @@ public class EnumerationType extends Type {
     }
 
     @Override
-    public EnumerationValue buildTaskRunParameterValue(StorageData output, UUID id, String outputName) {
+    public EnumerationValue createOutputProvisioningEndpointResponse(StorageData output, UUID id, String outputName) {
         String outputValue = FileHelper.read(output.peek().getData(), getStorageCharset());
 
         EnumerationValue enumerationValue = new EnumerationValue();
@@ -162,7 +162,7 @@ public class EnumerationType extends Type {
     }
 
     @Override
-    public EnumerationValue buildTaskRunParameterValue(TypePersistence typePersistence) {
+    public EnumerationValue createOutputProvisioningEndpointResponse(TypePersistence typePersistence) {
         EnumerationPersistence enumerationPersistence = (EnumerationPersistence) typePersistence;
         EnumerationValue enumerationValue = new EnumerationValue();
         enumerationValue.setParameterName(enumerationPersistence.getParameterName());

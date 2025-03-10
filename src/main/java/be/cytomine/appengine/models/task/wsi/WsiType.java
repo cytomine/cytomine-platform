@@ -201,7 +201,7 @@ public class WsiType extends Type {
     }
 
     @Override
-    public JsonNode createTypedParameterResponse(JsonNode provision, Run run) {
+    public JsonNode createInputProvisioningEndpointResponse(JsonNode provision, Run run) {
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode provisionedParameter = mapper.createObjectNode();
         provisionedParameter.put("param_name", provision.get("param_name").asText());
@@ -211,7 +211,7 @@ public class WsiType extends Type {
     }
 
     @Override
-    public WsiValue buildTaskRunParameterValue(StorageData output, UUID id, String outputName) {
+    public WsiValue createOutputProvisioningEndpointResponse(StorageData output, UUID id, String outputName) {
         WsiValue wsiValue = new WsiValue();
         wsiValue.setParameterName(outputName);
         wsiValue.setTaskRunId(id);
@@ -221,7 +221,7 @@ public class WsiType extends Type {
     }
 
     @Override
-    public WsiValue buildTaskRunParameterValue(TypePersistence typePersistence) {
+    public WsiValue createOutputProvisioningEndpointResponse(TypePersistence typePersistence) {
         WsiPersistence wsiPersistence = (WsiPersistence) typePersistence;
         WsiValue wsiValue = new WsiValue();
         wsiValue.setParameterName(wsiPersistence.getParameterName());

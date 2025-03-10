@@ -84,13 +84,12 @@ public class Type extends BaseEntity {
         };
     }
 
-    // Todo : rename
-    public JsonNode createTypedParameterResponse(JsonNode provision, Run run) {
+    public JsonNode createInputProvisioningEndpointResponse(JsonNode provision, Run run) {
         return null;
     }
 
-    // Todo : rename
-    public TaskRunParameterValue buildTaskRunParameterValue(
+
+    public TaskRunParameterValue createOutputProvisioningEndpointResponse(
         StorageData outputData,
         UUID id,
         String outputName
@@ -100,7 +99,7 @@ public class Type extends BaseEntity {
     }
 
     // Todo : rename
-    public TaskRunParameterValue buildTaskRunParameterValue(
+    public TaskRunParameterValue createOutputProvisioningEndpointResponse(
         TypePersistence typePersistence
     ) throws ProvisioningException
     {

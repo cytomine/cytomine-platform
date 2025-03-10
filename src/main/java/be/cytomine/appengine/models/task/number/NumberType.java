@@ -177,7 +177,7 @@ public class NumberType extends Type {
     }
 
     @Override
-    public JsonNode createTypedParameterResponse(JsonNode provision, Run run) {
+    public JsonNode createInputProvisioningEndpointResponse(JsonNode provision, Run run) {
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode provisionedParameter = mapper.createObjectNode();
         provisionedParameter.put("param_name", provision.get("param_name").asText());
@@ -188,7 +188,7 @@ public class NumberType extends Type {
     }
 
     @Override
-    public TaskRunParameterValue buildTaskRunParameterValue(StorageData output, UUID id, String outputName) {
+    public TaskRunParameterValue createOutputProvisioningEndpointResponse(StorageData output, UUID id, String outputName) {
         String outputValue = FileHelper.read(output.peek().getData(), getStorageCharset());
 
         NumberValue value = new NumberValue();
@@ -201,7 +201,7 @@ public class NumberType extends Type {
     }
 
     @Override
-    public TaskRunParameterValue buildTaskRunParameterValue(TypePersistence typePersistence) {
+    public TaskRunParameterValue createOutputProvisioningEndpointResponse(TypePersistence typePersistence) {
         NumberPersistence numberPersistence = (NumberPersistence) typePersistence;
         NumberValue value = new NumberValue();
         value.setParameterName(numberPersistence.getParameterName());

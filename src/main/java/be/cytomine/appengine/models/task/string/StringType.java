@@ -149,7 +149,7 @@ public class StringType extends Type {
     }
 
     @Override
-    public JsonNode createTypedParameterResponse(JsonNode provision, Run run) {
+    public JsonNode createInputProvisioningEndpointResponse(JsonNode provision, Run run) {
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode provisionedParameter = mapper.createObjectNode();
         provisionedParameter.put("param_name", provision.get("param_name").asText());
@@ -160,7 +160,7 @@ public class StringType extends Type {
     }
 
     @Override
-    public TaskRunParameterValue buildTaskRunParameterValue(StorageData output, UUID id, String outputName) {
+    public TaskRunParameterValue createOutputProvisioningEndpointResponse(StorageData output, UUID id, String outputName) {
         String outputValue = FileHelper.read(output.peek().getData(), getStorageCharset());
 
         StringValue value = new StringValue();
@@ -173,7 +173,7 @@ public class StringType extends Type {
     }
 
     @Override
-    public TaskRunParameterValue buildTaskRunParameterValue(TypePersistence typePersistence) {
+    public TaskRunParameterValue createOutputProvisioningEndpointResponse(TypePersistence typePersistence) {
         StringPersistence stringPersistence = (StringPersistence) typePersistence;
         StringValue value = new StringValue();
         value.setParameterName(stringPersistence.getParameterName());
