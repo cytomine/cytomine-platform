@@ -5,7 +5,12 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.regex.Pattern;
 
+import be.cytomine.appengine.dto.responses.errors.AppEngineError;
+import be.cytomine.appengine.dto.responses.errors.ErrorBuilder;
+import be.cytomine.appengine.dto.responses.errors.ErrorCode;
+import be.cytomine.appengine.exceptions.TypeValidationException;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -86,6 +91,80 @@ public class TaskRunController {
             data.toFile()
         );
         log.info("/task-runs/{run_id}/input-provisions/{param_name} File PUT Ended");
+
+        return ResponseEntity.ok(provisioned);
+    }
+
+    @PutMapping(
+        value = "/task-runs/{run_id}/input-provisions/{param_name}/indexes",
+        consumes = MediaType.APPLICATION_JSON_VALUE
+    )
+    @ResponseStatus(code = HttpStatus.OK)
+    public ResponseEntity<?> provisionCollectionItemJson(
+        @PathVariable("run_id") String runId,
+        @PathVariable("param_name") String parameterName,
+        @RequestParam String value,
+        @RequestBody JsonNode provision
+    ) throws ProvisioningException, TypeValidationException
+    {
+        log.info("/task-runs/{run_id}/input-provisions/{param_name} JSON PUT");
+        String regex = "^(0(/[0-9]+)*|[1-9][0-9]*(/[0-9]+)*)$";
+        boolean isValid = Pattern.matches(regex, value);
+        if (!isValid) {
+            AppEngineError error = ErrorBuilder.buildParamRelatedError(
+                ErrorCode.INTERNAL_INVALID_INDEXES_PATTERN,
+                parameterName,
+                "indexes [" + value + "] is not a valid"
+            );
+            throw new ProvisioningException(error);
+        }
+        String[] indexesArray = value.split("/");
+        JsonNode provisioned = taskRunService.provisionCollectionItem(
+            runId,
+            parameterName,
+            provision,
+            indexesArray
+        );
+        log.info("/task-runs/{run_id}/input-provisions/{param_name}/indexes JSON PUT Ended");
+
+        return ResponseEntity.ok(provisioned);
+    }
+
+    @PutMapping(
+        value = "/task-runs/{run_id}/input-provisions/{param_name}/indexes",
+        consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    @ResponseStatus(code = HttpStatus.OK)
+    public ResponseEntity<?> provisionCollectionItemData(
+        @PathVariable("run_id") String runId,
+        @PathVariable("param_name") String parameterName,
+        @RequestParam String value,
+        @RequestParam MultipartFile file
+    ) throws ProvisioningException, TypeValidationException, IOException
+    {
+        log.info("/task-runs/{run_id}/input-provisions/{param_name} JSON PUT");
+        String regex = "^(0(/[0-9]+)*|[1-9][0-9]*(/[0-9]+)*)$";
+        boolean isValid = Pattern.matches(regex, value);
+        if (!isValid) {
+            AppEngineError error = ErrorBuilder.buildParamRelatedError(
+                ErrorCode.INTERNAL_INVALID_INDEXES_PATTERN,
+                parameterName,
+                "indexes [" + value + "] is not a valid"
+            );
+            throw new ProvisioningException(error);
+        }
+        String[] indexesArray = value.split("/");
+
+        Path data = Files.createTempFile(parameterName, null);
+        file.transferTo(data);
+
+        JsonNode provisioned = taskRunService.provisionCollectionItem(
+            runId,
+            parameterName,
+            data.toFile(),
+            indexesArray
+        );
+        log.info("/task-runs/{run_id}/input-provisions/{param_name}/indexes JSON PUT Ended");
 
         return ResponseEntity.ok(provisioned);
     }
