@@ -294,7 +294,7 @@ public class TaskProvisioningService {
         }
     }
 
-    private static Parameter getParameter(String parameterName, ParameterType parameterType, Run run)
+    private Parameter getParameter(String parameterName, ParameterType parameterType, Run run)
     {
         return run
             .getTask()
@@ -306,7 +306,7 @@ public class TaskProvisioningService {
             .orElse(null);
     }
 
-    private static void validateProvisionValuesAgainstTaskType(
+    private void validateProvisionValuesAgainstTaskType(
         GenericParameterProvision provision,
         Run run
     ) throws TypeValidationException {
@@ -333,7 +333,7 @@ public class TaskProvisioningService {
         }
     }
 
-    private static void validateProvisionValuesAgainstTaskType(
+    private void validateProvisionValuesAgainstTaskType(
         GenericParameterCollectionItemProvision provision,
         Run run,
         String[] indexesArray
@@ -349,7 +349,15 @@ public class TaskProvisioningService {
         for (Parameter parameter : inputs) {
             if (parameter.getName().equalsIgnoreCase(provision.getParameterName())) {
                 inputFound = true;
-                parameter.getType().validate(provision.getValue());
+                if (provision.getValue() instanceof ArrayList<?>) {
+                    // todo : crawl the type to the correct collection by setting tracking/parent/sub type references
+                    Type nestedValidationType = validateParents(parameter , indexesArray);
+                    // todo : call validate with that object
+                    nestedValidationType.validate(provision.getValue());
+                } else {
+                    parameter.getType().validate(provision.getValue());
+                }
+
             }
         }
         if (!inputFound) {
@@ -359,6 +367,29 @@ public class TaskProvisioningService {
                     + "], not found in task descriptor"
             );
         }
+    }
+
+    private Type validateParents(Parameter parameter, String[] indexes) throws TypeValidationException {
+        int validationDepth = indexes.length - 1;
+        CollectionType type = (CollectionType) parameter.getType();
+        for(int i = 0; i <= validationDepth; i++) {
+            if (Objects.isNull(type.getTrackingType())){
+                type.setTrackingType(new CollectionType(type));
+                type.setParentType(type.getTrackingType());
+            }else {
+                if (type.getTrackingType() instanceof CollectionType){
+                    type.setParentType(type.getTrackingType());
+                    type.setTrackingType(((CollectionType) type.getTrackingType()).getSubType());
+                }
+            }
+            // validate index against
+            int index = Integer.parseInt(indexes[i]);
+            if (index > ((CollectionType) type.getParentType()).getMaxSize() - 1
+                || index < 0) {
+                throw new TypeValidationException("invalid index [{"+index+"}]");
+            }
+        }
+        return type;
     }
 
     public StorageData retrieveIOZipArchive(
