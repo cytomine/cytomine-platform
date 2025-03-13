@@ -91,7 +91,6 @@ public class CollectionType extends Type {
   @OneToOne(cascade = CascadeType.ALL, optional = false)
   private Type subType;
 
-  @Transient private Type trackingType;
   @Transient
   private Type trackingType;
 
