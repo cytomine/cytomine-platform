@@ -92,8 +92,11 @@ public class CollectionType extends Type {
   private Type subType;
 
   @Transient private Type trackingType;
+  @Transient
+  private Type trackingType;
 
-  @Transient private Type parentType;
+  @Transient
+  private Type parentType;
 
   public void validateFeatureCollection(String json, GeometryType geometryType)
       throws TypeValidationException {
@@ -255,6 +258,11 @@ public class CollectionType extends Type {
             case "be.cytomine.appengine.models.task.bool.BooleanType":
               item.put("value" , Boolean.parseBoolean(value));
               break;
+            case "be.cytomine.appengine.models.task.file.FileType",
+                 "be.cytomine.appengine.models.task.image.ImageType",
+                 "be.cytomine.appengine.models.task.wsi.WsiType":
+              item.put("value" , entry.getData());
+              break;
             default: throw new TypeValidationException("unknown leaf type: " + leafType);
           }
           ((List<Object>) lists.get(parentListName)).add(item);
@@ -279,7 +287,7 @@ public class CollectionType extends Type {
 
   @Override
   public void validate(Object valueObject) throws TypeValidationException {
-    if (valueObject == null) {
+    if (Objects.isNull(valueObject)) {
       return;
     }
     //
@@ -348,7 +356,8 @@ public class CollectionType extends Type {
   }
 
   private void validateNativeCollection(List<?> value) throws TypeValidationException {
-    validateNode(value);
+    // check if nested collection by checking if tracking/parent is not null
+      validateNode(value);
   }
 
   @SuppressWarnings("unchecked")
@@ -1066,7 +1075,6 @@ public class CollectionType extends Type {
       }
     }
     if (value.isObject() || value.isValueNode()) {
-      // todo : check if the object is geojson collection
       if (value.has("type")
           && (value.get("type").asText().equals("GeometryCollection")
           || value.get("type").asText().equals("FeatureCollection"))){
@@ -1152,7 +1160,6 @@ public class CollectionType extends Type {
         String fileName = entry.getName().substring(entry.getName().lastIndexOf("/") + 1);
         String fileNameWithoutExtension = fileName.substring(0, fileName.lastIndexOf("."));
 
-        // todo : check if this is a geojson collection file
         if (entry.getName().endsWith(".geojson")){
           String outerDirectoryName = outputName + "/";
           if (entry.getName().equals(outerDirectoryName)){
@@ -1245,7 +1252,6 @@ public class CollectionType extends Type {
     if (typePersistence instanceof CollectionPersistence){
       CollectionPersistence collectionPersistence = (CollectionPersistence) typePersistence;
       // either items or compact value but not both
-      // todo : check whether data saved as items or compact value
       if (Objects.nonNull(collectionPersistence.getItems())
           && !collectionPersistence.getItems().isEmpty()
           && Objects.isNull(collectionPersistence.getCompactValue())){
@@ -1293,6 +1299,12 @@ public class CollectionType extends Type {
       } else if(typePersistence instanceof EnumerationPersistence){
         collectionItemValue.setValue(((EnumerationPersistence) typePersistence).getValue());
         collectionItemValue.setType(ValueType.ENUMERATION);
+      } else if(typePersistence instanceof ImagePersistence){
+        collectionItemValue.setType(ValueType.IMAGE);
+      } else if(typePersistence instanceof FilePersistence){
+        collectionItemValue.setType(ValueType.FILE);
+      } else if(typePersistence instanceof WsiPersistence){
+        collectionItemValue.setType(ValueType.WSI);
       } else {
         throw new ProvisioningException("unknown  type: " + leafType);
       }
