@@ -355,7 +355,6 @@ public class CollectionType extends Type {
   }
 
   private void validateNativeCollection(List<?> value) throws TypeValidationException {
-    // check if nested collection by checking if tracking/parent is not null
       validateNode(value);
   }
 
@@ -428,8 +427,7 @@ public class CollectionType extends Type {
 
   }
 
-  private void persistCollectionItem(JsonNode provision, UUID runId)
-  {
+  private void persistCollectionItem(JsonNode provision, UUID runId) throws ProvisioningException {
     Type currentType = new CollectionType(this);
     CollectionPersistenceRepository collectionRepo =
         AppEngineApplicationContext.getBean(CollectionPersistenceRepository.class);
@@ -454,11 +452,26 @@ public class CollectionType extends Type {
           currentType = ((CollectionType) currentType).getSubType();
           continue;
         } else {
-          List<TypePersistence> items = persistedProvision.getItems();
-          for (TypePersistence item : items) {
-            if (indexes[i].equalsIgnoreCase(getNumberAtPosition(item.getCollectionIndex(), i))) {
-              persistedProvision = (CollectionPersistence) item;
-              break;
+          if (i == indexes.length - 1) { // this is the last item yet it is still a collection (nested)
+            while (currentType instanceof CollectionType) {
+              currentType = ((CollectionType) currentType).getSubType();
+            }
+            leafType = currentType.getClass().getCanonicalName();
+            String parameterName = transform(indexes);
+            CollectionPersistence collectionAsItem = (CollectionPersistence) persistNode(provision, runId, parameterName, leafType);
+            String collectionIndex = transform(indexes);
+            collectionIndex = collectionIndex.substring(collectionIndex.indexOf("["));
+            collectionAsItem.setCollectionIndex(collectionIndex);
+            persistedProvision.getItems().add(collectionAsItem);
+            collectionRepo.saveAndFlush(persistedProvision);
+            break; // do nothing after this
+          } else {
+            List<TypePersistence> items = persistedProvision.getItems();
+            for (TypePersistence item : items) {
+              if (indexes[i].equalsIgnoreCase(getNumberAtPosition(item.getCollectionIndex(), i))) {
+                persistedProvision = (CollectionPersistence) item;
+                break;
+              }
             }
           }
           currentType = ((CollectionType) currentType).getSubType();
@@ -477,8 +490,10 @@ public class CollectionType extends Type {
             integerPersistence.setValueType(ValueType.INTEGER);
             integerPersistence.setValue(provision.get("value").asInt());
             integerPersistence.setCollectionIndex(collectionItemParameterName.substring(collectionItemParameterName.indexOf("[")));
+
             persistedProvision.getItems().add(integerPersistence);
             persistedProvision.setSize(persistedProvision.getItems().size());
+
             collectionRepo.saveAndFlush(persistedProvision);
             break;
           case "be.cytomine.appengine.models.task.string.StringType":
@@ -588,6 +603,21 @@ public class CollectionType extends Type {
     }
   }
 
+  private String transform(String[] indexes) {
+    if (indexes == null || indexes.length == 0) {
+      return "";
+    }
+
+    // Start with the first element
+    StringBuilder sb = new StringBuilder(indexes[0]);
+
+    // Append each subsequent element within square brackets
+    for (int i = 1; i < indexes.length; i++) {
+      sb.append("[").append(indexes[i]).append("]");
+    }
+    return sb.toString();
+  }
+
   public String transform(String input) {
     int firstSlashIndex = input.indexOf('/');
 
@@ -690,7 +720,13 @@ public class CollectionType extends Type {
       if (Objects.nonNull(node.get("param_name"))){
         paramName = node.get("param_name").asText();
       } else {
-        paramName = parameterName+"["+node.get("index").asText()+"]";
+        String transformedIndex = transform(node.get("index").asText());
+        if (parameterName.equalsIgnoreCase(transformedIndex)){
+            paramName = parameterName;
+          } else {
+            paramName = parameterName+"["+node.get("index").asText()+"]";
+          }
+
       }
       // check if this is GeoJSON collection
       if (node.has("type")
