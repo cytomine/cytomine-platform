@@ -141,24 +141,31 @@ public class TaskProvisioningService {
         saveInDatabase(name, provision, run);
         log.info("ProvisionParameter: saved");
 
-        Set<Parameter> inputParameters = run.getTask()
-            .getParameters()
-            .stream()
-            .filter(parameter -> parameter.getParameterType().equals(ParameterType.INPUT))
-            .collect(Collectors.toSet());
-
-        if (inputParameters.size() == 1) {
-            changeStateToProvisioned(run);
-        }
+        changeStateToProvisioned(run);
 
         return getInputParameterType(name, run).createInputProvisioningEndpointResponse(provision, run);
     }
 
     private void changeStateToProvisioned(Run run) {
         log.info("ProvisionParameter: Changing run state to PROVISIONED...");
-        run.setState(TaskRunState.PROVISIONED);
-        runRepository.saveAndFlush(run);
-        log.info("ProvisionParameter: RUN PROVISIONED");
+        Set<Parameter> inputParameters = run.getTask()
+            .getParameters()
+            .stream()
+            .filter(parameter -> parameter.getParameterType().equals(ParameterType.INPUT))
+            .collect(Collectors.toSet());
+
+        List<TypePersistence> persistenceList = typePersistenceRepository
+            .findTypePersistenceByRunIdAndParameterType(run.getId(),
+            ParameterType.INPUT);
+        boolean allParametersAreChecked = inputParameters.size() == persistenceList.size();
+        if (allParametersAreChecked && persistenceList.stream().allMatch(TypePersistence::isProvisioned)) {
+            run.setState(TaskRunState.PROVISIONED);
+            runRepository.saveAndFlush(run);
+            log.info("ProvisionParameter: RUN PROVISIONED");
+        } else {
+            log.info("ProvisionParameter: RUN NOT PROVISIONED");
+        }
+
     }
 
     public List<JsonNode> provisionMultipleRunParameters(
@@ -242,15 +249,8 @@ public class TaskProvisioningService {
             throw new ProvisioningException(error);
         }
 
-        Set<Parameter> inputParameters = run.getTask()
-            .getParameters()
-            .stream()
-            .filter(parameter -> parameter.getParameterType().equals(ParameterType.INPUT))
-            .collect(Collectors.toSet());
+        changeStateToProvisioned(run);
 
-        if (provisions.size() == inputParameters.size()) {
-            changeStateToProvisioned(run);
-        }
         log.info("ProvisionMultipleParameter: return collection");
         return response;
     }
@@ -350,9 +350,7 @@ public class TaskProvisioningService {
             if (parameter.getName().equalsIgnoreCase(provision.getParameterName())) {
                 inputFound = true;
                 if (provision.getValue() instanceof ArrayList<?>) {
-                    // todo : crawl the type to the correct collection by setting tracking/parent/sub type references
                     Type nestedValidationType = validateParents(parameter , indexesArray);
-                    // todo : call validate with that object
                     nestedValidationType.validate(provision.getValue());
                 } else {
                     parameter.getType().validate(provision.getValue());
@@ -493,8 +491,6 @@ public class TaskProvisioningService {
         }
     }
 
-    // This fuction should return a JsonNode object to give more freedom
-    // to the type implementer to return complex types
     private List<TaskRunParameterValue> processOutputFiles(
         MultipartFile outputs,
         Set<Parameter> runTaskOutputs,
@@ -540,10 +536,8 @@ public class TaskProvisioningService {
                         break;
                     }
 
-                    //
                     currentOutput = null;
                 }
-
 
                 // there's a file that do not match any output parameter
                 if (currentOutput == null) {
@@ -944,7 +938,6 @@ public class TaskProvisioningService {
         );
     }
 
-    // todo : refactor this to be merged with provisionRunParameter() because these are quite similar
     public JsonNode provisionCollectionItem(String runId, String name, Object value, String[] indexesArray)
         throws ProvisioningException, TypeValidationException
     {
@@ -1001,7 +994,6 @@ public class TaskProvisioningService {
         genericParameterProvision.setRunId(runId);
         log.info("ProvisionCollectionItem: generic provision prepared");
 
-        // todo: nested collections are still not covered
         log.info("ProvisionCollectionItem: validating item...");
         validateProvisionValuesAgainstTaskType(genericParameterProvision, run, indexesArray);
         log.info("ProvisionCollectionItem: item validated");
@@ -1021,17 +1013,16 @@ public class TaskProvisioningService {
         }
 
         // store item in storage -> crawl indexes and store
-        log.info("ProvisionParameter: storing provision to storage...");
+        log.info("ProvisionCollectionItem: storing provision to storage...");
         saveProvisionInStorage(name, provision, run);
-        log.info("ProvisionParameter: stored");
+        log.info("ProvisionCollectionItem: stored");
 
         // store item in the database
         log.info("ProvisionCollectionItem: validating item...");
         saveInDatabase(name, provision, run);
         log.info("ProvisionCollectionItem: item validated");
 
-        // todo : how to decide whether to change the run status to provisioned or not?
-        // CHECK IF THIS IS THE LAST ITEM IN THE LAST/ONLY PARAMETER then change to PROVISIONED
+        changeStateToProvisioned(run);
 
         return getInputParameterType(name, run).createInputProvisioningEndpointResponse(provision, run);
     }
