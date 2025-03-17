@@ -87,7 +87,7 @@ public class FileType extends Type {
         persistedProvision.setParameterType(ParameterType.INPUT);
         persistedProvision.setRunId(runId);
         persistedProvision.setValueType(ValueType.FILE);
-
+        persistedProvision.setProvisioned(true);
         filePersistenceRepository.save(persistedProvision);
     }
 

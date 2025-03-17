@@ -432,11 +432,12 @@ public class CollectionType extends Type {
     CollectionPersistenceRepository collectionRepo =
         AppEngineApplicationContext.getBean(CollectionPersistenceRepository.class);
     String leafType;
+    CollectionType parentType = null;
     String[] indexes = provision.get("index").textValue().split("/");
     CollectionPersistence persistedProvision = new CollectionPersistence();
     for (int i = 0; i < indexes.length; i++) { // [input,0]
       if (currentType instanceof CollectionType) {
-        if (i == 0) { // first item
+        if (i == 0) { // first item which is the parameter
           persistedProvision =
               collectionRepo.findCollectionPersistenceByParameterNameAndRunIdAndParameterType(
                   indexes[i], runId, ParameterType.INPUT);
@@ -449,11 +450,13 @@ public class CollectionType extends Type {
             persistedProvision.setItems(new ArrayList<>());
             persistedProvision = collectionRepo.save(persistedProvision);
           }
+          parentType = (CollectionType) currentType;
           currentType = ((CollectionType) currentType).getSubType();
           continue;
         } else {
-          if (i == indexes.length - 1) { // this is the last item yet it is still a collection (nested)
+          if (i == indexes.length - 1) { // this is the last item, yet it is still a collection (nested)
             while (currentType instanceof CollectionType) {
+              ((CollectionType) currentType).setParentType(currentType);
               currentType = ((CollectionType) currentType).getSubType();
             }
             leafType = currentType.getClass().getCanonicalName();
@@ -463,6 +466,11 @@ public class CollectionType extends Type {
             collectionIndex = collectionIndex.substring(collectionIndex.indexOf("["));
             collectionAsItem.setCollectionIndex(collectionIndex);
             persistedProvision.getItems().add(collectionAsItem);
+            // make collection provisioned
+            if (persistedProvision.getItems().size() >= parentType.minSize
+                && persistedProvision.getItems().size() <= parentType.maxSize) {
+              persistedProvision.setProvisioned(true);
+            }
             collectionRepo.saveAndFlush(persistedProvision);
             break; // do nothing after this
           } else {
@@ -474,6 +482,7 @@ public class CollectionType extends Type {
               }
             }
           }
+          parentType = (CollectionType) currentType;
           currentType = ((CollectionType) currentType).getSubType();
         }
 
@@ -488,12 +497,17 @@ public class CollectionType extends Type {
             integerPersistence.setParameterName(collectionItemParameterName);
             integerPersistence.setRunId(runId);
             integerPersistence.setValueType(ValueType.INTEGER);
+            integerPersistence.setProvisioned(true);
             integerPersistence.setValue(provision.get("value").asInt());
             integerPersistence.setCollectionIndex(collectionItemParameterName.substring(collectionItemParameterName.indexOf("[")));
-
             persistedProvision.getItems().add(integerPersistence);
             persistedProvision.setSize(persistedProvision.getItems().size());
 
+            // make collection provisioned
+            if (persistedProvision.getItems().size() >= parentType.minSize
+                && persistedProvision.getItems().size() <= parentType.maxSize) {
+              persistedProvision.setProvisioned(true);
+            }
             collectionRepo.saveAndFlush(persistedProvision);
             break;
           case "be.cytomine.appengine.models.task.string.StringType":
@@ -503,10 +517,18 @@ public class CollectionType extends Type {
             stringPersistence.setParameterName(collectionItemParameterName);
             stringPersistence.setRunId(runId);
             stringPersistence.setValueType(ValueType.STRING);
+            stringPersistence.setProvisioned(true);
             stringPersistence.setValue(provision.get("value").asText());
             stringPersistence.setCollectionIndex(collectionItemParameterName.substring(collectionItemParameterName.indexOf("[")));
             persistedProvision.getItems().add(stringPersistence);
             persistedProvision.setSize(persistedProvision.getItems().size());
+
+            // make collection provisioned
+            if (persistedProvision.getItems().size() >= parentType.minSize
+                && persistedProvision.getItems().size() <= parentType.maxSize) {
+              persistedProvision.setProvisioned(true);
+            }
+
             collectionRepo.saveAndFlush(persistedProvision);
             break;
           case "be.cytomine.appengine.models.task.number.NumberType":
@@ -516,10 +538,17 @@ public class CollectionType extends Type {
             numberPersistence.setParameterName(collectionItemParameterName);
             numberPersistence.setRunId(runId);
             numberPersistence.setValueType(ValueType.NUMBER);
+            numberPersistence.setProvisioned(true);
             numberPersistence.setValue(provision.get("value").asDouble());
             numberPersistence.setCollectionIndex(collectionItemParameterName.substring(collectionItemParameterName.indexOf("[")));
             persistedProvision.getItems().add(numberPersistence);
             persistedProvision.setSize(persistedProvision.getItems().size());
+            // make collection provisioned
+            if (persistedProvision.getItems().size() >= parentType.minSize
+                && persistedProvision.getItems().size() <= parentType.maxSize) {
+              persistedProvision.setProvisioned(true);
+            }
+
             collectionRepo.saveAndFlush(persistedProvision);
             break;
           case "be.cytomine.appengine.models.task.bool.BooleanType":
@@ -529,10 +558,17 @@ public class CollectionType extends Type {
             booleanPersistence.setParameterName(collectionItemParameterName);
             booleanPersistence.setRunId(runId);
             booleanPersistence.setValueType(ValueType.BOOLEAN);
+            booleanPersistence.setProvisioned(true);
             booleanPersistence.setValue(provision.get("value").asBoolean());
             booleanPersistence.setCollectionIndex(collectionItemParameterName.substring(collectionItemParameterName.indexOf("[")));
             persistedProvision.getItems().add(booleanPersistence);
             persistedProvision.setSize(persistedProvision.getItems().size());
+            // make collection provisioned
+            if (persistedProvision.getItems().size() >= parentType.minSize
+                && persistedProvision.getItems().size() <= parentType.maxSize) {
+              persistedProvision.setProvisioned(true);
+            }
+
             collectionRepo.saveAndFlush(persistedProvision);
             break;
           case "be.cytomine.apentryValuepengine.models.task.enumeration.EnumerationType":
@@ -543,9 +579,15 @@ public class CollectionType extends Type {
             enumPersistence.setRunId(runId);
             enumPersistence.setValueType(ValueType.ENUMERATION);
             enumPersistence.setValue(provision.get("value").asText());
+            enumPersistence.setProvisioned(true);
             enumPersistence.setCollectionIndex(collectionItemParameterName.substring(collectionItemParameterName.indexOf("[")));
             persistedProvision.getItems().add(enumPersistence);
             persistedProvision.setSize(persistedProvision.getItems().size());
+            // make collection provisioned
+            if (persistedProvision.getItems().size() >= parentType.minSize
+                && persistedProvision.getItems().size() <= parentType.maxSize) {
+              persistedProvision.setProvisioned(true);
+            }
             collectionRepo.saveAndFlush(persistedProvision);
             break;
           case "be.cytomine.appengine.models.task.geometry.GeometryType":
@@ -555,10 +597,16 @@ public class CollectionType extends Type {
             geoPersistence.setParameterName(collectionItemParameterName);
             geoPersistence.setRunId(runId);
             geoPersistence.setValueType(ValueType.GEOMETRY);
+            geoPersistence.setProvisioned(true);
             geoPersistence.setValue(provision.get("value").asText());
             geoPersistence.setCollectionIndex(collectionItemParameterName.substring(collectionItemParameterName.indexOf("[")));
             persistedProvision.getItems().add(geoPersistence);
             persistedProvision.setSize(persistedProvision.getItems().size());
+            // make collection provisioned
+            if (persistedProvision.getItems().size() >= parentType.minSize
+                && persistedProvision.getItems().size() <= parentType.maxSize) {
+              persistedProvision.setProvisioned(true);
+            }
             collectionRepo.saveAndFlush(persistedProvision);
             break;
           case "be.cytomine.appengine.models.task.file.FileType":
@@ -568,9 +616,15 @@ public class CollectionType extends Type {
             filePersistence.setParameterName(collectionItemParameterName);
             filePersistence.setRunId(runId);
             filePersistence.setValueType(ValueType.FILE);
+            filePersistence.setProvisioned(true);
             filePersistence.setCollectionIndex(collectionItemParameterName.substring(collectionItemParameterName.indexOf("[")));
             persistedProvision.getItems().add(filePersistence);
             persistedProvision.setSize(persistedProvision.getItems().size());
+            // make collection provisioned
+            if (persistedProvision.getItems().size() >= parentType.minSize
+                && persistedProvision.getItems().size() <= parentType.maxSize) {
+              persistedProvision.setProvisioned(true);
+            }
             collectionRepo.saveAndFlush(persistedProvision);
             break;
           case "be.cytomine.appengine.models.task.image.ImageType":
@@ -580,9 +634,15 @@ public class CollectionType extends Type {
             imagePersistence.setParameterName(collectionItemParameterName);
             imagePersistence.setRunId(runId);
             imagePersistence.setValueType(ValueType.IMAGE);
+            imagePersistence.setProvisioned(true);
             imagePersistence.setCollectionIndex(collectionItemParameterName.substring(collectionItemParameterName.indexOf("[")));
             persistedProvision.getItems().add(imagePersistence);
             persistedProvision.setSize(persistedProvision.getItems().size());
+            // make collection provisioned
+            if (persistedProvision.getItems().size() >= parentType.minSize
+                && persistedProvision.getItems().size() <= parentType.maxSize) {
+              persistedProvision.setProvisioned(true);
+            }
             collectionRepo.saveAndFlush(persistedProvision);
             break;
           case "be.cytomine.appengine.models.task.wsi.WsiType":
@@ -590,14 +650,19 @@ public class CollectionType extends Type {
             wsiPersistence.setParameterType(ParameterType.INPUT);
             collectionItemParameterName = transform(provision.get("index").textValue());
             wsiPersistence.setParameterName(collectionItemParameterName);
+            wsiPersistence.setProvisioned(true);
             wsiPersistence.setRunId(runId);
             wsiPersistence.setValueType(ValueType.WSI);
             wsiPersistence.setCollectionIndex(collectionItemParameterName.substring(collectionItemParameterName.indexOf("[")));
             persistedProvision.getItems().add(wsiPersistence);
             persistedProvision.setSize(persistedProvision.getItems().size());
+            // make collection provisioned
+            if (persistedProvision.getItems().size() >= parentType.minSize
+                && persistedProvision.getItems().size() <= parentType.maxSize) {
+              persistedProvision.setProvisioned(true);
+            }
             collectionRepo.saveAndFlush(persistedProvision);
             break;
-          // todo : add nested collection here maybe!
         }
       }
     }
@@ -686,6 +751,7 @@ public class CollectionType extends Type {
         persistedProvision.setValueType(ValueType.ARRAY);
         persistedProvision.setParameterType(ParameterType.INPUT);
         persistedProvision.setParameterName(parameterName);
+        persistedProvision.setProvisioned(true);
         persistedProvision.setRunId(runId);
       }
       List<TypePersistence> items = new ArrayList<>();
@@ -740,6 +806,7 @@ public class CollectionType extends Type {
           persistedProvision.setValueType(ValueType.ARRAY);
           persistedProvision.setParameterType(ParameterType.INPUT);
           persistedProvision.setParameterName(paramName);
+          persistedProvision.setProvisioned(true);
           persistedProvision.setRunId(runId);
           persistedProvision.setCompactValue(node.get("value").asText());
           return persistedProvision;
@@ -963,7 +1030,6 @@ public class CollectionType extends Type {
         String entryValue = FileHelper.read(entry.getData(), getStorageCharset());
 
         if (entry.getName().endsWith(".geojson")){
-        // todo handle this file and store it in a CollectionPersistence object then attach it to the parent
           ObjectMapper objectMapper = new ObjectMapper();
           JsonNode geoJsonCollectionFileContent;
           try {
@@ -1284,9 +1350,8 @@ public class CollectionType extends Type {
     }
     String leafType = currentType.getClass().getCanonicalName();
 
-    if (typePersistence instanceof CollectionPersistence){
-      CollectionPersistence collectionPersistence = (CollectionPersistence) typePersistence;
-      // either items or compact value but not both
+    if (typePersistence instanceof CollectionPersistence collectionPersistence){
+        // either items or compact value but not both
       if (Objects.nonNull(collectionPersistence.getItems())
           && !collectionPersistence.getItems().isEmpty()
           && Objects.isNull(collectionPersistence.getCompactValue())){
@@ -1312,40 +1377,48 @@ public class CollectionType extends Type {
       }
 
     } else {
-      CollectionItemValue collectionItemValue = new CollectionItemValue();
-      String fileName = typePersistence.getParameterName().substring(typePersistence.getParameterName().lastIndexOf("[") + 1).replace("]" , "");
-      collectionItemValue.setIndex(Integer.parseInt(fileName));
 
-      if (typePersistence instanceof IntegerPersistence) {
-          collectionItemValue.setValue(((IntegerPersistence) typePersistence).getValue());
-          collectionItemValue.setType(ValueType.INTEGER);
-        } else if (typePersistence instanceof StringPersistence) {
-        collectionItemValue.setValue(((StringPersistence) typePersistence).getValue());
-        collectionItemValue.setType(ValueType.STRING);
-      } else if (typePersistence instanceof GeometryPersistence) {
-        collectionItemValue.setValue(((GeometryPersistence) typePersistence).getValue());
-        collectionItemValue.setType(ValueType.GEOMETRY);
-      } else if (typePersistence instanceof NumberPersistence) {
-        collectionItemValue.setValue(((NumberPersistence) typePersistence).getValue());
-        collectionItemValue.setType(ValueType.NUMBER);
-      } else if (typePersistence instanceof BooleanPersistence) {
-        collectionItemValue.setValue(((BooleanPersistence) typePersistence).isValue());
-        collectionItemValue.setType(ValueType.BOOLEAN);
-      } else if(typePersistence instanceof EnumerationPersistence){
-        collectionItemValue.setValue(((EnumerationPersistence) typePersistence).getValue());
-        collectionItemValue.setType(ValueType.ENUMERATION);
-      } else if(typePersistence instanceof ImagePersistence){
-        collectionItemValue.setType(ValueType.IMAGE);
-      } else if(typePersistence instanceof FilePersistence){
-        collectionItemValue.setType(ValueType.FILE);
-      } else if(typePersistence instanceof WsiPersistence){
-        collectionItemValue.setType(ValueType.WSI);
-      } else {
-        throw new ProvisioningException("unknown  type: " + leafType);
-      }
-
-      return collectionItemValue;
+        return getCollectionItemValue(typePersistence, leafType);
     }
+  }
+
+  private static CollectionItemValue getCollectionItemValue(TypePersistence typePersistence,
+                                                            String leafType)
+      throws ProvisioningException
+  {
+    CollectionItemValue collectionItemValue = new CollectionItemValue();
+    String fileName = typePersistence.getParameterName().substring(
+        typePersistence.getParameterName().lastIndexOf("[") + 1).replace("]" , "");
+    collectionItemValue.setIndex(Integer.parseInt(fileName));
+
+    if (typePersistence instanceof IntegerPersistence) {
+        collectionItemValue.setValue(((IntegerPersistence) typePersistence).getValue());
+        collectionItemValue.setType(ValueType.INTEGER);
+      } else if (typePersistence instanceof StringPersistence) {
+      collectionItemValue.setValue(((StringPersistence) typePersistence).getValue());
+      collectionItemValue.setType(ValueType.STRING);
+    } else if (typePersistence instanceof GeometryPersistence) {
+      collectionItemValue.setValue(((GeometryPersistence) typePersistence).getValue());
+      collectionItemValue.setType(ValueType.GEOMETRY);
+    } else if (typePersistence instanceof NumberPersistence) {
+      collectionItemValue.setValue(((NumberPersistence) typePersistence).getValue());
+      collectionItemValue.setType(ValueType.NUMBER);
+    } else if (typePersistence instanceof BooleanPersistence) {
+      collectionItemValue.setValue(((BooleanPersistence) typePersistence).isValue());
+      collectionItemValue.setType(ValueType.BOOLEAN);
+    } else if(typePersistence instanceof EnumerationPersistence){
+      collectionItemValue.setValue(((EnumerationPersistence) typePersistence).getValue());
+      collectionItemValue.setType(ValueType.ENUMERATION);
+    } else if(typePersistence instanceof ImagePersistence){
+      collectionItemValue.setType(ValueType.IMAGE);
+    } else if(typePersistence instanceof FilePersistence){
+      collectionItemValue.setType(ValueType.FILE);
+    } else if(typePersistence instanceof WsiPersistence){
+      collectionItemValue.setType(ValueType.WSI);
+    } else {
+      throw new ProvisioningException("unknown  type: " + leafType);
+    }
+    return collectionItemValue;
   }
 
   // copy constructor

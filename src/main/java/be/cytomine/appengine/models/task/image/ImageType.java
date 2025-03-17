@@ -177,7 +177,7 @@ public class ImageType extends Type {
         persistedProvision.setParameterType(ParameterType.INPUT);
         persistedProvision.setRunId(runId);
         persistedProvision.setValueType(ValueType.IMAGE);
-
+        persistedProvision.setProvisioned(true);
         imagePersistenceRepository.save(persistedProvision);
     }
 

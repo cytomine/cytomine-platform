@@ -131,6 +131,7 @@ public class IntegerType extends Type {
             persistedProvision.setParameterName(parameterName);
             persistedProvision.setRunId(runId);
             persistedProvision.setValue(value);
+            persistedProvision.setProvisioned(true);
             integerPersistenceRepository.save(persistedProvision);
         } else {
             persistedProvision.setValue(value);

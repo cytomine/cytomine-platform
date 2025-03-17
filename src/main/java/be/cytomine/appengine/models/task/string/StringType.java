@@ -112,6 +112,7 @@ public class StringType extends Type {
             persistedProvision.setParameterType(ParameterType.INPUT);
             persistedProvision.setParameterName(parameterName);
             persistedProvision.setRunId(runId);
+            persistedProvision.setProvisioned(true);
             persistedProvision.setValue(value);
             stringPersistenceRepository.save(persistedProvision);
         } else {

@@ -171,7 +171,7 @@ public class WsiType extends Type {
         persistedProvision.setParameterType(ParameterType.INPUT);
         persistedProvision.setRunId(runId);
         persistedProvision.setValueType(ValueType.WSI);
-
+        persistedProvision.setProvisioned(true);
         wsiPersistenceRepository.save(persistedProvision);
     }
 

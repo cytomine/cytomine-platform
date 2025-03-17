@@ -139,6 +139,7 @@ public class NumberType extends Type {
             persistedProvision.setParameterType(ParameterType.INPUT);
             persistedProvision.setParameterName(parameterName);
             persistedProvision.setRunId(runId);
+            persistedProvision.setProvisioned(true);
             persistedProvision.setValue(value);
             numberPersistenceRepository.save(persistedProvision);
         } else {

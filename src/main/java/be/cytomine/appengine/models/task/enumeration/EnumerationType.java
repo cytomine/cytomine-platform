@@ -102,6 +102,7 @@ public class EnumerationType extends Type {
             persistedProvision.setValueType(ValueType.ENUMERATION);
             persistedProvision.setParameterType(ParameterType.INPUT);
             persistedProvision.setParameterName(parameterName);
+            persistedProvision.setProvisioned(true);
             persistedProvision.setRunId(runId);
             persistedProvision.setValue(value);
             repository.save(persistedProvision);
