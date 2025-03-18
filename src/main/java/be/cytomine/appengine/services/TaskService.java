@@ -13,6 +13,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import be.cytomine.appengine.models.CheckTime;
 import be.cytomine.appengine.models.Match;
 import be.cytomine.appengine.models.task.Parameter;
 import be.cytomine.appengine.models.task.ParameterType;
@@ -211,7 +212,7 @@ public class TaskService {
         JsonNode outputsNode = descriptor.get("outputs");
         List<Match> matches = new ArrayList<>();
 
-        // Process dependencies for parameters
+        // Process dependencies for inputs
         processDependencies(inputsNode, parameters, matches);
 
         // Process dependencies for outputs
@@ -254,7 +255,26 @@ public class TaskService {
                     parameters.stream()
                         .filter(p -> p.getName().equals(matchingName) && p.getParameterType().equals(ParameterType.from(matchingType)))
                         .findFirst()
-                        .ifPresent(other -> matches.add(new Match(param, other)));
+                        .ifPresent(other -> {
+                            // set check time relative to execution
+                            CheckTime when = CheckTime.UNDEFINED;
+                            boolean bothInputs = param.getParameterType().equals(ParameterType.INPUT)
+                                && matchingType.equalsIgnoreCase("inputs");
+                            if (bothInputs) {
+                                when = CheckTime.BEFORE_EXECUTION;
+                            }
+                            boolean bothOutputs = param.getParameterType().equals(ParameterType.OUTPUT)
+                                && matchingType.equalsIgnoreCase("outputs");
+                            boolean crossMatch = (param.getParameterType().equals(ParameterType.INPUT)
+                                && matchingType.equalsIgnoreCase("outputs")) ||
+                                param.getParameterType().equals(ParameterType.OUTPUT)
+                                    && matchingType.equalsIgnoreCase("inputs");
+                            if (bothOutputs || crossMatch) {
+                                when = CheckTime.AFTER_EXECUTION;
+                            }
+
+                            matches.add(new Match(param, other, when));
+                        });
 
                 }
             }
