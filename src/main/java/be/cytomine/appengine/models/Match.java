@@ -40,9 +40,12 @@ public class Match extends BaseEntity {
     @JoinColumn(name = "matched_id")
     private Parameter matched;
 
-    public Match(Parameter matching, Parameter matched)
+    private CheckTime when;
+
+    public Match(Parameter matching, Parameter matched, CheckTime when)
     {
         this.matching = matching;
         this.matched = matched;
+        this.when = when;
     }
 }
