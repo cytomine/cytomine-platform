@@ -18,9 +18,9 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import be.cytomine.appengine.dto.inputs.task.GenericParameterCollectionItemProvision;
-import be.cytomine.appengine.models.task.Parameter;
-import be.cytomine.appengine.models.task.collection.CollectionType;
+
+import be.cytomine.appengine.models.CheckTime;
+import be.cytomine.appengine.models.task.collection.CollectionPersistence;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -64,6 +64,11 @@ import be.cytomine.appengine.models.task.TypePersistence;
 import be.cytomine.appengine.repositories.RunRepository;
 import be.cytomine.appengine.repositories.TypePersistenceRepository;
 import be.cytomine.appengine.states.TaskRunState;
+import be.cytomine.appengine.dto.inputs.task.GenericParameterCollectionItemProvision;
+import be.cytomine.appengine.models.Match;
+import be.cytomine.appengine.models.task.Parameter;
+import be.cytomine.appengine.models.task.collection.CollectionType;
+import be.cytomine.appengine.repositories.collection.CollectionPersistenceRepository;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -71,6 +76,8 @@ import be.cytomine.appengine.states.TaskRunState;
 public class TaskProvisioningService {
 
     private final TypePersistenceRepository typePersistenceRepository;
+
+    private final CollectionPersistenceRepository collectionPersistenceRepository;
 
     private final RunRepository runRepository;
 
@@ -869,6 +876,9 @@ public class TaskProvisioningService {
         }
         log.info("Running Task: valid run");
 
+        // Todo : validate collections matching constraints if any .. only collections as inputs
+        checkMatches(run);
+
         log.info("Running Task: contacting scheduler...");
         Schedule schedule = new Schedule();
         schedule.setRun(run);
@@ -884,6 +894,34 @@ public class TaskProvisioningService {
         log.info("Running Task: scheduled");
 
         return action;
+    }
+
+    private void checkMatches(Run run) throws ProvisioningException
+    {
+        AppEngineError error;
+        List<Match> matches = run.getTask().getMatches().stream().filter(match ->
+            match.getWhen().equals(CheckTime.BEFORE_EXECUTION)).toList();
+
+        if (!matches.isEmpty()) {
+            for (Match match : matches) {
+                CollectionPersistence matching = collectionPersistenceRepository.findCollectionPersistenceByParameterNameAndRunIdAndParameterType(match.getMatching().getName(), run.getId(), ParameterType.INPUT);
+                CollectionPersistence matched = collectionPersistenceRepository.findCollectionPersistenceByParameterNameAndRunIdAndParameterType(match.getMatched().getName(), run.getId(), ParameterType.INPUT);
+                // compare size
+                if (!Objects.equals(matching.getSize(), matched.getSize())) {
+                    error = ErrorBuilder.build(ErrorCode.INTERNAL_NOT_MATCHING_DIFF_SIZE);
+                    throw new ProvisioningException(error);
+                }
+                // map indexes
+                for (TypePersistence item : matching.getItems()) {
+                    String matchingItemIndex = item.getCollectionIndex().substring(item.getCollectionIndex().lastIndexOf('['));
+                    List<TypePersistence> matchedItemIndexes = matched.getItems().stream().filter(typePersistence -> typePersistence.getCollectionIndex().endsWith(matchingItemIndex)).toList();
+                    if (matchedItemIndexes.size() != 1) {
+                        error = ErrorBuilder.build(ErrorCode.INTERNAL_NOT_MATCHING_NOT_ALIGNED_INDEXES);
+                        throw new ProvisioningException(error);
+                    }
+                }
+            }
+        }
     }
 
     private StateAction updateToProvisioned(Run run) throws ProvisioningException {
