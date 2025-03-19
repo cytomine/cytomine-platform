@@ -645,6 +645,9 @@ public class TaskProvisioningService {
                 );
             }
 
+            // todo : check matching of outputs and
+            multipleErrors.addAll(checkAfterExecutionMatches(run));
+
             // throw multiple errors if exist
             if (!multipleErrors.isEmpty()) {
                 AppEngineError error = ErrorBuilder.buildBatchError(multipleErrors);
@@ -877,7 +880,7 @@ public class TaskProvisioningService {
         log.info("Running Task: valid run");
 
         // Todo : validate collections matching constraints if any .. only collections as inputs
-        checkMatches(run);
+        checkBeforeExecutionMatches(run);
 
         log.info("Running Task: contacting scheduler...");
         Schedule schedule = new Schedule();
@@ -896,8 +899,7 @@ public class TaskProvisioningService {
         return action;
     }
 
-    private void checkMatches(Run run) throws ProvisioningException
-    {
+    private void checkBeforeExecutionMatches(Run run) throws ProvisioningException {
         AppEngineError error;
         List<Match> matches = run.getTask().getMatches().stream().filter(match ->
             match.getWhen().equals(CheckTime.BEFORE_EXECUTION)).toList();
@@ -922,6 +924,36 @@ public class TaskProvisioningService {
                 }
             }
         }
+    }
+
+    private List<AppEngineError> checkAfterExecutionMatches(Run run) throws ProvisioningException {
+        List<AppEngineError> multipleErrors = new ArrayList<>();
+        List<Match> matches = run.getTask().getMatches().stream().filter(match ->
+            match.getWhen().equals(CheckTime.AFTER_EXECUTION)).toList();
+
+        if (!matches.isEmpty()) {
+            for (Match match : matches) {
+                CollectionPersistence matching = collectionPersistenceRepository.findCollectionPersistenceByParameterNameAndRunId(match.getMatching().getName(), run.getId());
+                CollectionPersistence matched = collectionPersistenceRepository.findCollectionPersistenceByParameterNameAndRunId(match.getMatched().getName(), run.getId());
+                // compare size
+                if (!Objects.equals(matching.getSize(), matched.getSize())) {
+                    ParameterError parameterError = new ParameterError(matching.getParameterName());
+                    AppEngineError error = ErrorBuilder.build(ErrorCode.INTERNAL_NOT_MATCHING_DIFF_SIZE, parameterError);
+                    multipleErrors.add(error);
+                }
+                // map indexes
+                for (TypePersistence item : matching.getItems()) {
+                    String matchingItemIndex = item.getCollectionIndex().substring(item.getCollectionIndex().lastIndexOf('['));
+                    List<TypePersistence> matchedItemIndexes = matched.getItems().stream().filter(typePersistence -> typePersistence.getCollectionIndex().endsWith(matchingItemIndex)).toList();
+                    if (matchedItemIndexes.size() != 1) {
+                        ParameterError parameterError = new ParameterError(matching.getParameterName());
+                        AppEngineError error = ErrorBuilder.build(ErrorCode.INTERNAL_NOT_MATCHING_NOT_ALIGNED_INDEXES, parameterError);
+                        multipleErrors.add(error);
+                    }
+                }
+            }
+        }
+        return multipleErrors;
     }
 
     private StateAction updateToProvisioned(Run run) throws ProvisioningException {
