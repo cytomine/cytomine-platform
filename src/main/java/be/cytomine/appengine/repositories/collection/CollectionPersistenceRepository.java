@@ -15,4 +15,9 @@ public interface CollectionPersistenceRepository extends JpaRepository<Collectio
         UUID run,
         ParameterType parameterType
     );
+
+    CollectionPersistence findCollectionPersistenceByParameterNameAndRunId(
+        String parameterName,
+        UUID run
+    );
 }
