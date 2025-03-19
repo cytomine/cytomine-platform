@@ -27,7 +27,6 @@ import be.cytomine.appengine.models.task.geometry.GeometryType;
 import be.cytomine.appengine.models.task.image.ImagePersistence;
 import be.cytomine.appengine.models.task.image.ImageType;
 import be.cytomine.appengine.models.task.integer.IntegerPersistence;
-import be.cytomine.appengine.models.task.integer.IntegerType;
 import be.cytomine.appengine.models.task.number.NumberPersistence;
 import be.cytomine.appengine.models.task.string.StringPersistence;
 import be.cytomine.appengine.models.task.wsi.WsiPersistence;
@@ -349,9 +348,12 @@ public class CollectionType extends Type {
   {
     // todo : this is not correct I need to redo it
     GeometryType geometryType = new GeometryType();
-    validateFeatureCollection(valueObject, geometryType);
-    validateGeometryCollection(valueObject,geometryType);
-
+    try {
+      validateFeatureCollection(valueObject, geometryType);
+    } catch (TypeValidationException e) {
+      geometryType = new GeometryType();
+      validateGeometryCollection(valueObject,geometryType);
+    }
   }
 
   private void validateNativeCollection(List<?> value) throws TypeValidationException {
