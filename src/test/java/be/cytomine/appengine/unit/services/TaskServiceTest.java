@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,9 +22,12 @@ import org.springframework.mock.web.MockMultipartFile;
 import be.cytomine.appengine.dto.inputs.task.TaskDescription;
 import be.cytomine.appengine.dto.inputs.task.UploadTaskArchive;
 import be.cytomine.appengine.exceptions.BundleArchiveException;
+import be.cytomine.appengine.exceptions.FileStorageException;
+import be.cytomine.appengine.exceptions.TaskNotFoundException;
 import be.cytomine.appengine.exceptions.TaskServiceException;
 import be.cytomine.appengine.exceptions.ValidationException;
 import be.cytomine.appengine.handlers.RegistryHandler;
+import be.cytomine.appengine.handlers.StorageData;
 import be.cytomine.appengine.handlers.StorageHandler;
 import be.cytomine.appengine.models.task.Task;
 import be.cytomine.appengine.repositories.TaskRepository;
@@ -32,42 +36,49 @@ import be.cytomine.appengine.services.TaskValidationService;
 import be.cytomine.appengine.utils.ArchiveUtils;
 import be.cytomine.appengine.utils.TestTaskBuilder;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class TaskServiceTest {
 
     @Mock
-    TaskRepository taskRepository;
+    private ArchiveUtils archiveUtils;
 
     @Mock
-    ArchiveUtils archiveUtils;
+    private RegistryHandler registryHandler;
 
     @Mock
-    StorageHandler fileStorageHandler;
+    private StorageHandler storageHandler;
 
     @Mock
-    RegistryHandler registryHandler;
+    private TaskRepository taskRepository;
 
     @Mock
-    TaskValidationService taskValidationService;
+    private TaskValidationService taskValidationService;
 
     @InjectMocks
-    TaskService taskService;
+    private TaskService taskService;
 
-    @Test
-    @DisplayName("Testing successful upload")
-    public void succesfulUpload() throws IOException, TaskServiceException, ValidationException, BundleArchiveException {
-        ClassPathResource resource = TestTaskBuilder.buildCustomImageLocationTask();
-        MockMultipartFile testAppBundle = new MockMultipartFile("test_custom_image_location_task.zip", resource.getInputStream());
+    private Task task;
 
-        String nameSpace = "namespace";
-        String version = "version";
-        String descriptorFile = "descriptor";
-        String storageReference = "storageReference";
-        Task task = new Task(UUID.randomUUID(), nameSpace, version, descriptorFile, storageReference);
+    private UploadTaskArchive uploadTaskArchive;
 
-        UploadTaskArchive uploadTaskArchive = new UploadTaskArchive();
+    @BeforeEach
+    public void setUp() throws Exception {
+        task = new Task();
+        task.setNamespace("namespace");
+        task.setVersion("version");
+        task.setStorageReference("storageReference");
+
+        uploadTaskArchive = new UploadTaskArchive();
         uploadTaskArchive.setDockerImage(File.createTempFile("docker-image", ".tar"));
         uploadTaskArchive.setDescriptorFile(null);
         String descriptorYml = "name: Integers addition\n" +
@@ -111,20 +122,7 @@ public class TaskServiceTest {
                 "    description: Sum of A and B";
         JsonNode descriptor = getDescriptorJsonNode(descriptorYml);
         uploadTaskArchive.setDescriptorFileAsJson(descriptor);
-
-        lenient().when(taskRepository.findByNamespaceAndVersion(nameSpace, version)).thenReturn(task);
-        lenient().when(archiveUtils.readArchive(testAppBundle)).thenReturn(uploadTaskArchive);
-        Optional<TaskDescription> result = taskService.uploadTask(testAppBundle);
-
-        Assertions.assertTrue(result.isPresent());
     }
-
-    // TODO : test generateTaskIdentifiers
-    // TODO : test retrieveYmlDescriptor(namespace , version)
-    // TODO : test retrieveYmlDescriptor(id)
-    // TODO : test getAuthors
-    // TODO : test getOutputs
-    // TODO : test getInputs
 
     public static JsonNode getDescriptorJsonNode(String descriptor) throws ValidationException {
         ObjectMapper descriptorMapper = new ObjectMapper(new YAMLFactory());
@@ -136,4 +134,119 @@ public class TaskServiceTest {
         }
         return descriptorJsonNode;
     }
+
+    @DisplayName("Successfully upload a task bundle")
+    @Test
+    public void uploadTaskShouldUploadTaskBundle() throws IOException, TaskServiceException, ValidationException, BundleArchiveException {
+        ClassPathResource resource = TestTaskBuilder.buildCustomImageLocationTask();
+        MockMultipartFile testAppBundle = new MockMultipartFile("test_custom_image_location_task.zip", resource.getInputStream());
+
+        String nameSpace = "namespace";
+        String version = "version";
+        String descriptorFile = "descriptor";
+        String storageReference = "storageReference";
+        Task task = new Task(UUID.randomUUID(), nameSpace, version, descriptorFile, storageReference);
+
+        lenient().when(taskRepository.findByNamespaceAndVersion(nameSpace, version)).thenReturn(task);
+        lenient().when(archiveUtils.readArchive(testAppBundle)).thenReturn(uploadTaskArchive);
+        Optional<TaskDescription> result = taskService.uploadTask(testAppBundle);
+
+        Assertions.assertTrue(result.isPresent());
+    }
+
+    @DisplayName("Successfully retrieve the descriptor by namespace and version")
+    @Test
+    public void retrieveYmlDescriptorByNamespaceAndVersionShouldReturnDescriptor() throws Exception {
+        String namespace = "namespace";
+        String version = "version";
+        StorageData mockStorageData = new StorageData("descriptor.yml", "storageReference");
+        when(taskRepository.findByNamespaceAndVersion(namespace, version)).thenReturn(task);
+        when(storageHandler.readStorageData(any(StorageData.class))).thenReturn(mockStorageData);
+
+        StorageData result = taskService.retrieveYmlDescriptor(namespace, version);
+
+        assertNotNull(result);
+        assertEquals("descriptor.yml", result.peek().getName());
+        assertEquals("storageReference", result.peek().getStorageId());
+        verify(taskRepository, times(1)).findByNamespaceAndVersion(namespace, version);
+        verify(storageHandler, times(1)).readStorageData(any(StorageData.class));
+    }
+
+    @DisplayName("Fail to retrieve descriptor by namespace and version and throw TaskNotFoundException")
+    @Test
+    public void retrieveYmlDescriptorByNamespaceAndVersionShouldThrowTaskNotFoundException() throws Exception {
+        String namespace = "namespace";
+        String version = "version";
+        when(taskRepository.findByNamespaceAndVersion(namespace, version)).thenReturn(null);
+
+        TaskNotFoundException exception = assertThrows(TaskNotFoundException.class, 
+            () -> taskService.retrieveYmlDescriptor(namespace, version));
+        assertEquals("task not found", exception.getMessage());
+    }
+
+    @DisplayName("Fail to retrieve the descriptor by namespace and version and throw a FileStorageException")
+    @Test
+    public void retrieveYmlDescriptorByNamespaceAndVersionShouldThrowFileStorageException() throws Exception {
+        String namespace = "namespace";
+        String version = "version";
+        when(taskRepository.findByNamespaceAndVersion(namespace, version)).thenReturn(task);
+        when(storageHandler.readStorageData(any(StorageData.class)))
+            .thenThrow(new FileStorageException("File error"));
+
+        TaskServiceException exception = assertThrows(
+            TaskServiceException.class,
+            () -> taskService.retrieveYmlDescriptor(namespace, version)
+        );
+        assertTrue(exception.getCause() instanceof FileStorageException);
+    }
+
+    @DisplayName("Successfully retrieve descriptor by ID")
+    @Test
+    public void retrieveYmlDescriptorByIdShouldReturnDescriptor() throws Exception {
+        String id = "d9aad8ab-210c-48fa-8d94-6b03e8776a55";
+        StorageData mockStorageData = new StorageData("descriptor.yml", "storageReference");
+        when(taskRepository.findById(UUID.fromString(id))).thenReturn(Optional.of(task));
+        when(storageHandler.readStorageData(any(StorageData.class))).thenReturn(mockStorageData);
+
+        StorageData result = taskService.retrieveYmlDescriptor(id);
+
+        assertNotNull(result);
+        assertEquals("descriptor.yml", result.peek().getName());
+        assertEquals("storageReference", result.peek().getStorageId());
+        verify(taskRepository, times(1)).findById(UUID.fromString(id));
+        verify(storageHandler, times(1)).readStorageData(any(StorageData.class));
+    }
+
+    @DisplayName("Fail to retrieve descriptor by ID and throw TaskNotFoundException")
+    @Test
+    public void retrieveYmlDescriptorByIdShouldThrowTaskNotFoundException() throws Exception {
+        String id = "d9aad8ab-210c-48fa-8d94-6b03e8776a55";
+        when(taskRepository.findById(UUID.fromString(id))).thenReturn(Optional.empty());
+
+        TaskNotFoundException exception = assertThrows(TaskNotFoundException.class, 
+            () -> taskService.retrieveYmlDescriptor(id));
+        assertEquals("task not found", exception.getMessage());
+    }
+
+    @DisplayName("Fail to retrieve descriptor by ID and throw FileStorageException")
+    @Test
+    public void retrieveYmlDescriptorByIdShouldThrowFileStorageException() throws Exception {
+        String id = "d9aad8ab-210c-48fa-8d94-6b03e8776a55";
+        when(taskRepository.findById(UUID.fromString(id))).thenReturn(Optional.of(task));
+        when(storageHandler.readStorageData(any(StorageData.class)))
+            .thenThrow(new FileStorageException("File error"));
+
+        TaskServiceException exception = assertThrows(
+            TaskServiceException.class,
+            () -> taskService.retrieveYmlDescriptor(id)
+        );
+        assertTrue(exception.getCause() instanceof FileStorageException);
+    }
+
+    // TODO : test retrieveYmlDescriptor(id)
+    // TODO : test getAuthors
+    // TODO : test getOutputs
+    // TODO : test getInputs
+
+
 }
