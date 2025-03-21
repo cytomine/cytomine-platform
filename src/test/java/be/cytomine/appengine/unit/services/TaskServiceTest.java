@@ -1,14 +1,9 @@
 package be.cytomine.appengine.unit.services;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -30,7 +25,6 @@ import be.cytomine.appengine.exceptions.FileStorageException;
 import be.cytomine.appengine.exceptions.RunTaskServiceException;
 import be.cytomine.appengine.exceptions.TaskNotFoundException;
 import be.cytomine.appengine.exceptions.TaskServiceException;
-import be.cytomine.appengine.exceptions.ValidationException;
 import be.cytomine.appengine.handlers.RegistryHandler;
 import be.cytomine.appengine.handlers.StorageData;
 import be.cytomine.appengine.handlers.StorageHandler;
@@ -78,62 +72,7 @@ public class TaskServiceTest {
     @BeforeAll
     public static void setUp() throws Exception {
         task = TaskUtils.createTestTask();
-
-        uploadTaskArchive = new UploadTaskArchive();
-        uploadTaskArchive.setDockerImage(File.createTempFile("docker-image", ".tar"));
-        uploadTaskArchive.setDescriptorFile(null);
-        String descriptorYml = "name: Integers addition\n" +
-                "name_short: add_int\n" +
-                "version: 0.1.0\n" +
-                "namespace: com.cytomine.dummy.arithmetic.integer.addition\n" +
-                "$schema: https://cytomine.com/schema-store/tasks/task.v0.json\n" +
-                "authors:\n" +
-                "  - first_name: Romain\n" +
-                "    last_name: Mormont\n" +
-                "    organization: Cytomine Corporation\n" +
-                "    email: romain.mormont@cytomine.com\n" +
-                "    is_contact: true\n" +
-                "\n" +
-                "configuration:\n" +
-                "  input_folder: /inputs\n" +
-                "  output_folder: /outputs\n" +
-                "  image:\n" +
-                "        file: /image.tar \n" +
-                "\n" +
-                "inputs:\n" +
-                "  a:\n" +
-                "    display_name: A \n" +
-                "    type:\n" +
-                "        id: integer\n" +
-                "        lt: 500\n" +
-                "        gt: 200\n" +
-                "    description: First operand\n" +
-                "  b:\n" +
-                "    display_name: B\n" +
-                "    type:\n" +
-                "        id: integer\n" +
-                "        lt: 500\n" +
-                "    description: Second operand\n" +
-                "\n" +
-                "outputs:\n" +
-                "  out:\n" +
-                "    display_name: Sum\n" +
-                "    type:\n" +
-                "        id: integer\n" +
-                "    description: Sum of A and B";
-        JsonNode descriptor = getDescriptorJsonNode(descriptorYml);
-        uploadTaskArchive.setDescriptorFileAsJson(descriptor);
-    }
-
-    public static JsonNode getDescriptorJsonNode(String descriptor) throws ValidationException {
-        ObjectMapper descriptorMapper = new ObjectMapper(new YAMLFactory());
-        JsonNode descriptorJsonNode;
-        try {
-            descriptorJsonNode = descriptorMapper.readTree(descriptor.getBytes());
-        } catch (IOException e) {
-            throw new ValidationException("failed to read descriptor.yml");
-        }
-        return descriptorJsonNode;
+        uploadTaskArchive = TaskUtils.createTestUploadTaskArchive();
     }
 
     @DisplayName("Successfully upload a task bundle")

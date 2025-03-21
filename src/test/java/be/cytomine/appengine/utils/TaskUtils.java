@@ -1,14 +1,26 @@
 package be.cytomine.appengine.utils;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Set;
 import java.util.UUID;
 
+import org.springframework.core.io.ClassPathResource;
+
+import be.cytomine.appengine.dto.inputs.task.UploadTaskArchive;
 import be.cytomine.appengine.models.task.Author;
 import be.cytomine.appengine.models.task.Input;
 import be.cytomine.appengine.models.task.Task;
 import be.cytomine.appengine.models.task.integer.IntegerType;
 
 public class TaskUtils {
+    public static UploadTaskArchive createTestUploadTaskArchive() throws IOException {
+        File descriptorFile = new ClassPathResource("artifacts/descriptor.yml").getFile();
+        File dockerImage = File.createTempFile("docker-image", ".tar");
+
+        return new UploadTaskArchive(descriptorFile, dockerImage);
+    }
+
     public static Author createTestAuthor() {
         Author author = new Author();
         author.setFirstName("Cytomine");
