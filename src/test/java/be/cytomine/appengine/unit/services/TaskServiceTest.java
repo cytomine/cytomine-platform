@@ -10,7 +10,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -65,12 +65,12 @@ public class TaskServiceTest {
     @InjectMocks
     private TaskService taskService;
 
-    private Task task;
+    private static Task task;
 
-    private UploadTaskArchive uploadTaskArchive;
+    private static UploadTaskArchive uploadTaskArchive;
 
-    @BeforeEach
-    public void setUp() throws Exception {
+    @BeforeAll
+    public static void setUp() throws Exception {
         Author author = new Author();
         author.setFirstName("Cytomine");
         author.setLastName("ULiege");
@@ -149,13 +149,13 @@ public class TaskServiceTest {
         ClassPathResource resource = TestTaskBuilder.buildCustomImageLocationTask();
         MockMultipartFile testAppBundle = new MockMultipartFile("test_custom_image_location_task.zip", resource.getInputStream());
 
-        String nameSpace = "namespace";
+        String namespace = "namespace";
         String version = "version";
         String descriptorFile = "descriptor";
         String storageReference = "storageReference";
-        Task task = new Task(UUID.randomUUID(), nameSpace, version, descriptorFile, storageReference);
+        Task task = new Task(UUID.randomUUID(), namespace, version, descriptorFile, storageReference);
 
-        lenient().when(taskRepository.findByNamespaceAndVersion(nameSpace, version)).thenReturn(task);
+        lenient().when(taskRepository.findByNamespaceAndVersion(namespace, version)).thenReturn(task);
         lenient().when(archiveUtils.readArchive(testAppBundle)).thenReturn(uploadTaskArchive);
         Optional<TaskDescription> result = taskService.uploadTask(testAppBundle);
 
@@ -230,12 +230,11 @@ public class TaskServiceTest {
     @DisplayName("Fail to retrieve the descriptor by ID and throw TaskNotFoundException")
     @Test
     public void retrieveYmlDescriptorByIdShouldThrowTaskNotFoundException() throws Exception {
-        String id = "d9aad8ab-210c-48fa-8d94-6b03e8776a55";
-        when(taskRepository.findById(UUID.fromString(id))).thenReturn(Optional.empty());
+        when(taskRepository.findById(task.getIdentifier())).thenReturn(Optional.empty());
 
         TaskNotFoundException exception = Assertions.assertThrows(
             TaskNotFoundException.class,
-            () -> taskService.retrieveYmlDescriptor(id)
+            () -> taskService.retrieveYmlDescriptor(task.getIdentifier().toString())
         );
         Assertions.assertEquals("task not found", exception.getMessage());
     }
@@ -243,21 +242,20 @@ public class TaskServiceTest {
     @DisplayName("Fail to retrieve the descriptor by ID and throw FileStorageException")
     @Test
     public void retrieveYmlDescriptorByIdShouldThrowFileStorageException() throws Exception {
-        String id = "d9aad8ab-210c-48fa-8d94-6b03e8776a55";
-        when(taskRepository.findById(UUID.fromString(id))).thenReturn(Optional.of(task));
+        when(taskRepository.findById(task.getIdentifier())).thenReturn(Optional.of(task));
         when(storageHandler.readStorageData(any(StorageData.class)))
             .thenThrow(new FileStorageException("File error"));
 
         TaskServiceException exception = Assertions.assertThrows(
             TaskServiceException.class,
-            () -> taskService.retrieveYmlDescriptor(id)
+            () -> taskService.retrieveYmlDescriptor(task.getIdentifier().toString())
         );
         Assertions.assertTrue(exception.getCause() instanceof FileStorageException);
     }
 
     @DisplayName("Successfully retrieve the task description by ID")
     @Test
-    void retrieveTaskDescriptionShouldReturnTaskDescription() {
+    void retrieveTaskDescriptionByIdShouldReturnTaskDescription() {
         when(taskRepository.findById(task.getIdentifier())).thenReturn(Optional.of(task));
 
         Optional<TaskDescription> result = taskService.retrieveTaskDescription(task.getIdentifier().toString());
@@ -268,12 +266,33 @@ public class TaskServiceTest {
 
     @DisplayName("Fail to retrieve the task description by ID")
     @Test
-    void retrieveTaskDescriptionShouldReturnEmpty() {
+    void retrieveTaskDescriptionByIdShouldReturnEmpty() {
         String taskId = "44e60a8a-b281-490d-a843-82de987e2d3c";
 
         when(taskRepository.findById(UUID.fromString(taskId))).thenReturn(Optional.empty());
 
         Optional<TaskDescription> result = taskService.retrieveTaskDescription(taskId);
+
+        Assertions.assertFalse(result.isPresent());
+    }
+
+    @DisplayName("Successfully retrieve the task description by namespace and version")
+    @Test
+    void retrieveTaskDescriptionByNamespaceAndVersionShouldReturnTaskDescription() {
+        when(taskRepository.findByNamespaceAndVersion(task.getNamespace(), task.getVersion())).thenReturn(task);
+
+        Optional<TaskDescription> result = taskService.retrieveTaskDescription(task.getNamespace(), task.getVersion());
+
+        Assertions.assertTrue(result.isPresent());
+        Assertions.assertEquals("Test Task Description", result.get().getDescription());
+    }
+
+    @DisplayName("Fail to retrieve the task description by namespace and version")
+    @Test
+    void retrieveTaskDescriptionByNamespaceAndVersionShouldReturnEmpty() {
+        when(taskRepository.findByNamespaceAndVersion(task.getNamespace(), task.getVersion())).thenReturn(null);
+
+        Optional<TaskDescription> result = taskService.retrieveTaskDescription(task.getNamespace(), task.getVersion());
 
         Assertions.assertFalse(result.isPresent());
     }
