@@ -16,14 +16,16 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.mock.web.MockMultipartFile;
 
+import be.cytomine.appengine.dto.handlers.filestorage.Storage;
+import be.cytomine.appengine.dto.handlers.registry.DockerImage;
 import be.cytomine.appengine.dto.inputs.task.TaskDescription;
 import be.cytomine.appengine.dto.inputs.task.TaskRun;
 import be.cytomine.appengine.dto.inputs.task.UploadTaskArchive;
-import be.cytomine.appengine.exceptions.BundleArchiveException;
 import be.cytomine.appengine.exceptions.FileStorageException;
 import be.cytomine.appengine.exceptions.RunTaskServiceException;
 import be.cytomine.appengine.exceptions.TaskNotFoundException;
@@ -32,6 +34,7 @@ import be.cytomine.appengine.exceptions.ValidationException;
 import be.cytomine.appengine.handlers.RegistryHandler;
 import be.cytomine.appengine.handlers.StorageData;
 import be.cytomine.appengine.handlers.StorageHandler;
+import be.cytomine.appengine.models.task.Run;
 import be.cytomine.appengine.models.task.Task;
 import be.cytomine.appengine.repositories.RunRepository;
 import be.cytomine.appengine.repositories.TaskRepository;
@@ -43,10 +46,6 @@ import be.cytomine.appengine.utils.TaskUtils;
 import be.cytomine.appengine.utils.TestTaskBuilder;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class TaskServiceTest {
@@ -139,21 +138,19 @@ public class TaskServiceTest {
 
     @DisplayName("Successfully upload a task bundle")
     @Test
-    public void uploadTaskShouldUploadTaskBundle() throws IOException, TaskServiceException, ValidationException, BundleArchiveException {
+    public void uploadTaskShouldUploadTaskBundle() throws Exception {
         ClassPathResource resource = TestTaskBuilder.buildCustomImageLocationTask();
         MockMultipartFile testAppBundle = new MockMultipartFile("test_custom_image_location_task.zip", resource.getInputStream());
 
-        String namespace = "namespace";
-        String version = "version";
-        String descriptorFile = "descriptor";
-        String storageReference = "storageReference";
-        Task task = new Task(UUID.randomUUID(), namespace, version, descriptorFile, storageReference);
-
-        lenient().when(taskRepository.findByNamespaceAndVersion(namespace, version)).thenReturn(task);
-        lenient().when(archiveUtils.readArchive(testAppBundle)).thenReturn(uploadTaskArchive);
+        Mockito.when(archiveUtils.readArchive(testAppBundle)).thenReturn(uploadTaskArchive);
         Optional<TaskDescription> result = taskService.uploadTask(testAppBundle);
 
         Assertions.assertTrue(result.isPresent());
+        Mockito.verify(archiveUtils, Mockito.times(1)).readArchive(testAppBundle);
+        Mockito.verify(storageHandler, Mockito.times(1)).createStorage(any(Storage.class));
+        Mockito.verify(storageHandler, Mockito.times(1)).saveStorageData(any(Storage.class), any(StorageData.class));
+        Mockito.verify(registryHandler, Mockito.times(1)).pushImage(any(DockerImage.class));
+        Mockito.verify(taskRepository, Mockito.times(1)).save(any(Task.class));
     }
 
     @DisplayName("Successfully retrieve the descriptor by namespace and version")
@@ -162,16 +159,16 @@ public class TaskServiceTest {
         String namespace = "namespace";
         String version = "version";
         StorageData mockStorageData = new StorageData("descriptor.yml", "storageReference");
-        when(taskRepository.findByNamespaceAndVersion(namespace, version)).thenReturn(task);
-        when(storageHandler.readStorageData(any(StorageData.class))).thenReturn(mockStorageData);
+        Mockito.when(taskRepository.findByNamespaceAndVersion(namespace, version)).thenReturn(task);
+        Mockito.when(storageHandler.readStorageData(any(StorageData.class))).thenReturn(mockStorageData);
 
         StorageData result = taskService.retrieveYmlDescriptor(namespace, version);
 
         Assertions.assertNotNull(result);
         Assertions.assertEquals("descriptor.yml", result.peek().getName());
         Assertions.assertEquals("storageReference", result.peek().getStorageId());
-        verify(taskRepository, times(1)).findByNamespaceAndVersion(namespace, version);
-        verify(storageHandler, times(1)).readStorageData(any(StorageData.class));
+        Mockito.verify(taskRepository, Mockito.times(1)).findByNamespaceAndVersion(namespace, version);
+        Mockito.verify(storageHandler, Mockito.times(1)).readStorageData(any(StorageData.class));
     }
 
     @DisplayName("Fail to retrieve the descriptor by namespace and version and throw TaskNotFoundException")
@@ -179,13 +176,15 @@ public class TaskServiceTest {
     public void retrieveYmlDescriptorByNamespaceAndVersionShouldThrowTaskNotFoundException() throws Exception {
         String namespace = "namespace";
         String version = "version";
-        when(taskRepository.findByNamespaceAndVersion(namespace, version)).thenReturn(null);
+        Mockito.when(taskRepository.findByNamespaceAndVersion(namespace, version)).thenReturn(null);
 
         TaskNotFoundException exception = Assertions.assertThrows(
             TaskNotFoundException.class,
             () -> taskService.retrieveYmlDescriptor(namespace, version)
         );
         Assertions.assertEquals("task not found", exception.getMessage());
+        Mockito.verify(taskRepository, Mockito.times(1)).findByNamespaceAndVersion(namespace, version);
+        Mockito.verify(storageHandler, Mockito.times(0)).readStorageData(any(StorageData.class));
     }
 
     @DisplayName("Fail to retrieve the descriptor by namespace and version and throw FileStorageException")
@@ -193,8 +192,8 @@ public class TaskServiceTest {
     public void retrieveYmlDescriptorByNamespaceAndVersionShouldThrowFileStorageException() throws Exception {
         String namespace = "namespace";
         String version = "version";
-        when(taskRepository.findByNamespaceAndVersion(namespace, version)).thenReturn(task);
-        when(storageHandler.readStorageData(any(StorageData.class)))
+        Mockito.when(taskRepository.findByNamespaceAndVersion(namespace, version)).thenReturn(task);
+        Mockito.when(storageHandler.readStorageData(any(StorageData.class)))
             .thenThrow(new FileStorageException("File error"));
 
         TaskServiceException exception = Assertions.assertThrows(
@@ -202,6 +201,8 @@ public class TaskServiceTest {
             () -> taskService.retrieveYmlDescriptor(namespace, version)
         );
         Assertions.assertTrue(exception.getCause() instanceof FileStorageException);
+        Mockito.verify(taskRepository, Mockito.times(1)).findByNamespaceAndVersion(namespace, version);
+        Mockito.verify(storageHandler, Mockito.times(1)).readStorageData(any(StorageData.class));
     }
 
     @DisplayName("Successfully retrieve the descriptor by ID")
@@ -209,35 +210,37 @@ public class TaskServiceTest {
     public void retrieveYmlDescriptorByIdShouldReturnDescriptor() throws Exception {
         String id = "d9aad8ab-210c-48fa-8d94-6b03e8776a55";
         StorageData mockStorageData = new StorageData("descriptor.yml", "storageReference");
-        when(taskRepository.findById(UUID.fromString(id))).thenReturn(Optional.of(task));
-        when(storageHandler.readStorageData(any(StorageData.class))).thenReturn(mockStorageData);
+        Mockito.when(taskRepository.findById(UUID.fromString(id))).thenReturn(Optional.of(task));
+        Mockito.when(storageHandler.readStorageData(any(StorageData.class))).thenReturn(mockStorageData);
 
         StorageData result = taskService.retrieveYmlDescriptor(id);
 
         Assertions.assertNotNull(result);
         Assertions.assertEquals("descriptor.yml", result.peek().getName());
         Assertions.assertEquals("storageReference", result.peek().getStorageId());
-        verify(taskRepository, times(1)).findById(UUID.fromString(id));
-        verify(storageHandler, times(1)).readStorageData(any(StorageData.class));
+        Mockito.verify(taskRepository, Mockito.times(1)).findById(UUID.fromString(id));
+        Mockito.verify(storageHandler, Mockito.times(1)).readStorageData(any(StorageData.class));
     }
 
     @DisplayName("Fail to retrieve the descriptor by ID and throw TaskNotFoundException")
     @Test
     public void retrieveYmlDescriptorByIdShouldThrowTaskNotFoundException() throws Exception {
-        when(taskRepository.findById(task.getIdentifier())).thenReturn(Optional.empty());
+        Mockito.when(taskRepository.findById(task.getIdentifier())).thenReturn(Optional.empty());
 
         TaskNotFoundException exception = Assertions.assertThrows(
             TaskNotFoundException.class,
             () -> taskService.retrieveYmlDescriptor(task.getIdentifier().toString())
         );
         Assertions.assertEquals("task not found", exception.getMessage());
+        Mockito.verify(taskRepository, Mockito.times(1)).findById(task.getIdentifier());
+        Mockito.verify(storageHandler, Mockito.times(0)).readStorageData(any(StorageData.class));
     }
 
     @DisplayName("Fail to retrieve the descriptor by ID and throw FileStorageException")
     @Test
     public void retrieveYmlDescriptorByIdShouldThrowFileStorageException() throws Exception {
-        when(taskRepository.findById(task.getIdentifier())).thenReturn(Optional.of(task));
-        when(storageHandler.readStorageData(any(StorageData.class)))
+        Mockito.when(taskRepository.findById(task.getIdentifier())).thenReturn(Optional.of(task));
+        Mockito.when(storageHandler.readStorageData(any(StorageData.class)))
             .thenThrow(new FileStorageException("File error"));
 
         TaskServiceException exception = Assertions.assertThrows(
@@ -245,70 +248,77 @@ public class TaskServiceTest {
             () -> taskService.retrieveYmlDescriptor(task.getIdentifier().toString())
         );
         Assertions.assertTrue(exception.getCause() instanceof FileStorageException);
+        Mockito.verify(taskRepository, Mockito.times(1)).findById(task.getIdentifier());
+        Mockito.verify(storageHandler, Mockito.times(1)).readStorageData(any(StorageData.class));
     }
 
     @DisplayName("Successfully retrieve the task description by ID")
     @Test
     void retrieveTaskDescriptionByIdShouldReturnTaskDescription() {
-        when(taskRepository.findById(task.getIdentifier())).thenReturn(Optional.of(task));
+        Mockito.when(taskRepository.findById(task.getIdentifier())).thenReturn(Optional.of(task));
 
         Optional<TaskDescription> result = taskService.retrieveTaskDescription(task.getIdentifier().toString());
 
         Assertions.assertTrue(result.isPresent());
         Assertions.assertEquals("Test Task Description", result.get().getDescription());
+        Mockito.verify(taskRepository, Mockito.times(1)).findById(task.getIdentifier());
     }
 
     @DisplayName("Fail to retrieve the task description by ID")
     @Test
     void retrieveTaskDescriptionByIdShouldReturnEmpty() {
-        String taskId = "44e60a8a-b281-490d-a843-82de987e2d3c";
+        Mockito.when(taskRepository.findById(task.getIdentifier())).thenReturn(Optional.empty());
 
-        when(taskRepository.findById(UUID.fromString(taskId))).thenReturn(Optional.empty());
-
-        Optional<TaskDescription> result = taskService.retrieveTaskDescription(taskId);
+        Optional<TaskDescription> result = taskService.retrieveTaskDescription(task.getIdentifier().toString());
 
         Assertions.assertFalse(result.isPresent());
+        Mockito.verify(taskRepository, Mockito.times(1)).findById(task.getIdentifier());
     }
 
     @DisplayName("Successfully retrieve the task description by namespace and version")
     @Test
     void retrieveTaskDescriptionByNamespaceAndVersionShouldReturnTaskDescription() {
-        when(taskRepository.findByNamespaceAndVersion(task.getNamespace(), task.getVersion())).thenReturn(task);
+        Mockito.when(taskRepository.findByNamespaceAndVersion(task.getNamespace(), task.getVersion())).thenReturn(task);
 
         Optional<TaskDescription> result = taskService.retrieveTaskDescription(task.getNamespace(), task.getVersion());
 
         Assertions.assertTrue(result.isPresent());
         Assertions.assertEquals("Test Task Description", result.get().getDescription());
+        Mockito.verify(taskRepository, Mockito.times(1)).findByNamespaceAndVersion(task.getNamespace(), task.getVersion());
     }
 
     @DisplayName("Fail to retrieve the task description by namespace and version")
     @Test
     void retrieveTaskDescriptionByNamespaceAndVersionShouldReturnEmpty() {
-        when(taskRepository.findByNamespaceAndVersion(task.getNamespace(), task.getVersion())).thenReturn(null);
+        Mockito.when(taskRepository.findByNamespaceAndVersion(task.getNamespace(), task.getVersion())).thenReturn(null);
 
         Optional<TaskDescription> result = taskService.retrieveTaskDescription(task.getNamespace(), task.getVersion());
 
         Assertions.assertFalse(result.isPresent());
+        Mockito.verify(taskRepository, Mockito.times(1)).findByNamespaceAndVersion(task.getNamespace(), task.getVersion());
     }
 
     @DisplayName("Successfully retrieve all task descriptions")
     @Test
     void retrieveTaskDescriptionsShouldReturnAllTaskDescriptions() {
-        when(taskRepository.findAll()).thenReturn(List.of(task));
+        List<Task> tasks = List.of(task, task);
+        Mockito.when(taskRepository.findAll()).thenReturn(tasks);
 
         List<TaskDescription> result = taskService.retrieveTaskDescriptions();
 
-        Assertions.assertTrue(result.size() > 0);
+        Assertions.assertTrue(tasks.size() == result.size());
+        Mockito.verify(taskRepository, Mockito.times(1)).findAll();
     }
 
     @DisplayName("Successfully retrieve no task descriptions")
     @Test
     void retrieveTaskDescriptionsShouldReturnEmpty() {
-        when(taskRepository.findAll()).thenReturn(List.of());
+        Mockito.when(taskRepository.findAll()).thenReturn(List.of());
 
         List<TaskDescription> result = taskService.retrieveTaskDescriptions();
 
         Assertions.assertTrue(result.size() == 0);
+        Mockito.verify(taskRepository, Mockito.times(1)).findAll();
     }
 
     @DisplayName("Successfully create a task description")
@@ -326,7 +336,7 @@ public class TaskServiceTest {
     @DisplayName("Successfully create a task run by ID")
     @Test
     void createRunForTaskByIdShouldReturnTaskRun() throws Exception {
-        when(taskRepository.findById(task.getIdentifier())).thenReturn(Optional.of(task));
+        Mockito.when(taskRepository.findById(task.getIdentifier())).thenReturn(Optional.of(task));
 
         TaskRun result = taskService.createRunForTask(task.getIdentifier().toString());
 
@@ -336,12 +346,14 @@ public class TaskServiceTest {
         Assertions.assertEquals(task.getVersion(), result.getTask().getVersion());
         Assertions.assertEquals(task.getDescription(), result.getTask().getDescription());
         Assertions.assertEquals(TaskRunState.CREATED, result.getState());
+        Mockito.verify(taskRepository, Mockito.times(1)).findById(task.getIdentifier());
+        Mockito.verify(runRepository, Mockito.times(1)).saveAndFlush(any(Run.class));
     }
 
     @DisplayName("Fail to create a task run by ID and throw RunTaskServiceException")
     @Test
     void createRunForTaskByIdShouldThrowRunTaskServiceException() throws Exception {
-        when(taskRepository.findById(task.getIdentifier())).thenReturn(Optional.empty());
+        Mockito.when(taskRepository.findById(task.getIdentifier())).thenReturn(Optional.empty());
 
         String expectedMessage = "task {" + task.getIdentifier() + "} not found to associate with this run";
 
@@ -350,12 +362,14 @@ public class TaskServiceTest {
             () -> taskService.createRunForTask(task.getIdentifier().toString())
         );
         Assertions.assertEquals(expectedMessage, exception.getMessage());
+        Mockito.verify(taskRepository, Mockito.times(1)).findById(task.getIdentifier());
+        Mockito.verify(runRepository, Mockito.times(0)).saveAndFlush(any(Run.class));
     }
 
     @DisplayName("Successfully create a task run by namespace and version")
     @Test
     void createRunForTaskByNamespaceAndVersionShouldReturnTaskRun() throws Exception {
-        when(taskRepository.findByNamespaceAndVersion(task.getNamespace(), task.getVersion())).thenReturn(task);
+        Mockito.when(taskRepository.findByNamespaceAndVersion(task.getNamespace(), task.getVersion())).thenReturn(task);
 
         TaskRun result = taskService.createRunForTask(task.getNamespace(), task.getVersion());
 
@@ -365,12 +379,14 @@ public class TaskServiceTest {
         Assertions.assertEquals(task.getVersion(), result.getTask().getVersion());
         Assertions.assertEquals(task.getDescription(), result.getTask().getDescription());
         Assertions.assertEquals(TaskRunState.CREATED, result.getState());
+        Mockito.verify(taskRepository, Mockito.times(1)).findByNamespaceAndVersion(task.getNamespace(), task.getVersion());
+        Mockito.verify(runRepository, Mockito.times(1)).saveAndFlush(any(Run.class));
     }
 
     @DisplayName("Fail to create a task run by namespace and version and throw RunTaskServiceException")
     @Test
     void createRunForTaskByNamespaceAndVersionShouldThrowRunTaskServiceException() throws Exception {
-        when(taskRepository.findByNamespaceAndVersion(task.getNamespace(), task.getVersion())).thenReturn(null);
+        Mockito.when(taskRepository.findByNamespaceAndVersion(task.getNamespace(), task.getVersion())).thenReturn(null);
 
         String expectedMessage = "task {" + task.getNamespace() + ":" +  task.getVersion() + "} not found to associate with this run";
 
@@ -379,5 +395,7 @@ public class TaskServiceTest {
             () -> taskService.createRunForTask(task.getNamespace(), task.getVersion())
         );
         Assertions.assertEquals(expectedMessage, exception.getMessage());
+        Mockito.verify(taskRepository, Mockito.times(1)).findByNamespaceAndVersion(task.getNamespace(), task.getVersion());
+        Mockito.verify(runRepository, Mockito.times(0)).saveAndFlush(any(Run.class));
     }
 }
