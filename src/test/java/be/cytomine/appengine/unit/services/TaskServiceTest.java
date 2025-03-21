@@ -2,8 +2,8 @@ package be.cytomine.appengine.unit.services;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -21,21 +21,25 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.mock.web.MockMultipartFile;
 
 import be.cytomine.appengine.dto.inputs.task.TaskDescription;
+import be.cytomine.appengine.dto.inputs.task.TaskRun;
 import be.cytomine.appengine.dto.inputs.task.UploadTaskArchive;
 import be.cytomine.appengine.exceptions.BundleArchiveException;
 import be.cytomine.appengine.exceptions.FileStorageException;
+import be.cytomine.appengine.exceptions.RunTaskServiceException;
 import be.cytomine.appengine.exceptions.TaskNotFoundException;
 import be.cytomine.appengine.exceptions.TaskServiceException;
 import be.cytomine.appengine.exceptions.ValidationException;
 import be.cytomine.appengine.handlers.RegistryHandler;
 import be.cytomine.appengine.handlers.StorageData;
 import be.cytomine.appengine.handlers.StorageHandler;
-import be.cytomine.appengine.models.task.Author;
 import be.cytomine.appengine.models.task.Task;
+import be.cytomine.appengine.repositories.RunRepository;
 import be.cytomine.appengine.repositories.TaskRepository;
 import be.cytomine.appengine.services.TaskService;
 import be.cytomine.appengine.services.TaskValidationService;
+import be.cytomine.appengine.states.TaskRunState;
 import be.cytomine.appengine.utils.ArchiveUtils;
+import be.cytomine.appengine.utils.TaskUtils;
 import be.cytomine.appengine.utils.TestTaskBuilder;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -57,6 +61,9 @@ public class TaskServiceTest {
     private StorageHandler storageHandler;
 
     @Mock
+    private RunRepository runRepository;
+
+    @Mock
     private TaskRepository taskRepository;
 
     @Mock
@@ -71,20 +78,7 @@ public class TaskServiceTest {
 
     @BeforeAll
     public static void setUp() throws Exception {
-        Author author = new Author();
-        author.setFirstName("Cytomine");
-        author.setLastName("ULiege");
-        author.setOrganization("University of Liege");
-        author.setEmail("cytomine@uliege.be");
-        author.setContact(true);
-
-        task = new Task();
-        task.setIdentifier(UUID.randomUUID());
-        task.setNamespace("namespace");
-        task.setVersion("version");
-        task.setStorageReference("storageReference");
-        task.setDescription("Test Task Description");
-        task.setAuthors(Set.of(author));
+        task = TaskUtils.createTestTask();
 
         uploadTaskArchive = new UploadTaskArchive();
         uploadTaskArchive.setDockerImage(File.createTempFile("docker-image", ".tar"));
@@ -295,5 +289,95 @@ public class TaskServiceTest {
         Optional<TaskDescription> result = taskService.retrieveTaskDescription(task.getNamespace(), task.getVersion());
 
         Assertions.assertFalse(result.isPresent());
+    }
+
+    @DisplayName("Successfully retrieve all task descriptions")
+    @Test
+    void retrieveTaskDescriptionsShouldReturnAllTaskDescriptions() {
+        when(taskRepository.findAll()).thenReturn(List.of(task));
+
+        List<TaskDescription> result = taskService.retrieveTaskDescriptions();
+
+        Assertions.assertTrue(result.size() > 0);
+    }
+
+    @DisplayName("Successfully retrieve no task descriptions")
+    @Test
+    void retrieveTaskDescriptionsShouldReturnEmpty() {
+        when(taskRepository.findAll()).thenReturn(List.of());
+
+        List<TaskDescription> result = taskService.retrieveTaskDescriptions();
+
+        Assertions.assertTrue(result.size() == 0);
+    }
+
+    @DisplayName("Successfully create a task description")
+    @Test
+    void makeTaskDescriptionShouldReturnTaskDescription() {
+        TaskDescription result = taskService.makeTaskDescription(task);
+
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(task.getIdentifier(), result.getId());
+        Assertions.assertEquals(task.getNamespace(), result.getNamespace());
+        Assertions.assertEquals(task.getVersion(), result.getVersion());
+        Assertions.assertEquals(task.getDescription(), result.getDescription());
+    }
+
+    @DisplayName("Successfully create a task run by ID")
+    @Test
+    void createRunForTaskByIdShouldReturnTaskRun() throws Exception {
+        when(taskRepository.findById(task.getIdentifier())).thenReturn(Optional.of(task));
+
+        TaskRun result = taskService.createRunForTask(task.getIdentifier().toString());
+
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(task.getIdentifier(), result.getTask().getId());
+        Assertions.assertEquals(task.getNamespace(), result.getTask().getNamespace());
+        Assertions.assertEquals(task.getVersion(), result.getTask().getVersion());
+        Assertions.assertEquals(task.getDescription(), result.getTask().getDescription());
+        Assertions.assertEquals(TaskRunState.CREATED, result.getState());
+    }
+
+    @DisplayName("Fail to create a task run by ID and throw RunTaskServiceException")
+    @Test
+    void createRunForTaskByIdShouldThrowRunTaskServiceException() throws Exception {
+        when(taskRepository.findById(task.getIdentifier())).thenReturn(Optional.empty());
+
+        String expectedMessage = "task {" + task.getIdentifier() + "} not found to associate with this run";
+
+        RunTaskServiceException exception = Assertions.assertThrows(
+            RunTaskServiceException.class,
+            () -> taskService.createRunForTask(task.getIdentifier().toString())
+        );
+        Assertions.assertEquals(expectedMessage, exception.getMessage());
+    }
+
+    @DisplayName("Successfully create a task run by namespace and version")
+    @Test
+    void createRunForTaskByNamespaceAndVersionShouldReturnTaskRun() throws Exception {
+        when(taskRepository.findByNamespaceAndVersion(task.getNamespace(), task.getVersion())).thenReturn(task);
+
+        TaskRun result = taskService.createRunForTask(task.getNamespace(), task.getVersion());
+
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(task.getIdentifier(), result.getTask().getId());
+        Assertions.assertEquals(task.getNamespace(), result.getTask().getNamespace());
+        Assertions.assertEquals(task.getVersion(), result.getTask().getVersion());
+        Assertions.assertEquals(task.getDescription(), result.getTask().getDescription());
+        Assertions.assertEquals(TaskRunState.CREATED, result.getState());
+    }
+
+    @DisplayName("Fail to create a task run by namespace and version and throw RunTaskServiceException")
+    @Test
+    void createRunForTaskByNamespaceAndVersionShouldThrowRunTaskServiceException() throws Exception {
+        when(taskRepository.findByNamespaceAndVersion(task.getNamespace(), task.getVersion())).thenReturn(null);
+
+        String expectedMessage = "task {" + task.getNamespace() + ":" +  task.getVersion() + "} not found to associate with this run";
+
+        RunTaskServiceException exception = Assertions.assertThrows(
+            RunTaskServiceException.class,
+            () -> taskService.createRunForTask(task.getNamespace(), task.getVersion())
+        );
+        Assertions.assertEquals(expectedMessage, exception.getMessage());
     }
 }
