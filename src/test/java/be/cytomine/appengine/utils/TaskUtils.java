@@ -16,7 +16,7 @@ import be.cytomine.appengine.models.task.integer.IntegerType;
 public class TaskUtils {
     public static UploadTaskArchive createTestUploadTaskArchive() throws IOException {
         File descriptorFile = new ClassPathResource("artifacts/descriptor.yml").getFile();
-        File dockerImage = File.createTempFile("docker-image", ".tar");
+        File dockerImage = new ClassPathResource("artifacts/image.tar").getFile();
 
         return new UploadTaskArchive(descriptorFile, dockerImage);
     }

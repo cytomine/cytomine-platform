@@ -29,7 +29,7 @@ public class ValidationException extends Exception {
     }
 
     public ValidationException(AppEngineError error) {
-        super();
+        super(error.getMessage());
         this.error = error;
     }
 

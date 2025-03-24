@@ -1,5 +1,7 @@
 package be.cytomine.appengine.unit.services;
 
+import java.nio.file.Files;
+
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -61,5 +63,22 @@ public class TaskValidationServiceTest {
         Mockito.verify(taskRepository, Mockito.times(1)).findByNamespaceAndVersion(namespace, version);
     }
 
+    @DisplayName("Successfully return void when image is valid")
+    @Test
+    public void validateImageShouldReturnVoid() throws Exception {
+        Assertions.assertDoesNotThrow(() -> taskValidationService.validateImage(archive));
+    }
 
+    @DisplayName("Fail to validate image and throw 'ValidationException'")
+    @Test
+    public void validateImageShouldThrowValidationException() throws Exception {
+        UploadTaskArchive missing = TaskUtils.createTestUploadTaskArchive();
+        missing.setDockerImage(Files.createTempFile("docker-image", ".tar").toFile());
+
+        ValidationException exception = Assertions.assertThrows(
+            ValidationException.class,
+            () -> taskValidationService.validateImage(missing)
+        );
+        Assertions.assertEquals("image is not invalid manifest is missing", exception.getMessage());
+    }
 }
