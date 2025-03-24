@@ -359,6 +359,7 @@ public class TaskProvisioningService {
         zipOut.close();
 
         log.info("Retrieving IO Archive: zipped...");
+
         return new StorageData(tempFile.toFile());
     }
 

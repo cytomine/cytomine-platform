@@ -11,6 +11,9 @@ import java.util.UUID;
 import org.springframework.core.io.ClassPathResource;
 
 import be.cytomine.appengine.dto.inputs.task.UploadTaskArchive;
+import be.cytomine.appengine.handlers.StorageData;
+import be.cytomine.appengine.handlers.StorageDataEntry;
+import be.cytomine.appengine.handlers.StorageDataType;
 import be.cytomine.appengine.models.task.Author;
 import be.cytomine.appengine.models.task.Input;
 import be.cytomine.appengine.models.task.Run;
@@ -85,7 +88,6 @@ public class TaskUtils {
         return task;
     }
 
-
     public static Run createTestRun(boolean binaryType) {
         return new Run(
             UUID.randomUUID(),
@@ -93,5 +95,12 @@ public class TaskUtils {
             createTestTask(binaryType),
             UUID.randomUUID().toString()
         );
+    }
+
+    public static StorageData createTestStorageData(String parameterName, String storageId) throws IOException {
+        File data = File.createTempFile("data", null);
+        data.deleteOnExit();
+
+        return new StorageData(new StorageDataEntry(data, parameterName, storageId, StorageDataType.FILE));
     }
 }

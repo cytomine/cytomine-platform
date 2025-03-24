@@ -26,16 +26,19 @@ import be.cytomine.appengine.handlers.SchedulerHandler;
 import be.cytomine.appengine.handlers.StorageData;
 import be.cytomine.appengine.handlers.StorageHandler;
 import be.cytomine.appengine.models.task.Input;
+import be.cytomine.appengine.models.task.ParameterType;
 import be.cytomine.appengine.models.task.Run;
+import be.cytomine.appengine.models.task.integer.IntegerPersistence;
 import be.cytomine.appengine.repositories.RunRepository;
+import be.cytomine.appengine.repositories.TypePersistenceRepository;
 import be.cytomine.appengine.repositories.file.FilePersistenceRepository;
 import be.cytomine.appengine.repositories.integer.IntegerPersistenceRepository;
 import be.cytomine.appengine.services.TaskProvisioningService;
+import be.cytomine.appengine.states.TaskRunState;
 import be.cytomine.appengine.utils.AppEngineApplicationContext;
 import be.cytomine.appengine.utils.TaskUtils;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
 
 @ExtendWith(MockitoExtension.class)
 public class TaskProvisioningServiceTest {
@@ -52,6 +55,9 @@ public class TaskProvisioningServiceTest {
     @Mock
     private RunRepository runRepository;
 
+    @Mock
+    private TypePersistenceRepository typePersistenceRepository;
+
     @InjectMocks
     private TaskProvisioningService taskProvisioningService;
 
@@ -66,13 +72,13 @@ public class TaskProvisioningServiceTest {
     @BeforeAll
     public static void setUp() {
         run = TaskUtils.createTestRun(false);
-        applicationContext = mock(ApplicationContext.class);
+        applicationContext = Mockito.mock(ApplicationContext.class);
 
         AppEngineApplicationContext appEngineContext = new AppEngineApplicationContext();
         appEngineContext.setApplicationContext(applicationContext);
 
-        filePersistenceRepository = mock(FilePersistenceRepository.class);
-        integerPersistenceRepository = mock(IntegerPersistenceRepository.class);
+        filePersistenceRepository = Mockito.mock(FilePersistenceRepository.class);
+        integerPersistenceRepository = Mockito.mock(IntegerPersistenceRepository.class);
         Mockito.when(applicationContext.getBean(FilePersistenceRepository.class)).thenReturn(filePersistenceRepository);
         Mockito.when(applicationContext.getBean(IntegerPersistenceRepository.class)).thenReturn(integerPersistenceRepository);
     }
@@ -181,5 +187,55 @@ public class TaskProvisioningServiceTest {
         Assertions.assertEquals("Error(s) occurred during a handling of a batch request.", exception.getMessage());
         Mockito.verify(runRepository, Mockito.times(1)).findById(localRun.getId());
         Mockito.verify(storageHandler, Mockito.times(0)).saveStorageData(any(Storage.class), any(StorageData.class));
+    }
+
+    @DisplayName("Successfully retrieve a zip archive")
+    @Test
+    public void retrieveIOZipArchiveShouldReturnStorageData() throws Exception {
+        String name = run.getTask().getInputs().iterator().next().getName();
+        String storageId = "inputs-archive-" + run.getId().toString();
+        StorageData mockStorageData = TaskUtils.createTestStorageData(name, storageId);
+
+        Mockito.when(storageHandler.readStorageData(any(StorageData.class))).thenReturn(mockStorageData);
+        Mockito.when(runRepository.findById(run.getId())).thenReturn(Optional.of(run));
+        Mockito.when(typePersistenceRepository.findTypePersistenceByRunIdAndParameterType(run.getId(), ParameterType.INPUT))
+            .thenReturn(List.of(new IntegerPersistence(42)));
+
+        StorageData result = taskProvisioningService.retrieveIOZipArchive(run.getId().toString(), ParameterType.INPUT);
+    
+        Assertions.assertEquals(mockStorageData.getEntryList().size(), result.getEntryList().size());
+        Assertions.assertTrue(result.peek().getData().getName().matches("inputs-archive-\\d*" + run.getId()));
+        Mockito.verify(runRepository, Mockito.times(1)).findById(run.getId());
+        Mockito.verify(storageHandler, Mockito.times(1)).readStorageData(any(StorageData.class));
+        Mockito.verify(typePersistenceRepository, Mockito.times(1)).findTypePersistenceByRunIdAndParameterType(run.getId(), ParameterType.INPUT);
+    }
+
+    @DisplayName("Failed to retrieve a zip archive and throw 'ProvisioningException' when run state is invalid")
+    @Test
+    public void retrieveIOZipArchiveShouldThrowProvisioningExceptionWhenInvalidRunState() throws Exception {
+        Run localRun = TaskUtils.createTestRun(false);
+        localRun.setState(TaskRunState.CREATED);
+
+        Mockito.when(runRepository.findById(localRun.getId())).thenReturn(Optional.of(localRun));
+
+        ProvisioningException exception = Assertions.assertThrows(
+            ProvisioningException.class,
+            () -> taskProvisioningService.retrieveIOZipArchive(localRun.getId().toString(), ParameterType.INPUT)
+        );
+        Assertions.assertEquals("run is in invalid state", exception.getMessage());
+    }
+
+    @DisplayName("Failed to retrieve a zip archive and throw 'ProvisioningException' when provisions are empty")
+    @Test
+    public void retrieveIOZipArchiveShouldThrowProvisioningExceptionWhenEmptyProvisions() throws Exception {
+        Mockito.when(runRepository.findById(run.getId())).thenReturn(Optional.of(run));
+        Mockito.when(typePersistenceRepository.findTypePersistenceByRunIdAndParameterType(run.getId(), ParameterType.INPUT))
+            .thenReturn(List.of());
+
+        ProvisioningException exception = Assertions.assertThrows(
+            ProvisioningException.class,
+            () -> taskProvisioningService.retrieveIOZipArchive(run.getId().toString(), ParameterType.INPUT)
+        );
+        Assertions.assertEquals("provisions not found", exception.getMessage());
     }
 }
