@@ -13,8 +13,10 @@ import org.springframework.core.io.ClassPathResource;
 import be.cytomine.appengine.dto.inputs.task.UploadTaskArchive;
 import be.cytomine.appengine.models.task.Author;
 import be.cytomine.appengine.models.task.Input;
+import be.cytomine.appengine.models.task.Run;
 import be.cytomine.appengine.models.task.Task;
 import be.cytomine.appengine.models.task.integer.IntegerType;
+import be.cytomine.appengine.states.TaskRunState;
 
 public class TaskUtils {
     public static UploadTaskArchive createTestUploadTaskArchive() throws IOException {
@@ -42,12 +44,15 @@ public class TaskUtils {
     }
 
     public static Input createTestInput() {
+        IntegerType integerType = new IntegerType();
+        integerType.setCharset("UTF-8");
+
         Input input = new Input();
         input.setName("input");
         input.setDisplayName("Input");
         input.setDescription("Input description");
         input.setOptional(false);
-        input.setType(new IntegerType());
+        input.setType(integerType);
 
         return input;
     }
@@ -63,5 +68,14 @@ public class TaskUtils {
         task.setInputs(Set.of(createTestInput()));
 
         return task;
+    }
+
+    public static Run createTestRun() {
+        return new Run(
+            UUID.randomUUID(),
+            TaskRunState.CREATED,
+            createTestTask(),
+            UUID.randomUUID().toString()
+        );
     }
 }
