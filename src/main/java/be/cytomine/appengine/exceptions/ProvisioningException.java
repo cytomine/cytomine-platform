@@ -16,7 +16,7 @@ public class ProvisioningException extends Exception {
     }
 
     public ProvisioningException(AppEngineError error) {
-        super();
+        super(error.getMessage());
         this.error = error;
     }
 

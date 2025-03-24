@@ -18,6 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationContext;
 
 import be.cytomine.appengine.dto.handlers.filestorage.Storage;
+import be.cytomine.appengine.exceptions.ProvisioningException;
 import be.cytomine.appengine.handlers.SchedulerHandler;
 import be.cytomine.appengine.handlers.StorageData;
 import be.cytomine.appengine.handlers.StorageHandler;
@@ -111,9 +112,19 @@ public class TaskProvisioningServiceTest {
         Mockito.verify(storageHandler, Mockito.times(1)).saveStorageData(any(Storage.class), any(StorageData.class));
     }
 
-    // @DisplayName("Failed to provision a run parameter and throw 'ProvisioningException'")
-    // @Test
-    // public void provisionRunParameterShouldThrowProvisioningException() {
+    @DisplayName("Failed to provision a run parameter and throw 'ProvisioningException'")
+    @Test
+    public void provisionRunParameterShouldThrowProvisioningException() throws Exception {
+        String name = run.getTask().getInputs().iterator().next().getName();
+        ObjectNode value = new ObjectMapper().createObjectNode().put("unwanted", "value");
 
-    // }
+        Mockito.when(runRepository.findById(run.getId())).thenReturn(Optional.of(run));
+
+        ProvisioningException exception = Assertions.assertThrows(
+            ProvisioningException.class,
+            () -> taskProvisioningService.provisionRunParameter(run.getId().toString(), name, value)
+        );
+        Assertions.assertEquals("unable to process json", exception.getMessage());
+        Mockito.verify(runRepository, Mockito.times(1)).findById(run.getId());
+    }
 }
