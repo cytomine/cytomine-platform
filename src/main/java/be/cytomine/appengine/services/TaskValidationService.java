@@ -83,9 +83,9 @@ public class TaskValidationService {
         throw new ValidationException(error);
     }
 
-    public void validateDescriptorFile(UploadTaskArchive task) throws ValidationException {
+    public void validateDescriptorFile(UploadTaskArchive archive) throws ValidationException {
         Set<ValidationMessage> errors = getDescriptorJsonSchemaV7()
-            .validate(getDescriptorJsonNode(task));
+            .validate(archive.getDescriptorFileAsJson());
         // prepare error list just in case
         List<AppEngineError> multipleErrors = new ArrayList<>();
         for (ValidationMessage message : errors) {
@@ -117,22 +117,6 @@ public class TaskValidationService {
             parameterError
         );
         return error;
-    }
-
-    public static JsonNode getDescriptorJsonNode(
-        UploadTaskArchive task
-    ) throws ValidationException {
-        ObjectMapper descriptorMapper = new ObjectMapper(new YAMLFactory());
-        JsonNode descriptorJsonNode;
-        try {
-            descriptorJsonNode = descriptorMapper.readTree(task.getDescriptorFile());
-        } catch (IOException e) {
-            AppEngineError error = ErrorBuilder.build(
-                ErrorCode.INTERNAL_DESCRIPTOR_EXTRACTION_FAILED
-            );
-            throw new ValidationException(error);
-        }
-        return descriptorJsonNode;
     }
 
     private static JsonSchema getDescriptorJsonSchemaV7() throws ValidationException {

@@ -2,6 +2,8 @@ package be.cytomine.appengine.unit.services;
 
 import java.nio.file.Files;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -57,8 +59,9 @@ public class TaskValidationServiceTest {
         Mockito.when(taskRepository.findByNamespaceAndVersion(namespace, version)).thenReturn(task);
 
         ValidationException exception = Assertions.assertThrows(
-                ValidationException.class,
-                () -> taskValidationService.checkIsNotDuplicate(archive));
+            ValidationException.class,
+            () -> taskValidationService.checkIsNotDuplicate(archive)
+        );
         Assertions.assertEquals("Task already exists.", exception.getMessage());
         Mockito.verify(taskRepository, Mockito.times(1)).findByNamespaceAndVersion(namespace, version);
     }
@@ -80,5 +83,28 @@ public class TaskValidationServiceTest {
             () -> taskValidationService.validateImage(missing)
         );
         Assertions.assertEquals("image is not invalid manifest is missing", exception.getMessage());
+    }
+
+    @DisplayName("Successfully validate the descriptor")
+    @Test
+    public void validateDescriptorFileShouldReturnVoid() throws Exception {
+        Assertions.assertDoesNotThrow(() -> taskValidationService.validateDescriptorFile(archive));
+    }
+
+    @DisplayName("Fail to valide the descriptor throw 'ValidationException'")
+    @Test
+    public void validateDescriptorFileShouldThrowValidationException() throws Exception {
+        UploadTaskArchive invalid = TaskUtils.createTestUploadTaskArchive();
+        JsonNode descriptor = invalid.getDescriptorFileAsJson();
+
+        ObjectNode node = (ObjectNode) descriptor;
+        node.put("name", "a");
+        invalid.setDescriptorFileAsJson(descriptor);
+
+        ValidationException exception = Assertions.assertThrows(
+            ValidationException.class,
+            () -> taskValidationService.validateDescriptorFile(invalid)
+        );
+        Assertions.assertEquals("schema validation failed for descriptor.yml", exception.getMessage());
     }
 }
