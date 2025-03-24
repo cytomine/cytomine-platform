@@ -1,5 +1,6 @@
 package be.cytomine.appengine.unit.services;
 
+import java.io.File;
 import java.util.Optional;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -22,6 +23,7 @@ import be.cytomine.appengine.handlers.StorageData;
 import be.cytomine.appengine.handlers.StorageHandler;
 import be.cytomine.appengine.models.task.Run;
 import be.cytomine.appengine.repositories.RunRepository;
+import be.cytomine.appengine.repositories.file.FilePersistenceRepository;
 import be.cytomine.appengine.repositories.integer.IntegerPersistenceRepository;
 import be.cytomine.appengine.services.TaskProvisioningService;
 import be.cytomine.appengine.utils.AppEngineApplicationContext;
@@ -50,19 +52,23 @@ public class TaskProvisioningServiceTest {
 
     private static ApplicationContext applicationContext;
 
+    private static FilePersistenceRepository filePersistenceRepository;
+
     private static IntegerPersistenceRepository integerPersistenceRepository;
 
     private static Run run;
 
     @BeforeAll
     public static void setUp() {
-        run = TaskUtils.createTestRun();
+        run = TaskUtils.createTestRun(false);
         applicationContext = mock(ApplicationContext.class);
 
         AppEngineApplicationContext appEngineContext = new AppEngineApplicationContext();
         appEngineContext.setApplicationContext(applicationContext);
 
+        filePersistenceRepository = mock(FilePersistenceRepository.class);
         integerPersistenceRepository = mock(IntegerPersistenceRepository.class);
+        Mockito.when(applicationContext.getBean(FilePersistenceRepository.class)).thenReturn(filePersistenceRepository);
         Mockito.when(applicationContext.getBean(IntegerPersistenceRepository.class)).thenReturn(integerPersistenceRepository);
     }
 
@@ -70,7 +76,6 @@ public class TaskProvisioningServiceTest {
     @Test
     public void provisionRunParameterWithJsonShouldReturnJsonNode() throws Exception {
         String name = run.getTask().getInputs().iterator().next().getName();
-
         ObjectNode value = new ObjectMapper().createObjectNode();
         value.put("param_name", name);
         value.put("value", 42);
@@ -87,11 +92,24 @@ public class TaskProvisioningServiceTest {
         Mockito.verify(storageHandler, Mockito.times(1)).saveStorageData(any(Storage.class), any(StorageData.class));
     }
 
-    // @DisplayName("Successfully provision a run parameter with binary data")
-    // @Test
-    // public void provisionRunParameterWithFileShouldReturnJsonNode() {
+    @DisplayName("Successfully provision a run parameter with binary data")
+    @Test
+    public void provisionRunParameterWithFileShouldReturnJsonNode() throws Exception {
+        Run localRun = TaskUtils.createTestRun(true);
+        String name = localRun.getTask().getInputs().iterator().next().getName();
+        File value = File.createTempFile("input", null);
+        value.deleteOnExit();
 
-    // }
+        Mockito.when(runRepository.findById(localRun.getId())).thenReturn(Optional.of(localRun));
+
+        JsonNode result = taskProvisioningService.provisionRunParameter(localRun.getId().toString(), name, value);
+
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(name, result.get("param_name").asText());
+        Assertions.assertEquals(localRun.getId().toString(), result.get("task_run_id").asText());
+        Mockito.verify(runRepository, Mockito.times(1)).findById(localRun.getId());
+        Mockito.verify(storageHandler, Mockito.times(1)).saveStorageData(any(Storage.class), any(StorageData.class));
+    }
 
     // @DisplayName("Failed to provision a run parameter and throw 'ProvisioningException'")
     // @Test

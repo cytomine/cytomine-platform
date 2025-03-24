@@ -15,6 +15,8 @@ import be.cytomine.appengine.models.task.Author;
 import be.cytomine.appengine.models.task.Input;
 import be.cytomine.appengine.models.task.Run;
 import be.cytomine.appengine.models.task.Task;
+import be.cytomine.appengine.models.task.Type;
+import be.cytomine.appengine.models.task.file.FileType;
 import be.cytomine.appengine.models.task.integer.IntegerType;
 import be.cytomine.appengine.states.TaskRunState;
 
@@ -43,21 +45,21 @@ public class TaskUtils {
         return author;
     }
 
-    public static Input createTestInput() {
-        IntegerType integerType = new IntegerType();
-        integerType.setCharset("UTF-8");
+    public static Input createTestInput(boolean binaryType) {
+        Type type = binaryType ? new FileType() : new IntegerType();
+        type.setCharset("UTF-8");
 
         Input input = new Input();
         input.setName("input");
         input.setDisplayName("Input");
         input.setDescription("Input description");
         input.setOptional(false);
-        input.setType(integerType);
+        input.setType(type);
 
         return input;
     }
 
-    public static Task createTestTask() {
+    public static Task createTestTask(boolean binaryType) {
         Task task = new Task();
         task.setIdentifier(UUID.randomUUID());
         task.setNamespace("namespace");
@@ -65,16 +67,16 @@ public class TaskUtils {
         task.setStorageReference("storageReference");
         task.setDescription("Test Task Description");
         task.setAuthors(Set.of(createTestAuthor()));
-        task.setInputs(Set.of(createTestInput()));
+        task.setInputs(Set.of(createTestInput(binaryType)));
 
         return task;
     }
 
-    public static Run createTestRun() {
+    public static Run createTestRun(boolean binaryType) {
         return new Run(
             UUID.randomUUID(),
             TaskRunState.CREATED,
-            createTestTask(),
+            createTestTask(binaryType),
             UUID.randomUUID().toString()
         );
     }
