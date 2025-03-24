@@ -38,7 +38,7 @@ public class TaskValidationServiceTest {
 
     @DisplayName("Successfully return void when no duplicates")
     @Test
-    public void checkIsNotDuplicateShouldReturnTrue() throws Exception {
+    public void checkIsNotDuplicateShouldReturnVoid() throws Exception {
         String namespace = archive.getDescriptorFileAsJson().get("namespace").textValue();
         String version = archive.getDescriptorFileAsJson().get("version").textValue();
         Mockito.when(taskRepository.findByNamespaceAndVersion(namespace, version)).thenReturn(null);
@@ -49,7 +49,7 @@ public class TaskValidationServiceTest {
 
     @DisplayName("Successfully throw 'ValidationException' when duplicates")
     @Test
-    public void checkIsNotDuplicateShouldReturnFalse() {
+    public void checkIsNotDuplicateShouldThrowValidationException() {
         String namespace = archive.getDescriptorFileAsJson().get("namespace").textValue();
         String version = archive.getDescriptorFileAsJson().get("version").textValue();
         Mockito.when(taskRepository.findByNamespaceAndVersion(namespace, version)).thenReturn(task);
@@ -60,4 +60,6 @@ public class TaskValidationServiceTest {
         Assertions.assertEquals("Task already exists.", exception.getMessage());
         Mockito.verify(taskRepository, Mockito.times(1)).findByNamespaceAndVersion(namespace, version);
     }
+
+
 }
