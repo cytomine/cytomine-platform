@@ -91,7 +91,7 @@ public class TaskValidationServiceTest {
         Assertions.assertDoesNotThrow(() -> taskValidationService.validateDescriptorFile(archive));
     }
 
-    @DisplayName("Fail to valide the descriptor throw 'ValidationException'")
+    @DisplayName("Fail to validate the descriptor throw 'ValidationException'")
     @Test
     public void validateDescriptorFileShouldThrowValidationException() throws Exception {
         UploadTaskArchive invalid = TaskUtils.createTestUploadTaskArchive();
