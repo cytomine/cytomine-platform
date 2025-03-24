@@ -1,7 +1,10 @@
 package be.cytomine.appengine.unit.services;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -22,6 +25,7 @@ import be.cytomine.appengine.exceptions.ProvisioningException;
 import be.cytomine.appengine.handlers.SchedulerHandler;
 import be.cytomine.appengine.handlers.StorageData;
 import be.cytomine.appengine.handlers.StorageHandler;
+import be.cytomine.appengine.models.task.Input;
 import be.cytomine.appengine.models.task.Run;
 import be.cytomine.appengine.repositories.RunRepository;
 import be.cytomine.appengine.repositories.file.FilePersistenceRepository;
@@ -126,5 +130,56 @@ public class TaskProvisioningServiceTest {
         );
         Assertions.assertEquals("unable to process json", exception.getMessage());
         Mockito.verify(runRepository, Mockito.times(1)).findById(run.getId());
+        Mockito.verify(storageHandler, Mockito.times(0)).saveStorageData(any(Storage.class), any(StorageData.class));
+    }
+
+    @DisplayName("Successfully provision multiple run parameters")
+    @Test
+    public void provisionMultipleRunParametersShouldReturnListJsonNode() throws Exception {
+        Run localRun = TaskUtils.createTestRun(false);
+        localRun.setTask(TaskUtils.createTestTaskWithMultipleInputs());
+
+        List<JsonNode> values = new ArrayList<>();
+        for (Input input : localRun.getTask().getInputs()) {
+            ObjectNode value = new ObjectMapper().createObjectNode();
+            value.put("param_name", input.getName());
+            value.put("value", new Random().nextInt(100));
+            values.add(value);
+        }
+
+        Mockito.when(runRepository.findById(localRun.getId())).thenReturn(Optional.of(localRun));
+
+        List<JsonNode> result = taskProvisioningService.provisionMultipleRunParameters(localRun.getId().toString(), values);
+
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(values.size(), result.size());
+        Mockito.verify(runRepository, Mockito.times(1)).findById(localRun.getId());
+        Mockito.verify(storageHandler, Mockito.times(2)).saveStorageData(any(Storage.class), any(StorageData.class));
+    }
+
+    @DisplayName("Failed to provision multiple run parameters")
+    @Test
+    public void provisionMultipleRunParametersShouldThrowProvisioningException() throws Exception {
+        Run localRun = TaskUtils.createTestRun(false);
+        localRun.setTask(TaskUtils.createTestTaskWithMultipleInputs());
+
+        List<JsonNode> values = new ArrayList<>();
+        for (Input input : localRun.getTask().getInputs()) {
+            ObjectNode value = new ObjectMapper().createObjectNode();
+            value.put("param_name", input.getName());
+            value.put("value", new Random().nextInt(100));
+            value.put("unwanted", "value");
+            values.add(value);
+        }
+
+        Mockito.when(runRepository.findById(localRun.getId())).thenReturn(Optional.of(localRun));
+
+        ProvisioningException exception = Assertions.assertThrows(
+            ProvisioningException.class,
+            () -> taskProvisioningService.provisionMultipleRunParameters(localRun.getId().toString(), values)
+        );
+        Assertions.assertEquals("Error(s) occurred during a handling of a batch request.", exception.getMessage());
+        Mockito.verify(runRepository, Mockito.times(1)).findById(localRun.getId());
+        Mockito.verify(storageHandler, Mockito.times(0)).saveStorageData(any(Storage.class), any(StorageData.class));
     }
 }

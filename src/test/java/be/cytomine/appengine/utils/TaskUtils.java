@@ -45,12 +45,12 @@ public class TaskUtils {
         return author;
     }
 
-    public static Input createTestInput(boolean binaryType) {
+    public static Input createTestInput(String name, boolean binaryType) {
         Type type = binaryType ? new FileType() : new IntegerType();
         type.setCharset("UTF-8");
 
         Input input = new Input();
-        input.setName("input");
+        input.setName(name);
         input.setDisplayName("Input");
         input.setDescription("Input description");
         input.setOptional(false);
@@ -67,10 +67,24 @@ public class TaskUtils {
         task.setStorageReference("storageReference");
         task.setDescription("Test Task Description");
         task.setAuthors(Set.of(createTestAuthor()));
-        task.setInputs(Set.of(createTestInput(binaryType)));
+        task.setInputs(Set.of(createTestInput("name", binaryType)));
 
         return task;
     }
+
+    public static Task createTestTaskWithMultipleInputs() {
+        Task task = new Task();
+        task.setIdentifier(UUID.randomUUID());
+        task.setNamespace("namespace");
+        task.setVersion("version");
+        task.setStorageReference("storageReference");
+        task.setDescription("Test Task Description");
+        task.setAuthors(Set.of(createTestAuthor()));
+        task.setInputs(Set.of(createTestInput("name 1", false), createTestInput("name 2", false)));
+
+        return task;
+    }
+
 
     public static Run createTestRun(boolean binaryType) {
         return new Run(
