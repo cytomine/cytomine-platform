@@ -28,6 +28,7 @@ import be.cytomine.appengine.dto.inputs.task.State;
 import be.cytomine.appengine.dto.inputs.task.StateAction;
 import be.cytomine.appengine.dto.inputs.task.TaskRunParameterValue;
 import be.cytomine.appengine.dto.inputs.task.TaskRunResponse;
+import be.cytomine.appengine.exceptions.FileStorageException;
 import be.cytomine.appengine.exceptions.ProvisioningException;
 import be.cytomine.appengine.handlers.SchedulerHandler;
 import be.cytomine.appengine.handlers.StorageData;
@@ -426,6 +427,38 @@ public class TaskProvisioningServiceTest {
         );
         assertEquals("run is in invalid state", exception.getMessage());
         verify(runRepository, times(1)).findById(localRun.getId());
+    }
+
+    @DisplayName("Successfully retrieve a single IO")
+    @Test
+    public void retrieveSingleRunIOShouldReturnSingleIO() throws Exception {
+        String storageId = "task-run-inputs-" + run.getId();
+        String parameterName = run.getTask().getInputs().iterator().next().getName();
+        IntegerPersistence input = new IntegerPersistence(42);
+        input.setParameterName(parameterName);
+        StorageData mockStorageData = TaskUtils.createTestStorageData(parameterName, storageId);
+
+        when(storageHandler.readStorageData(any(StorageData.class))).thenReturn(mockStorageData);
+
+        File result =  taskProvisioningService.retrieveSingleRunIO(run.getId().toString(), input.getParameterName(), ParameterType.INPUT);
+
+        assertEquals(mockStorageData.peek().getData().getName(), result.getName());
+        verify(storageHandler, times(1)).readStorageData(any(StorageData.class));
+    }
+
+    @DisplayName("Failed to retrieve the single IO and throw 'ProvisioningException'")
+    @Test
+    public void retrieveSingleRunIOShouldThrowProvisioningException() throws Exception {
+        String parameterName = run.getTask().getInputs().iterator().next().getName();
+
+        when(storageHandler.readStorageData(any(StorageData.class))).thenThrow(new FileStorageException("failed to read file from storage service"));
+
+        ProvisioningException exception = assertThrows(
+            ProvisioningException.class,
+            () -> taskProvisioningService.retrieveSingleRunIO(run.getId().toString(), parameterName, ParameterType.INPUT)
+        );
+        assertEquals("failed to read file from storage service", exception.getMessage());
+        verify(storageHandler, times(1)).readStorageData(any(StorageData.class));
     }
 
     @DisplayName("Successfully update the run state to PROVISIONED")
