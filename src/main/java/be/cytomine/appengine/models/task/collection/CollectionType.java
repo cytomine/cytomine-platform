@@ -269,13 +269,15 @@ public class CollectionType extends Type {
     // check that every list (collection or nested collection has array.yml)
     for (String key : lists.keySet()) {
       List<Object> collection = (List<Object>) lists.get(key);
-      boolean arrayYmlFound = false;
+      int arrayYmlFound = 0;
       for (Object item : collection) {
         Map<String, Object> itemMap = (Map<String, Object>) item;
-        arrayYmlFound = itemMap.containsKey("array.yml");
+        if(itemMap.containsKey("array.yml")){
+          arrayYmlFound++;
         }
-      if (!arrayYmlFound) {
-          throw new TypeValidationException("array.yml not found in collection " + key);
+        }
+      if (arrayYmlFound == 0) {
+          throw new TypeValidationException(ErrorCode.INTERNAL_MISSING_METADATA);
         }
     }
 
@@ -412,8 +414,11 @@ public class CollectionType extends Type {
       }
 
       // validate subtype
-      trackingType.validate(map.get("value"));
-      trackingType = parentType;
+      if (map.get("value") != null) {
+        trackingType.validate(map.get("value"));
+        trackingType = parentType;
+      }
+
     }
   }
 
@@ -1134,7 +1139,43 @@ public class CollectionType extends Type {
 
             parentCollection.getItems().add(booleanPersistence);
             break;
-          default: throw new ProvisioningException("unknown leaf type: " + leafType);
+          case "be.cytomine.appengine.models.task.file.FileType":
+            FilePersistence filePersistence = new FilePersistence();
+            filePersistence.setParameterType(ParameterType.OUTPUT);
+            filePersistence.setRunId(run.getId());
+            filePersistence.setParameterName(String.join("", nameParts));
+            filePersistence.setCollectionIndex(Arrays.stream(nameParts, 1, nameParts.length).collect(
+                Collectors.joining()));
+            filePersistence.setValue(null);
+            filePersistence.setValueType(ValueType.FILE);
+
+            parentCollection.getItems().add(filePersistence);
+            break;
+          case "be.cytomine.appengine.models.task.image.ImageType":
+            ImagePersistence imagePersistence = new ImagePersistence();
+            imagePersistence.setParameterType(ParameterType.OUTPUT);
+            imagePersistence.setRunId(run.getId());
+            imagePersistence.setParameterName(String.join("", nameParts));
+            imagePersistence.setCollectionIndex(Arrays.stream(nameParts, 1, nameParts.length).collect(
+                Collectors.joining()));
+            imagePersistence.setValue(null);
+            imagePersistence.setValueType(ValueType.IMAGE);
+
+            parentCollection.getItems().add(imagePersistence);
+            break;
+          case "be.cytomine.appengine.models.task.wsi.WsiType":
+            WsiPersistence wsiPersistence = new WsiPersistence();
+            wsiPersistence.setParameterType(ParameterType.OUTPUT);
+            wsiPersistence.setRunId(run.getId());
+            wsiPersistence.setParameterName(String.join("", nameParts));
+            wsiPersistence.setCollectionIndex(Arrays.stream(nameParts, 1, nameParts.length).collect(
+                Collectors.joining()));
+            wsiPersistence.setValue(null);
+            wsiPersistence.setValueType(ValueType.WSI);
+
+            parentCollection.getItems().add(wsiPersistence);
+            break;
+            default: throw new ProvisioningException("unknown leaf type: " + leafType);
         }
         
       }
@@ -1145,7 +1186,7 @@ public class CollectionType extends Type {
   }
 
   @Override
-  public StorageData mapToStorageFileData(JsonNode provision) throws FileStorageException
+  public StorageData mapToStorageFileData(JsonNode provision, Run run) throws FileStorageException
   {
       String name = null;
       // if provision is an item
@@ -1157,14 +1198,14 @@ public class CollectionType extends Type {
 
       // if provision is full collection
       return mapNode("/"+name, provision.get("value"),
-          new StorageData());
+          new StorageData(), run);
   }
 
-  private StorageData mapNode(String path, JsonNode value, StorageData container)
+  private StorageData mapNode(String path, JsonNode value, StorageData container, Run run)
       throws FileStorageException
   {
     if (value.isNull()){
-      throw new FileStorageException("invalid provision value");
+      throw new FileStorageException("invalid provision value"); // todo: fix exception
     }
     if (value.isArray()){
       container.add(new StorageDataEntry(path, StorageDataType.DIRECTORY));
@@ -1174,7 +1215,7 @@ public class CollectionType extends Type {
           path+"/"+"array.yml",
           StorageDataType.FILE));
       for (JsonNode item : value){
-        container = mapNode(path+"/"+item.get("index").asText(), item.get("value"),container);
+        container = mapNode(path+"/"+item.get("index").asText(), item.get("value"),container, run);
       }
     }
     if (value.isObject() || value.isValueNode()) {
@@ -1188,6 +1229,28 @@ public class CollectionType extends Type {
           path,
           StorageDataType.FILE
       );
+      // add the yml file to the storage data object
+
+      String ymlPath = "";
+      if (path.contains("/")){
+        ymlPath = path.substring(1, path.lastIndexOf("/"));
+      }
+      // todo : get the type persistence of the collection to get the size
+      CollectionPersistenceRepository collectionPersistenceRepository =
+          AppEngineApplicationContext.getBean(CollectionPersistenceRepository.class);
+      String persistenceParameterName = transform(ymlPath);
+      CollectionPersistence collectionPersistence = collectionPersistenceRepository.findCollectionPersistenceByParameterNameAndRunId(persistenceParameterName,run.getId());
+      int size = 0;
+      if (Objects.isNull(collectionPersistence)){
+        size = 1;
+      } else {
+        size = collectionPersistence.getSize() + 1;
+      }
+      String arrayDotYmpData = "size: " + size;
+      container.add(new StorageDataEntry(FileHelper.write("array.yml", arrayDotYmpData.getBytes(StandardCharsets.UTF_8)),
+          ymlPath+"/array.yml",
+          StorageDataType.FILE));
+
       container.add(itemFileEntry);
     }
     return container;
@@ -1261,7 +1324,12 @@ public class CollectionType extends Type {
 
         String entryValue = FileHelper.read(entry.getData(), getStorageCharset());
         String fileName = entry.getName().substring(entry.getName().lastIndexOf("/") + 1);
-        String fileNameWithoutExtension = fileName.substring(0, fileName.lastIndexOf("."));
+        String fileNameWithoutExtension = null;
+        if (fileName.contains(".")){
+          fileNameWithoutExtension = fileName.substring(0, fileName.lastIndexOf("."));
+        } else {
+          fileNameWithoutExtension = fileName;
+        }
 
         if (entry.getName().endsWith(".geojson")){
           String outerDirectoryName = outputName + "/";
@@ -1305,10 +1373,24 @@ public class CollectionType extends Type {
                break;
           case "be.cytomine.appengine.models.task.number.NumberType":
                collectionItemValue.setValue(Double.parseDouble(entryValue));
+               collectionItemValue.setType(ValueType.NUMBER);
                break;
           case "be.cytomine.appengine.models.task.bool.BooleanType":
                collectionItemValue.setValue(Boolean.parseBoolean(entryValue));
+               collectionItemValue.setType(ValueType.BOOLEAN);
                break;
+          case "be.cytomine.appengine.models.task.file.FileType":
+                collectionItemValue.setValue(null);
+                collectionItemValue.setType(ValueType.FILE);
+                break;
+          case "be.cytomine.appengine.models.task.image.ImageType":
+                collectionItemValue.setValue(null);
+                collectionItemValue.setType(ValueType.IMAGE);
+                break;
+          case "be.cytomine.appengine.models.task.wsi.WsiType":
+                collectionItemValue.setValue(null);
+                collectionItemValue.setType(ValueType.WSI);
+                break;
           default: throw new ProvisioningException("unknown leaf type: " + leafType);
         }
         itemListsDictionary.get(entry.getName().substring(0,entry.getName().lastIndexOf("/") + 1)).add(collectionItemValue);
