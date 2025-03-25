@@ -2,6 +2,7 @@ package be.cytomine.appengine.unit.services;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -41,6 +42,7 @@ import be.cytomine.appengine.states.TaskRunState;
 import be.cytomine.appengine.utils.AppEngineApplicationContext;
 import be.cytomine.appengine.utils.TaskUtils;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 
 @ExtendWith(MockitoExtension.class)
@@ -326,5 +328,29 @@ public class TaskProvisioningServiceTest {
         );
         Assertions.assertEquals("some outputs are missing in the archive", exception.getMessage());
         Mockito.verify(runRepository, Mockito.times(1)).findById(localRun.getId());
+    }
+
+    @DisplayName("Successfuly get the storage charset")
+    @Test
+    public void getStorageCharsetShouldReturnCorrectCharset() {
+        assertEquals(StandardCharsets.US_ASCII, taskProvisioningService.getStorageCharset("US_ASCII"));
+        assertEquals(StandardCharsets.ISO_8859_1, taskProvisioningService.getStorageCharset("ISO_8859_1"));
+        assertEquals(StandardCharsets.UTF_16LE, taskProvisioningService.getStorageCharset("UTF_16LE"));
+        assertEquals(StandardCharsets.UTF_16BE, taskProvisioningService.getStorageCharset("UTF_16BE"));
+        assertEquals(StandardCharsets.UTF_16, taskProvisioningService.getStorageCharset("UTF_16"));
+    }
+
+    @DisplayName("Successfuly get UTF-8 for unknown charset")
+    @Test
+    public void getStorageCharsetShouldReturnUTF8ByDefault() {
+        assertEquals(StandardCharsets.UTF_8, taskProvisioningService.getStorageCharset("UNKNOWN_CHARSET"));
+    }
+
+    @DisplayName("Successfuly get the storage charset for mixed case")
+    @Test
+    public void getStorageCharsetShouldReturnCorrectCharsetForMixedCase() {
+        assertEquals(StandardCharsets.US_ASCII, taskProvisioningService.getStorageCharset("us_ascii"));
+        assertEquals(StandardCharsets.ISO_8859_1, taskProvisioningService.getStorageCharset("iso_8859_1"));
+        assertEquals(StandardCharsets.UTF_16LE, taskProvisioningService.getStorageCharset("utf_16le"));
     }
 }
