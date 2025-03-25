@@ -162,8 +162,9 @@ public class TaskProvisioningService {
             .collect(Collectors.toSet());
 
         List<TypePersistence> persistenceList = typePersistenceRepository
-            .findTypePersistenceByRunIdAndParameterType(run.getId(),
-            ParameterType.INPUT);
+            .findTypePersistenceByRunIdAndParameterTypeAndParameterNameIn(run.getId(),
+            ParameterType.INPUT,
+            inputParameters.stream().map(Parameter::getName).toList());
         boolean allParametersAreChecked = inputParameters.size() == persistenceList.size();
         if (allParametersAreChecked && persistenceList.stream().allMatch(TypePersistence::isProvisioned)) {
             run.setState(TaskRunState.PROVISIONED);
@@ -289,7 +290,7 @@ public class TaskProvisioningService {
         Storage runStorage = new Storage("task-run-inputs-" + run.getId());
 
         try {
-            StorageData inputProvisionFileData = inputForType.getType().mapToStorageFileData(provision);
+            StorageData inputProvisionFileData = inputForType.getType().mapToStorageFileData(provision, run);
             fileStorageHandler.saveStorageData(runStorage, inputProvisionFileData);
         } catch (FileStorageException e) {
             AppEngineError error = ErrorBuilder.buildParamRelatedError(
@@ -902,7 +903,7 @@ public class TaskProvisioningService {
     private void checkBeforeExecutionMatches(Run run) throws ProvisioningException {
         AppEngineError error;
         List<Match> matches = run.getTask().getMatches().stream().filter(match ->
-            match.getWhen().equals(CheckTime.BEFORE_EXECUTION)).toList();
+            match.getCheckTime().equals(CheckTime.BEFORE_EXECUTION)).toList();
 
         if (!matches.isEmpty()) {
             for (Match match : matches) {
@@ -929,7 +930,7 @@ public class TaskProvisioningService {
     private List<AppEngineError> checkAfterExecutionMatches(Run run) throws ProvisioningException {
         List<AppEngineError> multipleErrors = new ArrayList<>();
         List<Match> matches = run.getTask().getMatches().stream().filter(match ->
-            match.getWhen().equals(CheckTime.AFTER_EXECUTION)).toList();
+            match.getCheckTime().equals(CheckTime.AFTER_EXECUTION)).toList();
 
         if (!matches.isEmpty()) {
             for (Match match : matches) {
