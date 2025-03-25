@@ -1,5 +1,6 @@
 package be.cytomine.appengine.utils;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -7,6 +8,8 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Set;
 import java.util.UUID;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import org.springframework.core.io.ClassPathResource;
 
@@ -16,6 +19,7 @@ import be.cytomine.appengine.handlers.StorageDataEntry;
 import be.cytomine.appengine.handlers.StorageDataType;
 import be.cytomine.appengine.models.task.Author;
 import be.cytomine.appengine.models.task.Input;
+import be.cytomine.appengine.models.task.Output;
 import be.cytomine.appengine.models.task.Run;
 import be.cytomine.appengine.models.task.Task;
 import be.cytomine.appengine.models.task.Type;
@@ -62,6 +66,20 @@ public class TaskUtils {
         return input;
     }
 
+    public static Output createTestOutput(String name, boolean binaryType) {
+        Type type = binaryType ? new FileType() : new IntegerType();
+        type.setCharset("UTF-8");
+
+        Output output = new Output();
+        output.setName(name);
+        output.setDisplayName("Output");
+        output.setDescription("output description");
+        output.setOptional(false);
+        output.setType(type);
+
+        return output;
+    }
+
     public static Task createTestTask(boolean binaryType) {
         Task task = new Task();
         task.setIdentifier(UUID.randomUUID());
@@ -71,11 +89,12 @@ public class TaskUtils {
         task.setDescription("Test Task Description");
         task.setAuthors(Set.of(createTestAuthor()));
         task.setInputs(Set.of(createTestInput("name", binaryType)));
+        task.setOutputs(Set.of(createTestOutput("out", binaryType)));
 
         return task;
     }
 
-    public static Task createTestTaskWithMultipleInputs() {
+    public static Task createTestTaskWithMultipleIO() {
         Task task = new Task();
         task.setIdentifier(UUID.randomUUID());
         task.setNamespace("namespace");
@@ -84,6 +103,7 @@ public class TaskUtils {
         task.setDescription("Test Task Description");
         task.setAuthors(Set.of(createTestAuthor()));
         task.setInputs(Set.of(createTestInput("name 1", false), createTestInput("name 2", false)));
+        task.setOutputs(Set.of(createTestOutput("out 1", false), createTestOutput("out 2", false)));
 
         return task;
     }
@@ -102,5 +122,20 @@ public class TaskUtils {
         data.deleteOnExit();
 
         return new StorageData(new StorageDataEntry(data, parameterName, storageId, StorageDataType.FILE));
+    }
+
+    public static byte[] createFakeOutputsZip(String... names) throws IOException {
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
+             ZipOutputStream zos = new ZipOutputStream(baos)) {
+
+            for (String name : names) {
+                zos.putNextEntry(new ZipEntry(name));
+                zos.write("42".getBytes());
+                zos.closeEntry();
+            }
+
+            zos.finish();
+            return baos.toByteArray();
+        }
     }
 }

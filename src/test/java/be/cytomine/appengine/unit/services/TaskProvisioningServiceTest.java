@@ -1,5 +1,6 @@
 package be.cytomine.appengine.unit.services;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,8 +20,10 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationContext;
+import org.springframework.web.multipart.MultipartFile;
 
 import be.cytomine.appengine.dto.handlers.filestorage.Storage;
+import be.cytomine.appengine.dto.inputs.task.TaskRunParameterValue;
 import be.cytomine.appengine.exceptions.ProvisioningException;
 import be.cytomine.appengine.handlers.SchedulerHandler;
 import be.cytomine.appengine.handlers.StorageData;
@@ -143,7 +146,7 @@ public class TaskProvisioningServiceTest {
     @Test
     public void provisionMultipleRunParametersShouldReturnListJsonNode() throws Exception {
         Run localRun = TaskUtils.createTestRun(false);
-        localRun.setTask(TaskUtils.createTestTaskWithMultipleInputs());
+        localRun.setTask(TaskUtils.createTestTaskWithMultipleIO());
 
         List<JsonNode> values = new ArrayList<>();
         for (Input input : localRun.getTask().getInputs()) {
@@ -167,7 +170,7 @@ public class TaskProvisioningServiceTest {
     @Test
     public void provisionMultipleRunParametersShouldThrowProvisioningException() throws Exception {
         Run localRun = TaskUtils.createTestRun(false);
-        localRun.setTask(TaskUtils.createTestTaskWithMultipleInputs());
+        localRun.setTask(TaskUtils.createTestTaskWithMultipleIO());
 
         List<JsonNode> values = new ArrayList<>();
         for (Input input : localRun.getTask().getInputs()) {
@@ -237,5 +240,91 @@ public class TaskProvisioningServiceTest {
             () -> taskProvisioningService.retrieveIOZipArchive(run.getId().toString(), ParameterType.INPUT)
         );
         Assertions.assertEquals("provisions not found", exception.getMessage());
+    }
+
+    @DisplayName("Successfully save the outputs archive")
+    @Test
+    public void postOutputsZipArchiveShouldReturnParameters() throws Exception {
+        Run localRun = TaskUtils.createTestRun(false);
+        localRun.setState(TaskRunState.RUNNING);
+        MultipartFile outputs = Mockito.mock(MultipartFile.class);
+
+        Mockito.when(outputs.getInputStream()).thenReturn(new ByteArrayInputStream(TaskUtils.createFakeOutputsZip("out")));
+        Mockito.when(runRepository.findById(localRun.getId())).thenReturn(Optional.of(localRun));
+
+        List<TaskRunParameterValue> results = taskProvisioningService.postOutputsZipArchive(localRun.getId().toString(), localRun.getSecret(), outputs);
+
+        Assertions.assertEquals(localRun.getTask().getOutputs().size(), results.size());
+        Mockito.verify(runRepository, Mockito.times(1)).findById(localRun.getId());
+        Mockito.verify(runRepository, Mockito.times(1)).saveAndFlush(any(Run.class));
+    }
+
+    @DisplayName("Failed to save the outputs archive and throw 'ProvisioningException' when not authenticated")
+    @Test
+    public void postOutputsZipArchiveShouldThrowProvisioningExceptionWhenNotAuth() throws Exception {
+        Run localRun = TaskUtils.createTestRun(false);
+        localRun.setState(TaskRunState.RUNNING);
+
+        Mockito.when(runRepository.findById(localRun.getId())).thenReturn(Optional.of(localRun));
+
+        ProvisioningException exception = Assertions.assertThrows(
+            ProvisioningException.class,
+            () -> taskProvisioningService.postOutputsZipArchive(localRun.getId().toString(), run.getSecret(), null)
+        );
+        Assertions.assertEquals("unauthenticated task failed to provision outputs for this run", exception.getMessage());
+        Mockito.verify(runRepository, Mockito.times(1)).findById(localRun.getId());
+    }
+
+    @DisplayName("Failed to save the outputs archive and throw 'ProvisioningException' when not in correct state")
+    @Test
+    public void postOutputsZipArchiveShouldThrowProvisioningExceptionWhenNotCorrectState() {
+        Run localRun = TaskUtils.createTestRun(false);
+        localRun.setState(TaskRunState.CREATED);
+
+        Mockito.when(runRepository.findById(localRun.getId())).thenReturn(Optional.of(localRun));
+
+        ProvisioningException exception = Assertions.assertThrows(
+            ProvisioningException.class,
+            () -> taskProvisioningService.postOutputsZipArchive(localRun.getId().toString(), localRun.getSecret(), null)
+        );
+        Assertions.assertEquals("run is in invalid state", exception.getMessage());
+        Mockito.verify(runRepository, Mockito.times(1)).findById(localRun.getId());
+    }
+
+    @DisplayName("Failed to save the outputs archive and throw 'ProvisioningException' when not in correct output")
+    @Test
+    public void postOutputsZipArchiveShouldThrowProvisioningExceptionWhenNotCorrectOutput() throws Exception {
+        Run localRun = TaskUtils.createTestRun(false);
+        localRun.setState(TaskRunState.RUNNING);
+        MultipartFile outputs = Mockito.mock(MultipartFile.class);
+
+        Mockito.when(outputs.getInputStream()).thenReturn(new ByteArrayInputStream(TaskUtils.createFakeOutputsZip("out", "invalid")));
+        Mockito.when(runRepository.findById(localRun.getId())).thenReturn(Optional.of(localRun));
+
+        ProvisioningException exception = Assertions.assertThrows(
+            ProvisioningException.class,
+            () -> taskProvisioningService.postOutputsZipArchive(localRun.getId().toString(), localRun.getSecret(), outputs)
+        );
+        Assertions.assertEquals("unexpected output, did not match an actual task output", exception.getMessage());
+        Mockito.verify(runRepository, Mockito.times(1)).findById(localRun.getId());
+    }
+
+    @DisplayName("Failed to save the outputs archive and throw 'ProvisioningException' when missing output")
+    @Test
+    public void postOutputsZipArchiveShouldThrowProvisioningExceptionWhenMissingOutput() throws Exception {
+        Run localRun = TaskUtils.createTestRun(false);
+        localRun.setState(TaskRunState.RUNNING);
+        localRun.setTask(TaskUtils.createTestTaskWithMultipleIO());
+        MultipartFile outputs = Mockito.mock(MultipartFile.class);
+
+        Mockito.when(outputs.getInputStream()).thenReturn(new ByteArrayInputStream(TaskUtils.createFakeOutputsZip("out 1")));
+        Mockito.when(runRepository.findById(localRun.getId())).thenReturn(Optional.of(localRun));
+
+        ProvisioningException exception = Assertions.assertThrows(
+            ProvisioningException.class,
+            () -> taskProvisioningService.postOutputsZipArchive(localRun.getId().toString(), localRun.getSecret(), outputs)
+        );
+        Assertions.assertEquals("some outputs are missing in the archive", exception.getMessage());
+        Mockito.verify(runRepository, Mockito.times(1)).findById(localRun.getId());
     }
 }
