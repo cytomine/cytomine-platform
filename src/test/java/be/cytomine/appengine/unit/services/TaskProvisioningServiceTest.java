@@ -156,35 +156,33 @@ public class TaskProvisioningServiceTest {
     @DisplayName("Successfully provision multiple run parameters")
     @Test
     public void provisionMultipleRunParametersShouldReturnListJsonNode() throws Exception {
-        Run localRun = TaskUtils.createTestRun(false);
-        localRun.setTask(TaskUtils.createTestTaskWithMultipleIO());
+        run.setTask(TaskUtils.createTestTaskWithMultipleIO());
 
         List<JsonNode> values = new ArrayList<>();
-        for (Input input : localRun.getTask().getInputs()) {
+        for (Input input : run.getTask().getInputs()) {
             ObjectNode value = new ObjectMapper().createObjectNode();
             value.put("param_name", input.getName());
             value.put("value", new Random().nextInt(100));
             values.add(value);
         }
 
-        when(runRepository.findById(localRun.getId())).thenReturn(Optional.of(localRun));
+        when(runRepository.findById(run.getId())).thenReturn(Optional.of(run));
 
-        List<JsonNode> result = taskProvisioningService.provisionMultipleRunParameters(localRun.getId().toString(), values);
+        List<JsonNode> result = taskProvisioningService.provisionMultipleRunParameters(run.getId().toString(), values);
 
         assertNotNull(result);
         assertEquals(values.size(), result.size());
-        verify(runRepository, times(1)).findById(localRun.getId());
+        verify(runRepository, times(1)).findById(run.getId());
         verify(storageHandler, times(2)).saveStorageData(any(Storage.class), any(StorageData.class));
     }
 
     @DisplayName("Failed to provision multiple run parameters")
     @Test
     public void provisionMultipleRunParametersShouldThrowProvisioningException() throws Exception {
-        Run localRun = TaskUtils.createTestRun(false);
-        localRun.setTask(TaskUtils.createTestTaskWithMultipleIO());
+        run.setTask(TaskUtils.createTestTaskWithMultipleIO());
 
         List<JsonNode> values = new ArrayList<>();
-        for (Input input : localRun.getTask().getInputs()) {
+        for (Input input : run.getTask().getInputs()) {
             ObjectNode value = new ObjectMapper().createObjectNode();
             value.put("param_name", input.getName());
             value.put("value", new Random().nextInt(100));
@@ -192,14 +190,14 @@ public class TaskProvisioningServiceTest {
             values.add(value);
         }
 
-        when(runRepository.findById(localRun.getId())).thenReturn(Optional.of(localRun));
+        when(runRepository.findById(run.getId())).thenReturn(Optional.of(run));
 
         ProvisioningException exception = assertThrows(
             ProvisioningException.class,
-            () -> taskProvisioningService.provisionMultipleRunParameters(localRun.getId().toString(), values)
+            () -> taskProvisioningService.provisionMultipleRunParameters(run.getId().toString(), values)
         );
         assertEquals("Error(s) occurred during a handling of a batch request.", exception.getMessage());
-        verify(runRepository, times(1)).findById(localRun.getId());
+        verify(runRepository, times(1)).findById(run.getId());
         verify(storageHandler, times(0)).saveStorageData(any(Storage.class), any(StorageData.class));
     }
 
