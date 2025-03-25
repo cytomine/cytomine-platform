@@ -65,6 +65,7 @@ public class ErrorDefinitions {
         codes.put(ErrorCode.INTERNAL_OUTPUT_FILE_FOR_PARAMETER_IS_BLANK, new MessageCode("APPE-internal-is-blank", "file for parameter is blank"));
         codes.put(ErrorCode.INTERNAL_INVALID_INDEXES_PATTERN, new MessageCode("APPE-internal-invalid-indexes", "indexes don't match pattern {^(0(/[0-9]+)*|[1-9][0-9]*(/[0-9]+)*)$}"));
         codes.put(ErrorCode.INTERNAL_NOT_MATCHING_DIFF_SIZE, new MessageCode("APPE-internal-not-matching", "collections don't have the same size"));
+        codes.put(ErrorCode.INTERNAL_MISSING_METADATA, new MessageCode("APPE-internal-missing-metadata", "collection does not have array.yml file"));
 
     }
 
