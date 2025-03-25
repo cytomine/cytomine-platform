@@ -40,6 +40,7 @@ import be.cytomine.appengine.repositories.TypePersistenceRepository;
 import be.cytomine.appengine.repositories.file.FilePersistenceRepository;
 import be.cytomine.appengine.repositories.integer.IntegerPersistenceRepository;
 import be.cytomine.appengine.services.TaskProvisioningService;
+import be.cytomine.appengine.services.TaskService;
 import be.cytomine.appengine.states.TaskRunState;
 import be.cytomine.appengine.utils.AppEngineApplicationContext;
 import be.cytomine.appengine.utils.TaskUtils;
@@ -71,6 +72,9 @@ public class TaskProvisioningServiceTest {
 
     @Mock
     private TypePersistenceRepository typePersistenceRepository;
+
+    @Mock
+    private TaskService taskService;
 
     @InjectMocks
     private TaskProvisioningService taskProvisioningService;
