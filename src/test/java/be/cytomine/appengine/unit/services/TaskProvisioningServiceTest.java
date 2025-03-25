@@ -24,6 +24,8 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.web.multipart.MultipartFile;
 
 import be.cytomine.appengine.dto.handlers.filestorage.Storage;
+import be.cytomine.appengine.dto.inputs.task.State;
+import be.cytomine.appengine.dto.inputs.task.StateAction;
 import be.cytomine.appengine.dto.inputs.task.TaskRunParameterValue;
 import be.cytomine.appengine.exceptions.ProvisioningException;
 import be.cytomine.appengine.handlers.SchedulerHandler;
@@ -43,7 +45,10 @@ import be.cytomine.appengine.utils.AppEngineApplicationContext;
 import be.cytomine.appengine.utils.TaskUtils;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 public class TaskProvisioningServiceTest {
@@ -330,7 +335,7 @@ public class TaskProvisioningServiceTest {
         Mockito.verify(runRepository, Mockito.times(1)).findById(localRun.getId());
     }
 
-    @DisplayName("Successfuly get the storage charset")
+    @DisplayName("Successfully get the storage charset")
     @Test
     public void getStorageCharsetShouldReturnCorrectCharset() {
         assertEquals(StandardCharsets.US_ASCII, taskProvisioningService.getStorageCharset("US_ASCII"));
@@ -340,17 +345,71 @@ public class TaskProvisioningServiceTest {
         assertEquals(StandardCharsets.UTF_16, taskProvisioningService.getStorageCharset("UTF_16"));
     }
 
-    @DisplayName("Successfuly get UTF-8 for unknown charset")
+    @DisplayName("Successfully get UTF-8 for unknown charset")
     @Test
     public void getStorageCharsetShouldReturnUTF8ByDefault() {
         assertEquals(StandardCharsets.UTF_8, taskProvisioningService.getStorageCharset("UNKNOWN_CHARSET"));
     }
 
-    @DisplayName("Successfuly get the storage charset for mixed case")
+    @DisplayName("Successfully get the storage charset for mixed case")
     @Test
     public void getStorageCharsetShouldReturnCorrectCharsetForMixedCase() {
         assertEquals(StandardCharsets.US_ASCII, taskProvisioningService.getStorageCharset("us_ascii"));
         assertEquals(StandardCharsets.ISO_8859_1, taskProvisioningService.getStorageCharset("iso_8859_1"));
         assertEquals(StandardCharsets.UTF_16LE, taskProvisioningService.getStorageCharset("utf_16le"));
+    }
+
+    @DisplayName("Successfully update the run state to PROVISIONED")
+    @Test
+    public void updateRunStateShouldUpdateStateToProvisioned() throws Exception {
+        Run localRun = TaskUtils.createTestRun(false);
+        State desiredState = new State();
+        desiredState.setDesired(TaskRunState.PROVISIONED);
+
+        Mockito.when(runRepository.findById(localRun.getId())).thenReturn(Optional.of(localRun));
+
+        StateAction result = taskProvisioningService.updateRunState(localRun.getId().toString(), desiredState);
+
+        assertEquals("success", result.getStatus());
+        assertEquals(localRun.getId(), result.getResource().getId());
+        assertEquals(TaskRunState.PROVISIONED, result.getResource().getState());
+        Mockito.verify(runRepository, Mockito.times(1)).findById(localRun.getId());
+        Mockito.verify(runRepository, Mockito.times(1)).saveAndFlush(any(Run.class));
+    }
+
+    @DisplayName("Successfully update the run state to RUNNING")
+    @Test
+    public void updateRunStateShouldUpdateStateToRunning() throws Exception {
+        Run localRun = TaskUtils.createTestRun(false);
+        localRun.setState(TaskRunState.PROVISIONED);
+        State desiredState = new State();
+        desiredState.setDesired(TaskRunState.RUNNING);
+
+        Mockito.when(runRepository.findById(localRun.getId())).thenReturn(Optional.of(localRun));
+
+        StateAction result = taskProvisioningService.updateRunState(localRun.getId().toString(), desiredState);
+
+        assertEquals("success", result.getStatus());
+        assertEquals(localRun.getId(), result.getResource().getId());
+        assertEquals(TaskRunState.QUEUING, result.getResource().getState());
+        Mockito.verify(runRepository, Mockito.times(1)).findById(localRun.getId());
+        Mockito.verify(runRepository, Mockito.times(1)).saveAndFlush(any(Run.class));
+    }
+
+    @DisplayName("Failed to update the run state and throw 'ProvisioningException'")
+    @Test
+    public void updateRunStateShouldThrowProvisioningException() {
+        Run localRun = TaskUtils.createTestRun(false);
+        State desiredState = new State();
+        desiredState.setDesired(TaskRunState.PENDING);
+
+        Mockito.when(runRepository.findById(localRun.getId())).thenReturn(Optional.of(localRun));
+
+        ProvisioningException exception = assertThrows(
+            ProvisioningException.class,
+            () -> taskProvisioningService.updateRunState(localRun.getId().toString(), desiredState)
+        );
+        assertEquals("unknown state in transition request", exception.getMessage());
+        verify(runRepository, times(1)).findById(localRun.getId());
     }
 }
