@@ -27,6 +27,7 @@ import be.cytomine.appengine.dto.handlers.filestorage.Storage;
 import be.cytomine.appengine.dto.inputs.task.State;
 import be.cytomine.appengine.dto.inputs.task.StateAction;
 import be.cytomine.appengine.dto.inputs.task.TaskRunParameterValue;
+import be.cytomine.appengine.dto.inputs.task.TaskRunResponse;
 import be.cytomine.appengine.exceptions.ProvisioningException;
 import be.cytomine.appengine.handlers.SchedulerHandler;
 import be.cytomine.appengine.handlers.StorageData;
@@ -49,6 +50,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class TaskProvisioningServiceTest {
@@ -411,5 +413,29 @@ public class TaskProvisioningServiceTest {
         );
         assertEquals("unknown state in transition request", exception.getMessage());
         verify(runRepository, times(1)).findById(localRun.getId());
+    }
+
+    @DisplayName("Successfully retrieve a task run")
+    @Test
+    public void retrieveRunShouldReturnCorrectRun() throws Exception {
+        when(runRepository.findById(run.getId())).thenReturn(Optional.of(run));
+
+        TaskRunResponse result = taskProvisioningService.retrieveRun(run.getId().toString());
+
+        assertEquals(result.getId(), run.getId());
+        assertEquals(result.getState(), run.getState());
+    }
+
+    @DisplayName("Failed to retrieve a task run and throw 'ProvisioningException'")
+    @Test
+    public void retrieveRunShouldThrowProvisioningException() throws ProvisioningException {
+        when(runRepository.findById(run.getId())).thenReturn(Optional.empty());
+
+        ProvisioningException exception = assertThrows(
+            ProvisioningException.class,
+            () -> taskProvisioningService.retrieveRun(run.getId().toString())
+        );
+        assertEquals("Run not found.", exception.getMessage());
+        verify(runRepository, times(1)).findById(run.getId());
     }
 }
