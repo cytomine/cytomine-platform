@@ -11,14 +11,12 @@ import java.util.Random;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.multipart.MultipartFile;
@@ -47,8 +45,11 @@ import be.cytomine.appengine.utils.AppEngineApplicationContext;
 import be.cytomine.appengine.utils.TaskUtils;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -85,15 +86,15 @@ public class TaskProvisioningServiceTest {
     @BeforeAll
     public static void setUp() {
         run = TaskUtils.createTestRun(false);
-        applicationContext = Mockito.mock(ApplicationContext.class);
+        applicationContext = mock(ApplicationContext.class);
 
         AppEngineApplicationContext appEngineContext = new AppEngineApplicationContext();
         appEngineContext.setApplicationContext(applicationContext);
 
-        filePersistenceRepository = Mockito.mock(FilePersistenceRepository.class);
-        integerPersistenceRepository = Mockito.mock(IntegerPersistenceRepository.class);
-        Mockito.when(applicationContext.getBean(FilePersistenceRepository.class)).thenReturn(filePersistenceRepository);
-        Mockito.when(applicationContext.getBean(IntegerPersistenceRepository.class)).thenReturn(integerPersistenceRepository);
+        filePersistenceRepository = mock(FilePersistenceRepository.class);
+        integerPersistenceRepository = mock(IntegerPersistenceRepository.class);
+        when(applicationContext.getBean(FilePersistenceRepository.class)).thenReturn(filePersistenceRepository);
+        when(applicationContext.getBean(IntegerPersistenceRepository.class)).thenReturn(integerPersistenceRepository);
     }
 
     @DisplayName("Successfully provision a run parameter with json data")
@@ -104,16 +105,16 @@ public class TaskProvisioningServiceTest {
         value.put("param_name", name);
         value.put("value", 42);
 
-        Mockito.when(runRepository.findById(run.getId())).thenReturn(Optional.of(run));
+        when(runRepository.findById(run.getId())).thenReturn(Optional.of(run));
 
         JsonNode result = taskProvisioningService.provisionRunParameter(run.getId().toString(), name, value);
 
-        Assertions.assertNotNull(result);
-        Assertions.assertEquals(value.get("param_name"), result.get("param_name"));
-        Assertions.assertEquals(value.get("value"), result.get("value"));
-        Assertions.assertEquals(run.getId().toString(), result.get("task_run_id").asText());
-        Mockito.verify(runRepository, Mockito.times(1)).findById(run.getId());
-        Mockito.verify(storageHandler, Mockito.times(1)).saveStorageData(any(Storage.class), any(StorageData.class));
+        assertNotNull(result);
+        assertEquals(value.get("param_name"), result.get("param_name"));
+        assertEquals(value.get("value"), result.get("value"));
+        assertEquals(run.getId().toString(), result.get("task_run_id").asText());
+        verify(runRepository, times(1)).findById(run.getId());
+        verify(storageHandler, times(1)).saveStorageData(any(Storage.class), any(StorageData.class));
     }
 
     @DisplayName("Successfully provision a run parameter with binary data")
@@ -124,15 +125,15 @@ public class TaskProvisioningServiceTest {
         File value = File.createTempFile("input", null);
         value.deleteOnExit();
 
-        Mockito.when(runRepository.findById(localRun.getId())).thenReturn(Optional.of(localRun));
+        when(runRepository.findById(localRun.getId())).thenReturn(Optional.of(localRun));
 
         JsonNode result = taskProvisioningService.provisionRunParameter(localRun.getId().toString(), name, value);
 
-        Assertions.assertNotNull(result);
-        Assertions.assertEquals(name, result.get("param_name").asText());
-        Assertions.assertEquals(localRun.getId().toString(), result.get("task_run_id").asText());
-        Mockito.verify(runRepository, Mockito.times(1)).findById(localRun.getId());
-        Mockito.verify(storageHandler, Mockito.times(1)).saveStorageData(any(Storage.class), any(StorageData.class));
+        assertNotNull(result);
+        assertEquals(name, result.get("param_name").asText());
+        assertEquals(localRun.getId().toString(), result.get("task_run_id").asText());
+        verify(runRepository, times(1)).findById(localRun.getId());
+        verify(storageHandler, times(1)).saveStorageData(any(Storage.class), any(StorageData.class));
     }
 
     @DisplayName("Failed to provision a run parameter and throw 'ProvisioningException'")
@@ -141,15 +142,15 @@ public class TaskProvisioningServiceTest {
         String name = run.getTask().getInputs().iterator().next().getName();
         ObjectNode value = new ObjectMapper().createObjectNode().put("unwanted", "value");
 
-        Mockito.when(runRepository.findById(run.getId())).thenReturn(Optional.of(run));
+        when(runRepository.findById(run.getId())).thenReturn(Optional.of(run));
 
-        ProvisioningException exception = Assertions.assertThrows(
+        ProvisioningException exception = assertThrows(
             ProvisioningException.class,
             () -> taskProvisioningService.provisionRunParameter(run.getId().toString(), name, value)
         );
-        Assertions.assertEquals("unable to process json", exception.getMessage());
-        Mockito.verify(runRepository, Mockito.times(1)).findById(run.getId());
-        Mockito.verify(storageHandler, Mockito.times(0)).saveStorageData(any(Storage.class), any(StorageData.class));
+        assertEquals("unable to process json", exception.getMessage());
+        verify(runRepository, times(1)).findById(run.getId());
+        verify(storageHandler, times(0)).saveStorageData(any(Storage.class), any(StorageData.class));
     }
 
     @DisplayName("Successfully provision multiple run parameters")
@@ -166,14 +167,14 @@ public class TaskProvisioningServiceTest {
             values.add(value);
         }
 
-        Mockito.when(runRepository.findById(localRun.getId())).thenReturn(Optional.of(localRun));
+        when(runRepository.findById(localRun.getId())).thenReturn(Optional.of(localRun));
 
         List<JsonNode> result = taskProvisioningService.provisionMultipleRunParameters(localRun.getId().toString(), values);
 
-        Assertions.assertNotNull(result);
-        Assertions.assertEquals(values.size(), result.size());
-        Mockito.verify(runRepository, Mockito.times(1)).findById(localRun.getId());
-        Mockito.verify(storageHandler, Mockito.times(2)).saveStorageData(any(Storage.class), any(StorageData.class));
+        assertNotNull(result);
+        assertEquals(values.size(), result.size());
+        verify(runRepository, times(1)).findById(localRun.getId());
+        verify(storageHandler, times(2)).saveStorageData(any(Storage.class), any(StorageData.class));
     }
 
     @DisplayName("Failed to provision multiple run parameters")
@@ -191,15 +192,15 @@ public class TaskProvisioningServiceTest {
             values.add(value);
         }
 
-        Mockito.when(runRepository.findById(localRun.getId())).thenReturn(Optional.of(localRun));
+        when(runRepository.findById(localRun.getId())).thenReturn(Optional.of(localRun));
 
-        ProvisioningException exception = Assertions.assertThrows(
+        ProvisioningException exception = assertThrows(
             ProvisioningException.class,
             () -> taskProvisioningService.provisionMultipleRunParameters(localRun.getId().toString(), values)
         );
-        Assertions.assertEquals("Error(s) occurred during a handling of a batch request.", exception.getMessage());
-        Mockito.verify(runRepository, Mockito.times(1)).findById(localRun.getId());
-        Mockito.verify(storageHandler, Mockito.times(0)).saveStorageData(any(Storage.class), any(StorageData.class));
+        assertEquals("Error(s) occurred during a handling of a batch request.", exception.getMessage());
+        verify(runRepository, times(1)).findById(localRun.getId());
+        verify(storageHandler, times(0)).saveStorageData(any(Storage.class), any(StorageData.class));
     }
 
     @DisplayName("Successfully retrieve a zip archive")
@@ -209,18 +210,18 @@ public class TaskProvisioningServiceTest {
         String storageId = "inputs-archive-" + run.getId().toString();
         StorageData mockStorageData = TaskUtils.createTestStorageData(name, storageId);
 
-        Mockito.when(storageHandler.readStorageData(any(StorageData.class))).thenReturn(mockStorageData);
-        Mockito.when(runRepository.findById(run.getId())).thenReturn(Optional.of(run));
-        Mockito.when(typePersistenceRepository.findTypePersistenceByRunIdAndParameterType(run.getId(), ParameterType.INPUT))
+        when(storageHandler.readStorageData(any(StorageData.class))).thenReturn(mockStorageData);
+        when(runRepository.findById(run.getId())).thenReturn(Optional.of(run));
+        when(typePersistenceRepository.findTypePersistenceByRunIdAndParameterType(run.getId(), ParameterType.INPUT))
             .thenReturn(List.of(new IntegerPersistence(42)));
 
         StorageData result = taskProvisioningService.retrieveIOZipArchive(run.getId().toString(), ParameterType.INPUT);
     
-        Assertions.assertEquals(mockStorageData.getEntryList().size(), result.getEntryList().size());
-        Assertions.assertTrue(result.peek().getData().getName().matches("inputs-archive-\\d*" + run.getId()));
-        Mockito.verify(runRepository, Mockito.times(1)).findById(run.getId());
-        Mockito.verify(storageHandler, Mockito.times(1)).readStorageData(any(StorageData.class));
-        Mockito.verify(typePersistenceRepository, Mockito.times(1)).findTypePersistenceByRunIdAndParameterType(run.getId(), ParameterType.INPUT);
+        assertEquals(mockStorageData.getEntryList().size(), result.getEntryList().size());
+        assertTrue(result.peek().getData().getName().matches("inputs-archive-\\d*" + run.getId()));
+        verify(runRepository, times(1)).findById(run.getId());
+        verify(storageHandler, times(1)).readStorageData(any(StorageData.class));
+        verify(typePersistenceRepository, times(1)).findTypePersistenceByRunIdAndParameterType(run.getId(), ParameterType.INPUT);
     }
 
     @DisplayName("Failed to retrieve a zip archive and throw 'ProvisioningException' when run state is invalid")
@@ -229,27 +230,27 @@ public class TaskProvisioningServiceTest {
         Run localRun = TaskUtils.createTestRun(false);
         localRun.setState(TaskRunState.CREATED);
 
-        Mockito.when(runRepository.findById(localRun.getId())).thenReturn(Optional.of(localRun));
+        when(runRepository.findById(localRun.getId())).thenReturn(Optional.of(localRun));
 
-        ProvisioningException exception = Assertions.assertThrows(
+        ProvisioningException exception = assertThrows(
             ProvisioningException.class,
             () -> taskProvisioningService.retrieveIOZipArchive(localRun.getId().toString(), ParameterType.INPUT)
         );
-        Assertions.assertEquals("run is in invalid state", exception.getMessage());
+        assertEquals("run is in invalid state", exception.getMessage());
     }
 
     @DisplayName("Failed to retrieve a zip archive and throw 'ProvisioningException' when provisions are empty")
     @Test
     public void retrieveIOZipArchiveShouldThrowProvisioningExceptionWhenEmptyProvisions() throws Exception {
-        Mockito.when(runRepository.findById(run.getId())).thenReturn(Optional.of(run));
-        Mockito.when(typePersistenceRepository.findTypePersistenceByRunIdAndParameterType(run.getId(), ParameterType.INPUT))
+        when(runRepository.findById(run.getId())).thenReturn(Optional.of(run));
+        when(typePersistenceRepository.findTypePersistenceByRunIdAndParameterType(run.getId(), ParameterType.INPUT))
             .thenReturn(List.of());
 
-        ProvisioningException exception = Assertions.assertThrows(
+        ProvisioningException exception = assertThrows(
             ProvisioningException.class,
             () -> taskProvisioningService.retrieveIOZipArchive(run.getId().toString(), ParameterType.INPUT)
         );
-        Assertions.assertEquals("provisions not found", exception.getMessage());
+        assertEquals("provisions not found", exception.getMessage());
     }
 
     @DisplayName("Successfully save the outputs archive")
@@ -257,16 +258,16 @@ public class TaskProvisioningServiceTest {
     public void postOutputsZipArchiveShouldReturnParameters() throws Exception {
         Run localRun = TaskUtils.createTestRun(false);
         localRun.setState(TaskRunState.RUNNING);
-        MultipartFile outputs = Mockito.mock(MultipartFile.class);
+        MultipartFile outputs = mock(MultipartFile.class);
 
-        Mockito.when(outputs.getInputStream()).thenReturn(new ByteArrayInputStream(TaskUtils.createFakeOutputsZip("out")));
-        Mockito.when(runRepository.findById(localRun.getId())).thenReturn(Optional.of(localRun));
+        when(outputs.getInputStream()).thenReturn(new ByteArrayInputStream(TaskUtils.createFakeOutputsZip("out")));
+        when(runRepository.findById(localRun.getId())).thenReturn(Optional.of(localRun));
 
         List<TaskRunParameterValue> results = taskProvisioningService.postOutputsZipArchive(localRun.getId().toString(), localRun.getSecret(), outputs);
 
-        Assertions.assertEquals(localRun.getTask().getOutputs().size(), results.size());
-        Mockito.verify(runRepository, Mockito.times(1)).findById(localRun.getId());
-        Mockito.verify(runRepository, Mockito.times(1)).saveAndFlush(any(Run.class));
+        assertEquals(localRun.getTask().getOutputs().size(), results.size());
+        verify(runRepository, times(1)).findById(localRun.getId());
+        verify(runRepository, times(1)).saveAndFlush(any(Run.class));
     }
 
     @DisplayName("Failed to save the outputs archive and throw 'ProvisioningException' when not authenticated")
@@ -275,14 +276,14 @@ public class TaskProvisioningServiceTest {
         Run localRun = TaskUtils.createTestRun(false);
         localRun.setState(TaskRunState.RUNNING);
 
-        Mockito.when(runRepository.findById(localRun.getId())).thenReturn(Optional.of(localRun));
+        when(runRepository.findById(localRun.getId())).thenReturn(Optional.of(localRun));
 
-        ProvisioningException exception = Assertions.assertThrows(
+        ProvisioningException exception = assertThrows(
             ProvisioningException.class,
             () -> taskProvisioningService.postOutputsZipArchive(localRun.getId().toString(), run.getSecret(), null)
         );
-        Assertions.assertEquals("unauthenticated task failed to provision outputs for this run", exception.getMessage());
-        Mockito.verify(runRepository, Mockito.times(1)).findById(localRun.getId());
+        assertEquals("unauthenticated task failed to provision outputs for this run", exception.getMessage());
+        verify(runRepository, times(1)).findById(localRun.getId());
     }
 
     @DisplayName("Failed to save the outputs archive and throw 'ProvisioningException' when not in correct state")
@@ -291,14 +292,14 @@ public class TaskProvisioningServiceTest {
         Run localRun = TaskUtils.createTestRun(false);
         localRun.setState(TaskRunState.CREATED);
 
-        Mockito.when(runRepository.findById(localRun.getId())).thenReturn(Optional.of(localRun));
+        when(runRepository.findById(localRun.getId())).thenReturn(Optional.of(localRun));
 
-        ProvisioningException exception = Assertions.assertThrows(
+        ProvisioningException exception = assertThrows(
             ProvisioningException.class,
             () -> taskProvisioningService.postOutputsZipArchive(localRun.getId().toString(), localRun.getSecret(), null)
         );
-        Assertions.assertEquals("run is in invalid state", exception.getMessage());
-        Mockito.verify(runRepository, Mockito.times(1)).findById(localRun.getId());
+        assertEquals("run is in invalid state", exception.getMessage());
+        verify(runRepository, times(1)).findById(localRun.getId());
     }
 
     @DisplayName("Failed to save the outputs archive and throw 'ProvisioningException' when not in correct output")
@@ -306,17 +307,17 @@ public class TaskProvisioningServiceTest {
     public void postOutputsZipArchiveShouldThrowProvisioningExceptionWhenNotCorrectOutput() throws Exception {
         Run localRun = TaskUtils.createTestRun(false);
         localRun.setState(TaskRunState.RUNNING);
-        MultipartFile outputs = Mockito.mock(MultipartFile.class);
+        MultipartFile outputs = mock(MultipartFile.class);
 
-        Mockito.when(outputs.getInputStream()).thenReturn(new ByteArrayInputStream(TaskUtils.createFakeOutputsZip("out", "invalid")));
-        Mockito.when(runRepository.findById(localRun.getId())).thenReturn(Optional.of(localRun));
+        when(outputs.getInputStream()).thenReturn(new ByteArrayInputStream(TaskUtils.createFakeOutputsZip("out", "invalid")));
+        when(runRepository.findById(localRun.getId())).thenReturn(Optional.of(localRun));
 
-        ProvisioningException exception = Assertions.assertThrows(
+        ProvisioningException exception = assertThrows(
             ProvisioningException.class,
             () -> taskProvisioningService.postOutputsZipArchive(localRun.getId().toString(), localRun.getSecret(), outputs)
         );
-        Assertions.assertEquals("unexpected output, did not match an actual task output", exception.getMessage());
-        Mockito.verify(runRepository, Mockito.times(1)).findById(localRun.getId());
+        assertEquals("unexpected output, did not match an actual task output", exception.getMessage());
+        verify(runRepository, times(1)).findById(localRun.getId());
     }
 
     @DisplayName("Failed to save the outputs archive and throw 'ProvisioningException' when missing output")
@@ -325,17 +326,17 @@ public class TaskProvisioningServiceTest {
         Run localRun = TaskUtils.createTestRun(false);
         localRun.setState(TaskRunState.RUNNING);
         localRun.setTask(TaskUtils.createTestTaskWithMultipleIO());
-        MultipartFile outputs = Mockito.mock(MultipartFile.class);
+        MultipartFile outputs = mock(MultipartFile.class);
 
-        Mockito.when(outputs.getInputStream()).thenReturn(new ByteArrayInputStream(TaskUtils.createFakeOutputsZip("out 1")));
-        Mockito.when(runRepository.findById(localRun.getId())).thenReturn(Optional.of(localRun));
+        when(outputs.getInputStream()).thenReturn(new ByteArrayInputStream(TaskUtils.createFakeOutputsZip("out 1")));
+        when(runRepository.findById(localRun.getId())).thenReturn(Optional.of(localRun));
 
-        ProvisioningException exception = Assertions.assertThrows(
+        ProvisioningException exception = assertThrows(
             ProvisioningException.class,
             () -> taskProvisioningService.postOutputsZipArchive(localRun.getId().toString(), localRun.getSecret(), outputs)
         );
-        Assertions.assertEquals("some outputs are missing in the archive", exception.getMessage());
-        Mockito.verify(runRepository, Mockito.times(1)).findById(localRun.getId());
+        assertEquals("some outputs are missing in the archive", exception.getMessage());
+        verify(runRepository, times(1)).findById(localRun.getId());
     }
 
     @DisplayName("Successfully get the storage charset")
@@ -468,15 +469,15 @@ public class TaskProvisioningServiceTest {
         State desiredState = new State();
         desiredState.setDesired(TaskRunState.PROVISIONED);
 
-        Mockito.when(runRepository.findById(localRun.getId())).thenReturn(Optional.of(localRun));
+        when(runRepository.findById(localRun.getId())).thenReturn(Optional.of(localRun));
 
         StateAction result = taskProvisioningService.updateRunState(localRun.getId().toString(), desiredState);
 
         assertEquals("success", result.getStatus());
         assertEquals(localRun.getId(), result.getResource().getId());
         assertEquals(TaskRunState.PROVISIONED, result.getResource().getState());
-        Mockito.verify(runRepository, Mockito.times(1)).findById(localRun.getId());
-        Mockito.verify(runRepository, Mockito.times(1)).saveAndFlush(any(Run.class));
+        verify(runRepository, times(1)).findById(localRun.getId());
+        verify(runRepository, times(1)).saveAndFlush(any(Run.class));
     }
 
     @DisplayName("Successfully update the run state to RUNNING")
@@ -487,15 +488,15 @@ public class TaskProvisioningServiceTest {
         State desiredState = new State();
         desiredState.setDesired(TaskRunState.RUNNING);
 
-        Mockito.when(runRepository.findById(localRun.getId())).thenReturn(Optional.of(localRun));
+        when(runRepository.findById(localRun.getId())).thenReturn(Optional.of(localRun));
 
         StateAction result = taskProvisioningService.updateRunState(localRun.getId().toString(), desiredState);
 
         assertEquals("success", result.getStatus());
         assertEquals(localRun.getId(), result.getResource().getId());
         assertEquals(TaskRunState.QUEUING, result.getResource().getState());
-        Mockito.verify(runRepository, Mockito.times(1)).findById(localRun.getId());
-        Mockito.verify(runRepository, Mockito.times(1)).saveAndFlush(any(Run.class));
+        verify(runRepository, times(1)).findById(localRun.getId());
+        verify(runRepository, times(1)).saveAndFlush(any(Run.class));
     }
 
     @DisplayName("Failed to update the run state and throw 'ProvisioningException'")
@@ -505,7 +506,7 @@ public class TaskProvisioningServiceTest {
         State desiredState = new State();
         desiredState.setDesired(TaskRunState.PENDING);
 
-        Mockito.when(runRepository.findById(localRun.getId())).thenReturn(Optional.of(localRun));
+        when(runRepository.findById(localRun.getId())).thenReturn(Optional.of(localRun));
 
         ProvisioningException exception = assertThrows(
             ProvisioningException.class,
