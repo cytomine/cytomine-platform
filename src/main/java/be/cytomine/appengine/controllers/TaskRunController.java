@@ -142,7 +142,7 @@ public class TaskRunController {
         @RequestParam MultipartFile file
     ) throws ProvisioningException, TypeValidationException, IOException
     {
-        log.info("/task-runs/{run_id}/input-provisions/{param_name} JSON PUT");
+        log.info("/task-runs/{run_id}/input-provisions/{param_name} Binary PUT");
         String regex = "^(0(/[0-9]+)*|[1-9][0-9]*(/[0-9]+)*)$";
         boolean isValid = Pattern.matches(regex, value);
         if (!isValid) {
@@ -164,7 +164,7 @@ public class TaskRunController {
             data.toFile(),
             indexesArray
         );
-        log.info("/task-runs/{run_id}/input-provisions/{param_name}/indexes JSON PUT Ended");
+        log.info("/task-runs/{run_id}/input-provisions/{param_name}/indexes Binary PUT Ended");
 
         return ResponseEntity.ok(provisioned);
     }
