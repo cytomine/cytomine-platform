@@ -361,6 +361,73 @@ public class TaskProvisioningServiceTest {
         assertEquals(StandardCharsets.UTF_16LE, taskProvisioningService.getStorageCharset("utf_16le"));
     }
 
+    @DisplayName("Successfully retrieve the outputs")
+    @Test
+    public void retrieveRunOutputsShouldReturnOutputs() throws Exception {
+        Run localRun = TaskUtils.createTestRun(false);
+        localRun.setState(TaskRunState.FINISHED);
+        IntegerPersistence output = new IntegerPersistence(42);
+        output.setParameterName(localRun.getTask().getOutputs().iterator().next().getName());
+
+        when(runRepository.findById(localRun.getId())).thenReturn(Optional.of(localRun));
+        when(typePersistenceRepository.findTypePersistenceByRunIdAndParameterType(localRun.getId(), ParameterType.OUTPUT))
+            .thenReturn(List.of(output));
+
+        List<TaskRunParameterValue> results =  taskProvisioningService.retrieveRunOutputs(localRun.getId().toString());
+
+        assertEquals(localRun.getTask().getOutputs().size(), results.size());
+        verify(runRepository, times(1)).findById(localRun.getId());
+        verify(typePersistenceRepository, times(1)).findTypePersistenceByRunIdAndParameterType(localRun.getId(), ParameterType.OUTPUT);
+    }
+
+    @DisplayName("Failed to retrieve the outputs and throw 'ProvisioningException'")
+    @Test
+    public void retrieveRunOutputsShouldThrowProvisioningException() throws Exception {
+        when(runRepository.findById(run.getId())).thenReturn(Optional.of(run));
+
+        ProvisioningException exception = assertThrows(
+            ProvisioningException.class,
+            () -> taskProvisioningService.retrieveRunOutputs(run.getId().toString())
+        );
+        assertEquals("run is in invalid state", exception.getMessage());
+        verify(runRepository, times(1)).findById(run.getId());
+    }
+
+    @DisplayName("Successfully retrieve the input")
+    @Test
+    public void retrieveRunInputsShouldReturnInputs() throws Exception {
+        Run localRun = TaskUtils.createTestRun(false);
+        localRun.setState(TaskRunState.FINISHED);
+        IntegerPersistence input = new IntegerPersistence(42);
+        input.setParameterName(localRun.getTask().getInputs().iterator().next().getName());
+
+        when(runRepository.findById(localRun.getId())).thenReturn(Optional.of(localRun));
+        when(typePersistenceRepository.findTypePersistenceByRunIdAndParameterType(localRun.getId(), ParameterType.INPUT))
+            .thenReturn(List.of(input));
+
+        List<TaskRunParameterValue> results =  taskProvisioningService.retrieveRunInputs(localRun.getId().toString());
+
+        assertEquals(localRun.getTask().getInputs().size(), results.size());
+        verify(runRepository, times(1)).findById(localRun.getId());
+        verify(typePersistenceRepository, times(1)).findTypePersistenceByRunIdAndParameterType(localRun.getId(), ParameterType.INPUT);
+    }
+
+    @DisplayName("Failed to retrieve the inputs and throw 'ProvisioningException'")
+    @Test
+    public void retrieveRunInputsShouldThrowProvisioningException() throws Exception {
+        Run localRun = TaskUtils.createTestRun(false);
+        localRun.setState(TaskRunState.CREATED);
+
+        when(runRepository.findById(localRun.getId())).thenReturn(Optional.of(localRun));
+
+        ProvisioningException exception = assertThrows(
+            ProvisioningException.class,
+            () -> taskProvisioningService.retrieveRunInputs(localRun.getId().toString())
+        );
+        assertEquals("run is in invalid state", exception.getMessage());
+        verify(runRepository, times(1)).findById(localRun.getId());
+    }
+
     @DisplayName("Successfully update the run state to PROVISIONED")
     @Test
     public void updateRunStateShouldUpdateStateToProvisioned() throws Exception {
