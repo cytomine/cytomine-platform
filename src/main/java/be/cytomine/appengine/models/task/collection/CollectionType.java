@@ -240,20 +240,24 @@ public class CollectionType extends Type {
           Map<String,Object> item = new LinkedHashMap<>();
           String index = entryName.substring(entryName.lastIndexOf('/') + 1);
           item.put("index", Integer.parseInt(index));
-          String value = FileHelper.read(entry.getData(), getStorageCharset());
+          String value = null;
           switch (leafType){
             case "be.cytomine.appengine.models.task.integer.IntegerType":
+              value = FileHelper.read(entry.getData(), getStorageCharset());
               item.put("value" , Integer.parseInt(value));
               break;
             case "be.cytomine.appengine.models.task.string.StringType",
                  "be.cytomine.appengine.models.task.geometry.GeometryType",
                  "be.cytomine.appengine.models.task.enumeration.EnumerationType":
+              value = FileHelper.read(entry.getData(), getStorageCharset());
               item.put("value" , value);
               break;
             case "be.cytomine.appengine.models.task.number.NumberType":
+              value = FileHelper.read(entry.getData(), getStorageCharset());
               item.put("value" , Double.parseDouble(value));
               break;
             case "be.cytomine.appengine.models.task.bool.BooleanType":
+              value = FileHelper.read(entry.getData(), getStorageCharset());
               item.put("value" , Boolean.parseBoolean(value));
               break;
             case "be.cytomine.appengine.models.task.file.FileType",
@@ -1034,7 +1038,13 @@ public class CollectionType extends Type {
         }
         CollectionPersistence parentCollection =
             (CollectionPersistence) parameterNameToTypePersistence.get(parentName);
-        String entryValue = FileHelper.read(entry.getData(), getStorageCharset());
+        String entryValue = null;
+        if (!(leafType.equals("be.cytomine.appengine.models.task.file.FileType")
+            || leafType.equals("be.cytomine.appengine.models.task.image.ImageType")
+            || leafType.equals("be.cytomine.appengine.models.task.wsi.WsiType"))){
+
+          entryValue = FileHelper.read(entry.getData(), getStorageCharset());
+        }
 
         if (entry.getName().endsWith(".geojson")){
           ObjectMapper objectMapper = new ObjectMapper();
@@ -1204,6 +1214,11 @@ public class CollectionType extends Type {
   private StorageData mapNode(String path, JsonNode value, StorageData container, Run run)
       throws FileStorageException
   {
+    Type currentType = new CollectionType(this);
+    while (currentType instanceof CollectionType) {
+      currentType = ((CollectionType) currentType).getSubType();
+    }
+    String leafType = currentType.getClass().getCanonicalName();
     if (value.isNull()){
       throw new FileStorageException("invalid provision value"); // todo: fix exception
     }
@@ -1224,13 +1239,22 @@ public class CollectionType extends Type {
           || value.get("type").asText().equals("FeatureCollection"))){
         path += ".geojson";
       }
-      StorageDataEntry itemFileEntry = new StorageDataEntry(
-          FileHelper.write(path.substring(path.lastIndexOf("/")+1), value.asText().getBytes(StandardCharsets.UTF_8)),
-          path,
-          StorageDataType.FILE
-      );
-      // add the yml file to the storage data object
+      String content;
+      StorageDataEntry itemFileEntry = null;
+      if (leafType.equalsIgnoreCase("be.cytomine.appengine.models.task.file.FileType")
+          || leafType.equalsIgnoreCase("be.cytomine.appengine.models.task.image.ImageType")
+          || leafType.equalsIgnoreCase("be.cytomine.appengine.models.task.wsi.WsiType")) {
 
+        itemFileEntry = new StorageDataEntry(new File(value.asText()), path, StorageDataType.FILE);
+      } else {
+        itemFileEntry = new StorageDataEntry(
+            FileHelper.write(path.substring(path.lastIndexOf("/")+1), value.asText().getBytes(StandardCharsets.UTF_8)),
+            path,
+            StorageDataType.FILE
+        );
+      }
+
+      // add the yml file to the storage data object
       String ymlPath = "";
       if (path.contains("/")){
         ymlPath = path.substring(1, path.lastIndexOf("/"));
@@ -1321,8 +1345,13 @@ public class CollectionType extends Type {
         if (entry.getName().endsWith("array.yml")){
           continue;
         }
+        String entryValue = null;
+        if (!(leafType.equals("be.cytomine.appengine.models.task.file.FileType")
+            || leafType.equals("be.cytomine.appengine.models.task.image.ImageType")
+            || leafType.equals("be.cytomine.appengine.models.task.wsi.WsiType"))){
+          entryValue = FileHelper.read(entry.getData(), getStorageCharset());
+        }
 
-        String entryValue = FileHelper.read(entry.getData(), getStorageCharset());
         String fileName = entry.getName().substring(entry.getName().lastIndexOf("/") + 1);
         String fileNameWithoutExtension = null;
         if (fileName.contains(".")){
