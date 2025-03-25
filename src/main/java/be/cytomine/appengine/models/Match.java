@@ -9,7 +9,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -40,12 +39,12 @@ public class Match extends BaseEntity {
     @JoinColumn(name = "matched_id")
     private Parameter matched;
 
-    private CheckTime when;
+    private CheckTime checkTime;
 
-    public Match(Parameter matching, Parameter matched, CheckTime when)
+    public Match(Parameter matching, Parameter matched, CheckTime checkTime)
     {
         this.matching = matching;
         this.matched = matched;
-        this.when = when;
+        this.checkTime = checkTime;
     }
 }
