@@ -108,7 +108,7 @@ public class FileType extends Type {
     }
 
     @Override
-    public StorageData mapToStorageFileData(JsonNode provision) {
+    public StorageData mapToStorageFileData(JsonNode provision, Run run) {
         String parameterName = provision.get("param_name").asText();
         File data = new File(provision.get("value").asText());
         StorageDataEntry entry = new StorageDataEntry(data, parameterName, StorageDataType.FILE);

@@ -68,7 +68,7 @@ public class Type extends BaseEntity {
         throws ProvisioningException
     {}
 
-    public StorageData mapToStorageFileData(JsonNode provision) throws FileStorageException
+    public StorageData mapToStorageFileData(JsonNode provision, Run run) throws FileStorageException
     {
         return null;
     }

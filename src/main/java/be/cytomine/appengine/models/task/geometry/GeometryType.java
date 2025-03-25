@@ -178,7 +178,7 @@ public class GeometryType extends Type {
     }
 
     @Override
-    public StorageData mapToStorageFileData(JsonNode provision) {
+    public StorageData mapToStorageFileData(JsonNode provision, Run run) {
         String value = provision.get("value").asText();
         String parameterName = provision.get("param_name").asText();
         File data = FileHelper.write(parameterName, value.getBytes(getStorageCharset()));
