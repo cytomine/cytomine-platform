@@ -209,7 +209,7 @@ public class CollectionType extends Type {
     while (currentType instanceof CollectionType) {
       currentType = ((CollectionType) currentType).getSubType();
     }
-    String leafType = currentType.getClass().getCanonicalName();
+    String leafType = currentType.getClass().getSimpleName();
 
     if (Objects.isNull(currentOutputStorageData)
         || Objects.isNull(currentOutputStorageData.getEntryList())
@@ -242,27 +242,27 @@ public class CollectionType extends Type {
           item.put("index", Integer.parseInt(index));
           String value = null;
           switch (leafType){
-            case "be.cytomine.appengine.models.task.integer.IntegerType":
+            case "IntegerType":
               value = FileHelper.read(entry.getData(), getStorageCharset());
               item.put("value" , Integer.parseInt(value));
               break;
-            case "be.cytomine.appengine.models.task.string.StringType",
-                 "be.cytomine.appengine.models.task.geometry.GeometryType",
-                 "be.cytomine.appengine.models.task.enumeration.EnumerationType":
+            case "StringType",
+                 "GeometryType",
+                 "EnumerationType":
               value = FileHelper.read(entry.getData(), getStorageCharset());
               item.put("value" , value);
               break;
-            case "be.cytomine.appengine.models.task.number.NumberType":
+            case "NumberType":
               value = FileHelper.read(entry.getData(), getStorageCharset());
               item.put("value" , Double.parseDouble(value));
               break;
-            case "be.cytomine.appengine.models.task.bool.BooleanType":
+            case "BooleanType":
               value = FileHelper.read(entry.getData(), getStorageCharset());
               item.put("value" , Boolean.parseBoolean(value));
               break;
-            case "be.cytomine.appengine.models.task.file.FileType",
-                 "be.cytomine.appengine.models.task.image.ImageType",
-                 "be.cytomine.appengine.models.task.wsi.WsiType":
+            case "FileType",
+                 "ImageType",
+                 "WsiType":
               item.put("value" , entry.getData());
               break;
             default: throw new TypeValidationException("unknown leaf type: " + leafType);
@@ -470,7 +470,7 @@ public class CollectionType extends Type {
               ((CollectionType) currentType).setParentType(currentType);
               currentType = ((CollectionType) currentType).getSubType();
             }
-            leafType = currentType.getClass().getCanonicalName();
+            leafType = currentType.getClass().getSimpleName();
             String parameterName = transform(indexes);
             CollectionPersistence collectionAsItem = (CollectionPersistence) persistNode(provision, runId, parameterName, leafType);
             String collectionIndex = transform(indexes);
@@ -498,10 +498,10 @@ public class CollectionType extends Type {
         }
 
       } else { // reached the end of crawling the subtypes then insert into the items of persisted provision
-        leafType = currentType.getClass().getCanonicalName();
+        leafType = currentType.getClass().getSimpleName();
         String collectionItemParameterName;
         switch (leafType) {
-          case "be.cytomine.appengine.models.task.integer.IntegerType":
+          case "IntegerType":
             IntegerPersistence integerPersistence = new IntegerPersistence();
             integerPersistence.setParameterType(ParameterType.INPUT);
             collectionItemParameterName = transform(provision.get("index").textValue());
@@ -521,7 +521,7 @@ public class CollectionType extends Type {
             }
             collectionRepo.saveAndFlush(persistedProvision);
             break;
-          case "be.cytomine.appengine.models.task.string.StringType":
+          case "StringType":
             StringPersistence stringPersistence = new StringPersistence();
             stringPersistence.setParameterType(ParameterType.INPUT);
             collectionItemParameterName = transform(provision.get("index").textValue());
@@ -542,7 +542,7 @@ public class CollectionType extends Type {
 
             collectionRepo.saveAndFlush(persistedProvision);
             break;
-          case "be.cytomine.appengine.models.task.number.NumberType":
+          case "NumberType":
             NumberPersistence numberPersistence = new NumberPersistence();
             numberPersistence.setParameterType(ParameterType.INPUT);
             collectionItemParameterName = transform(provision.get("index").textValue());
@@ -562,7 +562,7 @@ public class CollectionType extends Type {
 
             collectionRepo.saveAndFlush(persistedProvision);
             break;
-          case "be.cytomine.appengine.models.task.bool.BooleanType":
+          case "BooleanType":
             BooleanPersistence booleanPersistence = new BooleanPersistence();
             booleanPersistence.setParameterType(ParameterType.INPUT);
             collectionItemParameterName = transform(provision.get("index").textValue());
@@ -582,7 +582,7 @@ public class CollectionType extends Type {
 
             collectionRepo.saveAndFlush(persistedProvision);
             break;
-          case "be.cytomine.apentryValuepengine.models.task.enumeration.EnumerationType":
+          case "EnumerationType":
             EnumerationPersistence enumPersistence = new EnumerationPersistence();
             enumPersistence.setParameterType(ParameterType.INPUT);
             collectionItemParameterName = transform(provision.get("index").textValue());
@@ -601,7 +601,7 @@ public class CollectionType extends Type {
             }
             collectionRepo.saveAndFlush(persistedProvision);
             break;
-          case "be.cytomine.appengine.models.task.geometry.GeometryType":
+          case "GeometryType":
             GeometryPersistence geoPersistence = new GeometryPersistence();
             geoPersistence.setParameterType(ParameterType.INPUT);
             collectionItemParameterName = transform(provision.get("index").textValue());
@@ -620,7 +620,7 @@ public class CollectionType extends Type {
             }
             collectionRepo.saveAndFlush(persistedProvision);
             break;
-          case "be.cytomine.appengine.models.task.file.FileType":
+          case "FileType":
             FilePersistence filePersistence = new FilePersistence();
             filePersistence.setParameterType(ParameterType.INPUT);
             collectionItemParameterName = transform(provision.get("index").textValue());
@@ -638,7 +638,7 @@ public class CollectionType extends Type {
             }
             collectionRepo.saveAndFlush(persistedProvision);
             break;
-          case "be.cytomine.appengine.models.task.image.ImageType":
+          case "ImageType":
             ImagePersistence imagePersistence = new ImagePersistence();
             imagePersistence.setParameterType(ParameterType.INPUT);
             collectionItemParameterName = transform(provision.get("index").textValue());
@@ -656,7 +656,7 @@ public class CollectionType extends Type {
             }
             collectionRepo.saveAndFlush(persistedProvision);
             break;
-          case "be.cytomine.appengine.models.task.wsi.WsiType":
+          case "WsiType":
             WsiPersistence wsiPersistence = new WsiPersistence();
             wsiPersistence.setParameterType(ParameterType.INPUT);
             collectionItemParameterName = transform(provision.get("index").textValue());
@@ -737,7 +737,7 @@ public class CollectionType extends Type {
     while (currentType instanceof CollectionType) {
       currentType = ((CollectionType) currentType).getSubType();
     }
-    String leafType = currentType.getClass().getCanonicalName();
+    String leafType = currentType.getClass().getSimpleName();
 
     CollectionPersistenceRepository collectionRepo =
         AppEngineApplicationContext.getBean(CollectionPersistenceRepository.class);
@@ -776,17 +776,17 @@ public class CollectionType extends Type {
     if (node.isValueNode()){
       // determine the type
       switch (leafType) {
-        case "be.cytomine.appengine.models.task.integer.IntegerType":
+        case "IntegerType":
             return getIntegerPersistence(node, runId, parameterName);
-        case "be.cytomine.appengine.models.task.string.StringType":
+        case "StringType":
             return getStringPersistence(node, runId, parameterName);
-        case "be.cytomine.appengine.models.task.number.NumberType":
+        case "NumberType":
           return getNumberPersistence(node, runId, parameterName);
-        case "be.cytomine.appengine.models.task.bool.BooleanType":
+        case "BooleanType":
           return getBooleanPersistence(node, runId, parameterName);
-        case "be.cytomine.apentryValuepengine.models.task.enumeration.EnumerationType":
+        case "EnumerationType":
           return getEnumerationPersistence(node, runId, parameterName);
-        case "be.cytomine.appengine.models.task.geometry.GeometryType":
+        case "GeometryType":
           return getGeometryPersistence(node, runId, parameterName);
       }
 
@@ -985,7 +985,7 @@ public class CollectionType extends Type {
       currentType = ((CollectionType) currentType).getSubType();
     }
 
-    String leafType = currentType.getClass().getCanonicalName();
+    String leafType = currentType.getClass().getSimpleName();
     Map<String, TypePersistence> parameterNameToTypePersistence = new LinkedHashMap<>();
     outputValue.sortShallowToDeep();
     for (StorageDataEntry entry : outputValue.getEntryList()){
@@ -1039,9 +1039,9 @@ public class CollectionType extends Type {
         CollectionPersistence parentCollection =
             (CollectionPersistence) parameterNameToTypePersistence.get(parentName);
         String entryValue = null;
-        if (!(leafType.equals("be.cytomine.appengine.models.task.file.FileType")
-            || leafType.equals("be.cytomine.appengine.models.task.image.ImageType")
-            || leafType.equals("be.cytomine.appengine.models.task.wsi.WsiType"))){
+        if (!(leafType.equals("FileType")
+            || leafType.equals("ImageType")
+            || leafType.equals("WsiType"))){
 
           entryValue = FileHelper.read(entry.getData(), getStorageCharset());
         }
@@ -1077,7 +1077,7 @@ public class CollectionType extends Type {
         }
 
         switch (leafType){
-          case "be.cytomine.appengine.models.task.integer.IntegerType":
+          case "IntegerType":
             IntegerPersistence integerPersistence = new IntegerPersistence();
             integerPersistence.setParameterType(ParameterType.OUTPUT);
             integerPersistence.setRunId(run.getId());
@@ -1089,7 +1089,7 @@ public class CollectionType extends Type {
 
             parentCollection.getItems().add(integerPersistence);
             break;
-          case "be.cytomine.appengine.models.task.string.StringType":
+          case "StringType":
             StringPersistence stringPersistence = new StringPersistence();
             stringPersistence.setParameterType(ParameterType.OUTPUT);
             stringPersistence.setRunId(run.getId());
@@ -1101,7 +1101,7 @@ public class CollectionType extends Type {
 
             parentCollection.getItems().add(stringPersistence);
             break;
-          case "be.cytomine.appengine.models.task.enumeration.EnumerationType":
+          case "EnumerationType":
             EnumerationPersistence enumerationPersistence = new EnumerationPersistence();
             enumerationPersistence.setParameterType(ParameterType.OUTPUT);
             enumerationPersistence.setRunId(run.getId());
@@ -1113,7 +1113,7 @@ public class CollectionType extends Type {
 
             parentCollection.getItems().add(enumerationPersistence);
             break;
-          case "be.cytomine.appengine.models.task.geometry.GeometryType":
+          case "GeometryType":
             GeometryPersistence geoPersistence = new GeometryPersistence();
             geoPersistence.setParameterType(ParameterType.OUTPUT);
             geoPersistence.setRunId(run.getId());
@@ -1125,7 +1125,7 @@ public class CollectionType extends Type {
 
             parentCollection.getItems().add(geoPersistence);
             break;
-          case "be.cytomine.appengine.models.task.number.NumberType":
+          case "NumberType":
             NumberPersistence numberPersistence = new NumberPersistence();
             numberPersistence.setParameterType(ParameterType.OUTPUT);
             numberPersistence.setRunId(run.getId());
@@ -1137,7 +1137,7 @@ public class CollectionType extends Type {
 
             parentCollection.getItems().add(numberPersistence);
             break;
-          case "be.cytomine.appengine.models.task.bool.BooleanType":
+          case "BooleanType":
             BooleanPersistence booleanPersistence = new BooleanPersistence();
             booleanPersistence.setParameterType(ParameterType.OUTPUT);
             booleanPersistence.setRunId(run.getId());
@@ -1149,7 +1149,7 @@ public class CollectionType extends Type {
 
             parentCollection.getItems().add(booleanPersistence);
             break;
-          case "be.cytomine.appengine.models.task.file.FileType":
+          case "FileType":
             FilePersistence filePersistence = new FilePersistence();
             filePersistence.setParameterType(ParameterType.OUTPUT);
             filePersistence.setRunId(run.getId());
@@ -1161,7 +1161,7 @@ public class CollectionType extends Type {
 
             parentCollection.getItems().add(filePersistence);
             break;
-          case "be.cytomine.appengine.models.task.image.ImageType":
+          case "ImageType":
             ImagePersistence imagePersistence = new ImagePersistence();
             imagePersistence.setParameterType(ParameterType.OUTPUT);
             imagePersistence.setRunId(run.getId());
@@ -1173,7 +1173,7 @@ public class CollectionType extends Type {
 
             parentCollection.getItems().add(imagePersistence);
             break;
-          case "be.cytomine.appengine.models.task.wsi.WsiType":
+          case "WsiType":
             WsiPersistence wsiPersistence = new WsiPersistence();
             wsiPersistence.setParameterType(ParameterType.OUTPUT);
             wsiPersistence.setRunId(run.getId());
@@ -1218,7 +1218,7 @@ public class CollectionType extends Type {
     while (currentType instanceof CollectionType) {
       currentType = ((CollectionType) currentType).getSubType();
     }
-    String leafType = currentType.getClass().getCanonicalName();
+    String leafType = currentType.getClass().getSimpleName();
     if (value.isNull()){
       throw new FileStorageException("invalid provision value"); // todo: fix exception
     }
@@ -1241,9 +1241,9 @@ public class CollectionType extends Type {
       }
       String content;
       StorageDataEntry itemFileEntry = null;
-      if (leafType.equalsIgnoreCase("be.cytomine.appengine.models.task.file.FileType")
-          || leafType.equalsIgnoreCase("be.cytomine.appengine.models.task.image.ImageType")
-          || leafType.equalsIgnoreCase("be.cytomine.appengine.models.task.wsi.WsiType")) {
+      if (leafType.equalsIgnoreCase("FileType")
+          || leafType.equalsIgnoreCase("ImageType")
+          || leafType.equalsIgnoreCase("WsiType")) {
 
         itemFileEntry = new StorageDataEntry(new File(value.asText()), path, StorageDataType.FILE);
       } else {
@@ -1259,7 +1259,6 @@ public class CollectionType extends Type {
       if (path.contains("/")){
         ymlPath = path.substring(1, path.lastIndexOf("/"));
       }
-      // todo : get the type persistence of the collection to get the size
       CollectionPersistenceRepository collectionPersistenceRepository =
           AppEngineApplicationContext.getBean(CollectionPersistenceRepository.class);
       String persistenceParameterName = transform(ymlPath);
@@ -1315,7 +1314,7 @@ public class CollectionType extends Type {
       currentType = ((CollectionType) currentType).getSubType();
     }
     CollectionValue collectionValue = new CollectionValue();
-    String leafType = currentType.getClass().getCanonicalName();
+    String leafType = currentType.getClass().getSimpleName();
     Map<String, List<TaskRunParameterValue>> itemListsDictionary = new LinkedHashMap<>();
 
     output.sortShallowToDeep();
@@ -1346,9 +1345,9 @@ public class CollectionType extends Type {
           continue;
         }
         String entryValue = null;
-        if (!(leafType.equals("be.cytomine.appengine.models.task.file.FileType")
-            || leafType.equals("be.cytomine.appengine.models.task.image.ImageType")
-            || leafType.equals("be.cytomine.appengine.models.task.wsi.WsiType"))){
+        if (!(leafType.equals("FileType")
+            || leafType.equals("ImageType")
+            || leafType.equals("WsiType"))){
           entryValue = FileHelper.read(entry.getData(), getStorageCharset());
         }
 
@@ -1384,39 +1383,39 @@ public class CollectionType extends Type {
         CollectionItemValue collectionItemValue = new CollectionItemValue();
         collectionItemValue.setIndex(Integer.parseInt(fileName));
         switch (leafType){
-          case "be.cytomine.appengine.models.task.integer.IntegerType":
+          case "IntegerType":
                collectionItemValue.setValue(Integer.parseInt(entryValue));
                collectionItemValue.setType(ValueType.INTEGER);
                break;
-          case "be.cytomine.appengine.models.task.string.StringType":
+          case "StringType":
                collectionItemValue.setValue(entryValue);
                collectionItemValue.setType(ValueType.STRING);
                break;
-          case "be.cytomine.appengine.models.task.enumeration.EnumerationType":
+          case "EnumerationType":
                collectionItemValue.setValue(entryValue);
                collectionItemValue.setType(ValueType.ENUMERATION);
                break;
-          case "be.cytomine.appengine.models.task.geometry.GeometryType":
+          case "GeometryType":
                collectionItemValue.setValue(entryValue);
                collectionItemValue.setType(ValueType.GEOMETRY);
                break;
-          case "be.cytomine.appengine.models.task.number.NumberType":
+          case "NumberType":
                collectionItemValue.setValue(Double.parseDouble(entryValue));
                collectionItemValue.setType(ValueType.NUMBER);
                break;
-          case "be.cytomine.appengine.models.task.bool.BooleanType":
+          case "BooleanType":
                collectionItemValue.setValue(Boolean.parseBoolean(entryValue));
                collectionItemValue.setType(ValueType.BOOLEAN);
                break;
-          case "be.cytomine.appengine.models.task.file.FileType":
+          case "FileType":
                 collectionItemValue.setValue(null);
                 collectionItemValue.setType(ValueType.FILE);
                 break;
-          case "be.cytomine.appengine.models.task.image.ImageType":
+          case "ImageType":
                 collectionItemValue.setValue(null);
                 collectionItemValue.setType(ValueType.IMAGE);
                 break;
-          case "be.cytomine.appengine.models.task.wsi.WsiType":
+          case "WsiType":
                 collectionItemValue.setValue(null);
                 collectionItemValue.setType(ValueType.WSI);
                 break;
@@ -1461,7 +1460,7 @@ public class CollectionType extends Type {
     while (currentType instanceof CollectionType) {
       currentType = ((CollectionType) currentType).getSubType();
     }
-    String leafType = currentType.getClass().getCanonicalName();
+    String leafType = currentType.getClass().getSimpleName();
 
     if (typePersistence instanceof CollectionPersistence collectionPersistence){
         // either items or compact value but not both
