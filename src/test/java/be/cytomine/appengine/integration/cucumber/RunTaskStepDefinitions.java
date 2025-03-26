@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -492,9 +493,14 @@ public class RunTaskStepDefinitions {
 
     @Given("the task run has an output parameter {string}")
     public void the_task_run_has_an_output_parameter(String output) {
-        Set<Output> outputs = persistedRun.getTask().getOutputs();
+        Set<Parameter> outputs = persistedRun
+            .getTask()
+            .getParameters()
+            .stream()
+            .filter(parameter -> parameter.getParameterType().equals(ParameterType.OUTPUT))
+            .collect(Collectors.toSet());
         boolean found = false;
-        for (Output runOutput : outputs) {
+        for (Parameter runOutput : outputs) {
             if (runOutput.getName().equalsIgnoreCase(output)) {
                 found = true;
                 break;
