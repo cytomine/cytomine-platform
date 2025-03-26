@@ -15,8 +15,7 @@ import be.cytomine.appengine.dto.inputs.task.UploadTaskArchive;
 import be.cytomine.appengine.dto.misc.TaskIdentifiers;
 import be.cytomine.appengine.exceptions.BundleArchiveException;
 import be.cytomine.appengine.models.task.Author;
-import be.cytomine.appengine.models.task.Input;
-import be.cytomine.appengine.models.task.Output;
+import be.cytomine.appengine.models.task.Parameter;
 import be.cytomine.appengine.models.task.Task;
 import be.cytomine.appengine.models.task.TypeFactory;
 import be.cytomine.appengine.models.task.integer.IntegerType;
@@ -56,8 +55,8 @@ public class TestTaskBuilder {
         task.setAuthors(authors);
         // add inputs
 
-        Set<Input> inputs = new HashSet<>();
-        Input inputa = new Input();
+        Set<Parameter> inputs = new HashSet<>();
+        Parameter inputa = new Parameter();
         inputa.setName("a");
         inputa.setDisplayName("Operand A");
         inputa.setDescription("First operand");
@@ -67,7 +66,7 @@ public class TestTaskBuilder {
         inputa.setType(inputType1_1);
         inputa.setDefaultValue("0");
 
-        Input inputb = new Input();
+        Parameter inputb = new Parameter();
         inputb.setName("b");
         inputb.setDisplayName("Operand B");
         inputb.setDescription("Second operand");
@@ -79,10 +78,10 @@ public class TestTaskBuilder {
 
         inputs.add(inputa);
         inputs.add(inputb);
-        task.setInputs(inputs);
+        task.setParameters(inputs);
         // add outputs for task one
-        Set<Output> outputs = new HashSet<>();
-        Output output = new Output();
+        Set<Parameter> outputs = new HashSet<>();
+        Parameter output = new Parameter();
         output.setName("sum");
         output.setDisplayName("Sum");
         output.setDescription("Sum of operands A and B");
@@ -91,7 +90,7 @@ public class TestTaskBuilder {
         outputType.setCharset("UTF_8");
         output.setType(outputType);
         outputs.add(output);
-        task.setOutputs(outputs);
+        task.getParameters().addAll(outputs);
 
         // set resources
         task.setCpus(1);
@@ -136,8 +135,8 @@ public class TestTaskBuilder {
         task.setAuthors(authors);
         // add inputs
 
-        Set<Input> inputs = new HashSet<>();
-        Input inputa = new Input();
+        Set<Parameter> inputs = new HashSet<>();
+        Parameter inputa = new Parameter();
         inputa.setName("a");
         inputa.setDisplayName("Operand A");
         inputa.setDescription("First operand");
@@ -146,7 +145,7 @@ public class TestTaskBuilder {
         inputa.setType(inputType1_1);
         inputa.setDefaultValue("0");
 
-        Input inputb = new Input();
+        Parameter inputb = new Parameter();
         inputb.setName("b");
         inputb.setDisplayName("Operand B");
         inputb.setDescription("Second operand");
@@ -157,10 +156,10 @@ public class TestTaskBuilder {
 
         inputs.add(inputa);
         inputs.add(inputb);
-        task.setInputs(inputs);
+        task.setParameters(inputs);
         // add outputs for task one
-        Set<Output> outputs = new HashSet<>();
-        Output output = new Output();
+        Set<Parameter> outputs = new HashSet<>();
+        Parameter output = new Parameter();
         output.setName("out");
         output.setDisplayName("Difference");
         output.setDescription("Difference of operands A and B");
@@ -168,7 +167,7 @@ public class TestTaskBuilder {
         outputType.setId("integer");
         output.setType(outputType);
         outputs.add(output);
-        task.setOutputs(outputs);
+        task.getParameters().addAll(outputs);
         return task;
     }
 
@@ -231,8 +230,8 @@ public class TestTaskBuilder {
             }
 
             task.setAuthors(getAuthors(taskArchive));
-            task.setInputs(getInputs(taskArchive));
-            task.setOutputs(getOnputs(taskArchive));
+            task.setParameters(getInputs(taskArchive));
+            task.getParameters().addAll(getOnputs(taskArchive));
             return task;
         } catch (IOException | BundleArchiveException e) {
             throw new RuntimeException(e);
@@ -252,8 +251,8 @@ public class TestTaskBuilder {
         }
     }
 
-    private static Set<Input> getInputs(UploadTaskArchive uploadTaskArchive) {
-        Set<Input> inputs = new HashSet<>();
+    private static Set<Parameter> getInputs(UploadTaskArchive uploadTaskArchive) {
+        Set<Parameter> inputs = new HashSet<>();
         JsonNode inputsNode = uploadTaskArchive.getDescriptorFileAsJson().get("inputs");
         if (inputsNode.isObject()) {
             Iterator<String> fieldNames = inputsNode.fieldNames();
@@ -261,7 +260,7 @@ public class TestTaskBuilder {
                 String inputKey = fieldNames.next();
                 JsonNode inputValue = inputsNode.get(inputKey);
 
-                Input input = new Input();
+                Parameter input = new Parameter();
                 input.setName(inputKey);
                 input.setDisplayName(inputValue.get("display_name").textValue());
                 input.setDescription(inputValue.get("description").textValue());
@@ -285,8 +284,8 @@ public class TestTaskBuilder {
         return inputs;
     }
 
-    private static Set<Output> getOnputs(UploadTaskArchive uploadTaskArchive) {
-        Set<Output> outputs = new HashSet<>();
+    private static Set<Parameter> getOnputs(UploadTaskArchive uploadTaskArchive) {
+        Set<Parameter> outputs = new HashSet<>();
         JsonNode outputsNode = uploadTaskArchive.getDescriptorFileAsJson().get("outputs");
         if (outputsNode.isObject()) {
             Iterator<String> fieldNames = outputsNode.fieldNames();
@@ -294,7 +293,7 @@ public class TestTaskBuilder {
                 String outputKey = fieldNames.next();
                 JsonNode inputValue = outputsNode.get(outputKey);
 
-                Output output = new Output();
+                Parameter output = new Parameter();
                 output.setName(outputKey);
                 output.setDisplayName(inputValue.get("display_name").textValue());
                 output.setDescription(inputValue.get("description").textValue());

@@ -26,8 +26,7 @@ import be.cytomine.appengine.dto.inputs.task.TaskInput;
 import be.cytomine.appengine.dto.inputs.task.TaskOutput;
 import be.cytomine.appengine.dto.inputs.task.TaskRun;
 import be.cytomine.appengine.dto.inputs.task.TaskRunParameterValue;
-import be.cytomine.appengine.models.task.Input;
-import be.cytomine.appengine.models.task.Output;
+import be.cytomine.appengine.models.task.Parameter;
 import be.cytomine.appengine.states.TaskRunState;
 
 @Component
@@ -160,24 +159,24 @@ public class ApiClient {
         return get(url, new ParameterizedTypeReference<List<TaskOutput>>() {}).getBody();
     }
 
-    public List<Input> getInputs(String namespace, String version) {
+    public List<Parameter> getInputs(String namespace, String version) {
         String url = baseUrl + "/tasks/" + namespace + "/" + version + "/inputs";
-        return get(url, new ParameterizedTypeReference<List<Input>>() {}).getBody();
+        return get(url, new ParameterizedTypeReference<List<Parameter>>() {}).getBody();
     }
 
-    public List<Input> getInputs(String uuid) {
+    public List<Parameter> getInputs(String uuid) {
         String url = baseUrl + "/tasks/" + uuid + "/inputs";
-        return get(url, new ParameterizedTypeReference<List<Input>>() {}).getBody();
+        return get(url, new ParameterizedTypeReference<List<Parameter>>() {}).getBody();
     }
 
-    public List<Output> getOutputs(String namespace, String version) {
+    public List<Parameter> getOutputs(String namespace, String version) {
         String url = baseUrl + "/tasks/" + namespace + "/" + version + "/outputs";
-        return get(url, new ParameterizedTypeReference<List<Output>>() {}).getBody();
+        return get(url, new ParameterizedTypeReference<List<Parameter>>() {}).getBody();
     }
 
-    public List<Output> getOutputs(String uuid) {
+    public List<Parameter> getOutputs(String uuid) {
         String url = baseUrl + "/tasks/" + uuid + "/outputs";
-        return get(url, new ParameterizedTypeReference<List<Output>>() {}).getBody();
+        return get(url, new ParameterizedTypeReference<List<Parameter>>() {}).getBody();
     }
 
     public TaskRun createTaskRun(String namespace, String version) {
