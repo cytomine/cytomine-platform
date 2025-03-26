@@ -3,6 +3,7 @@ package be.cytomine.appengine.integration.cucumber;
 import java.io.*;
 import java.nio.file.Files;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -59,9 +60,9 @@ public class ReadTaskStepDefinitions {
 
     private String persistedUUID;
 
-    private List<Input> persistedInputs;
+    private List<Parameter> persistedInputs;
 
-    private List<Output> persistedOutputs;
+    private List<Parameter> persistedOutputs;
 
     private File persistedDescriptor;
 
@@ -214,7 +215,12 @@ public class ReadTaskStepDefinitions {
     @Then("App Engine sends a {string} OK response with a payload containing the task inputs as a JSON payload \\(see OpenAPI spec)")
     public void app_engine_sends_a_ok_response_with_a_payload_containing_the_task_inputs_as_a_json_payload_see_open_api_spec(String string) {
         Assertions.assertNotNull(persistedInputs);
-        Assertions.assertTrue(TaskTestsUtils.areSetEquals(persistedTask.getInputs(), persistedInputs));
+        Set<Parameter> persistedTaskInputs = persistedTask
+            .getParameters()
+            .stream()
+            .filter(parameter -> parameter.getParameterType().equals(ParameterType.INPUT))
+            .collect(Collectors.toSet());
+        Assertions.assertTrue(TaskTestsUtils.areSetEquals(persistedTaskInputs, persistedInputs));
     }
 
     @When("user calls the endpoint {string} with {string} and {string} HTTP method GET")
@@ -282,19 +288,34 @@ public class ReadTaskStepDefinitions {
     @Then("App Engine retrieves task outputs with {string}, a {string}  from the database")
     public void app_engine_retrieves_task_outputs_with_a_from_the_database(String namespace, String version) {
         Assertions.assertNotNull(persistedOutputs);
-        Assertions.assertTrue(TaskTestsUtils.areSetEquals(persistedTask.getOutputs(), persistedOutputs));
+        Set<Parameter> persistedTaskOutputs = persistedTask
+            .getParameters()
+            .stream()
+            .filter(parameter -> parameter.getParameterType().equals(ParameterType.OUTPUT))
+            .collect(Collectors.toSet());
+        Assertions.assertTrue(TaskTestsUtils.areSetEquals(persistedTaskOutputs, persistedOutputs));
     }
 
     @Then("App Engine sends a {string} OK response with a payload containing the task outputs as a JSON payload \\(see OpenAPI spec)")
     public void app_engine_sends_a_ok_response_with_a_payload_containing_the_task_outputs_as_a_json_payload_see_open_api_spec(String string) {
         Assertions.assertNotNull(persistedOutputs);
-        Assertions.assertTrue(TaskTestsUtils.areSetEquals(persistedTask.getOutputs(), persistedOutputs));
+        Set<Parameter> persistedTaskOutputs = persistedTask
+            .getParameters()
+            .stream()
+            .filter(parameter -> parameter.getParameterType().equals(ParameterType.OUTPUT))
+            .collect(Collectors.toSet());
+        Assertions.assertTrue(TaskTestsUtils.areSetEquals(persistedTaskOutputs, persistedOutputs));
     }
 
     @Then("App Engine retrieves task outputs with {string} from the database")
     public void app_engine_retrieves_task_outputs_with_from_the_database(String string) {
         Assertions.assertNotNull(persistedOutputs);
-        Assertions.assertTrue(TaskTestsUtils.areSetEquals(persistedTask.getOutputs(), persistedOutputs));
+        Set<Parameter> persistedTaskOutputs = persistedTask
+            .getParameters()
+            .stream()
+            .filter(parameter -> parameter.getParameterType().equals(ParameterType.OUTPUT))
+            .collect(Collectors.toSet());
+        Assertions.assertTrue(TaskTestsUtils.areSetEquals(persistedTaskOutputs, persistedOutputs));
     }
 
     @Given("a task unknown to the App Engine has a {string} and a {string} and a {string}")
