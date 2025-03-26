@@ -2,6 +2,7 @@ package be.cytomine.appengine.integration.cucumber;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -135,7 +136,12 @@ public class ProvisionTaskStepDefinitions {
 
     @Given("this task has at least one input parameter")
     public void this_task_has_at_least_one_input_parameter() {
-        Assertions.assertFalse(persistedTask.getInputs().isEmpty());
+        Set<Parameter> outputs = persistedTask
+            .getParameters()
+            .stream()
+            .filter(parameter -> parameter.getParameterType().equals(ParameterType.OUTPUT))
+            .collect(Collectors.toSet());
+        Assertions.assertFalse(outputs.isEmpty());
     }
 
     @When("user calls the endpoint {string} with HTTP method POST")
@@ -193,11 +199,10 @@ public class ProvisionTaskStepDefinitions {
 
     @Given("this task has only one input parameter {string} of type {string}")
     public void this_task_has_only_one_input_parameter_of_type(String paramName, String type) {
-        persistedTask.getInputs().removeIf(input -> {
-            return !(input.getType().getId().equals(type) && input.getName().equals(paramName));
-        });
+        persistedTask.getParameters().removeIf(input -> !(input.getType().getId().equals(type) && input.getName().equals(paramName) && input.getParameterType().equals(ParameterType.INPUT)));
         persistedTask = taskRepository.saveAndFlush(persistedTask);
-        Assertions.assertEquals(persistedTask.getInputs().size(), 1);
+        Assertions.assertEquals(1,
+            persistedTask.getParameters().stream().filter(parameter -> parameter.getParameterType().equals(ParameterType.INPUT)).toList().size());
     }
 
     @Given("this parameter has no validation rules")
@@ -219,10 +224,10 @@ public class ProvisionTaskStepDefinitions {
     public void a_task_run_has_been_created_for_this_task(String parameterName, String initialValue) throws FileStorageException {
         persistedRun = new Run(UUID.randomUUID(), TaskRunState.CREATED, persistedTask);
 
-        Input input = persistedTask
-            .getInputs()
+        Parameter input = persistedTask
+            .getParameters()
             .stream()
-            .filter(i -> i.getName().equals(parameterName))
+            .filter(i -> i.getName().equals(parameterName) && i.getParameterType().equals(ParameterType.INPUT))
             .findFirst()
             .orElse(null);
         Assertions.assertNotNull(input);
@@ -315,10 +320,10 @@ public class ProvisionTaskStepDefinitions {
 
     @When("a user calls the provisioning endpoint with {string} to provision parameter {string} with {string} of type {string}")
     public void a_user_calls_the_batch_provisioning_endpoint_put_task_runs_input_provisions_with_json_to_provision_parameter_my_input_with(String payload, String parameterName, String value, String type) {
-        Input input = persistedTask
-            .getInputs()
+        Parameter input = persistedTask
+            .getParameters()
             .stream()
-            .filter(i -> i.getName().equals(parameterName))
+            .filter(i -> i.getName().equals(parameterName) && i.getParameterType().equals(ParameterType.INPUT))
             .findFirst()
             .orElse(null);
 
@@ -331,10 +336,10 @@ public class ProvisionTaskStepDefinitions {
 
     @Then("the value {string} is saved and associated parameter {string} in the database")
     public void the_value_is_saved_and_associated_parameter_in_the_database(String value, String parameterName) {
-        Input input = persistedTask
-            .getInputs()
+        Parameter input = persistedTask
+            .getParameters()
             .stream()
-            .filter(i -> i.getName().equals(parameterName))
+            .filter(i -> i.getName().equals(parameterName) && i.getParameterType().equals(ParameterType.INPUT))
             .findFirst()
             .orElse(null);
         Assertions.assertNotNull(input);
@@ -402,14 +407,14 @@ public class ProvisionTaskStepDefinitions {
 
     @Given("the first parameter is {string} of type {string} without a validation rule")
     public void the_first_parameter_is_of_type_without_a_validation_rule(String parameterName, String type) {
-        Assertions.assertTrue(persistedTask.getInputs().stream()
-          .anyMatch(input -> input.getType().getId().equals(type) && input.getName().equals(parameterName)));
+        Assertions.assertTrue(persistedTask.getParameters().stream()
+          .anyMatch(input -> input.getType().getId().equals(type) && input.getName().equals(parameterName) && input.getParameterType().equals(ParameterType.INPUT)));
     }
 
     @Given("the second parameter is {string} of type {string} without a validation rule")
     public void the_second_parameter_is_of_type_without_a_validation_rule(String parameterName, String type) {
-        Assertions.assertTrue(persistedTask.getInputs().stream()
-          .anyMatch(input -> input.getType().getId().equals(type) && input.getName().equals(parameterName)));
+        Assertions.assertTrue(persistedTask.getParameters().stream()
+          .anyMatch(input -> input.getType().getId().equals(type) && input.getName().equals(parameterName) && input.getParameterType().equals(ParameterType.INPUT)));
     }
 
     @Given("no validation rules are defined for these parameters")
@@ -425,10 +430,10 @@ public class ProvisionTaskStepDefinitions {
         List<ObjectNode> provisions = new ArrayList<>();
         for (JsonNode parameter : payload) {
             String parameterName = parameter.get("param_name").textValue();
-            Input input = persistedTask
-                .getInputs()
+            Parameter input = persistedTask
+                .getParameters()
                 .stream()
-                .filter(i -> i.getName().equals(parameterName))
+                .filter(i -> i.getName().equals(parameterName) && i.getParameterType().equals(ParameterType.INPUT))
                 .findFirst()
                 .orElse(null);
 
@@ -467,12 +472,19 @@ public class ProvisionTaskStepDefinitions {
 
     @Given("the first parameter is {string} of type {string} with a validation rule {string}")
     public void the_first_parameter_is_of_type_with_a_validation_rule(String parameterName, String type, String validationRule) {
-        Optional<Input> parameterOptional = persistedTask.getInputs().stream().filter(input -> ((IntegerType)input.getType()).getId().equals(type) && input.getName().equals(parameterName)).findFirst();
+        Optional<Parameter> parameterOptional = persistedTask
+            .getParameters()
+            .stream()
+            .filter(
+            input -> ((IntegerType)input.getType()).getId().equals(type)
+                && input.getName().equals(parameterName)
+                && input.getParameterType().equals(ParameterType.INPUT))
+            .findFirst();
 
         Assertions.assertTrue(parameterOptional.isPresent());
 
         // adding constraint to the existing unconstrainted parameter
-        Input parameter = parameterOptional.get();
+        Parameter parameter = parameterOptional.get();
         String[] ruleSet = validationRule.split(":");
         switch (ruleSet[0].trim()) {
             case "lt":
@@ -513,7 +525,7 @@ public class ProvisionTaskStepDefinitions {
 
     @Given("this task has no parameter named {string}")
     public void this_task_has_no_parameter_named(String parameterName) {
-        Set<Input> inputs = persistedTask.getInputs();
+        Set<Parameter> inputs = persistedTask.getParameters().stream().filter(input -> input.getParameterType().equals(ParameterType.INPUT)).collect(Collectors.toSet());
         inputs.removeIf(input -> input.getName().equalsIgnoreCase(parameterName));
     }
 
@@ -554,11 +566,9 @@ public class ProvisionTaskStepDefinitions {
         // Check if the set contains an object matching the conditions
         // Will raise an error if the persisted task is not valid with the test
         boolean hasInput = persistedTask
-            .getInputs()
+            .getParameters()
             .stream()
-            .anyMatch(input -> {
-                return input.getType().getId().equals(type) && input.getName().equals(paramName);
-            });
+            .anyMatch(input -> input.getType().getId().equals(type) && input.getName().equals(paramName) && input.getParameterType().equals(ParameterType.INPUT));
 
         Assertions.assertTrue(hasInput);
     }
@@ -572,10 +582,10 @@ public class ProvisionTaskStepDefinitions {
 
     @Then("the value of parameter {string} is updated to {string} in the database")
     public void the_value_of_parameter_is_updated_to_in_the_database(String parameterName, String newValue) {
-        Input input = persistedTask
-            .getInputs()
+        Parameter input = persistedTask
+            .getParameters()
             .stream()
-            .filter(i -> i.getName().equals(parameterName))
+            .filter(i -> i.getName().equals(parameterName) && i.getParameterType().equals(ParameterType.INPUT))
             .findFirst()
             .orElse(null);
         Assertions.assertNotNull(input);
