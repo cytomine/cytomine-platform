@@ -66,7 +66,10 @@ public class ErrorDefinitions {
         codes.put(ErrorCode.INTERNAL_INVALID_INDEXES_PATTERN, new MessageCode("APPE-internal-invalid-indexes", "indexes don't match pattern {^(0(/[0-9]+)*|[1-9][0-9]*(/[0-9]+)*)$}"));
         codes.put(ErrorCode.INTERNAL_NOT_MATCHING_DIFF_SIZE, new MessageCode("APPE-internal-not-matching", "collections don't have the same size"));
         codes.put(ErrorCode.INTERNAL_MISSING_METADATA, new MessageCode("APPE-internal-missing-metadata", "collection does not have array.yml file"));
-
+        codes.put(ErrorCode.INTERNAL_INVALID_FEATURE_COLLECTION, new MessageCode("APPE-internal-invalid-collection", "invalid feature collection"));
+        codes.put(ErrorCode.INTERNAL_WRONG_PROVISION_STRUCTURE, new MessageCode("APPE-internal-invalid-structure", "invalid provision structure"));
+        codes.put(ErrorCode.INTERNAL_INVALID_COLLECTION_DIMENSIONS, new MessageCode("APPE-internal-invalid-dimensions", "invalid collection dimensions"));
+        codes.put(ErrorCode.INTERNAL_UNKNOWN_PARAMETER, new MessageCode("APPE-internal-unknown", "unknown parameter"));
     }
 
     public static MessageCode fromCode(ErrorCode code) {
