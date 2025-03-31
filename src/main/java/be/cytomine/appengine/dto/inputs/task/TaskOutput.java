@@ -10,7 +10,7 @@ public class TaskOutput {
     private String id;
 
     @JsonProperty(value = "default")
-    private int defaultValue; // this matches a reserved keyword
+    private String defaultValue; // this matches a reserved keyword
 
     private String name;
 

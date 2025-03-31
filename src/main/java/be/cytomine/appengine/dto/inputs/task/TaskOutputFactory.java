@@ -1,5 +1,7 @@
 package be.cytomine.appengine.dto.inputs.task;
 
+import java.util.Objects;
+
 import be.cytomine.appengine.dto.inputs.task.types.bool.TaskParameterBooleanType;
 import be.cytomine.appengine.dto.inputs.task.types.enumeration.TaskParameterEnumerationType;
 import be.cytomine.appengine.dto.inputs.task.types.file.TaskParameterFileType;
@@ -79,9 +81,10 @@ public class TaskOutputFactory {
             );
         }
 
+
         return new TaskOutput(
             output.getId().toString(),
-            Integer.parseInt(output.getDefaultValue()),
+            output.getDefaultValue(),
             output.getName(),
             output.getDisplayName(),
             output.getDescription(),
