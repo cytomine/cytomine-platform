@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import be.cytomine.appengine.dto.inputs.task.ParameterType;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -176,6 +177,10 @@ public class TaskTestsUtils {
                 break;
             case "file":
                 provision.setType(be.cytomine.appengine.dto.inputs.task.ParameterType.FILE);
+                provision.setValue(value.getBytes());
+                break;
+            case "array":
+                provision.setType(ParameterType.ARRAY);
                 provision.setValue(value.getBytes());
                 break;
             default:
