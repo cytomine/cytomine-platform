@@ -4,6 +4,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import be.cytomine.appengine.models.task.collection.CollectionPersistence;
+import be.cytomine.appengine.repositories.AuthorRepository;
+import be.cytomine.appengine.repositories.collection.CollectionPersistenceRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -77,6 +80,9 @@ public class ProvisionTaskStepDefinitions {
     private BooleanPersistenceRepository booleanProvisionRepository;
 
     @Autowired
+    private AuthorRepository authorRepository;
+
+    @Autowired
     private EnumerationPersistenceRepository enumerationProvisionRepository;
 
     @Autowired
@@ -114,6 +120,8 @@ public class ProvisionTaskStepDefinitions {
     private Run persistedRun;
 
     private Task persistedTask;
+    @Autowired
+    private CollectionPersistenceRepository collectionPersistenceRepository;
 
     @Before
     public void setUp() {
@@ -131,7 +139,7 @@ public class ProvisionTaskStepDefinitions {
     public void this_task_has_and(String namespace, String version) {
         String bundleFilename = namespace + "-" + version + ".zip";
         persistedTask = TestTaskBuilder.buildTaskFromResource(bundleFilename);
-        persistedTask = taskRepository.save(persistedTask);
+        persistedTask = taskRepository.saveAndFlush(persistedTask);
     }
 
     @Given("this task has at least one input parameter")
@@ -212,7 +220,12 @@ public class ProvisionTaskStepDefinitions {
 
     @Given("a task run has been created for this task")
     public void a_task_run_has_been_created_for_this_task() throws FileStorageException {
-        persistedRun = new Run(UUID.randomUUID(), TaskRunState.CREATED, persistedTask);
+        persistedRun = new Run(UUID.randomUUID(), TaskRunState.CREATED, null);
+        persistedRun = taskRunRepository.save(persistedRun);
+        persistedTask.setRuns(List.of(persistedRun));
+        persistedTask = taskRepository.saveAndFlush(persistedTask);
+        persistedTask.setRuns(List.of(persistedRun));
+        persistedRun.setTask(persistedTask);
         persistedRun = taskRunRepository.saveAndFlush(persistedRun);
         Storage runStorage = new Storage("task-run-inputs-" + persistedRun.getId().toString());
         storageHandler.createStorage(runStorage);
@@ -222,7 +235,7 @@ public class ProvisionTaskStepDefinitions {
 
     @Given("a task run has been created and provisioned with parameter {string} value {string} for this task")
     public void a_task_run_has_been_created_for_this_task(String parameterName, String initialValue) throws FileStorageException {
-        persistedRun = new Run(UUID.randomUUID(), TaskRunState.CREATED, persistedTask);
+        persistedRun = new Run(UUID.randomUUID(), TaskRunState.CREATED, null);
 
         Parameter input = persistedTask
             .getParameters()
@@ -279,6 +292,11 @@ public class ProvisionTaskStepDefinitions {
                 provision.setValueType(ValueType.FILE);
                 ((FilePersistence) provision).setValue(initialValue.getBytes());
                 break;
+//            case "CollectionType":
+//                provision = new CollectionPersistence();
+//                provision.setValueType(ValueType.ARRAY);
+//                ((CollectionPersistence) provision).setValue(initialValue.getBytes());
+//                break;
             default:
                 throw new RuntimeException("Unknown type: " + input.getType().getId());
         }
@@ -307,6 +325,12 @@ public class ProvisionTaskStepDefinitions {
         }
 
         persistedRun = taskRunRepository.save(persistedRun);
+        persistedTask.setRuns(List.of(persistedRun));
+        persistedTask = taskRepository.saveAndFlush(persistedTask);
+        persistedTask.setRuns(List.of(persistedRun));
+        persistedRun.setTask(persistedTask);
+        persistedRun = taskRunRepository.saveAndFlush(persistedRun);
+
         Storage runStorage = new Storage("task-run-inputs-" + persistedRun.getId().toString());
         storageHandler.createStorage(runStorage);
     }
@@ -373,6 +397,9 @@ public class ProvisionTaskStepDefinitions {
             case "FileType":
                 provision = filePersistenceRepository.findFilePersistenceByParameterNameAndRunIdAndParameterType(parameterName, persistedRun.getId(), ParameterType.INPUT);
                 break;
+            case "CollectionType":
+                provision = collectionPersistenceRepository.findCollectionPersistenceByParameterNameAndRunIdAndParameterType(parameterName, persistedRun.getId(), ParameterType.INPUT);
+                break;
             default:
                 throw new RuntimeException("Unknown type: " + input.getType().getId());
         }
@@ -395,7 +422,7 @@ public class ProvisionTaskStepDefinitions {
     public void the_task_run_states_changes_to_because_the_task_is_now_completely_provisioned(String state) {
         Optional<Run> optionalRun = taskRunRepository.findById(persistedRun.getId());
         optionalRun.ifPresent(value -> persistedRun = value);
-        Assertions.assertEquals(persistedRun.getState().toString(), state);
+        Assertions.assertEquals(state,persistedRun.getState().toString());
     }
 
     // PROVISIONING OF TWO PARAMETERS

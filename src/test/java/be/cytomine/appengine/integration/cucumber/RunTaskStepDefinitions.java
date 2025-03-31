@@ -178,16 +178,19 @@ public class RunTaskStepDefinitions {
     public void a_task_run_exists_with_identifier(String uuid) throws FileStorageException {
         runRepository.deleteAll();
         Task task = TestTaskBuilder.buildHardcodedAddInteger(UUID.fromString(uuid));
-        task = taskRepository.save(task);
         secret = UUID.randomUUID().toString();
-        persistedRun = new Run(UUID.fromString(uuid), null, task , secret);
+        persistedRun = new Run(UUID.fromString(uuid), null, null , secret);
+        task.setRuns(List.of(persistedRun));
+        task = taskRepository.saveAndFlush(task);
+        persistedRun.setTask(task);
+        persistedRun = runRepository.saveAndFlush(persistedRun);
         createStorage(uuid);
     }
 
     @Given("the task run is in state {string}")
     public void the_task_run_is_in_state(String state) {
         persistedRun.setState(TaskRunState.valueOf(state));
-        persistedRun = runRepository.save(persistedRun);
+        persistedRun = runRepository.saveAndFlush(persistedRun);
     }
 
     @When("user calls the endpoint with {string} HTTP method GET")
@@ -425,13 +428,20 @@ public class RunTaskStepDefinitions {
         taskRepository.deleteAll();
         Task task = TestTaskBuilder.buildHardcodedAddInteger();
         task = taskRepository.save(task);
-        persistedRun = new Run(UUID.fromString(runId), null, task);
+        persistedRun = new Run(UUID.fromString(runId), null, null);
+        persistedRun = runRepository.save(persistedRun);
+        task.setRuns(List.of(persistedRun));
+        task = taskRepository.saveAndFlush(task);
+        task.setRuns(List.of(persistedRun));
+        persistedRun.setTask(task);
+        taskRepository.saveAndFlush(task);
+        persistedRun = runRepository.findById(persistedRun.getId()).get();
     }
 
     @Given("this task run has not been successfully provisioned yet and is therefore in state {string}")
     public void this_task_run_has_not_been_successfully_provisioned_yet_and_is_therefore_in_state(String state) {
         persistedRun.setState(TaskRunState.valueOf(state));
-        persistedRun = runRepository.save(persistedRun);
+        persistedRun = runRepository.saveAndFlush(persistedRun);
     }
 
     @When("When user calls the endpoint to run task with HTTP method POST")
