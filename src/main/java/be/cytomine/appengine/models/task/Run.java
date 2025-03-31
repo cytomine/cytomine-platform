@@ -56,6 +56,13 @@ public class Run extends BaseEntity {
         this.provisions = new HashSet<>();
     }
 
+    public Run(TaskRunState taskRunState, Task task) {
+        super();
+        this.state = taskRunState;
+        this.task = task;
+        this.provisions = new HashSet<>();
+    }
+
     public Run(UUID taskRunId, TaskRunState taskRunState, Task task, String secret) {
         super();
         this.id = taskRunId;
