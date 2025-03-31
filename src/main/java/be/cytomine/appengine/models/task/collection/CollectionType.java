@@ -302,7 +302,7 @@ public class CollectionType extends Type {
         && !(valueObject instanceof Boolean)
         && !(valueObject instanceof LinkedHashMap)
         && !(valueObject instanceof File)) {
-      throw new TypeValidationException("wrong provision structure");
+      throw new TypeValidationException(ErrorCode.INTERNAL_WRONG_PROVISION_STRUCTURE);
     }
     if (valueObject instanceof ArrayList) {
        validateNativeCollection((ArrayList<?>) valueObject);
@@ -328,7 +328,7 @@ public class CollectionType extends Type {
             }
           } catch (JsonProcessingException e)
           {
-            throw new TypeValidationException("invalid feature collection");
+            throw new TypeValidationException(ErrorCode.INTERNAL_INVALID_FEATURE_COLLECTION);
           }
 
       } else {
@@ -352,7 +352,6 @@ public class CollectionType extends Type {
 
   private void validateGeoJSONCollection(String valueObject) throws TypeValidationException
   {
-    // todo : this is not correct I need to redo it
     GeometryType geometryType = new GeometryType();
     try {
       validateFeatureCollection(valueObject, geometryType);
@@ -379,14 +378,14 @@ public class CollectionType extends Type {
           }
       }
     if (trackingType instanceof CollectionType && !(obj instanceof List<?>)){
-      throw new RuntimeException("invalid collection dimensions");
+      throw new TypeValidationException(ErrorCode.INTERNAL_INVALID_COLLECTION_DIMENSIONS);
     }
     if (obj instanceof List<?>) {
       List<?> list = (List<?>) obj;
         assert trackingType instanceof CollectionType;
         CollectionType currentType = (CollectionType) trackingType;
       if (list.size() < currentType.getMinSize() || list.size() > currentType.getMaxSize()) {
-        throw new RuntimeException("invalid collection dimensions");
+        throw new TypeValidationException(ErrorCode.INTERNAL_INVALID_COLLECTION_DIMENSIONS);
       }
       for (Object o : list){
           validateNode(o);
@@ -398,7 +397,7 @@ public class CollectionType extends Type {
       }
       assert map != null;
       if (!(trackingType instanceof CollectionType) && map.get("value") instanceof List<?>){
-        throw new RuntimeException("wrong provision structure");
+        throw new TypeValidationException(ErrorCode.INTERNAL_WRONG_PROVISION_STRUCTURE);
       }
       if (map.get("value") instanceof List<?>) {
 
@@ -409,7 +408,7 @@ public class CollectionType extends Type {
         List<?> list = (List<?>) map.get("value");
         CollectionType currentType = (CollectionType) trackingType;
         if (list.size() < currentType.getMinSize() || list.size() > currentType.getMaxSize()) {
-          throw new TypeValidationException("invalid collection dimensions");
+          throw new TypeValidationException(ErrorCode.INTERNAL_INVALID_COLLECTION_DIMENSIONS);
         }
         for (Object o : list){
             validateNode(o);
