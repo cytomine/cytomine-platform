@@ -7,6 +7,7 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.UUID;
 
+import be.cytomine.appengine.models.task.ParameterType;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.mock.web.MockMultipartFile;
@@ -65,6 +66,7 @@ public class TestTaskBuilder {
         inputType1_1.setCharset("UTF_8");
         inputa.setType(inputType1_1);
         inputa.setDefaultValue("0");
+        inputa.setParameterType(ParameterType.INPUT);
 
         Parameter inputb = new Parameter();
         inputb.setName("b");
@@ -75,6 +77,7 @@ public class TestTaskBuilder {
         inputType1_2.setCharset("UTF_8");
         inputb.setType(inputType1_2);
         inputb.setDefaultValue("0");
+        inputb.setParameterType(ParameterType.INPUT);
 
         inputs.add(inputa);
         inputs.add(inputb);
@@ -89,6 +92,7 @@ public class TestTaskBuilder {
         outputType.setId("integer");
         outputType.setCharset("UTF_8");
         output.setType(outputType);
+        output.setParameterType(ParameterType.OUTPUT);
         outputs.add(output);
         task.getParameters().addAll(outputs);
 
@@ -144,6 +148,7 @@ public class TestTaskBuilder {
         inputType1_1.setId("integer");
         inputa.setType(inputType1_1);
         inputa.setDefaultValue("0");
+        inputa.setParameterType(ParameterType.INPUT);
 
         Parameter inputb = new Parameter();
         inputb.setName("b");
@@ -153,6 +158,7 @@ public class TestTaskBuilder {
         inputType1_2.setId("integer");
         inputb.setType(inputType1_2);
         inputb.setDefaultValue("0");
+        inputb.setParameterType(ParameterType.INPUT);
 
         inputs.add(inputa);
         inputs.add(inputb);
@@ -166,6 +172,7 @@ public class TestTaskBuilder {
         IntegerType outputType = new IntegerType();
         outputType.setId("integer");
         output.setType(outputType);
+        output.setParameterType(ParameterType.OUTPUT);
         outputs.add(output);
         task.getParameters().addAll(outputs);
         return task;
@@ -264,6 +271,7 @@ public class TestTaskBuilder {
                 input.setName(inputKey);
                 input.setDisplayName(inputValue.get("display_name").textValue());
                 input.setDescription(inputValue.get("description").textValue());
+                input.setParameterType(ParameterType.INPUT);
                 // use type factory to generate the correct type
                 input.setType(TypeFactory.createType(inputValue, "UTF_8"));
                 switch (TypeFactory.getTypeId(inputValue.get("type"))) {
@@ -297,6 +305,7 @@ public class TestTaskBuilder {
                 output.setName(outputKey);
                 output.setDisplayName(inputValue.get("display_name").textValue());
                 output.setDescription(inputValue.get("description").textValue());
+                output.setParameterType(ParameterType.OUTPUT);
                 // use type factory to generate the correct type
                 output.setType(TypeFactory.createType(inputValue, "UTF_8"));
 
