@@ -333,11 +333,7 @@ public class TaskProvisioningService {
             }
         }
         if (!inputFound) {
-            throw new TypeValidationException(
-                "unknown parameter ["
-                + provision.getParameterName()
-                + "], not found in task descriptor"
-                );
+            throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_DOES_NOT_EXIST);
         }
     }
 
