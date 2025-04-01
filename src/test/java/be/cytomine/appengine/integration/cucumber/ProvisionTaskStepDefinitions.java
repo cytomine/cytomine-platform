@@ -4,6 +4,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import be.cytomine.appengine.handlers.StorageDataType;
 import be.cytomine.appengine.models.task.collection.CollectionPersistence;
 import be.cytomine.appengine.repositories.AuthorRepository;
 import be.cytomine.appengine.repositories.collection.CollectionPersistenceRepository;
@@ -355,6 +356,9 @@ public class ProvisionTaskStepDefinitions {
             apiClient.provisionInput(persistedRun.getId().toString(), parameterName, input == null ? "" : type, value);
         } catch (RestClientResponseException e) {
             persistedException = e;
+        } catch (JsonProcessingException e)
+        {
+            throw new RuntimeException(e);
         }
     }
 
@@ -413,9 +417,15 @@ public class ProvisionTaskStepDefinitions {
         StorageData descriptorMetaData = new StorageData(fileName, template + "inputs-" + persistedRun.getId().toString());
         StorageData descriptor = storageHandler.readStorageData(descriptorMetaData);
         Assertions.assertNotNull(descriptor);
+        if (content.equalsIgnoreCase("directory")){
+            Assertions.assertEquals(StorageDataType.DIRECTORY,
+                descriptor.peek().getStorageDataType());
+            Assertions.assertEquals(4, descriptor.getEntryList().size());
+        } else {
+            String fileContent = FileHelper.read(descriptor.peek().getData(), StandardCharsets.UTF_8);
+            Assertions.assertTrue(fileContent.equalsIgnoreCase(content));
+        }
 
-        String fileContent = FileHelper.read(descriptor.peek().getData(), StandardCharsets.UTF_8);
-        Assertions.assertTrue(fileContent.equalsIgnoreCase(content));
     }
 
     @Then("the task run states changes to {string} because the task is now completely provisioned")

@@ -215,7 +215,9 @@ public class RunTaskStepDefinitions {
 
     // successful fetch of task run inputs archive in a launched task run
     @Given("the task run {string} has input parameters: {string} of type {string} with value {string} and {string} of type {string} with value {string}")
-    public void the_task_run_has_input_parameters_of_type_with_value_and_of_type_with_value(String runId, String name1, String type1, String value1, String name2, String type2, String value2) throws FileStorageException {
+    public void the_task_run_has_input_parameters_of_type_with_value_and_of_type_with_value(String runId, String name1, String type1, String value1, String name2, String type2, String value2) throws FileStorageException,
+        JsonProcessingException
+    {
         ObjectMapper mapper = new ObjectMapper();
         List<ObjectNode> provisions = new ArrayList<>();
         provisions.add(mapper.valueToTree(TaskTestsUtils.createProvision(name1, type1, value1)));
