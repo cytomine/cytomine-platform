@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.util.List;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -191,7 +192,9 @@ public class ApiClient {
         return get(baseUrl + "/task-runs/" + uuid, TaskRun.class).getBody();
     }
 
-    public JsonNode provisionInput(String uuid, String parameterName, String type, String value) {
+    public JsonNode provisionInput(String uuid, String parameterName, String type, String value)
+        throws JsonProcessingException
+    {
         HttpEntity<Object> entity = null;
         if (type.equals("image") || type.equals("wsi") || type.equals("file")) {
             HttpHeaders headers = new HttpHeaders();

@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 import be.cytomine.appengine.dto.inputs.task.ParameterType;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import be.cytomine.appengine.dto.inputs.task.GenericParameterProvision;
@@ -24,6 +25,9 @@ import be.cytomine.appengine.dto.inputs.task.types.integer.IntegerValue;
 import be.cytomine.appengine.dto.inputs.task.types.string.StringValue;
 import be.cytomine.appengine.dto.inputs.task.types.wsi.WsiValue;
 import be.cytomine.appengine.models.BaseEntity;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 
 public class TaskTestsUtils {
 
@@ -134,7 +138,9 @@ public class TaskTestsUtils {
         return parameterValues;
     }
 
-    public static GenericParameterProvision createProvision(String parameterName, String type, String value) {
+    public static GenericParameterProvision createProvision(String parameterName, String type, String value)
+        throws JsonProcessingException
+    {
         GenericParameterProvision provision = new GenericParameterProvision();
         provision.setParameterName(parameterName);
         if (type.isEmpty()) {
@@ -180,8 +186,10 @@ public class TaskTestsUtils {
                 provision.setValue(value.getBytes());
                 break;
             case "array":
+                ObjectMapper mapper = new ObjectMapper();
+                JsonNode jsonNode = mapper.readTree(value);
                 provision.setType(ParameterType.ARRAY);
-                provision.setValue(value.getBytes());
+                provision.setValue(jsonNode);
                 break;
             default:
                 throw new RuntimeException("Unknown type: " + type);
