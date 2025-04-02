@@ -14,6 +14,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.cucumber.java.Before;
+import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
@@ -677,4 +678,58 @@ public class ProvisionTaskStepDefinitions {
         String fileContent = FileHelper.read(descriptor.peek().getData(), StandardCharsets.UTF_8);
         Assertions.assertTrue(fileContent.equalsIgnoreCase(content));
     }
+
+    @When("a user calls the provisioning endpoint with {string} to provision collection {string} with {string} of type {string} in {int}")
+    public void aUserCallsTheProvisioningEndpointWithToProvisionCollectionWithOfType(String payload, String parameterName, String value, String type, int index)
+        throws JsonProcessingException
+    {
+
+        Parameter input = persistedTask
+            .getParameters()
+            .stream()
+            .filter(i -> i.getName().equals(parameterName) && i.getParameterType().equals(ParameterType.INPUT))
+            .findFirst()
+            .orElse(null);
+
+        try {
+            apiClient.provisionInputPart(persistedRun.getId().toString(), parameterName, input == null ? "" : type, value, index);
+        } catch (RestClientResponseException e) {
+            persistedException = e;
+        }
+
+    }
+
+    @Then("the value {string} is saved and associated collection {string} in the database")
+    public void theValueIsSavedAndAssociatedCollectionInTheDatabase(String value, String parameterName)
+    {
+
+        Parameter input = persistedTask
+            .getParameters()
+            .stream()
+            .filter(i -> i.getName().equals(parameterName) && i.getParameterType().equals(ParameterType.INPUT))
+            .findFirst()
+            .orElse(null);
+        Assertions.assertNotNull(input);
+
+        CollectionPersistence provision = collectionPersistenceRepository.findCollectionPersistenceByParameterNameAndRunIdAndParameterType(parameterName, persistedRun.getId(), ParameterType.INPUT);
+
+        Assertions.assertNotNull(provision);
+        Assertions.assertEquals(1, provision.getItems().size());
+        Assertions.assertTrue(provision.getParameterName().equalsIgnoreCase(parameterName));
+        
+    }
+
+    @And("a input file named {string} is created in the task run storage {string}+UUID within {string}")
+    public void aInputFileNamedIsCreatedInTheTaskRunStorageUUIDWithinWithContent(String index, String template, String parameterName)
+        throws FileStorageException
+    {
+        StorageData descriptorMetaData = new StorageData(parameterName, template + "inputs-" + persistedRun.getId().toString());
+        StorageData descriptor = storageHandler.readStorageData(descriptorMetaData);
+        Assertions.assertNotNull(descriptor);
+        Assertions.assertEquals(StorageDataType.DIRECTORY, descriptor.peek().getStorageDataType());
+        Assertions.assertEquals(3, descriptor.getEntryList().size());
+        Assertions.assertTrue(descriptor.getEntryList().stream().anyMatch(entry -> entry.getName().equalsIgnoreCase(parameterName+"/"+index)));
+
+    }
+
 }
