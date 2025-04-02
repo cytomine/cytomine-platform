@@ -70,6 +70,9 @@ public class ErrorDefinitions {
         codes.put(ErrorCode.INTERNAL_WRONG_PROVISION_STRUCTURE, new MessageCode("APPE-internal-invalid-structure", "invalid provision structure"));
         codes.put(ErrorCode.INTERNAL_INVALID_COLLECTION_DIMENSIONS, new MessageCode("APPE-internal-invalid-dimensions", "invalid collection dimensions"));
         codes.put(ErrorCode.INTERNAL_UNKNOWN_PARAMETER, new MessageCode("APPE-internal-unknown", "unknown parameter"));
+        codes.put(ErrorCode.INTERNAL_NULL_PROVISION, new MessageCode("APPE-internal-null-provision", "provision object is null"));
+        codes.put(ErrorCode.INTERNAL_UNKNOWN_SUBTYPE, new MessageCode("APPE-internal-unknown-subtype", "collection subtype unknown"));
+        codes.put(ErrorCode.INTERNAL_INVALID_METADATA, new MessageCode("APPE-internal-invalid-metadata", "collection array.yml is malformed"));
     }
 
     public static MessageCode fromCode(ErrorCode code) {
