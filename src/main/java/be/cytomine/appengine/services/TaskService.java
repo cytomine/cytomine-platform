@@ -2,21 +2,15 @@ package be.cytomine.appengine.services;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import be.cytomine.appengine.models.CheckTime;
-import be.cytomine.appengine.models.Match;
-import be.cytomine.appengine.models.task.Parameter;
-import be.cytomine.appengine.models.task.ParameterType;
 import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -49,8 +43,11 @@ import be.cytomine.appengine.exceptions.ValidationException;
 import be.cytomine.appengine.handlers.RegistryHandler;
 import be.cytomine.appengine.handlers.StorageData;
 import be.cytomine.appengine.handlers.StorageHandler;
+import be.cytomine.appengine.models.CheckTime;
+import be.cytomine.appengine.models.Match;
 import be.cytomine.appengine.models.task.Author;
 import be.cytomine.appengine.models.task.Parameter;
+import be.cytomine.appengine.models.task.ParameterType;
 import be.cytomine.appengine.models.task.Run;
 import be.cytomine.appengine.models.task.Task;
 import be.cytomine.appengine.models.task.TypeFactory;
@@ -58,7 +55,6 @@ import be.cytomine.appengine.repositories.RunRepository;
 import be.cytomine.appengine.repositories.TaskRepository;
 import be.cytomine.appengine.states.TaskRunState;
 import be.cytomine.appengine.utils.ArchiveUtils;
-import org.springframework.web.servlet.theme.CookieThemeResolver;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -222,7 +218,10 @@ public class TaskService {
         return matches;
     }
 
-    private void processDependencies(JsonNode node, Set<Parameter> parameters, List<Match> matches) {
+    private void processDependencies(
+        JsonNode node,
+        Set<Parameter> parameters,
+        List<Match> matches) {
         if (node != null && node.isObject()) {
             Iterator<String> fieldNames = node.fieldNames();
             while (fieldNames.hasNext()) {
@@ -231,15 +230,21 @@ public class TaskService {
                 parameters.stream()
                     .filter(parameter -> parameter.getName().equals(key))
                     .findFirst()
-                    .ifPresent(parameter -> processParameterDependencies(parameter, value, parameters, matches));
+                    .ifPresent(parameter -> processParameterDependencies(
+                    parameter,
+                    value,
+                    parameters,
+                    matches));
             }
         }
     }
 
 
-    private void processParameterDependencies(Parameter param, JsonNode value,
-                                              Set<Parameter> parameters,
-                                              List<Match> matches) {
+    private void processParameterDependencies(
+        Parameter param,
+        JsonNode value,
+        Set<Parameter> parameters,
+        List<Match> matches) {
         JsonNode dependencies = value.get("dependencies");
         if (dependencies != null && dependencies.isObject()) {
             JsonNode matching = dependencies.get("matching");
@@ -247,28 +252,38 @@ public class TaskService {
                 for (JsonNode element : matching) {
                     String text = element.textValue();
                     int slashIndex = text.indexOf("/");
-                    if (slashIndex == -1) continue; // skip unexpected format
+                    if (slashIndex == -1) {
+                        continue; // skip unexpected format
+                    }
 
                     String matchingType = text.substring(0, slashIndex);
                     String matchingName = text.substring(slashIndex + 1);
 
                     parameters.stream()
-                        .filter(p -> p.getName().equals(matchingName) && p.getParameterType().equals(ParameterType.from(matchingType)))
+                        .filter(p -> p.getName()
+                        .equals(matchingName) && p.getParameterType()
+                        .equals(ParameterType.from(matchingType)))
                         .findFirst()
                         .ifPresent(other -> {
                             // set check time relative to execution
                             CheckTime when = CheckTime.UNDEFINED;
-                            boolean bothInputs = param.getParameterType().equals(ParameterType.INPUT)
+                            boolean bothInputs = param
+                                .getParameterType()
+                                .equals(ParameterType.INPUT)
                                 && matchingType.equalsIgnoreCase("inputs");
                             if (bothInputs) {
                                 when = CheckTime.BEFORE_EXECUTION;
                             }
-                            boolean bothOutputs = param.getParameterType().equals(ParameterType.OUTPUT)
+                            boolean bothOutputs = param
+                                .getParameterType()
+                                .equals(ParameterType.OUTPUT)
                                 && matchingType.equalsIgnoreCase("outputs");
-                            boolean crossMatch = (param.getParameterType().equals(ParameterType.INPUT)
-                                && matchingType.equalsIgnoreCase("outputs")) ||
-                                param.getParameterType().equals(ParameterType.OUTPUT)
-                                    && matchingType.equalsIgnoreCase("inputs");
+                            boolean crossMatch = (param
+                                .getParameterType()
+                                .equals(ParameterType.INPUT)
+                                && matchingType.equalsIgnoreCase("outputs"))
+                                || param.getParameterType().equals(ParameterType.OUTPUT)
+                                && matchingType.equalsIgnoreCase("inputs");
                             if (bothOutputs || crossMatch) {
                                 when = CheckTime.AFTER_EXECUTION;
                             }
