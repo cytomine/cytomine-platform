@@ -7,10 +7,6 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import be.cytomine.appengine.dto.responses.errors.AppEngineError;
-import be.cytomine.appengine.dto.responses.errors.ErrorBuilder;
-import be.cytomine.appengine.dto.responses.errors.ErrorCode;
-import be.cytomine.appengine.exceptions.TypeValidationException;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,9 +30,13 @@ import be.cytomine.appengine.dto.inputs.task.State;
 import be.cytomine.appengine.dto.inputs.task.StateAction;
 import be.cytomine.appengine.dto.inputs.task.TaskRunParameterValue;
 import be.cytomine.appengine.dto.inputs.task.TaskRunResponse;
+import be.cytomine.appengine.dto.responses.errors.AppEngineError;
+import be.cytomine.appengine.dto.responses.errors.ErrorBuilder;
+import be.cytomine.appengine.dto.responses.errors.ErrorCode;
 import be.cytomine.appengine.exceptions.FileStorageException;
 import be.cytomine.appengine.exceptions.ProvisioningException;
 import be.cytomine.appengine.exceptions.SchedulingException;
+import be.cytomine.appengine.exceptions.TypeValidationException;
 import be.cytomine.appengine.handlers.StorageData;
 import be.cytomine.appengine.models.task.ParameterType;
 import be.cytomine.appengine.services.TaskProvisioningService;
@@ -105,8 +105,7 @@ public class TaskRunController {
         @PathVariable("param_name") String parameterName,
         @RequestParam String value,
         @RequestBody JsonNode provision
-    ) throws ProvisioningException, TypeValidationException
-    {
+    ) throws ProvisioningException, TypeValidationException {
         log.info("/task-runs/{run_id}/input-provisions/{param_name} JSON PUT");
         String regex = "^(0(/[0-9]+)*|[1-9][0-9]*(/[0-9]+)*)$";
         boolean isValid = Pattern.matches(regex, value);
@@ -140,8 +139,7 @@ public class TaskRunController {
         @PathVariable("param_name") String parameterName,
         @RequestParam String value,
         @RequestParam MultipartFile file
-    ) throws ProvisioningException, TypeValidationException, IOException
-    {
+    ) throws ProvisioningException, TypeValidationException, IOException {
         log.info("/task-runs/{run_id}/input-provisions/{param_name} Binary PUT");
         String regex = "^(0(/[0-9]+)*|[1-9][0-9]*(/[0-9]+)*)$";
         boolean isValid = Pattern.matches(regex, value);
