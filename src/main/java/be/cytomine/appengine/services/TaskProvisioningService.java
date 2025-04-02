@@ -18,9 +18,6 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-
-import be.cytomine.appengine.models.CheckTime;
-import be.cytomine.appengine.models.task.collection.CollectionPersistence;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -34,6 +31,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import be.cytomine.appengine.dto.handlers.filestorage.Storage;
 import be.cytomine.appengine.dto.handlers.scheduler.Schedule;
+import be.cytomine.appengine.dto.inputs.task.GenericParameterCollectionItemProvision;
 import be.cytomine.appengine.dto.inputs.task.GenericParameterProvision;
 import be.cytomine.appengine.dto.inputs.task.Resource;
 import be.cytomine.appengine.dto.inputs.task.State;
@@ -55,20 +53,23 @@ import be.cytomine.appengine.handlers.StorageData;
 import be.cytomine.appengine.handlers.StorageDataEntry;
 import be.cytomine.appengine.handlers.StorageDataType;
 import be.cytomine.appengine.handlers.StorageHandler;
+import be.cytomine.appengine.models.CheckTime;
+import be.cytomine.appengine.models.Match;
 import be.cytomine.appengine.models.task.Author;
+import be.cytomine.appengine.models.task.Parameter;
 import be.cytomine.appengine.models.task.ParameterType;
 import be.cytomine.appengine.models.task.Run;
 import be.cytomine.appengine.models.task.Task;
 import be.cytomine.appengine.models.task.Type;
 import be.cytomine.appengine.models.task.TypePersistence;
+import be.cytomine.appengine.models.task.collection.CollectionPersistence;
+import be.cytomine.appengine.models.task.collection.CollectionType;
 import be.cytomine.appengine.repositories.RunRepository;
 import be.cytomine.appengine.repositories.TypePersistenceRepository;
-import be.cytomine.appengine.states.TaskRunState;
-import be.cytomine.appengine.dto.inputs.task.GenericParameterCollectionItemProvision;
-import be.cytomine.appengine.models.Match;
-import be.cytomine.appengine.models.task.Parameter;
-import be.cytomine.appengine.models.task.collection.CollectionType;
 import be.cytomine.appengine.repositories.collection.CollectionPersistenceRepository;
+import be.cytomine.appengine.states.TaskRunState;
+
+
 
 @Slf4j
 @RequiredArgsConstructor
@@ -150,7 +151,8 @@ public class TaskProvisioningService {
 
         changeStateToProvisioned(run);
 
-        return getInputParameterType(name, run).createInputProvisioningEndpointResponse(provision, run);
+        return getInputParameterType(name, run)
+            .createInputProvisioningEndpointResponse(provision, run);
     }
 
     private void changeStateToProvisioned(Run run) {
@@ -166,7 +168,8 @@ public class TaskProvisioningService {
             ParameterType.INPUT,
             inputParameters.stream().map(Parameter::getName).toList());
         boolean allParametersAreChecked = inputParameters.size() == persistenceList.size();
-        if (allParametersAreChecked && persistenceList.stream().allMatch(TypePersistence::isProvisioned)) {
+        if (allParametersAreChecked
+            && persistenceList.stream().allMatch(TypePersistence::isProvisioned)) {
             run.setState(TaskRunState.PROVISIONED);
             runRepository.saveAndFlush(run);
             log.info("ProvisionParameter: RUN PROVISIONED");
@@ -265,8 +268,7 @@ public class TaskProvisioningService {
 
     @NotNull
     private void saveInDatabase(String parameterName, JsonNode provision, Run run)
-        throws ProvisioningException
-    {
+        throws ProvisioningException {
         Parameter inputForType = getParameter(parameterName, ParameterType.INPUT, run);
 
         inputForType
@@ -290,7 +292,9 @@ public class TaskProvisioningService {
         Storage runStorage = new Storage("task-run-inputs-" + run.getId());
 
         try {
-            StorageData inputProvisionFileData = inputForType.getType().mapToStorageFileData(provision, run);
+            StorageData inputProvisionFileData = inputForType
+                .getType()
+                .mapToStorageFileData(provision, run);
             fileStorageHandler.saveStorageData(runStorage, inputProvisionFileData);
         } catch (FileStorageException e) {
             AppEngineError error = ErrorBuilder.buildParamRelatedError(
@@ -302,8 +306,7 @@ public class TaskProvisioningService {
         }
     }
 
-    private Parameter getParameter(String parameterName, ParameterType parameterType, Run run)
-    {
+    private Parameter getParameter(String parameterName, ParameterType parameterType, Run run) {
         return run
             .getTask()
             .getParameters()
@@ -354,7 +357,7 @@ public class TaskProvisioningService {
             if (parameter.getName().equalsIgnoreCase(provision.getParameterName())) {
                 inputFound = true;
                 if (provision.getValue() instanceof ArrayList<?>) {
-                    Type nestedValidationType = validateParents(parameter , indexesArray);
+                    Type nestedValidationType = validateParents(parameter, indexesArray);
                     nestedValidationType.validate(provision.getValue());
                 } else {
                     parameter.getType().validate(provision.getValue());
@@ -371,15 +374,18 @@ public class TaskProvisioningService {
         }
     }
 
-    private Type validateParents(Parameter parameter, String[] indexes) throws TypeValidationException {
+    private Type validateParents(
+        Parameter parameter,
+        String[] indexes)
+        throws TypeValidationException {
         int validationDepth = indexes.length - 1;
         CollectionType type = (CollectionType) parameter.getType();
-        for(int i = 0; i <= validationDepth; i++) {
-            if (Objects.isNull(type.getTrackingType())){
+        for (int i = 0; i <= validationDepth; i++) {
+            if (Objects.isNull(type.getTrackingType())) {
                 type.setTrackingType(new CollectionType(type));
                 type.setParentType(type.getTrackingType());
-            }else {
-                if (type.getTrackingType() instanceof CollectionType){
+            } else {
+                if (type.getTrackingType() instanceof CollectionType) {
                     type.setParentType(type.getTrackingType());
                     type.setTrackingType(((CollectionType) type.getTrackingType()).getSubType());
                 }
@@ -388,7 +394,7 @@ public class TaskProvisioningService {
             int index = Integer.parseInt(indexes[i]);
             if (index > ((CollectionType) type.getParentType()).getMaxSize() - 1
                 || index < 0) {
-                throw new TypeValidationException("invalid index [{"+index+"}]");
+                throw new TypeValidationException("invalid index [{" + index + "}]");
             }
         }
         return type;
@@ -423,7 +429,10 @@ public class TaskProvisioningService {
         ZipOutputStream zipOut = new ZipOutputStream(Files.newOutputStream(tempFile));
         for (TypePersistence provision : provisions) {
             // check that this type persistence is actually associated with a parameter
-            Parameter parameter = getParameter(provision.getParameterName(), provision.getParameterType(), run);
+            Parameter parameter = getParameter(
+                provision.getParameterName(),
+                provision.getParameterType(),
+                run);
             if (Objects.isNull(parameter)) {
                 continue;
             }
@@ -432,7 +441,7 @@ public class TaskProvisioningService {
             );
 
             for (StorageDataEntry current : provisionFileData.getEntryList()) {
-                String entryName ;
+                String entryName;
                 if (current.getStorageDataType().equals(StorageDataType.FILE)) {
                     entryName = current.getName();
                 } else {
@@ -520,20 +529,26 @@ public class TaskProvisioningService {
                         String outputName = currentOutput.getName();
                         Path tempFile = Files.createTempFile(outputName, null);
                         Files.copy(zais, tempFile, StandardCopyOption.REPLACE_EXISTING);
-                        parameterZipEntryStorageData = new StorageData(tempFile.toFile(), outputName);
+                        parameterZipEntryStorageData = new StorageData(
+                            tempFile.toFile(),
+                            outputName);
                         contentsOfZip.add(parameterZipEntryStorageData);
                         break;
                     }
                     // assuming it's the main directory of a collection parameter
-                    if (ze.getName().startsWith(currentOutput.getName()+"/")) {
+                    if (ze.getName().startsWith(currentOutput.getName() + "/")) {
                         StorageData partialParameterZipEntryStorageData;
                         if (ze.isDirectory()) {
                             partialParameterZipEntryStorageData = new StorageData(ze.getName());
                             contentsOfZip.add(partialParameterZipEntryStorageData);
                         } else {
-                            Path tempFile = Files.createTempFile(ze.getName().replace("/" , ""), null);
+                            Path tempFile = Files.createTempFile(ze
+                                .getName()
+                                .replace("/", ""), null);
                             Files.copy(zais, tempFile, StandardCopyOption.REPLACE_EXISTING);
-                            partialParameterZipEntryStorageData = new StorageData(tempFile.toFile(), ze.getName());
+                            partialParameterZipEntryStorageData = new StorageData(
+                                tempFile.toFile(),
+                                ze.getName());
                             contentsOfZip.add(partialParameterZipEntryStorageData);
                         }
 
@@ -561,7 +576,8 @@ public class TaskProvisioningService {
                 .filter(parameter -> parameter.getType() instanceof CollectionType)
                 .toList()
                 .size();
-            remainingOutputsAreCollections = numberOfCollections > 0 && numberOfCollections == remainingOutputs.size();
+            remainingOutputsAreCollections = numberOfCollections > 0
+                && numberOfCollections == remainingOutputs.size();
 
             if (!remainingOutputs.isEmpty() && !remainingOutputsAreCollections) {
                 AppEngineError error = ErrorBuilder.build(ErrorCode.INTERNAL_MISSING_OUTPUTS);
@@ -609,7 +625,9 @@ public class TaskProvisioningService {
                     .filter(s -> s
                     .peek()
                     .getName()
-                    .equals(currentOutput.getType() instanceof CollectionType? currentOutput.getName()+"/":currentOutput.getName()))
+                    .equals(
+                    currentOutput.getType() instanceof CollectionType
+                    ? currentOutput.getName() + "/" : currentOutput.getName()))
                     .findFirst();
                 StorageData currentOutputStorageData = null;
                 if (currentOutputStorageDataOptional.isPresent()) {
@@ -635,7 +653,9 @@ public class TaskProvisioningService {
                 // saving to the storage does not care about the type
                 storeOutputInFileStorage(run, currentOutputStorageData, outputName);
                 // based on parsed type build the response
-                taskRunParameterValues.add(currentOutput.getType().createOutputProvisioningEndpointResponse(
+                taskRunParameterValues.add(currentOutput
+                    .getType()
+                    .createOutputProvisioningEndpointResponse(
                     currentOutputStorageData,
                     run.getId(),
                     outputName)
@@ -656,8 +676,11 @@ public class TaskProvisioningService {
         }
     }
 
-    private void validateFiles(Run run, Parameter currentOutput, StorageData currentOutputStorageData)
-        throws TypeValidationException {
+    private void validateFiles(
+        Run run,
+        Parameter currentOutput,
+        StorageData currentOutputStorageData
+    ) throws TypeValidationException {
         log.info("Posting Outputs Archive: "
             + "validating files and directories contents and structure...");
         currentOutput.getType().validateFiles(run, currentOutput, currentOutputStorageData);
@@ -688,8 +711,7 @@ public class TaskProvisioningService {
     }
 
     private void saveOutput(Run run, Parameter currentOutput, StorageData outputValue)
-        throws ProvisioningException
-    {
+        throws ProvisioningException {
         log.info("Posting Outputs Archive: saving...");
         currentOutput.getType().persistResult(run, currentOutput, outputValue);
         log.info("Posting Outputs Archive: saved...");
@@ -778,8 +800,7 @@ public class TaskProvisioningService {
     }
 
     private List<TaskRunParameterValue> buildTaskRunParameterValues(Run run, ParameterType type)
-        throws ProvisioningException
-    {
+        throws ProvisioningException {
         List<TaskRunParameterValue> parameterValues = new ArrayList<>();
         @SuppressWarnings("checkstyle:LineLength")
         List<TypePersistence> results = typePersistenceRepository.findTypePersistenceByRunIdAndParameterType(run.getId(), type);
@@ -795,10 +816,15 @@ public class TaskProvisioningService {
                 // based on the type of the parameter assign the type
                 Optional<Parameter> inputForTypeOptional = inputs
                     .stream()
-                    .filter(parameter -> parameter.getName().equalsIgnoreCase(result.getParameterName()))
+                    .filter(parameter -> parameter
+                    .getName()
+                    .equalsIgnoreCase(result.getParameterName()))
                     .findFirst();
                 if (inputForTypeOptional.isPresent()) {
-                    parameterValues.add(inputForTypeOptional.get().getType().createOutputProvisioningEndpointResponse(result));
+                    parameterValues.add(inputForTypeOptional
+                        .get()
+                        .getType()
+                        .createOutputProvisioningEndpointResponse(result));
                 }
 
             }
@@ -814,10 +840,16 @@ public class TaskProvisioningService {
                 // based on the type of the parameter assign the type
                 Optional<Parameter> outputForTypeOptional = outputs
                     .stream()
-                    .filter(parameter -> parameter.getName().equalsIgnoreCase(result.getParameterName()))
+                    .filter(parameter -> parameter
+                    .getName()
+                    .equalsIgnoreCase(result.getParameterName()))
                     .findFirst();
                 if (outputForTypeOptional.isPresent()) {
-                    parameterValues.add(outputForTypeOptional.get().getType().createOutputProvisioningEndpointResponse(result));
+                    parameterValues
+                        .add(outputForTypeOptional
+                        .get()
+                        .getType()
+                        .createOutputProvisioningEndpointResponse(result));
                 }
 
             }
@@ -903,8 +935,14 @@ public class TaskProvisioningService {
 
         if (!matches.isEmpty()) {
             for (Match match : matches) {
-                CollectionPersistence matching = collectionPersistenceRepository.findCollectionPersistenceByParameterNameAndRunIdAndParameterType(match.getMatching().getName(), run.getId(), ParameterType.INPUT);
-                CollectionPersistence matched = collectionPersistenceRepository.findCollectionPersistenceByParameterNameAndRunIdAndParameterType(match.getMatched().getName(), run.getId(), ParameterType.INPUT);
+                CollectionPersistence matching = collectionPersistenceRepository
+                    .findCollectionPersistenceByParameterNameAndRunIdAndParameterType(match
+                    .getMatching()
+                    .getName(), run.getId(), ParameterType.INPUT);
+                CollectionPersistence matched = collectionPersistenceRepository
+                    .findCollectionPersistenceByParameterNameAndRunIdAndParameterType(match
+                    .getMatched()
+                    .getName(), run.getId(), ParameterType.INPUT);
                 // compare size
                 if (!Objects.equals(matching.getSize(), matched.getSize())) {
                     error = ErrorBuilder.build(ErrorCode.INTERNAL_NOT_MATCHING_DIFF_SIZE);
@@ -912,10 +950,19 @@ public class TaskProvisioningService {
                 }
                 // map indexes
                 for (TypePersistence item : matching.getItems()) {
-                    String matchingItemIndex = item.getCollectionIndex().substring(item.getCollectionIndex().lastIndexOf('['));
-                    List<TypePersistence> matchedItemIndexes = matched.getItems().stream().filter(typePersistence -> typePersistence.getCollectionIndex().endsWith(matchingItemIndex)).toList();
+                    String matchingItemIndex = item
+                        .getCollectionIndex()
+                        .substring(item.getCollectionIndex().lastIndexOf('['));
+                    List<TypePersistence> matchedItemIndexes = matched
+                        .getItems()
+                        .stream()
+                        .filter(typePersistence -> typePersistence
+                        .getCollectionIndex()
+                        .endsWith(matchingItemIndex))
+                        .toList();
                     if (matchedItemIndexes.size() != 1) {
-                        error = ErrorBuilder.build(ErrorCode.INTERNAL_NOT_MATCHING_NOT_ALIGNED_INDEXES);
+                        error = ErrorBuilder
+                            .build(ErrorCode.INTERNAL_NOT_MATCHING_NOT_ALIGNED_INDEXES);
                         throw new ProvisioningException(error);
                     }
                 }
@@ -930,21 +977,40 @@ public class TaskProvisioningService {
 
         if (!matches.isEmpty()) {
             for (Match match : matches) {
-                CollectionPersistence matching = collectionPersistenceRepository.findCollectionPersistenceByParameterNameAndRunId(match.getMatching().getName(), run.getId());
-                CollectionPersistence matched = collectionPersistenceRepository.findCollectionPersistenceByParameterNameAndRunId(match.getMatched().getName(), run.getId());
+                CollectionPersistence matching = collectionPersistenceRepository
+                    .findCollectionPersistenceByParameterNameAndRunId(match
+                    .getMatching()
+                    .getName(), run.getId());
+                CollectionPersistence matched = collectionPersistenceRepository
+                    .findCollectionPersistenceByParameterNameAndRunId(match
+                    .getMatched()
+                    .getName(), run.getId());
                 // compare size
                 if (!Objects.equals(matching.getSize(), matched.getSize())) {
                     ParameterError parameterError = new ParameterError(matching.getParameterName());
-                    AppEngineError error = ErrorBuilder.build(ErrorCode.INTERNAL_NOT_MATCHING_DIFF_SIZE, parameterError);
+                    AppEngineError error = ErrorBuilder
+                        .build(ErrorCode.INTERNAL_NOT_MATCHING_DIFF_SIZE, parameterError);
                     multipleErrors.add(error);
                 }
                 // map indexes
                 for (TypePersistence item : matching.getItems()) {
-                    String matchingItemIndex = item.getCollectionIndex().substring(item.getCollectionIndex().lastIndexOf('['));
-                    List<TypePersistence> matchedItemIndexes = matched.getItems().stream().filter(typePersistence -> typePersistence.getCollectionIndex().endsWith(matchingItemIndex)).toList();
+                    String matchingItemIndex = item
+                        .getCollectionIndex()
+                        .substring(item.getCollectionIndex().lastIndexOf('['));
+                    List<TypePersistence> matchedItemIndexes = matched
+                        .getItems()
+                        .stream()
+                        .filter(typePersistence -> typePersistence
+                        .getCollectionIndex()
+                        .endsWith(matchingItemIndex))
+                        .toList();
                     if (matchedItemIndexes.size() != 1) {
-                        ParameterError parameterError = new ParameterError(matching.getParameterName());
-                        AppEngineError error = ErrorBuilder.build(ErrorCode.INTERNAL_NOT_MATCHING_NOT_ALIGNED_INDEXES, parameterError);
+                        ParameterError parameterError = new ParameterError(
+                            matching.getParameterName()
+                        );
+                        AppEngineError error = ErrorBuilder
+                            .build(ErrorCode
+                            .INTERNAL_NOT_MATCHING_NOT_ALIGNED_INDEXES, parameterError);
                         multipleErrors.add(error);
                     }
                 }
@@ -1005,9 +1071,12 @@ public class TaskProvisioningService {
         );
     }
 
-    public JsonNode provisionCollectionItem(String runId, String name, Object value, String[] indexesArray)
-        throws ProvisioningException, TypeValidationException
-    {
+    public JsonNode provisionCollectionItem(
+        String runId,
+        String name,
+        Object value,
+        String[] indexesArray)
+        throws ProvisioningException, TypeValidationException {
         // get run and make sure it is valid
         log.info("ProvisionCollectionItem: finding associated task run...");
         Run run = getRunIfValid(runId);
@@ -1035,7 +1104,8 @@ public class TaskProvisioningService {
         log.info("ProvisionCollectionItem: preparing generic provision...");
 
         // prepare item as generic provision
-        GenericParameterCollectionItemProvision genericParameterProvision = new GenericParameterCollectionItemProvision();
+        GenericParameterCollectionItemProvision
+            genericParameterProvision = new GenericParameterCollectionItemProvision();
 
         if (value instanceof JsonNode) {
             try {
@@ -1091,6 +1161,7 @@ public class TaskProvisioningService {
 
         changeStateToProvisioned(run);
 
-        return getInputParameterType(name, run).createInputProvisioningEndpointResponse(provision, run);
+        return getInputParameterType(name, run)
+            .createInputProvisioningEndpointResponse(provision, run);
     }
 }
