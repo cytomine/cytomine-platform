@@ -82,11 +82,14 @@ public class StorageData {
     }
 
     public StorageDataEntry get(String name) {
-        return entryList.stream().filter(entry -> Objects.equals(entry.getName(), name)).findFirst().orElse(null);
+        return entryList
+            .stream()
+            .filter(entry -> Objects.equals(entry.getName(), name))
+            .findFirst()
+            .orElse(null);
     }
 
-    public void sortShallowToDeep()
-    {
+    public void sortShallowToDeep() {
         entryList.sort(Comparator.comparingInt(entry -> countSlashes(entry.getName())));
     }
 
