@@ -20,6 +20,3 @@ databaseChangeLog:
   - include:
       file: migrations/remove-task-inputs-outputs.sql
       relativeToChangelogFile: false
-#  - includeAll:
-#      path: migrations/
-#      relativeToChangelogFile: false
