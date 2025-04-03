@@ -141,9 +141,11 @@ public class FileSystemStorageHandler implements StorageHandler {
                 }
                 if (Files.isRegularFile(path)) {
                     entry.setData(path.toFile());
-                    String fromStorageId = path.toString().substring(path.toString().indexOf(current.getStorageId()));
+                    String fromStorageId = path
+                        .toString()
+                        .substring(path.toString().indexOf(current.getStorageId()));
                     String subTreeFileName = fromStorageId
-                        .substring(current.getStorageId().length()+1);
+                        .substring(current.getStorageId().length() + 1);
                     if (!subTreeFileName.equalsIgnoreCase(filename)) {
                         entry.setName(subTreeFileName);
                     }
@@ -153,9 +155,11 @@ public class FileSystemStorageHandler implements StorageHandler {
 
                 if (Files.isDirectory(path)) {
                     entry.setStorageDataType(StorageDataType.DIRECTORY);
-                    String fromStorageId = path.toString().substring(path.toString().indexOf(current.getStorageId()));
+                    String fromStorageId = path
+                        .toString()
+                        .substring(path.toString().indexOf(current.getStorageId()));
                     String subTreeFileName = fromStorageId
-                        .substring(current.getStorageId().length()+1);
+                        .substring(current.getStorageId().length() + 1);
                     if (!subTreeFileName.equalsIgnoreCase(filename)) {
                         entry.setName(subTreeFileName);
                     }
