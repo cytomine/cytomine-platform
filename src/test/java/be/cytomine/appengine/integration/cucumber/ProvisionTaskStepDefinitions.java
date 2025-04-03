@@ -6,7 +6,6 @@ import java.util.stream.Collectors;
 
 import be.cytomine.appengine.handlers.StorageDataType;
 import be.cytomine.appengine.models.task.collection.CollectionPersistence;
-import be.cytomine.appengine.repositories.AuthorRepository;
 import be.cytomine.appengine.repositories.collection.CollectionPersistenceRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
