@@ -1,12 +1,11 @@
 package be.cytomine.appengine.dto.inputs.task.types.collection;
 
-import be.cytomine.appengine.dto.inputs.task.TaskParameterType;
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+
+import be.cytomine.appengine.dto.inputs.task.TaskParameterType;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
