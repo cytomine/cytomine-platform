@@ -3,8 +3,13 @@ package be.cytomine.appengine.integration.cucumber;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
 
+import be.cytomine.appengine.models.task.Run;
+import be.cytomine.appengine.repositories.RunRepository;
 import com.cytomine.registry.client.RegistryClient;
 import com.cytomine.registry.client.http.resp.CatalogResp;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -16,6 +21,7 @@ import io.cucumber.java.Before;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
+import org.hibernate.StaleObjectStateException;
 import org.junit.jupiter.api.Assertions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -55,6 +61,9 @@ public class UploadTaskStepDefinitions {
     @Autowired
     private TaskRepository taskRepository;
 
+    @Autowired
+    private RunRepository taskRunRepository;
+
     @Value("${app-engine.api_prefix}")
     private String apiPrefix;
 
@@ -88,7 +97,7 @@ public class UploadTaskStepDefinitions {
     public void app_engine_is_up_and_running() {
         ResponseEntity<String> health = apiClient.checkHealth();
         Assertions.assertTrue(health.getStatusCode().is2xxSuccessful());
-        taskRepository.deleteAll();
+        taskRepository.deleteAllTasks();
     }
 
     @Given("File storage service is up and running")
@@ -102,9 +111,7 @@ public class UploadTaskStepDefinitions {
     public void registry_service_is_up_and_running() throws IOException {
         try {
             RegistryClient.delete("registry:5000/img@sha256:d53ef00848a227ce64ce71cd7cceb7184fd1f116e0202289b26a576cf87dc4cb");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        } catch (IOException ignored) {}
     }
 
     @Given("a task uniquely identified by an {string} and a {string}")

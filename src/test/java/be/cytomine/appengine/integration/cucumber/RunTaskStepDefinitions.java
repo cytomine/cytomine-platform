@@ -438,6 +438,7 @@ public class RunTaskStepDefinitions {
         persistedRun.setTask(task);
         taskRepository.saveAndFlush(task);
         persistedRun = runRepository.findById(persistedRun.getId()).get();
+
     }
 
     @Given("this task run has not been successfully provisioned yet and is therefore in state {string}")
@@ -659,7 +660,5 @@ public class RunTaskStepDefinitions {
     }
 
     @Then("App Engine initiates the process of executing the task run")
-    public void app_engine_initiates_the_process_of_executing_the_task_run() {
-        // TODO : How?
-    }
+    public void app_engine_initiates_the_process_of_executing_the_task_run() {}
 }
