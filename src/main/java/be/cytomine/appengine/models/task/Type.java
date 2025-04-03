@@ -7,8 +7,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import be.cytomine.appengine.exceptions.FileStorageException;
-import be.cytomine.appengine.exceptions.ProvisioningException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -25,6 +23,8 @@ import org.apache.logging.log4j.util.Strings;
 
 import be.cytomine.appengine.dto.inputs.task.TaskRunParameterValue;
 import be.cytomine.appengine.dto.responses.errors.ErrorCode;
+import be.cytomine.appengine.exceptions.FileStorageException;
+import be.cytomine.appengine.exceptions.ProvisioningException;
 import be.cytomine.appengine.exceptions.TypeValidationException;
 import be.cytomine.appengine.handlers.StorageData;
 import be.cytomine.appengine.models.BaseEntity;
@@ -68,8 +68,10 @@ public class Type extends BaseEntity {
         throws ProvisioningException
     {}
 
-    public StorageData mapToStorageFileData(JsonNode provision, Run run) throws FileStorageException
-    {
+    public StorageData mapToStorageFileData(
+        JsonNode provision,
+        Run run)
+        throws FileStorageException {
         return null;
     }
 
@@ -93,16 +95,14 @@ public class Type extends BaseEntity {
         StorageData outputData,
         UUID id,
         String outputName
-    ) throws ProvisioningException
-    {
+    ) throws ProvisioningException {
         return null;
     }
 
-    // Todo : rename
+
     public TaskRunParameterValue createOutputProvisioningEndpointResponse(
         TypePersistence typePersistence
-    ) throws ProvisioningException
-    {
+    ) throws ProvisioningException {
         return null;
     }
 
