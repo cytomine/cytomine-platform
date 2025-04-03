@@ -1,7 +1,5 @@
 package be.cytomine.appengine.dto.inputs.task;
 
-import java.util.Objects;
-
 import be.cytomine.appengine.dto.inputs.task.types.bool.TaskParameterBooleanType;
 import be.cytomine.appengine.dto.inputs.task.types.enumeration.TaskParameterEnumerationType;
 import be.cytomine.appengine.dto.inputs.task.types.file.TaskParameterFileType;
