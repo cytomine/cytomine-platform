@@ -1,15 +1,12 @@
 package be.cytomine.appengine.models.task;
 
 import java.util.Arrays;
-import java.util.Objects;
 import java.util.Optional;
 
-import be.cytomine.appengine.dto.inputs.task.types.collection.CollectionGenericTypeConstraint;
-import be.cytomine.appengine.dto.inputs.task.types.collection.CollectionGenericTypeDependency;
-import be.cytomine.appengine.models.task.collection.CollectionType;
 import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.validation.constraints.NotNull;
 
+import be.cytomine.appengine.dto.inputs.task.types.collection.CollectionGenericTypeConstraint;
 import be.cytomine.appengine.dto.inputs.task.types.enumeration.EnumerationTypeConstraint;
 import be.cytomine.appengine.dto.inputs.task.types.file.FileTypeConstraint;
 import be.cytomine.appengine.dto.inputs.task.types.image.ImageTypeConstraint;
@@ -18,6 +15,7 @@ import be.cytomine.appengine.dto.inputs.task.types.number.NumberTypeConstraint;
 import be.cytomine.appengine.dto.inputs.task.types.string.StringTypeConstraint;
 import be.cytomine.appengine.dto.inputs.task.types.wsi.WsiTypeConstraint;
 import be.cytomine.appengine.models.task.bool.BooleanType;
+import be.cytomine.appengine.models.task.collection.CollectionType;
 import be.cytomine.appengine.models.task.enumeration.EnumerationType;
 import be.cytomine.appengine.models.task.file.FileType;
 import be.cytomine.appengine.models.task.geometry.GeometryType;
@@ -60,8 +58,7 @@ public class TypeFactory {
     private static Type createCollectionType(
         JsonNode typeNode,
         String typeId,
-        String charset)
-    {
+        String charset) {
         CollectionType type = new CollectionType();
         type.setId(typeId);
         type.setCharset(charset);
