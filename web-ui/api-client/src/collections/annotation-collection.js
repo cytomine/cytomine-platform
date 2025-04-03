@@ -28,7 +28,6 @@ export default class AnnotationCollection extends Collection {
     this.slice = null;
     this.slices = null;
 
-    this.job = null;
     this.user = null;
     this.users = null;
     this.includeAlgo = null;
@@ -39,7 +38,6 @@ export default class AnnotationCollection extends Collection {
     this.terms = null;
     this.suggestedTerm = null;
     this.userForTermAlgo = null;
-    this.jobForTermAlgo = null;
     this.noTerm = null;
     this.noAlgoTerm = null;
     this.multipleTerm = null;
