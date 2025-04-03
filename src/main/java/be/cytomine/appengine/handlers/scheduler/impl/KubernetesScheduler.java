@@ -20,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
+import org.springframework.stereotype.Component;
 
 import be.cytomine.appengine.dto.handlers.scheduler.Schedule;
 import be.cytomine.appengine.exceptions.SchedulingException;
@@ -29,6 +30,7 @@ import be.cytomine.appengine.models.task.Run;
 import be.cytomine.appengine.models.task.Task;
 import be.cytomine.appengine.repositories.RunRepository;
 import be.cytomine.appengine.states.TaskRunState;
+
 
 @Slf4j
 @Component
