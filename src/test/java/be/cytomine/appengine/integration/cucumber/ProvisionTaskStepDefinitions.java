@@ -82,9 +82,6 @@ public class ProvisionTaskStepDefinitions {
     private BooleanPersistenceRepository booleanProvisionRepository;
 
     @Autowired
-    private AuthorRepository authorRepository;
-
-    @Autowired
     private EnumerationPersistenceRepository enumerationProvisionRepository;
 
     @Autowired
@@ -294,11 +291,6 @@ public class ProvisionTaskStepDefinitions {
                 provision.setValueType(ValueType.FILE);
                 ((FilePersistence) provision).setValue(initialValue.getBytes());
                 break;
-//            case "CollectionType":
-//                provision = new CollectionPersistence();
-//                provision.setValueType(ValueType.ARRAY);
-//                ((CollectionPersistence) provision).setValue(initialValue.getBytes());
-//                break;
             default:
                 throw new RuntimeException("Unknown type: " + input.getType().getId());
         }
