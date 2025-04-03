@@ -1,10 +1,11 @@
 package be.cytomine.appengine.dto.inputs.task.types.collection;
 
-import be.cytomine.appengine.dto.inputs.task.TaskRunParameterValue;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+
+import be.cytomine.appengine.dto.inputs.task.TaskRunParameterValue;
 
 @EqualsAndHashCode(callSuper = false)
 @Data
