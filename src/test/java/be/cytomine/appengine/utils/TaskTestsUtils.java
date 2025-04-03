@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import be.cytomine.appengine.dto.inputs.task.GenericParameterCollectionItemProvision;
 import be.cytomine.appengine.dto.inputs.task.ParameterType;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -25,9 +26,6 @@ import be.cytomine.appengine.dto.inputs.task.types.integer.IntegerValue;
 import be.cytomine.appengine.dto.inputs.task.types.string.StringValue;
 import be.cytomine.appengine.dto.inputs.task.types.wsi.WsiValue;
 import be.cytomine.appengine.models.BaseEntity;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.node.TextNode;
 
 public class TaskTestsUtils {
 
@@ -190,6 +188,61 @@ public class TaskTestsUtils {
                 JsonNode jsonNode = mapper.readTree(value);
                 provision.setType(ParameterType.ARRAY);
                 provision.setValue(jsonNode);
+                break;
+            default:
+                throw new RuntimeException("Unknown type: " + type);
+        }
+
+        return provision;
+    }
+
+    public static GenericParameterCollectionItemProvision createProvisionPart(String parameterName, String type, String value, int index)
+        throws JsonProcessingException
+    {
+        GenericParameterCollectionItemProvision provision = new GenericParameterCollectionItemProvision();
+        provision.setParameterName(parameterName);
+        provision.setIndex(String.valueOf(index));
+        if (type.isEmpty()) {
+            provision.setValue(value);
+            return provision;
+        }
+
+        switch (type) {
+            case "boolean":
+                provision.setType(be.cytomine.appengine.dto.inputs.task.ParameterType.BOOLEAN);
+                provision.setValue(Boolean.parseBoolean(value));
+                break;
+            case "integer":
+                provision.setType(be.cytomine.appengine.dto.inputs.task.ParameterType.INTEGER);
+                provision.setValue(Integer.parseInt(value));
+                break;
+            case "number":
+                provision.setType(be.cytomine.appengine.dto.inputs.task.ParameterType.NUMBER);
+                provision.setValue(Double.parseDouble(value));
+                break;
+            case "string":
+                provision.setType(be.cytomine.appengine.dto.inputs.task.ParameterType.STRING);
+                provision.setValue(value);
+                break;
+            case "enumeration":
+                provision.setType(be.cytomine.appengine.dto.inputs.task.ParameterType.ENUMERATION);
+                provision.setValue(value);
+                break;
+            case "geometry":
+                provision.setType(be.cytomine.appengine.dto.inputs.task.ParameterType.GEOMETRY);
+                provision.setValue(value);
+                break;
+            case "image":
+                provision.setType(be.cytomine.appengine.dto.inputs.task.ParameterType.IMAGE);
+                provision.setValue(value.getBytes());
+                break;
+            case "wsi":
+                provision.setType(be.cytomine.appengine.dto.inputs.task.ParameterType.WSI);
+                provision.setValue(value.getBytes());
+                break;
+            case "file":
+                provision.setType(be.cytomine.appengine.dto.inputs.task.ParameterType.FILE);
+                provision.setValue(value.getBytes());
                 break;
             default:
                 throw new RuntimeException("Unknown type: " + type);

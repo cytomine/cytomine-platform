@@ -2,7 +2,9 @@ package be.cytomine.appengine.utils;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -29,6 +31,7 @@ import be.cytomine.appengine.dto.inputs.task.TaskRun;
 import be.cytomine.appengine.dto.inputs.task.TaskRunParameterValue;
 import be.cytomine.appengine.models.task.Parameter;
 import be.cytomine.appengine.states.TaskRunState;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @Component
 public class ApiClient {
@@ -97,6 +100,17 @@ public class ApiClient {
 
     public <T> ResponseEntity<T> put(String url, HttpEntity<Object> entity, Class<T> responseType) {
         return restTemplate.exchange(url, HttpMethod.PUT, entity, responseType);
+    }
+
+    public <T> ResponseEntity<T> put(String url, HttpEntity<Object> entity, Class<T> responseType, Map<String, String> params) {
+        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(url);
+
+        for (Map.Entry<String, String> entry : params.entrySet()) {
+            builder.queryParam(entry.getKey(), entry.getValue());
+        }
+        String finalUrl = builder.toUriString();
+
+        return restTemplate.exchange(finalUrl, HttpMethod.PUT, entity, responseType);
     }
 
     public <T> ResponseEntity<T> put(String url, HttpEntity<Object> entity, ParameterizedTypeReference<T> responseType) {
@@ -266,5 +280,41 @@ public class ApiClient {
         String response = get(url, String.class).getBody();
 
         return TaskTestsUtils.convertTo(response);
+    }
+
+    public JsonNode provisionInputPart(String uuid, String parameterName, String type, String value, int index)
+        throws JsonProcessingException
+    {
+        HttpEntity<Object> entity = null;
+        if (type.equals("image") || type.equals("wsi") || type.equals("file")) {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+            MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+            ByteArrayResource fileResource = new ByteArrayResource(value.getBytes()) {
+                @Override
+                public String getFilename() {
+                    return "file.txt";
+                }
+            };
+            body.add("file", fileResource);
+
+            entity = new HttpEntity<>(body, headers);
+        } else {
+            ObjectMapper mapper = new ObjectMapper();
+            ObjectNode jsonNode = mapper.valueToTree(
+                TaskTestsUtils.createProvisionPart(parameterName, type, value, index)
+            );
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+            entity = new HttpEntity<>(jsonNode, headers);
+        }
+
+        Map<String,String> params = new HashMap<>();
+        params.put("value", String.valueOf(index));
+
+        return put(baseUrl + "/task-runs/" + uuid + "/input-provisions/" + parameterName + "/indexes", entity, JsonNode.class, params).getBody();
     }
 }
