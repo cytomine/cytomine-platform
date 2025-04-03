@@ -41,8 +41,11 @@ public class Match extends BaseEntity {
 
     private CheckTime checkTime;
 
-    public Match(Parameter matching, Parameter matched, CheckTime checkTime)
-    {
+    public Match(
+        Parameter matching,
+        Parameter matched,
+        CheckTime checkTime) {
+
         this.matching = matching;
         this.matched = matched;
         this.checkTime = checkTime;
