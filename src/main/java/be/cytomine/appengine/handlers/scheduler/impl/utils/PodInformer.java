@@ -57,7 +57,7 @@ public class PodInformer implements ResourceEventHandler<Pod> {
         int maxAttempts = 3;
         int attempts = 0;
         while (attempts < maxAttempts) {
-            try{
+            try {
                 Run run = getRun(pod);
                 if (run == null || FINAL_STATES.contains(run.getState())) {
                     return;
@@ -67,13 +67,11 @@ public class PodInformer implements ResourceEventHandler<Pod> {
                 run = runRepository.saveAndFlush(run);
                 log.info("Pod Informer: set Run {} to {}", run.getId(), run.getState());
                 return;
-            }catch(ObjectOptimisticLockingFailureException ex){
+            } catch (ObjectOptimisticLockingFailureException ex) {
                 attempts++;
                 if (attempts >= maxAttempts) {
-                    // After maxAttempts, rethrow the exception.
                     throw ex;
                 }
-                // Optionally, wait a short time before retrying.
                 try {
                     Thread.sleep(100);
                 } catch (InterruptedException e) {
@@ -93,9 +91,9 @@ public class PodInformer implements ResourceEventHandler<Pod> {
         int maxAttempts = 3;
         int attempts = 0;
         while (attempts < maxAttempts) {
-            try{
+            try {
                 Run run = getRun(newPod);
-                if (Objects.isNull(run)){
+                if (Objects.isNull(run)) {
                     return;
                 }
 
@@ -106,17 +104,16 @@ public class PodInformer implements ResourceEventHandler<Pod> {
                     return;
                 }
 
-                run.setState(STATUS.getOrDefault(newPod.getStatus().getPhase(), TaskRunState.FAILED));
+                run.setState(STATUS
+                    .getOrDefault(newPod.getStatus().getPhase(), TaskRunState.FAILED));
                 run = runRepository.saveAndFlush(run);
                 log.info("Pod Informer: update Run {} to {}", run.getId(), run.getState());
                 return;
-            }catch(ObjectOptimisticLockingFailureException ex){
+            } catch (ObjectOptimisticLockingFailureException ex) {
                 attempts++;
                 if (attempts >= maxAttempts) {
-                    // After maxAttempts, rethrow the exception.
                     throw ex;
                 }
-                // Optionally, wait a short time before retrying.
                 try {
                     Thread.sleep(100);
                 } catch (InterruptedException e) {
