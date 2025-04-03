@@ -39,7 +39,7 @@ Feature: [URS00001-TASK] Upload a task
       | com.cytomine.dummy.identity.image              | 1.0.0        | image.tar    | acde070d-8c4c-4f0d-9d8a-162843c10333 | task-acde070d-8c4c-4f0d-9d8a-162843c10333-def | com/cytomine/dummy/identity/image:1.0.0              |
       | com.cytomine.dummy.identity.wsi                | 1.0.0        | image.tar    | acde070d-8c4c-4f0d-9d8a-162843c10333 | task-acde070d-8c4c-4f0d-9d8a-162843c10333-def | com/cytomine/dummy/identity/wsi:1.0.0                |
       | com.cytomine.dummy.identity.file               | 1.0.0        | image.tar    | acde070d-8c4c-4f0d-9d8a-162843c10333 | task-acde070d-8c4c-4f0d-9d8a-162843c10333-def | com/cytomine/dummy/identity/file:1.0.0               |
-      | com.uliege.dummy.identity.integer.collection      | 0.1.0        | image.tar    | acde070d-8c4c-4f0d-9d8a-162843c10333 | task-acde070d-8c4c-4f0d-9d8a-162843c10333-def | com/cytomine/dummy/identity/primitive-collection:0.1.0      |
+      | com.uliege.dummy.identity.integer.collection   | 0.1.0        | image.tar    | acde070d-8c4c-4f0d-9d8a-162843c10333 | task-acde070d-8c4c-4f0d-9d8a-162843c10333-def | com/cytomine/dummy/identity/primitive-collection:0.1.0      |
 
   Scenario Outline: unsuccessful upload of duplicate task
     Given a task uniquely identified by an "<task namespace>" and a "<task version>"
