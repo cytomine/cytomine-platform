@@ -11,6 +11,7 @@
     "scripts": {
         "dev": "webpack-cli --mode=development --watch --info-verbosity verbose",
         "build": "webpack-cli --mode=production",
+        "lint": "eslint -c .eslintrc.js --ext .js --ignore-path .gitignore .",
         "test": "./node_modules/karma/bin/karma start",
         "prepack": "npm run build",
         "prepare": "npm run build"
