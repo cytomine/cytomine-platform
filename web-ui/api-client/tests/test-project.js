@@ -241,7 +241,6 @@ describe('Project', function() {
     let totalNb = 0;
 
     let currentUser;
-    let software;
 
     before(async function() {
 
@@ -259,9 +258,6 @@ describe('Project', function() {
         projectPromises.push(createAndAccessProject());
       }
       projects = await Promise.all(projectPromises);
-
-      // wait for software package
-      //({software} = await utils.getSoftwareProject({project: projects[0].id}));
     });
 
     after(async function() {
@@ -329,13 +325,6 @@ describe('Project', function() {
       it('Filter on user ; light version', async function() {
         let collection = await ProjectCollection.fetchAll({filterKey: 'user', filterValue: currentUser.id, light: true});
         expect(collection).to.have.lengthOf.at.least(nbProjects);
-      });
-
-      it.skip('Filter on software', async function() {
-        let collection = new ProjectCollection();
-        collection.setFilter('software', software);
-        await collection.fetchAll();
-        expect(collection).to.have.lengthOf(1);
       });
 
       it('Filter on ontology', async function() {

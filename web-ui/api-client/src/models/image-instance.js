@@ -42,7 +42,6 @@ export default class ImageInstance extends Model {
     this.macroURL = null;
 
     this.numberOfAnnotations = null;
-    this.numberOfJobAnnotations = null;
     this.numberOfReviewedAnnotations = null;
 
     this.reviewStart = null;

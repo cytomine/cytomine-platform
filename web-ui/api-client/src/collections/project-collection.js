@@ -19,7 +19,7 @@ export default class ProjectCollection extends Collection {
 
   /** @inheritdoc */
   static get allowedFilters() {
-    return [null, 'user', 'software', 'ontology'];
+    return [null, 'user', 'ontology'];
   }
 
   /**
@@ -50,7 +50,7 @@ export default class ProjectCollection extends Collection {
   /**
    * @static Fetch bounds of the attributes of all projects
    *
-   * @returns {{numberOfAnnotations: {min: Long, max: Long}, numberOfJobAnnotations: {min: Long, max: Long}, numberOfReviewedAnnotations: {min: Long, max: Long}, numberOfImages: {min: Long, max: Long}, members: {min: Long, max: Long}}}
+   * @returns {{numberOfAnnotations: {min: Long, max: Long}, numberOfReviewedAnnotations: {min: Long, max: Long}, numberOfImages: {min: Long, max: Long}, members: {min: Long, max: Long}}}
    *          The max, min or list of all the projects properties. members is returned iif withMembersCount parameter is set to true
    */
   static async fetchBounds({withMembersCount=true}={}) {

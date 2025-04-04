@@ -29,7 +29,6 @@ export default class Project extends Model {
     this.numberOfSlides = null;
     this.numberOfImages = null;
     this.numberOfAnnotations = null;
-    this.numberOfJobAnnotations = null;
     this.numberOfReviewedAnnotations = null;
 
     this.retrievalDisable = null;
@@ -67,11 +66,10 @@ export default class Project extends Model {
    * Fetch all project users
    *
    * @param {boolean} [online]    If true, only online users are included in response
-   * @param {boolean} [showJob]   If true, the user jobs are included in response
    *
    * @returns {UserCollection} the collection of project users
    */
-  async fetchUsers(online, showJob) {
+  async fetchUsers(online) {
     if(this.isNew()) {
       throw new Error('Cannot fetch users of a project with no ID.');
     }
@@ -79,9 +77,6 @@ export default class Project extends Model {
     let params = {};
     if(online != null) {
       params.online = online;
-    }
-    if(showJob != null) {
-      params.showJob = showJob;
     }
 
     let {data} = await Cytomine.instance.api.get(`${this.callbackIdentifier}/${this.id}/user.json`, {params});
