@@ -1,5 +1,6 @@
 package be.cytomine.appengine.handlers.scheduler.impl;
 
+import java.io.File;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.HashMap;
@@ -69,7 +70,15 @@ public class KubernetesScheduler implements SchedulerHandler {
 
     private String baseOutputPath;
 
+    private boolean isInDocker() {
+        return new File("/.dockerenv").exists();
+    }
+
     private String getHostAddress() throws SchedulingException {
+        if (!isInDocker()) {
+            return "172.17.0.1";
+        }
+
         try {
             return InetAddress.getLocalHost().getHostAddress();
         } catch (UnknownHostException e) {
