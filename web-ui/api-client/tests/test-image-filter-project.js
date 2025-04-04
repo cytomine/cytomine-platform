@@ -1,14 +1,4 @@
-import * as utils from './utils.js';
-import {ImageFilterProject, ImageFilterProjectCollection} from '@';
-
 describe('ImageFilterProject', function() {
-
-  let imageFilter;
-  let project;
-  let imageFilterName;
-
-  let imageFilterProject;
-  let id = 0;
 
   /*before(async function() {
     await utils.connect(true);

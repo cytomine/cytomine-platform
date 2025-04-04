@@ -1,0 +1,20 @@
+stages:
+  - lint
+
+workflow:
+  rules:
+    - if: '$CI_MERGE_REQUEST_ID'
+      when: always
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: always
+    - if: '$CI_COMMIT_BRANCH == "production"'
+      when: always
+    - when: never
+
+lint-javascript:
+  stage: lint
+  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/node:${NODE_VERSION}
+  before_script:
+    - npm ci
+  script:
+    - npm run lint

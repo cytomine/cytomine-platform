@@ -12,7 +12,6 @@ module.exports = {
   rules: {
     'indent': ['error', 2],
     'quotes': ['error', 'single', {'avoidEscape': true}],
-    'brace-style': ['error', 'stroustrup'],
     'array-bracket-spacing': ['error', 'never'],
     'camelcase': ['error', {'properties': 'always'}],
     'semi': ['error', 'always']
