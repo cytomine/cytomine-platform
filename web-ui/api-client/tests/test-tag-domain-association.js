@@ -1,5 +1,5 @@
 import * as utils from './utils.js';
-import {Tag, TagDomainAssociation, TagDomainAssociationCollection} from '@';
+import {TagDomainAssociation, TagDomainAssociationCollection} from '@';
 
 describe('TagDomainAssociation', function() {
 
@@ -10,8 +10,8 @@ describe('TagDomainAssociation', function() {
 
   before(async function() {
     await utils.connect();
-    let name = utils.randomString();
-    let user = await utils.getUser();
+    utils.randomString();
+    await utils.getUser();
     ({id: tag} = await utils.getTag());
     project = await utils.getProject();
   });
@@ -67,19 +67,13 @@ describe('TagDomainAssociation', function() {
     let totalNb = 0;
 
     before(async function() {
-      try {
-        let associationPromises = [];
-        for(let i = 0; i < nbAssociations; i++) {
-          let tag;
-          ({id: tag} = await utils.getTag({forceCreation: true}));
-          associationPromises.push(new TagDomainAssociation({tag}, project).save());
-        }
-        associations = await Promise.all(associationPromises);
+      let associationPromises = [];
+      for(let i = 0; i < nbAssociations; i++) {
+        let tag;
+        ({id: tag} = await utils.getTag({forceCreation: true}));
+        associationPromises.push(new TagDomainAssociation({tag}, project).save());
       }
-      catch(error) {
-        console.log('Tag domain association already exists');
-      }
-
+      associations = await Promise.all(associationPromises);
     });
 
     after(async function() {

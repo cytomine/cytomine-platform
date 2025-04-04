@@ -30,7 +30,6 @@ async function getModel(model, collection, forceCreation) {
   // if no model was found or if a new model is explicitly required with the forceCreation parameter
   await model.save();
   createdModels.push(model);
-  console.log('Created ' + model);
   return model;
 }
 
@@ -46,7 +45,7 @@ export async function getAbstractImage({filename=randomString(), uploadedFile, f
   let abstractImageCollection = new cytomine.AbstractImageCollection({nbPerPage: 1});
   abstractImage = await getModel(abstractImage, abstractImageCollection, forceCreation);
 
-  let as = await new cytomine.AbstractSlice({uploadedFile, image: abstractImage.id, mime: 'image/pyrtiff'}).save();
+  await new cytomine.AbstractSlice({uploadedFile, image: abstractImage.id, mime: 'image/pyrtiff'}).save();
   return abstractImage;
 }
 
@@ -96,11 +95,8 @@ export async function getGroup({name=randomString(), forceCreation=true} = {}) {
   return getModel(group, groupCollection, forceCreation);
 }
 
-export async function getImageFilter({name=randomString(), baseUrl='path/', processingServer, forceCreation=true, cascadeForceCreation} = {}) {
+export async function getImageFilter({name=randomString(), baseUrl='path/', processingServer, forceCreation=true} = {}) {
   let imageFilterCollection = new cytomine.ImageFilterCollection({nbPerPage: 1});
-  if(!processingServer) {
-    ({url: processingServer} = await getProcessingServer({forceCreation: cascadeForceCreation}));
-  }
   let imageFilter = new cytomine.ImageFilter({name, baseUrl, processingServer});
   return getModel(imageFilter, imageFilterCollection, forceCreation);
 }
@@ -255,13 +251,7 @@ export async function cleanData() {
   // delete models sequentially and in reverse order to ensure there is no foreign key constraint issues
   for(let i = createdModels.length - 1; i >= 0; i--) {
     let model = createdModels[i];
-    try {
-      await model.delete();
-      console.log('Deleted ' + model);
-    }
-    catch(err) {
-      console.log(`Failed to delete ${model}`);
-    }
+    await model.delete();
   }
   createdModels = [];
 }
