@@ -1,8 +1,8 @@
 package be.cytomine.appengine.utils;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.util.List;
+import java.util.Set;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -38,22 +38,6 @@ public class ApiClient {
     private String baseUrl;
 
     private String port;
-
-    private File writeToFile(String filename, String suffix, byte[] content) {
-        try {
-            File tempFile = File.createTempFile(filename, suffix);
-            tempFile.deleteOnExit();
-
-            try (FileOutputStream fos = new FileOutputStream(tempFile)) {
-                fos.write(content);
-            }
-
-            return tempFile;
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException(e);
-        }
-    }
 
     public ApiClient() {
         this.restTemplate = new RestTemplate();
@@ -130,14 +114,20 @@ public class ApiClient {
         String url = baseUrl + "/tasks/" + namespace + "/" + version + "/descriptor.yml";
         byte[] resource = get(url, byte[].class).getBody();
 
-        return writeToFile("descriptor-", null, resource);
+        File data = FileHelper.write("descriptor-", resource);
+        data.deleteOnExit();
+
+        return data;
     }
 
     public File getTaskDescriptor(String uuid) {
         String url = baseUrl + "/tasks/" + uuid + "/descriptor.yml";
         byte[] resource = get(url, byte[].class).getBody();
 
-        return writeToFile("descriptor-", null, resource);
+        File data = FileHelper.write("descriptor-", resource);
+        data.deleteOnExit();
+
+        return data;
     }
 
     public List<TaskInput> getTaskInputs(String namespace, String version) {
@@ -194,7 +184,9 @@ public class ApiClient {
 
     public JsonNode provisionInput(String uuid, String parameterName, String type, String value) {
         HttpEntity<Object> entity = null;
-        if (type.equals("image") || type.equals("wsi") || type.equals("file")) {
+
+        Set<String> binaryTypes = Set.of("image", "wsi", "file");
+        if (binaryTypes.contains(type)) {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 
@@ -240,14 +232,20 @@ public class ApiClient {
         String url = baseUrl + "/task-runs/" + uuid + "/inputs.zip";
         byte[] resource = get(url, byte[].class).getBody();
 
-        return writeToFile("inputs-", ".zip", resource);
+        File data = FileHelper.write("inputs-", ".zip", resource);
+        data.deleteOnExit();
+
+        return data;
     }
 
     public File getTaskRunOutputsArchive(String uuid) {
         String url = baseUrl + "/task-runs/" + uuid + "/outputs.zip";
         byte[] resource = get(url, byte[].class).getBody();
 
-        return writeToFile("outputs-", ".zip", resource);
+        File data = FileHelper.write("outputs-", ".zip", resource);
+        data.deleteOnExit();
+
+        return data;
     }
 
     public List<TaskRunParameterValue> postTaskRunOutputsArchive(String uuid, String secret, File outputs) {

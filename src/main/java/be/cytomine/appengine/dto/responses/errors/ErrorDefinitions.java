@@ -27,6 +27,7 @@ public class ErrorDefinitions {
         codes.put(ErrorCode.INTERNAL_PARAMETER_GEOJSON_SUBTYPE_ERROR, new MessageCode("APPE-internal-request-validation-error", "unsupported GeoJSON subtype"));
         codes.put(ErrorCode.INTERNAL_PARAMETER_GEQ_VALIDATION_ERROR, new MessageCode("APPE-internal-request-validation-error", "value must be greater than or equal to define constraint"));
         codes.put(ErrorCode.INTERNAL_PARAMETER_GT_VALIDATION_ERROR, new MessageCode("APPE-internal-request-validation-error", "value must be greater than defined constraint"));
+        codes.put(ErrorCode.INTERNAL_PARAMETER_INFINITY_ERROR, new MessageCode("APPE-internal-request-validation-error", "value cannot be infinity"));
         codes.put(ErrorCode.INTERNAL_PARAMETER_INVALID_GEOJSON, new MessageCode("APPE-internal-request-validation-error", "invalid GeoJSON object"));
         codes.put(ErrorCode.INTERNAL_PARAMETER_INVALID_IMAGE, new MessageCode("APPE-internal-request-validation-error", "invalid image"));
         codes.put(ErrorCode.INTERNAL_PARAMETER_INVALID_IMAGE_DIMENSION, new MessageCode("APPE-internal-request-validation-error", "invalid image dimension"));
@@ -38,6 +39,7 @@ public class ErrorDefinitions {
         codes.put(ErrorCode.INTERNAL_PARAMETER_LEQ_VALIDATION_ERROR, new MessageCode("APPE-internal-request-validation-error", "value must be less than or equal to defined constraint"));
         codes.put(ErrorCode.INTERNAL_PARAMETER_LT_VALIDATION_ERROR, new MessageCode("APPE-internal-request-validation-error", "value must be less than defined constraint"));
         codes.put(ErrorCode.INTERNAL_PARAMETER_MISSING_RADIUS_ERROR, new MessageCode("APPE-internal-request-validation-error", "missing radius parameter"));
+        codes.put(ErrorCode.INTERNAL_PARAMETER_NAN_ERROR, new MessageCode("APPE-internal-request-validation-error", "value cannot be nan"));
         codes.put(ErrorCode.INTERNAL_PARAMETER_SCHEMA_VALIDATION_ERROR, new MessageCode("APPE-internal-bundle-io-schema-validation-error", ""));
         codes.put(ErrorCode.INTERNAL_PARAMETER_TYPE_ERROR, new MessageCode("APPE-internal-request-validation-error", "invalid parameter type"));
         codes.put(ErrorCode.INTERNAL_PARAMETER_UNSUPPORTED_GEOMETRY_SUBTYPE, new MessageCode("APPE-internal-request-validation-error", "unsupported geometry subtype"));

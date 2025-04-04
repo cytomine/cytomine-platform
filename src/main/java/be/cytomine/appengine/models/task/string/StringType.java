@@ -43,10 +43,10 @@ public class StringType extends Type {
     public void setConstraint(StringTypeConstraint constraint, Integer value) {
         switch (constraint) {
             case MIN_LENGTH:
-                this.setMinLength(value);
+                setMinLength(value);
                 break;
             case MAX_LENGTH:
-                this.setMaxLength(value);
+                setMaxLength(value);
                 break;
             default:
         }
@@ -54,8 +54,8 @@ public class StringType extends Type {
 
     public boolean hasConstraint(StringTypeConstraint constraint) {
         return switch (constraint) {
-            case MIN_LENGTH -> this.minLength != null;
-            case MAX_LENGTH -> this.maxLength != null;
+            case MIN_LENGTH -> minLength != null;
+            case MAX_LENGTH -> maxLength != null;
             default -> false;
         };
     }
@@ -74,7 +74,6 @@ public class StringType extends Type {
         String rawValue = getContentIfValid(outputFile);
 
         validate(rawValue);
-
     }
 
     @Override
@@ -85,17 +84,11 @@ public class StringType extends Type {
 
         String value = (String) valueObject;
 
-        if (
-            this.hasConstraint(StringTypeConstraint.MIN_LENGTH)
-            && value.length() < this.getMinLength()
-        ) {
+        if (hasConstraint(StringTypeConstraint.MIN_LENGTH) && value.length() < minLength) {
             throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_GT_VALIDATION_ERROR);
         }
 
-        if (
-            this.hasConstraint(StringTypeConstraint.MAX_LENGTH)
-            && value.length() > this.getMaxLength()
-        ) {
+        if (hasConstraint(StringTypeConstraint.MAX_LENGTH) && value.length() > maxLength) {
             throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_GEQ_VALIDATION_ERROR);
         }
     }
