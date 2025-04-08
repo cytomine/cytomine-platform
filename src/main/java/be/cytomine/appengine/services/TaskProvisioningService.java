@@ -660,8 +660,7 @@ public class TaskProvisioningService {
                     outputName)
                 );
             }
-
-            // todo : check matching of outputs and
+            
             multipleErrors.addAll(checkAfterExecutionMatches(run));
 
             // throw multiple errors if exist
