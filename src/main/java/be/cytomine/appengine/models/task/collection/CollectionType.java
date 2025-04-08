@@ -8,6 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -83,9 +84,6 @@ public class CollectionType extends Type {
 
     @Column(nullable = true)
     private Integer maxSize;
-
-    @Column(nullable = true)
-    private String subTypeId;
 
     @OneToOne(cascade = CascadeType.ALL, optional = false)
     private Type subType;
@@ -297,25 +295,32 @@ public class CollectionType extends Type {
             return;
         }
 
-        if (!(valueObject instanceof ArrayList)
-            && !(valueObject instanceof String)
-            && !(valueObject instanceof Integer)
-            && !(valueObject instanceof Double)
-            && !(valueObject instanceof Boolean)
-            && !(valueObject instanceof LinkedHashMap)
-            && !(valueObject instanceof File)) {
+        Set<Class<?>> excludedTypes = Set.of(
+            ArrayList.class,
+            String.class,
+            Integer.class,
+            Double.class,
+            Boolean.class,
+            LinkedHashMap.class,
+            File.class
+        );
+
+        if (!excludedTypes.contains(valueObject.getClass())) {
             throw new TypeValidationException(ErrorCode.INTERNAL_WRONG_PROVISION_STRUCTURE);
         }
+
         if (valueObject instanceof ArrayList) {
             validateNativeCollection((ArrayList<?>) valueObject);
         }
 
-        // validate collection item
-        if (valueObject instanceof String
-            || valueObject instanceof Integer
-            || valueObject instanceof Double
-            || valueObject instanceof Boolean
-            || valueObject instanceof File) {
+        Set<Class<?>> validTypes = Set.of(
+            String.class,
+            Integer.class,
+            Double.class,
+            Boolean.class,
+            File.class
+        );
+        if (validTypes.contains(valueObject.getClass())) {
 
             ObjectMapper objectMapper = new ObjectMapper();
             // validate a GeoJSON collection like FeatureCollection or GeometryCollection
@@ -1542,12 +1547,4 @@ public class CollectionType extends Type {
         return collectionItemValue;
     }
 
-    public CollectionType(CollectionType copy) {
-        this.subType = copy.getSubType();
-        this.maxSize = copy.getMaxSize();
-        this.minSize = copy.getMinSize();
-        this.subTypeId = copy.getSubTypeId();
-        this.parentType = copy.getParentType();
-        this.trackingType = copy.getTrackingType();
-    }
 }
