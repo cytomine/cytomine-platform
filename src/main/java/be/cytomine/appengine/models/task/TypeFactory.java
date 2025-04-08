@@ -76,8 +76,6 @@ public class TypeFactory {
 
         // handle nested type
         JsonNode subtype = typeNode.get("subtype");
-        String subTypeId = getTypeId(subtype);;
-        type.setSubTypeId(subTypeId);
         type.setSubType(TypeFactory.createType(subtype, charset));
         return type;
     }
