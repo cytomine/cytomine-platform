@@ -487,7 +487,6 @@ public class TaskProvisioningService {
             .filter(parameter -> parameter.getParameterType().equals(ParameterType.OUTPUT))
             .collect(Collectors.toSet());
 
-        new ArrayList<>();
         log.info("Posting Outputs Archive: unzipping...");
         try {
             List<TaskRunParameterValue> outputList = processOutputFiles(
