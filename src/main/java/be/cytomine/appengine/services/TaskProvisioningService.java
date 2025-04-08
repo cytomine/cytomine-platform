@@ -660,7 +660,7 @@ public class TaskProvisioningService {
                     outputName)
                 );
             }
-            
+
             multipleErrors.addAll(checkAfterExecutionMatches(run));
 
             // throw multiple errors if exist
@@ -906,7 +906,7 @@ public class TaskProvisioningService {
         }
         log.info("Running Task: valid run");
 
-        // Todo : validate collections matching constraints if any .. only collections as inputs
+
         checkBeforeExecutionMatches(run);
 
         log.info("Running Task: contacting scheduler...");
