@@ -2,6 +2,9 @@ package be.cytomine.appengine.utils;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.Set;
 import java.util.UUID;
 
@@ -16,7 +19,13 @@ import be.cytomine.appengine.models.task.integer.IntegerType;
 public class TaskUtils {
     public static UploadTaskArchive createTestUploadTaskArchive() throws IOException {
         File descriptorFile = new ClassPathResource("artifacts/descriptor.yml").getFile();
-        File dockerImage = File.createTempFile("docker-image", ".tar");
+
+        // Create a copy because it will be deleted after the upload process
+        Path original = new ClassPathResource("artifacts/image.tar").getFile().toPath();
+        Path copy = Path.of("src/test/resources/artifacts/docker-test-image.tar");
+        Files.copy(original, copy, StandardCopyOption.REPLACE_EXISTING);
+        File dockerImage = copy.toFile();
+        dockerImage.deleteOnExit();
 
         return new UploadTaskArchive(descriptorFile, dockerImage);
     }
