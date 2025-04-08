@@ -347,7 +347,6 @@ public class CollectionType extends Type {
         try {
             validateFeatureCollection(valueObject, geometryType);
         } catch (TypeValidationException e) {
-            geometryType = new GeometryType();
             validateGeometryCollection(valueObject, geometryType);
         }
     }
