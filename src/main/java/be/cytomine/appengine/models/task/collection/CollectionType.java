@@ -96,6 +96,14 @@ public class CollectionType extends Type {
     @Transient
     private Type parentType;
 
+    public CollectionType(CollectionType copy) {
+        this.subType = copy.getSubType();
+        this.maxSize = copy.getMaxSize();
+        this.minSize = copy.getMinSize();
+        this.parentType = copy.getParentType();
+        this.trackingType = copy.getTrackingType();
+    }
+
     public void validateFeatureCollection(String json, GeometryType geometryType)
         throws TypeValidationException {
         ObjectMapper objectMapper = new ObjectMapper();
