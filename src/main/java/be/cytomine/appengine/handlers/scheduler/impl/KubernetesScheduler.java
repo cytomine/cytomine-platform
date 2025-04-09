@@ -42,7 +42,7 @@ public class KubernetesScheduler implements SchedulerHandler {
     @Autowired
     private KubernetesClient kubernetesClient;
 
-    @Autowired
+
     private PodInformer podInformer;
 
     @Autowired
