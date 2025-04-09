@@ -20,7 +20,6 @@ import be.cytomine.appengine.states.TaskRunState;
 
 @Slf4j
 @AllArgsConstructor
-@Component
 public class PodInformer implements ResourceEventHandler<Pod> {
 
     private static final Map<String, TaskRunState> STATUS = new HashMap<String, TaskRunState>() {
