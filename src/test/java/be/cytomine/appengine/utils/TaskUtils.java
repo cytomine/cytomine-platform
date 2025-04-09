@@ -1,5 +1,6 @@
 package be.cytomine.appengine.utils;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -7,14 +8,24 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Set;
 import java.util.UUID;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import org.springframework.core.io.ClassPathResource;
 
 import be.cytomine.appengine.dto.inputs.task.UploadTaskArchive;
+import be.cytomine.appengine.handlers.StorageData;
+import be.cytomine.appengine.handlers.StorageDataEntry;
+import be.cytomine.appengine.handlers.StorageDataType;
 import be.cytomine.appengine.models.task.Author;
 import be.cytomine.appengine.models.task.Input;
+import be.cytomine.appengine.models.task.Output;
+import be.cytomine.appengine.models.task.Run;
 import be.cytomine.appengine.models.task.Task;
+import be.cytomine.appengine.models.task.Type;
+import be.cytomine.appengine.models.task.file.FileType;
 import be.cytomine.appengine.models.task.integer.IntegerType;
+import be.cytomine.appengine.states.TaskRunState;
 
 public class TaskUtils {
     public static UploadTaskArchive createTestUploadTaskArchive() throws IOException {
@@ -41,18 +52,35 @@ public class TaskUtils {
         return author;
     }
 
-    public static Input createTestInput() {
+    public static Input createTestInput(String name, boolean binaryType) {
+        Type type = binaryType ? new FileType() : new IntegerType();
+        type.setCharset("UTF-8");
+
         Input input = new Input();
-        input.setName("input");
+        input.setName(name);
         input.setDisplayName("Input");
         input.setDescription("Input description");
         input.setOptional(false);
-        input.setType(new IntegerType());
+        input.setType(type);
 
         return input;
     }
 
-    public static Task createTestTask() {
+    public static Output createTestOutput(String name, boolean binaryType) {
+        Type type = binaryType ? new FileType() : new IntegerType();
+        type.setCharset("UTF-8");
+
+        Output output = new Output();
+        output.setName(name);
+        output.setDisplayName("Output");
+        output.setDescription("output description");
+        output.setOptional(false);
+        output.setType(type);
+
+        return output;
+    }
+
+    public static Task createTestTask(boolean binaryType) {
         Task task = new Task();
         task.setIdentifier(UUID.randomUUID());
         task.setNamespace("namespace");
@@ -60,8 +88,54 @@ public class TaskUtils {
         task.setStorageReference("storageReference");
         task.setDescription("Test Task Description");
         task.setAuthors(Set.of(createTestAuthor()));
-        task.setInputs(Set.of(createTestInput()));
+        task.setInputs(Set.of(createTestInput("name", binaryType)));
+        task.setOutputs(Set.of(createTestOutput("out", binaryType)));
 
         return task;
+    }
+
+    public static Task createTestTaskWithMultipleIO() {
+        Task task = new Task();
+        task.setIdentifier(UUID.randomUUID());
+        task.setNamespace("namespace");
+        task.setVersion("version");
+        task.setStorageReference("storageReference");
+        task.setDescription("Test Task Description");
+        task.setAuthors(Set.of(createTestAuthor()));
+        task.setInputs(Set.of(createTestInput("name 1", false), createTestInput("name 2", false)));
+        task.setOutputs(Set.of(createTestOutput("out 1", false), createTestOutput("out 2", false)));
+
+        return task;
+    }
+
+    public static Run createTestRun(boolean binaryType) {
+        return new Run(
+            UUID.randomUUID(),
+            TaskRunState.CREATED,
+            createTestTask(binaryType),
+            UUID.randomUUID().toString()
+        );
+    }
+
+    public static StorageData createTestStorageData(String parameterName, String storageId) throws IOException {
+        File data = File.createTempFile("data", null);
+        data.deleteOnExit();
+
+        return new StorageData(new StorageDataEntry(data, parameterName, storageId, StorageDataType.FILE));
+    }
+
+    public static byte[] createFakeOutputsZip(String... names) throws IOException {
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
+             ZipOutputStream zos = new ZipOutputStream(baos)) {
+
+            for (String name : names) {
+                zos.putNextEntry(new ZipEntry(name));
+                zos.write("42".getBytes());
+                zos.closeEntry();
+            }
+
+            zos.finish();
+            return baos.toByteArray();
+        }
     }
 }

@@ -9,7 +9,6 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -34,7 +33,6 @@ import be.cytomine.appengine.dto.inputs.task.GenericParameterProvision;
 import be.cytomine.appengine.dto.inputs.task.Resource;
 import be.cytomine.appengine.dto.inputs.task.State;
 import be.cytomine.appengine.dto.inputs.task.StateAction;
-import be.cytomine.appengine.dto.inputs.task.TaskAuthor;
 import be.cytomine.appengine.dto.inputs.task.TaskDescription;
 import be.cytomine.appengine.dto.inputs.task.TaskRunParameterValue;
 import be.cytomine.appengine.dto.inputs.task.TaskRunResponse;
@@ -51,7 +49,6 @@ import be.cytomine.appengine.handlers.StorageData;
 import be.cytomine.appengine.handlers.StorageDataEntry;
 import be.cytomine.appengine.handlers.StorageDataType;
 import be.cytomine.appengine.handlers.StorageHandler;
-import be.cytomine.appengine.models.task.Author;
 import be.cytomine.appengine.models.task.Input;
 import be.cytomine.appengine.models.task.Output;
 import be.cytomine.appengine.models.task.ParameterType;
@@ -75,6 +72,8 @@ public class TaskProvisioningService {
     private final StorageHandler fileStorageHandler;
 
     private final SchedulerHandler schedulerHandler;
+
+    private final TaskService taskService;
 
     public JsonNode provisionRunParameter(
         String runId,
@@ -352,6 +351,7 @@ public class TaskProvisioningService {
         zipOut.close();
 
         log.info("Retrieving IO Archive: zipped...");
+
         return new StorageData(tempFile.toFile());
     }
 
@@ -718,7 +718,7 @@ public class TaskProvisioningService {
         StateAction action = new StateAction();
         action.setStatus("success");
 
-        TaskDescription description = makeTaskDescription(run.getTask());
+        TaskDescription description = taskService.makeTaskDescription(run.getTask());
         Resource resource = new Resource(
             run.getId(),
             description,
@@ -780,33 +780,10 @@ public class TaskProvisioningService {
         return createStateAction(run, TaskRunState.PROVISIONED);
     }
 
-    public TaskDescription makeTaskDescription(Task task) {
-        TaskDescription taskDescription = new TaskDescription(
-            task.getIdentifier(),
-            task.getName(),
-            task.getNamespace(),
-            task.getVersion(),
-            task.getDescription()
-        );
-        Set<TaskAuthor> descriptionAuthors = new HashSet<>();
-        for (Author author : task.getAuthors()) {
-            TaskAuthor taskAuthor = new TaskAuthor(
-                author.getFirstName(),
-                author.getLastName(),
-                author.getOrganization(),
-                author.getEmail(),
-                author.isContact()
-            );
-            descriptionAuthors.add(taskAuthor);
-        }
-        taskDescription.setAuthors(descriptionAuthors);
-        return taskDescription;
-    }
-
     public TaskRunResponse retrieveRun(String runId) throws ProvisioningException {
         log.info("Retrieving Run: retrieving...");
         Run run = getRunIfValid(runId);
-        TaskDescription description = makeTaskDescription(run.getTask());
+        TaskDescription description = taskService.makeTaskDescription(run.getTask());
         log.info("Retrieving Run: retrieved");
         return new TaskRunResponse(
             UUID.fromString(runId),
