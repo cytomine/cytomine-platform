@@ -82,7 +82,6 @@ public class TaskOutputFactory {
 
         return new TaskOutput(
             output.getId().toString(),
-            output.getDefaultValue(),
             output.getName(),
             output.getDisplayName(),
             output.getDescription(),
