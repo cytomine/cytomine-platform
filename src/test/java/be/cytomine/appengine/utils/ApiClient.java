@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -72,6 +73,23 @@ public class ApiClient {
 
     public <T> ResponseEntity<T> get(String url, Class<T> responseType) {
         return restTemplate.getForEntity(url, responseType);
+    }
+
+    public <T> ResponseEntity<Resource> getData(String url, HttpEntity<Object> entity, Map<String,String> params) {
+        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(url);
+
+        for (Map.Entry<String, String> entry : params.entrySet()) {
+            builder.queryParam(entry.getKey(), entry.getValue());
+        }
+        String finalUrl = builder.toUriString();
+
+        return restTemplate.exchange(
+            finalUrl,
+            HttpMethod.GET,
+            entity,
+            Resource.class
+        );
+
     }
 
     public <T> ResponseEntity<T> get(String url, ParameterizedTypeReference<T> responseType) {
@@ -307,7 +325,7 @@ public class ApiClient {
             );
 
             HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+            headers.setContentType(MediaType.APPLICATION_JSON);
 
             entity = new HttpEntity<>(jsonNode, headers);
         }
@@ -316,5 +334,13 @@ public class ApiClient {
         params.put("value", String.valueOf(index));
 
         return put(baseUrl + "/task-runs/" + uuid + "/input-provisions/" + parameterName + "/indexes", entity, JsonNode.class, params).getBody();
+    }
+
+    public Resource retrieveInputPart(String uuid, String parameterName, int index)  {
+
+        Map<String,String> params = new HashMap<>();
+        params.put("value", String.valueOf(index));
+
+        return getData(baseUrl + "/task-runs/" + uuid + "/input/" + parameterName + "/indexes", null, params).getBody();
     }
 }
