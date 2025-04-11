@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -782,6 +783,37 @@ public class TaskProvisioningService {
         StorageData data = new StorageData(parameterName, storage.getIdStorage());
 
         log.info("Get IO file from storage: read file " + parameterName + " from storage...");
+        try {
+            data = fileStorageHandler.readStorageData(data);
+        } catch (FileStorageException e) {
+            AppEngineError error = ErrorBuilder.buildParamRelatedError(
+                ErrorCode.STORAGE_READING_FILE_FAILED,
+                parameterName,
+                e.getMessage()
+            );
+            throw new ProvisioningException(error);
+        }
+
+        log.info("Get IO file from storage: done");
+        return data.peek().getData();
+    }
+
+    public File retrieveSingleRunCollectionItemIO(
+        String runId,
+        String parameterName,
+        ParameterType type,
+        String[] indexes
+    ) throws ProvisioningException {
+        log.info("Get IO file from storage: searching...");
+
+        String io = type.equals(ParameterType.INPUT) ? "inputs" : "outputs";
+        Storage storage = new Storage("task-run-" + io + "-" + runId);
+        String collectionItem = parameterName
+            + "/"
+            + Arrays.stream(indexes).sequential().collect(Collectors.joining("/"));
+        StorageData data = new StorageData(collectionItem, storage.getIdStorage());
+
+        log.info("Get IO file from storage: read file " + collectionItem + " from storage...");
         try {
             data = fileStorageHandler.readStorageData(data);
         } catch (FileStorageException e) {
