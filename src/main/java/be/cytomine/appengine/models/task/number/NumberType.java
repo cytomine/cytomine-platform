@@ -51,25 +51,34 @@ public class NumberType extends Type {
 
     private boolean nanAllowed = false;
 
+    public static Double parseDouble(String s) {
+        return switch (s.toLowerCase()) {
+            case "nan" -> Double.NaN;
+            case "inf" -> Double.POSITIVE_INFINITY;
+            case "-inf" -> Double.NEGATIVE_INFINITY;
+            default -> Double.parseDouble(s);
+        };
+    }
+
     public void setConstraint(NumberTypeConstraint constraint, String value) {
         switch (constraint) {
             case GREATER_EQUAL:
-                this.setGeq(Double.parseDouble(value));
+                setGeq(parseDouble(value));
                 break;
             case GREATER_THAN:
-                this.setGt(Double.parseDouble(value));
+                setGt(parseDouble(value));
                 break;
             case LOWER_EQUAL:
-                this.setLeq(Double.parseDouble(value));
+                setLeq(parseDouble(value));
                 break;
             case LOWER_THAN:
-                this.setLt(Double.parseDouble(value));
+                setLt(parseDouble(value));
                 break;
             case INFINITY_ALLOWED:
-                this.setInfinityAllowed(Boolean.parseBoolean(value));
+                setInfinityAllowed(Boolean.parseBoolean(value));
                 break;
             case NAN_ALLOWED:
-                this.setNanAllowed(Boolean.parseBoolean(value));
+                setNanAllowed(Boolean.parseBoolean(value));
                 break;
             default:
         }
@@ -77,10 +86,12 @@ public class NumberType extends Type {
 
     public boolean hasConstraint(NumberTypeConstraint constraint) {
         return switch (constraint) {
-            case GREATER_EQUAL -> this.geq != null;
-            case GREATER_THAN -> this.gt != null;
-            case LOWER_EQUAL -> this.leq != null;
-            case LOWER_THAN -> this.lt != null;
+            case GREATER_EQUAL -> geq != null;
+            case GREATER_THAN -> gt != null;
+            case LOWER_EQUAL -> leq != null;
+            case LOWER_THAN -> lt != null;
+            case INFINITY_ALLOWED -> true;
+            case NAN_ALLOWED -> true;
             default -> false;
         };
     }
@@ -98,8 +109,7 @@ public class NumberType extends Type {
         // validate value
         String rawValue = getContentIfValid(outputFile);
 
-        validate(Double.parseDouble(rawValue));
-
+        validate(parseDouble(rawValue));
     }
 
     @Override
@@ -108,22 +118,37 @@ public class NumberType extends Type {
             return;
         }
 
-        Double value = (Double) valueObject;
+        Double value = null;
+        if (valueObject instanceof Double) {
+            value = (Double) valueObject;
+        } else if (valueObject instanceof String) {
+            value = parseDouble((String) valueObject);
+        } else {
+            throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_TYPE_ERROR);
+        }
 
-        if (this.hasConstraint(NumberTypeConstraint.GREATER_THAN) && value <= this.getGt()) {
+        if (hasConstraint(NumberTypeConstraint.GREATER_THAN) && value <= gt) {
             throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_GT_VALIDATION_ERROR);
         }
 
-        if (this.hasConstraint(NumberTypeConstraint.GREATER_EQUAL) && value < this.getGeq()) {
+        if (hasConstraint(NumberTypeConstraint.GREATER_EQUAL) && value < geq) {
             throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_GEQ_VALIDATION_ERROR);
         }
 
-        if (this.hasConstraint(NumberTypeConstraint.LOWER_THAN) && value >= this.getLt()) {
+        if (hasConstraint(NumberTypeConstraint.LOWER_THAN) && value >= lt) {
             throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_LT_VALIDATION_ERROR);
         }
 
-        if (this.hasConstraint(NumberTypeConstraint.LOWER_EQUAL) && value > this.getLeq()) {
+        if (hasConstraint(NumberTypeConstraint.LOWER_EQUAL) && value > leq) {
             throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_LEQ_VALIDATION_ERROR);
+        }
+
+        if (!infinityAllowed && Double.isInfinite(value)) {
+            throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_INFINITY_ERROR);
+        }
+
+        if (!nanAllowed && Double.isNaN(value)) {
+            throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_NAN_ERROR);
         }
     }
 
@@ -153,7 +178,7 @@ public class NumberType extends Type {
         NumberPersistenceRepository numberPersistenceRepository = AppEngineApplicationContext.getBean(NumberPersistenceRepository.class);
         NumberPersistence result = numberPersistenceRepository.findNumberPersistenceByParameterNameAndRunIdAndParameterType(currentOutput.getName(), run.getId(), ParameterType.OUTPUT);
         String output = FileHelper.read(outputValue.peek().getData(), getStorageCharset());
-        double value = Double.parseDouble(output);
+        double value = parseDouble(output);
         if (result == null) {
             result = new NumberPersistence();
             result.setValueType(ValueType.NUMBER);
@@ -196,7 +221,7 @@ public class NumberType extends Type {
         value.setParameterName(outputName);
         value.setTaskRunId(id);
         value.setType(ValueType.NUMBER);
-        value.setValue(Double.parseDouble(outputValue));
+        value.setValue(parseDouble(outputValue));
 
         return value;
     }

@@ -71,6 +71,16 @@ public class ImageType extends Type {
         }
     }
 
+    public boolean hasConstraint(ImageTypeConstraint constraint) {
+        return switch (constraint) {
+            case FORMATS -> this.formats != null;
+            case MAX_FILE_SIZE -> this.maxFileSize != null;
+            case MAX_WIDTH -> this.maxWidth != null;
+            case MAX_HEIGHT -> this.maxHeight != null;
+            default -> false;
+        };
+    }
+
     private void validateImageFormat(File file) throws TypeValidationException {
         if (formats == null || formats.isEmpty()) {
             this.format = ImageFormatFactory.getGenericFormat();

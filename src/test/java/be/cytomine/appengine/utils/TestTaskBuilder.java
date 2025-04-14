@@ -1,20 +1,20 @@
 package be.cytomine.appengine.utils;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
 import be.cytomine.appengine.models.task.ParameterType;
 import com.fasterxml.jackson.databind.JsonNode;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.mock.web.MockMultipartFile;
 
 import be.cytomine.appengine.dto.inputs.task.UploadTaskArchive;
 import be.cytomine.appengine.dto.misc.TaskIdentifiers;
-import be.cytomine.appengine.exceptions.BundleArchiveException;
 import be.cytomine.appengine.models.task.Author;
 import be.cytomine.appengine.models.task.Parameter;
 import be.cytomine.appengine.models.task.Task;
@@ -22,6 +22,13 @@ import be.cytomine.appengine.models.task.TypeFactory;
 import be.cytomine.appengine.models.task.integer.IntegerType;
 
 public class TestTaskBuilder {
+
+    @Value("${scheduler.task-resources.ram}")
+    private static String defaultRam;
+
+    @Value("${scheduler.task-resources.cpus}")
+    private static int defaultCpus;
+
     public static Task buildHardcodedAddInteger(UUID taskUUID) {
         String storageIdentifier = "task-" + taskUUID + "-def";
         String imageRegistryCompliantName = "com/cytomine/dummy/arithmetic/integer/addition:1.0.0";
@@ -54,6 +61,7 @@ public class TestTaskBuilder {
         author.setContact(true);
         authors.add(author);
         task.setAuthors(authors);
+
         // add inputs
 
         Set<Parameter> inputs = new HashSet<>();
@@ -127,6 +135,7 @@ public class TestTaskBuilder {
         task.setNamespace("com.cytomine.dummy.arithmetic.integer.subtraction");
         task.setVersion("1.0.0");
         task.setDescription("");
+
         // add authors
         Set<Author> authors = new HashSet<>();
         Author author = new Author();
@@ -137,6 +146,7 @@ public class TestTaskBuilder {
         author.setContact(true);
         authors.add(author);
         task.setAuthors(authors);
+
         // add inputs
 
         Set<Parameter> inputs = new HashSet<>();
@@ -236,11 +246,21 @@ public class TestTaskBuilder {
                 task.setDescription(taskDescriptorJson.get("description").textValue());
             }
 
+            JsonNode resources = taskDescriptorJson.get("configuration").get("resources");
+            if (!Objects.nonNull(resources)) {
+                task.setRam(defaultRam);
+                task.setCpus(defaultCpus);
+            } else {
+                task.setRam(resources.path("ram").asText(defaultRam));
+                task.setCpus(resources.path("cpus").asInt(defaultCpus));
+                task.setGpus(resources.path("gpus").asInt(0));
+            }
+
             task.setAuthors(getAuthors(taskArchive));
             task.setParameters(getInputs(taskArchive));
             task.getParameters().addAll(getOnputs(taskArchive));
             return task;
-        } catch (IOException | BundleArchiveException e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
@@ -249,11 +269,10 @@ public class TestTaskBuilder {
         ClassPathResource resource = buildByBundleFilename(bundleFilename);
         ArchiveUtils archiveUtils = new ArchiveUtils();
         try {
-            MockMultipartFile taskMultipartFile = new MockMultipartFile(bundleFilename,
-                resource.getInputStream());
+            MockMultipartFile taskMultipartFile = new MockMultipartFile(bundleFilename, resource.getInputStream());
             UploadTaskArchive taskArchive = archiveUtils.readArchive(taskMultipartFile);
             return taskArchive.getDescriptorFile();
-        } catch (IOException | BundleArchiveException e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }

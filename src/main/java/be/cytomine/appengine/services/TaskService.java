@@ -402,8 +402,7 @@ public class TaskService {
         taskValidationService.validateImage(uploadTaskArchive);
     }
 
-    private TaskIdentifiers generateTaskIdentifiers(
-        UploadTaskArchive uploadTaskArchive) {
+    private TaskIdentifiers generateTaskIdentifiers(UploadTaskArchive uploadTaskArchive) {
         UUID taskLocalIdentifier = UUID.randomUUID();
         String storageIdentifier = "task-" + taskLocalIdentifier + "-def";
         String imageIdentifierFromDescriptor =

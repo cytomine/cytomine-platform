@@ -3,6 +3,14 @@ package be.cytomine.appengine.integration.cucumber;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+import java.util.function.Function;
 
 import be.cytomine.appengine.handlers.StorageDataType;
 import be.cytomine.appengine.models.task.collection.CollectionPersistence;
@@ -11,6 +19,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.cucumber.datatable.DataTable;
 
 import io.cucumber.java.Before;
 import io.cucumber.java.en.And;
@@ -24,9 +33,15 @@ import org.springframework.boot.test.context.SpringBootContextLoader;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.web.client.RestClientResponseException;
+
 import be.cytomine.appengine.AppEngineApplication;
 import be.cytomine.appengine.dto.handlers.filestorage.Storage;
 import be.cytomine.appengine.dto.inputs.task.GenericParameterProvision;
+import be.cytomine.appengine.dto.inputs.task.types.image.ImageTypeConstraint;
+import be.cytomine.appengine.dto.inputs.task.types.integer.IntegerTypeConstraint;
+import be.cytomine.appengine.dto.inputs.task.types.number.NumberTypeConstraint;
+import be.cytomine.appengine.dto.inputs.task.types.string.StringTypeConstraint;
+import be.cytomine.appengine.dto.inputs.task.types.wsi.WsiTypeConstraint;
 import be.cytomine.appengine.exceptions.FileStorageException;
 import be.cytomine.appengine.handlers.StorageData;
 import be.cytomine.appengine.handlers.StorageHandler;
@@ -36,11 +51,15 @@ import be.cytomine.appengine.models.task.enumeration.EnumerationPersistence;
 import be.cytomine.appengine.models.task.file.FilePersistence;
 import be.cytomine.appengine.models.task.geometry.GeometryPersistence;
 import be.cytomine.appengine.models.task.image.ImagePersistence;
+import be.cytomine.appengine.models.task.image.ImageType;
 import be.cytomine.appengine.models.task.integer.IntegerPersistence;
 import be.cytomine.appengine.models.task.integer.IntegerType;
 import be.cytomine.appengine.models.task.number.NumberPersistence;
+import be.cytomine.appengine.models.task.number.NumberType;
 import be.cytomine.appengine.models.task.string.StringPersistence;
+import be.cytomine.appengine.models.task.string.StringType;
 import be.cytomine.appengine.models.task.wsi.WsiPersistence;
+import be.cytomine.appengine.models.task.wsi.WsiType;
 import be.cytomine.appengine.repositories.TypePersistenceRepository;
 import be.cytomine.appengine.repositories.bool.BooleanPersistenceRepository;
 import be.cytomine.appengine.repositories.enumeration.EnumerationPersistenceRepository;
@@ -707,7 +726,7 @@ public class ProvisionTaskStepDefinitions {
         Assertions.assertNotNull(provision);
         Assertions.assertEquals(1, provision.getItems().size());
         Assertions.assertTrue(provision.getParameterName().equalsIgnoreCase(parameterName));
-        
+
     }
 
     @And("a input file named {string} is created in the task run storage {string}+UUID within {string}")
@@ -723,4 +742,51 @@ public class ProvisionTaskStepDefinitions {
 
     }
 
+
+    // Constraint validations
+
+    @Given("the parameter {string} has validation rules")
+    public void parameterHasValidationRules(String parameterName) {
+        Parameter input = persistedTask
+            .getParameters()
+            .stream()
+            .filter(i -> i.getName().equals(parameterName) && i.getParameterType().equals(ParameterType.INPUT))
+            .findFirst()
+            .orElse(null);
+        Assertions.assertNotNull(input);
+
+        Map<String, Function<Type, Boolean>> typeConstraintCheckers = Map.of(
+            "integer", t -> Arrays.stream(IntegerTypeConstraint.values()).anyMatch(((IntegerType) t)::hasConstraint),
+            "number", t -> Arrays.stream(NumberTypeConstraint.values()).anyMatch(((NumberType) t)::hasConstraint),
+            "string", t -> Arrays.stream(StringTypeConstraint.values()).anyMatch(((StringType) t)::hasConstraint),
+            "image", t -> Arrays.stream(ImageTypeConstraint.values()).anyMatch(((ImageType) t)::hasConstraint),
+            "wsi", t -> Arrays.stream(WsiTypeConstraint.values()).anyMatch(((WsiType) t)::hasConstraint)
+        );
+
+        Type type = input.getType();
+        Boolean hasValidationRules = typeConstraintCheckers.getOrDefault(type.getId(), t -> {
+            throw new RuntimeException("Unknown type: " + t.getId());
+        }).apply(type);
+
+        Assertions.assertTrue(hasValidationRules);
+    }
+
+    // Multiple different types
+
+    @When("a user calls the provisioning endpoint for provisioning all the parameters")
+    public void provisionTaskParameters(DataTable table) {
+        List<Map<String, String>> parameters = table.asMaps(String.class, String.class);
+
+        for (Map<String, String> param : parameters) {
+            String name = param.get("parameter_name");
+            String type = param.get("parameter_type");
+            String value = param.get("parameter_value");
+
+            try {
+                apiClient.provisionInput(persistedRun.getId().toString(), name, type, value);
+            } catch (RestClientResponseException e) {
+                Assertions.fail("Provisioning '" + name + "' failed: " + e.getMessage());
+            }
+        }
+    }
 }
