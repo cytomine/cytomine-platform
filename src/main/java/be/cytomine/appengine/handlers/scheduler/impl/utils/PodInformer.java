@@ -43,7 +43,7 @@ public class PodInformer implements ResourceEventHandler<Pod> {
         String runId = labels.get("runId");
         Optional<Run> runOptional = runRepository.findById(UUID.fromString(runId));
         if (runOptional.isEmpty()) {
-            log.error("Pod Watcher: run {} is empty", runId);
+            log.error("Pod Informer: run {} is empty", runId);
             return null;
         }
 
