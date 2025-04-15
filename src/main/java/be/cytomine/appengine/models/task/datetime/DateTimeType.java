@@ -20,7 +20,7 @@ import be.cytomine.appengine.exceptions.TypeValidationException;
 import be.cytomine.appengine.handlers.StorageData;
 import be.cytomine.appengine.handlers.StorageDataEntry;
 import be.cytomine.appengine.handlers.StorageDataType;
-import be.cytomine.appengine.models.task.Output;
+import be.cytomine.appengine.models.task.Parameter;
 import be.cytomine.appengine.models.task.ParameterType;
 import be.cytomine.appengine.models.task.Run;
 import be.cytomine.appengine.models.task.Type;
@@ -66,7 +66,7 @@ public class DateTimeType extends Type {
     @Override
     public void validateFiles(
         Run run,
-        Output currentOutput,
+        Parameter currentOutput,
         StorageData currentOutputStorageData
     ) throws TypeValidationException {
         File outputFile = getFileIfStructureIsValid(currentOutputStorageData);
@@ -114,7 +114,7 @@ public class DateTimeType extends Type {
     }
 
     @Override
-    public void persistResult(Run run, Output currentOutput, StorageData outputValue) {
+    public void persistResult(Run run, Parameter currentOutput, StorageData outputValue) {
         DateTimePersistenceRepository dateTimePersistenceRepository = AppEngineApplicationContext.getBean(DateTimePersistenceRepository.class);
         DateTimePersistence result = dateTimePersistenceRepository.findDateTimePersistenceByParameterNameAndRunIdAndParameterType(currentOutput.getName(), run.getId(), ParameterType.OUTPUT);
         String output = FileHelper.read(outputValue.peek().getData(), getStorageCharset());
@@ -134,7 +134,7 @@ public class DateTimeType extends Type {
     }
 
     @Override
-    public StorageData mapToStorageFileData(JsonNode provision) {
+    public StorageData mapToStorageFileData(JsonNode provision, Run run) {
         String value = provision.get("value").asText();
         String parameterName = provision.get("param_name").asText();
         File data = FileHelper.write(parameterName, value.getBytes(getStorageCharset()));
@@ -143,7 +143,7 @@ public class DateTimeType extends Type {
     }
 
     @Override
-    public JsonNode createTypedParameterResponse(JsonNode provision, Run run) {
+    public JsonNode createInputProvisioningEndpointResponse(JsonNode provision, Run run) {
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode provisionedParameter = mapper.createObjectNode();
         provisionedParameter.put("param_name", provision.get("param_name").asText());
@@ -154,7 +154,7 @@ public class DateTimeType extends Type {
     }
 
     @Override
-    public TaskRunParameterValue buildTaskRunParameterValue(StorageData output, UUID id, String outputName) {
+    public TaskRunParameterValue createOutputProvisioningEndpointResponse(StorageData output, UUID id, String outputName) {
         String outputValue = FileHelper.read(output.peek().getData(), getStorageCharset());
 
         DateTimeValue value = new DateTimeValue();
@@ -167,7 +167,7 @@ public class DateTimeType extends Type {
     }
 
     @Override
-    public TaskRunParameterValue buildTaskRunParameterValue(TypePersistence typePersistence) {
+    public TaskRunParameterValue createOutputProvisioningEndpointResponse(TypePersistence typePersistence) {
         DateTimePersistence dateTimePersistence = (DateTimePersistence) typePersistence;
         DateTimeValue value = new DateTimeValue();
         value.setParameterName(dateTimePersistence.getParameterName());
