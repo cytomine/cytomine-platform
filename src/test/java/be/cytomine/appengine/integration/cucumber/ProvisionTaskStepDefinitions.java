@@ -2,7 +2,6 @@ package be.cytomine.appengine.integration.cucumber;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
-import java.util.*;
 import java.util.stream.Collectors;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -13,15 +12,11 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 
-import be.cytomine.appengine.handlers.StorageDataType;
-import be.cytomine.appengine.models.task.collection.CollectionPersistence;
-import be.cytomine.appengine.repositories.collection.CollectionPersistenceRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.cucumber.datatable.DataTable;
-
 import io.cucumber.java.Before;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
@@ -45,9 +40,11 @@ import be.cytomine.appengine.dto.inputs.task.types.string.StringTypeConstraint;
 import be.cytomine.appengine.dto.inputs.task.types.wsi.WsiTypeConstraint;
 import be.cytomine.appengine.exceptions.FileStorageException;
 import be.cytomine.appengine.handlers.StorageData;
+import be.cytomine.appengine.handlers.StorageDataType;
 import be.cytomine.appengine.handlers.StorageHandler;
 import be.cytomine.appengine.models.task.*;
 import be.cytomine.appengine.models.task.bool.BooleanPersistence;
+import be.cytomine.appengine.models.task.collection.CollectionPersistence;
 import be.cytomine.appengine.models.task.datetime.DateTimePersistence;
 import be.cytomine.appengine.models.task.enumeration.EnumerationPersistence;
 import be.cytomine.appengine.models.task.file.FilePersistence;
@@ -64,6 +61,7 @@ import be.cytomine.appengine.models.task.wsi.WsiPersistence;
 import be.cytomine.appengine.models.task.wsi.WsiType;
 import be.cytomine.appengine.repositories.TypePersistenceRepository;
 import be.cytomine.appengine.repositories.bool.BooleanPersistenceRepository;
+import be.cytomine.appengine.repositories.collection.CollectionPersistenceRepository;
 import be.cytomine.appengine.repositories.datetime.DateTimePersistenceRepository;
 import be.cytomine.appengine.repositories.enumeration.EnumerationPersistenceRepository;
 import be.cytomine.appengine.repositories.file.FilePersistenceRepository;
@@ -101,6 +99,9 @@ public class ProvisionTaskStepDefinitions {
 
     @Autowired
     private BooleanPersistenceRepository booleanProvisionRepository;
+
+    @Autowired
+    private CollectionPersistenceRepository collectionPersistenceRepository;
 
     @Autowired
     private EnumerationPersistenceRepository enumerationProvisionRepository;
@@ -143,8 +144,6 @@ public class ProvisionTaskStepDefinitions {
     private Run persistedRun;
 
     private Task persistedTask;
-    @Autowired
-    private CollectionPersistenceRepository collectionPersistenceRepository;
 
     @Before
     public void setUp() {

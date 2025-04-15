@@ -1,6 +1,5 @@
 package be.cytomine.appengine.utils;
 
-import java.lang.reflect.InvocationTargetException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -177,6 +176,10 @@ public class TaskTestsUtils {
                 provision.setType(ParameterType.ENUMERATION);
                 provision.setValue(value);
                 break;
+            case "datetime":
+                provision.setType(ParameterType.DATETIME);
+                provision.setValue(value);
+                break;
             case "geometry":
                 provision.setType(ParameterType.GEOMETRY);
                 provision.setValue(value);
@@ -227,7 +230,7 @@ public class TaskTestsUtils {
                 provision.setValue(Integer.parseInt(value));
                 break;
             case "number":
-                provision.setType(be.cytomine.appengine.dto.inputs.task.ParameterType.NUMBER);
+                provision.setType(ParameterType.NUMBER);
                 provision.setValue(Double.parseDouble(value));
                 break;
             case "string":
@@ -239,7 +242,7 @@ public class TaskTestsUtils {
                 provision.setValue(value);
                 break;
             case "datetime":
-                provision.setType(be.cytomine.appengine.dto.inputs.task.ParameterType.DATETIME);
+                provision.setType(ParameterType.DATETIME);
                 provision.setValue(value);
                 break;
             case "geometry":
