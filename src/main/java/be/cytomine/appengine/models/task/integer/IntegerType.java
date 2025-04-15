@@ -19,7 +19,7 @@ import be.cytomine.appengine.exceptions.TypeValidationException;
 import be.cytomine.appengine.handlers.StorageData;
 import be.cytomine.appengine.handlers.StorageDataEntry;
 import be.cytomine.appengine.handlers.StorageDataType;
-import be.cytomine.appengine.models.task.Output;
+import be.cytomine.appengine.models.task.Parameter;
 import be.cytomine.appengine.models.task.ParameterType;
 import be.cytomine.appengine.models.task.Run;
 import be.cytomine.appengine.models.task.Type;
@@ -50,16 +50,16 @@ public class IntegerType extends Type {
     public void setConstraint(IntegerTypeConstraint constraint, Integer value) {
         switch (constraint) {
             case GREATER_EQUAL:
-                this.setGeq(value);
+                setGeq(value);
                 break;
             case GREATER_THAN:
-                this.setGt(value);
+                setGt(value);
                 break;
             case LOWER_EQUAL:
-                this.setLeq(value);
+                setLeq(value);
                 break;
             case LOWER_THAN:
-                this.setLt(value);
+                setLt(value);
                 break;
             default:
                 break;
@@ -73,16 +73,16 @@ public class IntegerType extends Type {
         }
 
         Integer value = (Integer) valueObject;
-        if (this.hasConstraint(IntegerTypeConstraint.GREATER_THAN) && value <= this.getGt()) {
+        if (hasConstraint(IntegerTypeConstraint.GREATER_THAN) && value <= gt) {
             throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_GT_VALIDATION_ERROR);
         }
-        if (this.hasConstraint(IntegerTypeConstraint.GREATER_EQUAL) && value < this.getGeq()) {
+        if (hasConstraint(IntegerTypeConstraint.GREATER_EQUAL) && value < geq) {
             throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_GEQ_VALIDATION_ERROR);
         }
-        if (this.hasConstraint(IntegerTypeConstraint.LOWER_THAN) && value >= this.getLt()) {
+        if (hasConstraint(IntegerTypeConstraint.LOWER_THAN) && value >= lt) {
             throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_LT_VALIDATION_ERROR);
         }
-        if (this.hasConstraint(IntegerTypeConstraint.LOWER_EQUAL) && value > this.getLeq()) {
+        if (hasConstraint(IntegerTypeConstraint.LOWER_EQUAL) && value > leq) {
             throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_LEQ_VALIDATION_ERROR);
         }
     }
@@ -90,7 +90,7 @@ public class IntegerType extends Type {
     @Override
     public void validateFiles(
         Run run,
-        Output currentOutput,
+        Parameter currentOutput,
         StorageData currentOutputStorageData)
         throws TypeValidationException {
 
@@ -106,16 +106,16 @@ public class IntegerType extends Type {
 
     public boolean hasConstraint(IntegerTypeConstraint constraint) {
         return switch (constraint) {
-            case GREATER_EQUAL -> this.geq != null;
-            case GREATER_THAN -> this.gt != null;
-            case LOWER_EQUAL -> this.leq != null;
-            case LOWER_THAN -> this.lt != null;
+            case GREATER_EQUAL -> geq != null;
+            case GREATER_THAN -> gt != null;
+            case LOWER_EQUAL -> leq != null;
+            case LOWER_THAN -> lt != null;
             default -> false;
         };
     }
 
     public boolean hasConstraint(String constraintKey) {
-        return this.hasConstraint(IntegerTypeConstraint.getConstraint(constraintKey));
+        return hasConstraint(IntegerTypeConstraint.getConstraint(constraintKey));
     }
 
     @Override
@@ -131,6 +131,7 @@ public class IntegerType extends Type {
             persistedProvision.setParameterName(parameterName);
             persistedProvision.setRunId(runId);
             persistedProvision.setValue(value);
+            persistedProvision.setProvisioned(true);
             integerPersistenceRepository.save(persistedProvision);
         } else {
             persistedProvision.setValue(value);
@@ -139,7 +140,7 @@ public class IntegerType extends Type {
     }
 
     @Override
-    public void persistResult(Run run, Output currentOutput, StorageData outputValue) {
+    public void persistResult(Run run, Parameter currentOutput, StorageData outputValue) {
         IntegerPersistenceRepository integerPersistenceRepository = AppEngineApplicationContext.getBean(IntegerPersistenceRepository.class);
         IntegerPersistence result = integerPersistenceRepository.findIntegerPersistenceByParameterNameAndRunIdAndParameterType(currentOutput.getName(), run.getId(), ParameterType.OUTPUT);
         String output = FileHelper.read(outputValue.peek().getData(), getStorageCharset());
@@ -158,7 +159,7 @@ public class IntegerType extends Type {
     }
 
     @Override
-    public StorageData mapToStorageFileData(JsonNode provision) {
+    public StorageData mapToStorageFileData(JsonNode provision, Run run) {
         String value = provision.get("value").asText();
         String parameterName = provision.get("param_name").asText();
         File data = FileHelper.write(parameterName, value.getBytes(getStorageCharset()));
@@ -167,7 +168,7 @@ public class IntegerType extends Type {
     }
 
     @Override
-    public JsonNode createTypedParameterResponse(JsonNode provision, Run run) {
+    public JsonNode createInputProvisioningEndpointResponse(JsonNode provision, Run run) {
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode provisionedParameter = mapper.createObjectNode();
         provisionedParameter.put("param_name", provision.get("param_name").asText());
@@ -177,7 +178,7 @@ public class IntegerType extends Type {
     }
 
     @Override
-    public IntegerValue buildTaskRunParameterValue(StorageData output, UUID id, String outputName) {
+    public IntegerValue createOutputProvisioningEndpointResponse(StorageData output, UUID id, String outputName) {
         String outputValue = FileHelper.read(output.peek().getData(), getStorageCharset());
 
         IntegerValue integerValue = new IntegerValue();
@@ -190,7 +191,7 @@ public class IntegerType extends Type {
     }
 
     @Override
-    public TaskRunParameterValue buildTaskRunParameterValue(TypePersistence typePersistence) {
+    public TaskRunParameterValue createOutputProvisioningEndpointResponse(TypePersistence typePersistence) {
         IntegerPersistence integerPersistence = (IntegerPersistence) typePersistence;
         IntegerValue integerValue = new IntegerValue();
         integerValue.setParameterName(integerPersistence.getParameterName());

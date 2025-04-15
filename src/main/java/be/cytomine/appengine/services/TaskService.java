@@ -9,6 +9,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.transaction.Transactional;
@@ -42,9 +43,11 @@ import be.cytomine.appengine.exceptions.ValidationException;
 import be.cytomine.appengine.handlers.RegistryHandler;
 import be.cytomine.appengine.handlers.StorageData;
 import be.cytomine.appengine.handlers.StorageHandler;
+import be.cytomine.appengine.models.CheckTime;
+import be.cytomine.appengine.models.Match;
 import be.cytomine.appengine.models.task.Author;
-import be.cytomine.appengine.models.task.Input;
-import be.cytomine.appengine.models.task.Output;
+import be.cytomine.appengine.models.task.Parameter;
+import be.cytomine.appengine.models.task.ParameterType;
 import be.cytomine.appengine.models.task.Run;
 import be.cytomine.appengine.models.task.Task;
 import be.cytomine.appengine.models.task.TypeFactory;
@@ -188,8 +191,8 @@ public class TaskService {
         }
 
         task.setAuthors(getAuthors(uploadTaskArchive));
-        task.setInputs(getInputs(uploadTaskArchive));
-        task.setOutputs(getOutputs(uploadTaskArchive, task.getInputs()));
+        task.setParameters(getParameters(uploadTaskArchive));
+        task.setMatches(getMatches(uploadTaskArchive, task.getParameters()));
 
         log.info("UploadTask: saving task...");
         taskRepository.save(task);
@@ -198,23 +201,126 @@ public class TaskService {
         return Optional.of(makeTaskDescription(task));
     }
 
-    private Set<Input> getInputs(UploadTaskArchive uploadTaskArchive) {
+    private List<Match> getMatches(UploadTaskArchive uploadTaskArchive, Set<Parameter> parameters) {
+        log.info("UploadTask: looking for matches...");
+        JsonNode descriptor = uploadTaskArchive.getDescriptorFileAsJson();
+        JsonNode inputsNode = descriptor.get("inputs");
+        JsonNode outputsNode = descriptor.get("outputs");
+        List<Match> matches = new ArrayList<>();
+
+        // Process dependencies for inputs
+        processDependencies(inputsNode, parameters, matches);
+
+        // Process dependencies for outputs
+        processDependencies(outputsNode, parameters, matches);
+
+        log.info("UploadTask: matches processed successfully");
+        return matches;
+    }
+
+    private void processDependencies(
+        JsonNode node,
+        Set<Parameter> parameters,
+        List<Match> matches) {
+        if (node != null && node.isObject()) {
+            Iterator<String> fieldNames = node.fieldNames();
+            while (fieldNames.hasNext()) {
+                String key = fieldNames.next();
+                JsonNode value = node.get(key);
+                parameters.stream()
+                    .filter(parameter -> parameter.getName().equals(key))
+                    .findFirst()
+                    .ifPresent(parameter -> processParameterDependencies(
+                    parameter,
+                    value,
+                    parameters,
+                    matches));
+            }
+        }
+    }
+
+
+    private void processParameterDependencies(
+        Parameter param,
+        JsonNode value,
+        Set<Parameter> parameters,
+        List<Match> matches) {
+        JsonNode dependencies = value.get("dependencies");
+        if (dependencies != null && dependencies.isObject()) {
+            JsonNode matching = dependencies.get("matching");
+            if (matching != null && matching.isArray()) {
+                for (JsonNode element : matching) {
+                    String text = element.textValue();
+                    int slashIndex = text.indexOf("/");
+                    if (slashIndex == -1) {
+                        continue; // skip unexpected format
+                    }
+
+                    String matchingType = text.substring(0, slashIndex);
+                    String matchingName = text.substring(slashIndex + 1);
+
+                    parameters.stream()
+                        .filter(p -> p.getName()
+                        .equals(matchingName) && p.getParameterType()
+                        .equals(ParameterType.from(matchingType)))
+                        .findFirst()
+                        .ifPresent(other -> {
+                            // set check time relative to execution
+                            CheckTime when = CheckTime.UNDEFINED;
+                            boolean bothInputs = param
+                                .getParameterType()
+                                .equals(ParameterType.INPUT)
+                                && matchingType.equalsIgnoreCase("inputs");
+                            if (bothInputs) {
+                                when = CheckTime.BEFORE_EXECUTION;
+                            }
+                            boolean bothOutputs = param
+                                .getParameterType()
+                                .equals(ParameterType.OUTPUT)
+                                && matchingType.equalsIgnoreCase("outputs");
+                            boolean crossMatch = (param
+                                .getParameterType()
+                                .equals(ParameterType.INPUT)
+                                && matchingType.equalsIgnoreCase("outputs"))
+                                || param.getParameterType().equals(ParameterType.OUTPUT)
+                                && matchingType.equalsIgnoreCase("inputs");
+                            if (bothOutputs || crossMatch) {
+                                when = CheckTime.AFTER_EXECUTION;
+                            }
+
+                            matches.add(new Match(param, other, when));
+                        });
+
+                }
+            }
+        }
+    }
+
+    private Set<Parameter> getParameters(UploadTaskArchive uploadTaskArchive) {
         log.info("UploadTask: getting inputs...");
-        Set<Input> inputs = new HashSet<>();
+        Set<Parameter> parameters = new HashSet<>();
         JsonNode inputsNode = uploadTaskArchive.getDescriptorFileAsJson().get("inputs");
+
+        log.info("UploadTask: getting outputs...");
+        JsonNode outputsNode = uploadTaskArchive.getDescriptorFileAsJson().get("outputs");
+
+        if (!inputsNode.isObject() && !outputsNode.isObject()) {
+            return new HashSet<>();
+        }
+
         if (inputsNode.isObject()) {
             Iterator<String> fieldNames = inputsNode.fieldNames();
             while (fieldNames.hasNext()) {
                 String inputKey = fieldNames.next();
                 JsonNode inputValue = inputsNode.get(inputKey);
 
-                Input input = new Input();
+                Parameter input = new Parameter();
                 input.setName(inputKey);
                 input.setDisplayName(inputValue.get("display_name").textValue());
                 input.setDescription(inputValue.get("description").textValue());
                 // use type factory to generate the correct type
                 input.setType(TypeFactory.createType(inputValue, charset));
-
+                input.setParameterType(ParameterType.INPUT);
                 // Set default value
                 JsonNode defaultNode = inputValue.get("default");
                 if (defaultNode != null) {
@@ -234,48 +340,40 @@ public class TaskService {
                     }
                 }
 
-                inputs.add(input);
+                parameters.add(input);
             }
         }
-        log.info("UploadTask: successful inputs ");
-        return inputs;
-    }
 
-    private Set<Output> getOutputs(UploadTaskArchive uploadTaskArchive, Set<Input> inputs) {
-        log.info("UploadTask: getting outputs...");
+        log.info("UploadTask: successful input parameters");
 
-        JsonNode outputsNode = uploadTaskArchive.getDescriptorFileAsJson().get("outputs");
-        if (!outputsNode.isObject()) {
-            return new HashSet<>();
-        }
+        Iterator<String> outputFieldNames = outputsNode.fieldNames();
+        while (outputFieldNames.hasNext()) {
+            String outputKey = outputFieldNames.next();
+            JsonNode outputValue = outputsNode.get(outputKey);
 
-        Set<Output> outputs = new HashSet<>();
-        Iterator<String> fieldNames = outputsNode.fieldNames();
-        while (fieldNames.hasNext()) {
-            String outputKey = fieldNames.next();
-            JsonNode inputValue = outputsNode.get(outputKey);
-
-            Output output = new Output();
+            Parameter output = new Parameter();
             output.setName(outputKey);
-            output.setDisplayName(inputValue.get("display_name").textValue());
-            output.setDescription(inputValue.get("description").textValue());
+            output.setDisplayName(outputValue.get("display_name").textValue());
+            output.setDescription(outputValue.get("description").textValue());
+            output.setParameterType(ParameterType.OUTPUT);
             // use type factory to generate the correct type
-            output.setType(TypeFactory.createType(inputValue, charset));
+            output.setType(TypeFactory.createType(outputValue, charset));
 
-            JsonNode dependencies = inputValue.get("dependencies");
+            JsonNode dependencies = outputValue.get("dependencies");
             if (dependencies != null && dependencies.isObject()) {
                 JsonNode derivedFrom = dependencies.get("derived_from");
                 String inputName = derivedFrom.textValue().substring("inputs/".length());
-                inputs.stream()
-                .filter(input -> input.getName().equals(inputName))
-                .findFirst().ifPresent(output::setDerivedFrom);
+                parameters.stream()
+                    .filter(parameter -> parameter.getName().equals(inputName)
+                        && parameter.getParameterType().equals(ParameterType.INPUT))
+                    .findFirst().ifPresent(output::setDerivedFrom);
             }
 
-            outputs.add(output);
+            parameters.add(output);
         }
 
-        log.info("UploadTask: successful outputs ");
-        return outputs;
+        log.info("UploadTask: successful output parameters ");
+        return parameters;
     }
 
     private Set<Author> getAuthors(UploadTaskArchive uploadTaskArchive) {
@@ -304,8 +402,7 @@ public class TaskService {
         taskValidationService.validateImage(uploadTaskArchive);
     }
 
-    private TaskIdentifiers generateTaskIdentifiers(
-        UploadTaskArchive uploadTaskArchive) {
+    private TaskIdentifiers generateTaskIdentifiers(UploadTaskArchive uploadTaskArchive) {
         UUID taskLocalIdentifier = UUID.randomUUID();
         String storageIdentifier = "task-" + taskLocalIdentifier + "-def";
         String imageIdentifierFromDescriptor =
@@ -399,17 +496,22 @@ public class TaskService {
 
     public List<TaskInput> makeTaskInputs(Task task) {
         List<TaskInput> inputs = new ArrayList<>();
-        for (Input input : task.getInputs()) {
-            inputs.add(TaskInputFactory.createTaskInput(input));
-        }
+        task
+            .getParameters()
+            .stream()
+            .filter(parameter -> parameter.getParameterType().equals(ParameterType.INPUT))
+            .forEach(parameter -> inputs.add(TaskInputFactory.createTaskInput(parameter)));
         return inputs;
     }
 
     public List<TaskOutput> makeTaskOutputs(Task task) {
         List<TaskOutput> outputs = new ArrayList<>();
-        for (Output output : task.getOutputs()) {
-            outputs.add(TaskOutputFactory.createTaskOutput(output));
-        }
+        task
+            .getParameters()
+            .stream()
+            .filter(parameter -> parameter.getParameterType().equals(ParameterType.OUTPUT))
+            .forEach(parameter -> outputs.add(TaskOutputFactory.createTaskOutput(parameter)));
+
         return outputs;
     }
 
@@ -448,7 +550,12 @@ public class TaskService {
             throw new RunTaskServiceException(
                 "task {" + namespace + ":" + version + "} not found to associate with this run");
         }
-        if (task.getInputs().isEmpty()) {
+        Set<Parameter> taskInputParameters = task
+            .getParameters()
+            .stream().filter(parameter -> parameter.getParameterType().equals(ParameterType.INPUT))
+            .collect(Collectors.toSet());
+
+        if (taskInputParameters.isEmpty()) {
             throw new RunTaskServiceException("task {"
                 + namespace + ":" + version + "} has no inputs");
         }
@@ -474,7 +581,12 @@ public class TaskService {
             throw new RunTaskServiceException(
                 "task {" + taskId + "} not found to associate with this run");
         }
-        if (task.get().getInputs().isEmpty()) {
+        Set<Parameter> taskInputParameters = task.get()
+            .getParameters()
+            .stream().filter(parameter -> parameter.getParameterType().equals(ParameterType.INPUT))
+            .collect(Collectors.toSet());
+
+        if (taskInputParameters.isEmpty()) {
             throw new RunTaskServiceException("task {" + taskId + "} has no inputs");
         }
         log.info("tasks/{namespace}/{version}/runs : retrieved task...");

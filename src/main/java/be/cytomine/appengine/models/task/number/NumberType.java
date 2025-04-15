@@ -19,7 +19,7 @@ import be.cytomine.appengine.exceptions.TypeValidationException;
 import be.cytomine.appengine.handlers.StorageData;
 import be.cytomine.appengine.handlers.StorageDataEntry;
 import be.cytomine.appengine.handlers.StorageDataType;
-import be.cytomine.appengine.models.task.Output;
+import be.cytomine.appengine.models.task.Parameter;
 import be.cytomine.appengine.models.task.ParameterType;
 import be.cytomine.appengine.models.task.Run;
 import be.cytomine.appengine.models.task.Type;
@@ -51,25 +51,34 @@ public class NumberType extends Type {
 
     private boolean nanAllowed = false;
 
+    public static Double parseDouble(String s) {
+        return switch (s.toLowerCase()) {
+            case "nan" -> Double.NaN;
+            case "inf" -> Double.POSITIVE_INFINITY;
+            case "-inf" -> Double.NEGATIVE_INFINITY;
+            default -> Double.parseDouble(s);
+        };
+    }
+
     public void setConstraint(NumberTypeConstraint constraint, String value) {
         switch (constraint) {
             case GREATER_EQUAL:
-                this.setGeq(Double.parseDouble(value));
+                setGeq(parseDouble(value));
                 break;
             case GREATER_THAN:
-                this.setGt(Double.parseDouble(value));
+                setGt(parseDouble(value));
                 break;
             case LOWER_EQUAL:
-                this.setLeq(Double.parseDouble(value));
+                setLeq(parseDouble(value));
                 break;
             case LOWER_THAN:
-                this.setLt(Double.parseDouble(value));
+                setLt(parseDouble(value));
                 break;
             case INFINITY_ALLOWED:
-                this.setInfinityAllowed(Boolean.parseBoolean(value));
+                setInfinityAllowed(Boolean.parseBoolean(value));
                 break;
             case NAN_ALLOWED:
-                this.setNanAllowed(Boolean.parseBoolean(value));
+                setNanAllowed(Boolean.parseBoolean(value));
                 break;
             default:
         }
@@ -77,10 +86,12 @@ public class NumberType extends Type {
 
     public boolean hasConstraint(NumberTypeConstraint constraint) {
         return switch (constraint) {
-            case GREATER_EQUAL -> this.geq != null;
-            case GREATER_THAN -> this.gt != null;
-            case LOWER_EQUAL -> this.leq != null;
-            case LOWER_THAN -> this.lt != null;
+            case GREATER_EQUAL -> geq != null;
+            case GREATER_THAN -> gt != null;
+            case LOWER_EQUAL -> leq != null;
+            case LOWER_THAN -> lt != null;
+            case INFINITY_ALLOWED -> true;
+            case NAN_ALLOWED -> true;
             default -> false;
         };
     }
@@ -88,7 +99,7 @@ public class NumberType extends Type {
     @Override
     public void validateFiles(
         Run run,
-        Output currentOutput,
+        Parameter currentOutput,
         StorageData currentOutputStorageData)
         throws TypeValidationException {
 
@@ -98,8 +109,7 @@ public class NumberType extends Type {
         // validate value
         String rawValue = getContentIfValid(outputFile);
 
-        validate(Double.parseDouble(rawValue));
-
+        validate(parseDouble(rawValue));
     }
 
     @Override
@@ -108,22 +118,37 @@ public class NumberType extends Type {
             return;
         }
 
-        Double value = (Double) valueObject;
+        Double value = null;
+        if (valueObject instanceof Double) {
+            value = (Double) valueObject;
+        } else if (valueObject instanceof String) {
+            value = parseDouble((String) valueObject);
+        } else {
+            throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_TYPE_ERROR);
+        }
 
-        if (this.hasConstraint(NumberTypeConstraint.GREATER_THAN) && value <= this.getGt()) {
+        if (hasConstraint(NumberTypeConstraint.GREATER_THAN) && value <= gt) {
             throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_GT_VALIDATION_ERROR);
         }
 
-        if (this.hasConstraint(NumberTypeConstraint.GREATER_EQUAL) && value < this.getGeq()) {
+        if (hasConstraint(NumberTypeConstraint.GREATER_EQUAL) && value < geq) {
             throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_GEQ_VALIDATION_ERROR);
         }
 
-        if (this.hasConstraint(NumberTypeConstraint.LOWER_THAN) && value >= this.getLt()) {
+        if (hasConstraint(NumberTypeConstraint.LOWER_THAN) && value >= lt) {
             throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_LT_VALIDATION_ERROR);
         }
 
-        if (this.hasConstraint(NumberTypeConstraint.LOWER_EQUAL) && value > this.getLeq()) {
+        if (hasConstraint(NumberTypeConstraint.LOWER_EQUAL) && value > leq) {
             throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_LEQ_VALIDATION_ERROR);
+        }
+
+        if (!infinityAllowed && Double.isInfinite(value)) {
+            throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_INFINITY_ERROR);
+        }
+
+        if (!nanAllowed && Double.isNaN(value)) {
+            throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_NAN_ERROR);
         }
     }
 
@@ -139,6 +164,7 @@ public class NumberType extends Type {
             persistedProvision.setParameterType(ParameterType.INPUT);
             persistedProvision.setParameterName(parameterName);
             persistedProvision.setRunId(runId);
+            persistedProvision.setProvisioned(true);
             persistedProvision.setValue(value);
             numberPersistenceRepository.save(persistedProvision);
         } else {
@@ -148,11 +174,11 @@ public class NumberType extends Type {
     }
 
     @Override
-    public void persistResult(Run run, Output currentOutput, StorageData outputValue) {
+    public void persistResult(Run run, Parameter currentOutput, StorageData outputValue) {
         NumberPersistenceRepository numberPersistenceRepository = AppEngineApplicationContext.getBean(NumberPersistenceRepository.class);
         NumberPersistence result = numberPersistenceRepository.findNumberPersistenceByParameterNameAndRunIdAndParameterType(currentOutput.getName(), run.getId(), ParameterType.OUTPUT);
         String output = FileHelper.read(outputValue.peek().getData(), getStorageCharset());
-        double value = Double.parseDouble(output);
+        double value = parseDouble(output);
         if (result == null) {
             result = new NumberPersistence();
             result.setValueType(ValueType.NUMBER);
@@ -168,7 +194,7 @@ public class NumberType extends Type {
     }
 
     @Override
-    public StorageData mapToStorageFileData(JsonNode provision) {
+    public StorageData mapToStorageFileData(JsonNode provision, Run run) {
         String value = provision.get("value").asText();
         String parameterName = provision.get("param_name").asText();
         File data = FileHelper.write(parameterName, value.getBytes(getStorageCharset()));
@@ -177,7 +203,7 @@ public class NumberType extends Type {
     }
 
     @Override
-    public JsonNode createTypedParameterResponse(JsonNode provision, Run run) {
+    public JsonNode createInputProvisioningEndpointResponse(JsonNode provision, Run run) {
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode provisionedParameter = mapper.createObjectNode();
         provisionedParameter.put("param_name", provision.get("param_name").asText());
@@ -188,20 +214,20 @@ public class NumberType extends Type {
     }
 
     @Override
-    public TaskRunParameterValue buildTaskRunParameterValue(StorageData output, UUID id, String outputName) {
+    public TaskRunParameterValue createOutputProvisioningEndpointResponse(StorageData output, UUID id, String outputName) {
         String outputValue = FileHelper.read(output.peek().getData(), getStorageCharset());
 
         NumberValue value = new NumberValue();
         value.setParameterName(outputName);
         value.setTaskRunId(id);
         value.setType(ValueType.NUMBER);
-        value.setValue(Double.parseDouble(outputValue));
+        value.setValue(parseDouble(outputValue));
 
         return value;
     }
 
     @Override
-    public TaskRunParameterValue buildTaskRunParameterValue(TypePersistence typePersistence) {
+    public TaskRunParameterValue createOutputProvisioningEndpointResponse(TypePersistence typePersistence) {
         NumberPersistence numberPersistence = (NumberPersistence) typePersistence;
         NumberValue value = new NumberValue();
         value.setParameterName(numberPersistence.getParameterName());

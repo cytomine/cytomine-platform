@@ -10,5 +10,6 @@ public enum ParameterType { // add types to this enum
     GEOMETRY,
     IMAGE,
     WSI,
-    FILE
+    FILE,
+    ARRAY
 }

@@ -19,7 +19,7 @@ import be.cytomine.appengine.exceptions.TypeValidationException;
 import be.cytomine.appengine.handlers.StorageData;
 import be.cytomine.appengine.handlers.StorageDataEntry;
 import be.cytomine.appengine.handlers.StorageDataType;
-import be.cytomine.appengine.models.task.Output;
+import be.cytomine.appengine.models.task.Parameter;
 import be.cytomine.appengine.models.task.ParameterType;
 import be.cytomine.appengine.models.task.Run;
 import be.cytomine.appengine.models.task.Type;
@@ -43,10 +43,10 @@ public class StringType extends Type {
     public void setConstraint(StringTypeConstraint constraint, Integer value) {
         switch (constraint) {
             case MIN_LENGTH:
-                this.setMinLength(value);
+                setMinLength(value);
                 break;
             case MAX_LENGTH:
-                this.setMaxLength(value);
+                setMaxLength(value);
                 break;
             default:
         }
@@ -54,8 +54,8 @@ public class StringType extends Type {
 
     public boolean hasConstraint(StringTypeConstraint constraint) {
         return switch (constraint) {
-            case MIN_LENGTH -> this.minLength != null;
-            case MAX_LENGTH -> this.maxLength != null;
+            case MIN_LENGTH -> minLength != null;
+            case MAX_LENGTH -> maxLength != null;
             default -> false;
         };
     }
@@ -63,7 +63,7 @@ public class StringType extends Type {
     @Override
     public void validateFiles(
         Run run,
-        Output currentOutput,
+        Parameter currentOutput,
         StorageData currentOutputStorageData)
         throws TypeValidationException {
 
@@ -74,7 +74,6 @@ public class StringType extends Type {
         String rawValue = getContentIfValid(outputFile);
 
         validate(rawValue);
-
     }
 
     @Override
@@ -85,17 +84,11 @@ public class StringType extends Type {
 
         String value = (String) valueObject;
 
-        if (
-            this.hasConstraint(StringTypeConstraint.MIN_LENGTH)
-            && value.length() < this.getMinLength()
-        ) {
+        if (hasConstraint(StringTypeConstraint.MIN_LENGTH) && value.length() < minLength) {
             throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_GT_VALIDATION_ERROR);
         }
 
-        if (
-            this.hasConstraint(StringTypeConstraint.MAX_LENGTH)
-            && value.length() > this.getMaxLength()
-        ) {
+        if (hasConstraint(StringTypeConstraint.MAX_LENGTH) && value.length() > maxLength) {
             throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_GEQ_VALIDATION_ERROR);
         }
     }
@@ -112,6 +105,7 @@ public class StringType extends Type {
             persistedProvision.setParameterType(ParameterType.INPUT);
             persistedProvision.setParameterName(parameterName);
             persistedProvision.setRunId(runId);
+            persistedProvision.setProvisioned(true);
             persistedProvision.setValue(value);
             stringPersistenceRepository.save(persistedProvision);
         } else {
@@ -121,7 +115,7 @@ public class StringType extends Type {
     }
 
     @Override
-    public void persistResult(Run run, Output currentOutput, StorageData outputValue) {
+    public void persistResult(Run run, Parameter currentOutput, StorageData outputValue) {
         StringPersistenceRepository stringPersistenceRepository = AppEngineApplicationContext.getBean(StringPersistenceRepository.class);
         StringPersistence result = stringPersistenceRepository.findStringPersistenceByParameterNameAndRunIdAndParameterType(currentOutput.getName(), run.getId(), ParameterType.OUTPUT);
         String output = FileHelper.read(outputValue.peek().getData(), getStorageCharset());
@@ -140,7 +134,7 @@ public class StringType extends Type {
     }
 
     @Override
-    public StorageData mapToStorageFileData(JsonNode provision) {
+    public StorageData mapToStorageFileData(JsonNode provision, Run run) {
         String value = provision.get("value").asText();
         String parameterName = provision.get("param_name").asText();
         File data = FileHelper.write(parameterName, value.getBytes(getStorageCharset()));
@@ -149,7 +143,7 @@ public class StringType extends Type {
     }
 
     @Override
-    public JsonNode createTypedParameterResponse(JsonNode provision, Run run) {
+    public JsonNode createInputProvisioningEndpointResponse(JsonNode provision, Run run) {
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode provisionedParameter = mapper.createObjectNode();
         provisionedParameter.put("param_name", provision.get("param_name").asText());
@@ -160,7 +154,7 @@ public class StringType extends Type {
     }
 
     @Override
-    public TaskRunParameterValue buildTaskRunParameterValue(StorageData output, UUID id, String outputName) {
+    public TaskRunParameterValue createOutputProvisioningEndpointResponse(StorageData output, UUID id, String outputName) {
         String outputValue = FileHelper.read(output.peek().getData(), getStorageCharset());
 
         StringValue value = new StringValue();
@@ -173,7 +167,7 @@ public class StringType extends Type {
     }
 
     @Override
-    public TaskRunParameterValue buildTaskRunParameterValue(TypePersistence typePersistence) {
+    public TaskRunParameterValue createOutputProvisioningEndpointResponse(TypePersistence typePersistence) {
         StringPersistence stringPersistence = (StringPersistence) typePersistence;
         StringValue value = new StringValue();
         value.setParameterName(stringPersistence.getParameterName());

@@ -1,7 +1,9 @@
 package be.cytomine.appengine.handlers.scheduler.impl;
 
+import java.io.File;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -30,6 +32,7 @@ import be.cytomine.appengine.models.task.Task;
 import be.cytomine.appengine.repositories.RunRepository;
 import be.cytomine.appengine.states.TaskRunState;
 
+
 @Slf4j
 public class KubernetesScheduler implements SchedulerHandler {
 
@@ -39,7 +42,7 @@ public class KubernetesScheduler implements SchedulerHandler {
     @Autowired
     private KubernetesClient kubernetesClient;
 
-    @Autowired
+
     private PodInformer podInformer;
 
     @Autowired
@@ -69,7 +72,15 @@ public class KubernetesScheduler implements SchedulerHandler {
 
     private String baseOutputPath;
 
+    private boolean isInDocker() {
+        return new File("/.dockerenv").exists();
+    }
+
     private String getHostAddress() throws SchedulingException {
+        if (!isInDocker()) {
+            return "172.17.0.1";
+        }
+
         try {
             return InetAddress.getLocalHost().getHostAddress();
         } catch (UnknownHostException e) {
@@ -208,7 +219,7 @@ public class KubernetesScheduler implements SchedulerHandler {
 
         String sendOutputs = "curl -X POST -F 'outputs=@outputs.zip' ";
         sendOutputs += url + "/" + runSecret + "/outputs.zip";
-        String zipOutputs = "zip -rj outputs.zip " + task.getOutputFolder();
+        String zipOutputs = "cd " + task.getOutputFolder() + and + " zip -r outputs.zip .";
         String wait = "export TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token); ";
         wait += "while ! curl -k -H \"Authorization: Bearer $TOKEN\" ";
         wait += "https://${KUBERNETES_SERVICE_HOST}:${KUBERNETES_SERVICE_PORT_HTTPS}/api/v1/namespaces/default/pods/${HOSTNAME}/status ";
@@ -308,6 +319,11 @@ public class KubernetesScheduler implements SchedulerHandler {
     @Override
     @PostConstruct
     public void monitor() throws SchedulingException {
+        if (Arrays.asList(environment.getActiveProfiles()).contains("test")) {
+            log.info("Monitor: disabled in test mode");
+            return;
+        }
+
         log.info("Monitor: add informer to the cluster");
         kubernetesClient
             .pods()

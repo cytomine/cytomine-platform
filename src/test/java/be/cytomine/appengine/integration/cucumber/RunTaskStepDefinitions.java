@@ -9,9 +9,11 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -19,7 +21,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.cucumber.datatable.DataTable;
 import io.cucumber.java.Before;
+import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
@@ -53,6 +57,7 @@ import be.cytomine.appengine.repositories.TaskRepository;
 import be.cytomine.appengine.services.RunService;
 import be.cytomine.appengine.states.TaskRunState;
 import be.cytomine.appengine.utils.ApiClient;
+import be.cytomine.appengine.utils.ClusterClient;
 import be.cytomine.appengine.utils.FileHelper;
 import be.cytomine.appengine.utils.TaskTestsUtils;
 import be.cytomine.appengine.utils.TestTaskBuilder;
@@ -65,6 +70,9 @@ public class RunTaskStepDefinitions {
 
     @Autowired
     private ApiClient apiClient;
+
+    @Autowired
+    private ClusterClient clusterClient;
 
     @Autowired
     private StorageHandler storageHandler;
@@ -108,6 +116,8 @@ public class RunTaskStepDefinitions {
     private File persistedZipFile;
 
     private Run persistedRun;
+
+    private Task persistedTask;
 
     private TaskRun persistedTaskRun;
 
@@ -177,16 +187,19 @@ public class RunTaskStepDefinitions {
     public void a_task_run_exists_with_identifier(String uuid) throws FileStorageException {
         runRepository.deleteAll();
         Task task = TestTaskBuilder.buildHardcodedAddInteger(UUID.fromString(uuid));
-        task = taskRepository.save(task);
         secret = UUID.randomUUID().toString();
-        persistedRun = new Run(UUID.fromString(uuid), null, task , secret);
+        persistedRun = new Run(UUID.fromString(uuid), null, null , secret);
+        task.setRuns(List.of(persistedRun));
+        task = taskRepository.saveAndFlush(task);
+        persistedRun.setTask(task);
+        persistedRun = runRepository.saveAndFlush(persistedRun);
         createStorage(uuid);
     }
 
     @Given("the task run is in state {string}")
     public void the_task_run_is_in_state(String state) {
         persistedRun.setState(TaskRunState.valueOf(state));
-        persistedRun = runRepository.save(persistedRun);
+        persistedRun = runRepository.saveAndFlush(persistedRun);
     }
 
     @When("user calls the endpoint with {string} HTTP method GET")
@@ -211,7 +224,9 @@ public class RunTaskStepDefinitions {
 
     // successful fetch of task run inputs archive in a launched task run
     @Given("the task run {string} has input parameters: {string} of type {string} with value {string} and {string} of type {string} with value {string}")
-    public void the_task_run_has_input_parameters_of_type_with_value_and_of_type_with_value(String runId, String name1, String type1, String value1, String name2, String type2, String value2) throws FileStorageException {
+    public void the_task_run_has_input_parameters_of_type_with_value_and_of_type_with_value(String runId, String name1, String type1, String value1, String name2, String type2, String value2) throws FileStorageException,
+        JsonProcessingException
+    {
         ObjectMapper mapper = new ObjectMapper();
         List<ObjectNode> provisions = new ArrayList<>();
         provisions.add(mapper.valueToTree(TaskTestsUtils.createProvision(name1, type1, value1)));
@@ -424,13 +439,21 @@ public class RunTaskStepDefinitions {
         taskRepository.deleteAll();
         Task task = TestTaskBuilder.buildHardcodedAddInteger();
         task = taskRepository.save(task);
-        persistedRun = new Run(UUID.fromString(runId), null, task);
+        persistedRun = new Run(UUID.fromString(runId), null, null);
+        persistedRun = runRepository.save(persistedRun);
+        task.setRuns(List.of(persistedRun));
+        task = taskRepository.saveAndFlush(task);
+        task.setRuns(List.of(persistedRun));
+        persistedRun.setTask(task);
+        taskRepository.saveAndFlush(task);
+        persistedRun = runRepository.findById(persistedRun.getId()).get();
+
     }
 
     @Given("this task run has not been successfully provisioned yet and is therefore in state {string}")
     public void this_task_run_has_not_been_successfully_provisioned_yet_and_is_therefore_in_state(String state) {
         persistedRun.setState(TaskRunState.valueOf(state));
-        persistedRun = runRepository.save(persistedRun);
+        persistedRun = runRepository.saveAndFlush(persistedRun);
     }
 
     @When("When user calls the endpoint to run task with HTTP method POST")
@@ -492,9 +515,14 @@ public class RunTaskStepDefinitions {
 
     @Given("the task run has an output parameter {string}")
     public void the_task_run_has_an_output_parameter(String output) {
-        Set<Output> outputs = persistedRun.getTask().getOutputs();
+        Set<Parameter> outputs = persistedRun
+            .getTask()
+            .getParameters()
+            .stream()
+            .filter(parameter -> parameter.getParameterType().equals(ParameterType.OUTPUT))
+            .collect(Collectors.toSet());
         boolean found = false;
-        for (Output runOutput : outputs) {
+        for (Parameter runOutput : outputs) {
             if (runOutput.getName().equalsIgnoreCase(output)) {
                 found = true;
                 break;
@@ -539,15 +567,14 @@ public class RunTaskStepDefinitions {
     }
 
     // unsuccessful upload of task run outputs as a valid zip file in a non-running non-pending non-queuing non-queued state state
-    @Given("the task run is not in state {string} or {string} or {string} or {string}")
-    public void the_task_run_is_not_in_state_or(String state1, String state2, String state3, String state4) {
+    @Given("the task run is not in one of the following state")
+    public void checkTaskRunNotInState(DataTable table) {
+        List<String> allowedStates = table.asList(String.class);
+
         persistedRun.setState(TaskRunState.PROVISIONED);
         persistedRun = runService.update(persistedRun);
 
-        Assertions.assertNotEquals(persistedRun.getState(), TaskRunState.valueOf(state1));
-        Assertions.assertNotEquals(persistedRun.getState(), TaskRunState.valueOf(state2));
-        Assertions.assertNotEquals(persistedRun.getState(), TaskRunState.valueOf(state3));
-        Assertions.assertNotEquals(persistedRun.getState(), TaskRunState.valueOf(state4));
+        Assertions.assertTrue(!allowedStates.contains(persistedRun.getState().toString()));
     }
 
     @When("user calls the endpoint to post outputs with {string} HTTP method POST and a valid outputs zip file")
@@ -643,5 +670,68 @@ public class RunTaskStepDefinitions {
     @Then("App Engine initiates the process of executing the task run")
     public void app_engine_initiates_the_process_of_executing_the_task_run() {
         // TODO : How?
+    }
+
+    @Given("a task with {string} and {string} has been uploaded")
+    public void uploadTask(String namespace, String version) {
+        taskRepository.deleteAll();
+
+        String bundleFilename = namespace + "-" + version + ".zip";
+        persistedTask = TestTaskBuilder.buildTaskFromResource(bundleFilename);
+        persistedTask = taskRepository.save(persistedTask);
+    }
+
+    @And("The task is assigned {string} RAM, {string} CPUs, and {string} GPUs")
+    public void setTaskResources(String ram, String cpus, String gpus) {
+        persistedTask.setRam(ram);
+        persistedTask.setCpus(Integer.parseInt(cpus));
+        persistedTask.setGpus(Integer.parseInt(gpus));
+        persistedTask = taskRepository.saveAndFlush(persistedTask);
+    }
+
+    @And("the task has requested {string} RAM, {string} CPUs, and {string} GPUs")
+    public void checkResourceRequested(String ram, String cpus, String gpus) {
+        Assertions.assertEquals(ram, persistedTask.getRam());
+        Assertions.assertEquals(Integer.parseInt(cpus), persistedTask.getCpus());
+        Assertions.assertEquals(Integer.parseInt(gpus), persistedTask.getGpus());
+    }
+
+    @And("a task run has been created with {string}")
+    public void createTaskRun(String uuid) {
+        persistedRun = new Run(UUID.fromString(uuid), TaskRunState.CREATED, persistedTask);
+//        persistedRun = runRepository.save(persistedRun);
+        persistedTask.setRuns(List.of(persistedRun));
+        persistedTask = taskRepository.saveAndFlush(persistedTask);
+
+    }
+
+    @And("a user provisioned all the parameters")
+    public void provisionInputs(DataTable table) {
+        List<Map<String, String>> parameters = table.asMaps(String.class, String.class);
+
+        for (Map<String, String> param : parameters) {
+            String name = param.get("parameter_name");
+            String type = param.get("parameter_type");
+            String value = param.get("parameter_value");
+
+            try {
+                apiClient.provisionInput(persistedRun.getId().toString(), name, type, value);
+            } catch (RestClientResponseException e) {
+                Assertions.fail("Provisioning '" + name + "' failed: " + e.getMessage());
+            } catch (JsonProcessingException e)
+            {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    @Then("the cluster has allocated {string} RAM, {string} CPUs, and {string} GPUs as requested.")
+    public void checkResourceAllocation(String ram, String cpus, String gpus) {
+        String uuid = persistedTask.getName().toLowerCase().replaceAll("[^a-zA-Z0-9]", "") + "-" + persistedRun.getId();
+        Map<String, String> resources = clusterClient.getAllocatedResources(uuid);
+
+        Assertions.assertEquals(ram, resources.get("ram"));
+        Assertions.assertEquals(cpus, resources.get("cpu"));
+        Assertions.assertEquals(gpus, resources.get("gpu"));
     }
 }

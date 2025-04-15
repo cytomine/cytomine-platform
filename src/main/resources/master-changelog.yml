@@ -14,6 +14,9 @@ databaseChangeLog:
   - include:
       file: migrations/add-derived-from.sql
       relativeToChangelogFile: false
-#  - includeAll:
-#      path: migrations/
-#      relativeToChangelogFile: false
+  - include:
+      file: migrations/remove-task-inputs-outputs-foreign-keys.sql
+      relativeToChangelogFile: false
+  - include:
+      file: migrations/remove-task-inputs-outputs.sql
+      relativeToChangelogFile: false

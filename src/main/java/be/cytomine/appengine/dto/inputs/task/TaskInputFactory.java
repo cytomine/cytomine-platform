@@ -10,7 +10,7 @@ import be.cytomine.appengine.dto.inputs.task.types.integer.TaskParameterIntegerT
 import be.cytomine.appengine.dto.inputs.task.types.number.TaskParameterNumberType;
 import be.cytomine.appengine.dto.inputs.task.types.string.TaskParameterStringType;
 import be.cytomine.appengine.dto.inputs.task.types.wsi.TaskParameterWsiType;
-import be.cytomine.appengine.models.task.Input;
+import be.cytomine.appengine.models.task.Parameter;
 import be.cytomine.appengine.models.task.bool.BooleanType;
 import be.cytomine.appengine.models.task.datetime.DateTimeType;
 import be.cytomine.appengine.models.task.enumeration.EnumerationType;
@@ -24,7 +24,7 @@ import be.cytomine.appengine.models.task.wsi.WsiType;
 
 public class TaskInputFactory {
 
-    public static TaskInput createTaskInput(Input input) {
+    public static TaskInput createTaskInput(Parameter input) {
         TaskParameterType taskParameterType = null;
 
         if (input.getType() instanceof BooleanType type) {
@@ -89,7 +89,7 @@ public class TaskInputFactory {
 
         return new TaskInput(
             input.getId().toString(),
-            input.getDefaultValue(),
+            String.valueOf(input.getDefaultValue()),
             input.getName(),
             input.getDisplayName(),
             input.getDescription(),

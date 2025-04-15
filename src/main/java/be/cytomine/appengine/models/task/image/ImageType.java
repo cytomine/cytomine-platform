@@ -21,7 +21,7 @@ import be.cytomine.appengine.exceptions.TypeValidationException;
 import be.cytomine.appengine.handlers.StorageData;
 import be.cytomine.appengine.handlers.StorageDataEntry;
 import be.cytomine.appengine.handlers.StorageDataType;
-import be.cytomine.appengine.models.task.Output;
+import be.cytomine.appengine.models.task.Parameter;
 import be.cytomine.appengine.models.task.ParameterType;
 import be.cytomine.appengine.models.task.Run;
 import be.cytomine.appengine.models.task.Type;
@@ -69,6 +69,16 @@ public class ImageType extends Type {
                 break;
             default:
         }
+    }
+
+    public boolean hasConstraint(ImageTypeConstraint constraint) {
+        return switch (constraint) {
+            case FORMATS -> this.formats != null;
+            case MAX_FILE_SIZE -> this.maxFileSize != null;
+            case MAX_WIDTH -> this.maxWidth != null;
+            case MAX_HEIGHT -> this.maxHeight != null;
+            default -> false;
+        };
     }
 
     private void validateImageFormat(File file) throws TypeValidationException {
@@ -152,7 +162,7 @@ public class ImageType extends Type {
     @Override
     public void validateFiles(
         Run run,
-        Output currentOutput,
+        Parameter currentOutput,
         StorageData currentOutputStorageData)
         throws TypeValidationException {
 
@@ -177,12 +187,12 @@ public class ImageType extends Type {
         persistedProvision.setParameterType(ParameterType.INPUT);
         persistedProvision.setRunId(runId);
         persistedProvision.setValueType(ValueType.IMAGE);
-
+        persistedProvision.setProvisioned(true);
         imagePersistenceRepository.save(persistedProvision);
     }
 
     @Override
-    public void persistResult(Run run, Output currentOutput, StorageData outputValue) {
+    public void persistResult(Run run, Parameter currentOutput, StorageData outputValue) {
         ImagePersistenceRepository imagePersistenceRepository = AppEngineApplicationContext.getBean(ImagePersistenceRepository.class);
         ImagePersistence result = imagePersistenceRepository.findImagePersistenceByParameterNameAndRunIdAndParameterType(currentOutput.getName(), run.getId(), ParameterType.OUTPUT);
         if (result != null) {
@@ -198,7 +208,7 @@ public class ImageType extends Type {
     }
 
     @Override
-    public StorageData mapToStorageFileData(JsonNode provision) {
+    public StorageData mapToStorageFileData(JsonNode provision, Run run) {
         String parameterName = provision.get("param_name").asText();
         File data = new File(provision.get("value").asText());
         StorageDataEntry entry = new StorageDataEntry(data, parameterName, StorageDataType.FILE);
@@ -206,7 +216,7 @@ public class ImageType extends Type {
     }
 
     @Override
-    public JsonNode createTypedParameterResponse(JsonNode provision, Run run) {
+    public JsonNode createInputProvisioningEndpointResponse(JsonNode provision, Run run) {
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode provisionedParameter = mapper.createObjectNode();
         provisionedParameter.put("param_name", provision.get("param_name").asText());
@@ -215,7 +225,7 @@ public class ImageType extends Type {
     }
 
     @Override
-    public ImageValue buildTaskRunParameterValue(StorageData output, UUID id, String outputName) {
+    public ImageValue createOutputProvisioningEndpointResponse(StorageData output, UUID id, String outputName) {
         ImageValue imageValue = new ImageValue();
         imageValue.setParameterName(outputName);
         imageValue.setTaskRunId(id);
@@ -224,7 +234,7 @@ public class ImageType extends Type {
     }
 
     @Override
-    public ImageValue buildTaskRunParameterValue(TypePersistence typePersistence) {
+    public ImageValue createOutputProvisioningEndpointResponse(TypePersistence typePersistence) {
         ImagePersistence imagePersistence = (ImagePersistence) typePersistence;
         ImageValue imageValue = new ImageValue();
         imageValue.setParameterName(imagePersistence.getParameterName());

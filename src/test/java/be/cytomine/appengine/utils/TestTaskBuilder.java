@@ -1,27 +1,34 @@
 package be.cytomine.appengine.utils;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
+import be.cytomine.appengine.models.task.ParameterType;
 import com.fasterxml.jackson.databind.JsonNode;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.mock.web.MockMultipartFile;
 
 import be.cytomine.appengine.dto.inputs.task.UploadTaskArchive;
 import be.cytomine.appengine.dto.misc.TaskIdentifiers;
-import be.cytomine.appengine.exceptions.BundleArchiveException;
 import be.cytomine.appengine.models.task.Author;
-import be.cytomine.appengine.models.task.Input;
-import be.cytomine.appengine.models.task.Output;
+import be.cytomine.appengine.models.task.Parameter;
 import be.cytomine.appengine.models.task.Task;
 import be.cytomine.appengine.models.task.TypeFactory;
 import be.cytomine.appengine.models.task.integer.IntegerType;
 
 public class TestTaskBuilder {
+
+    @Value("${scheduler.task-resources.ram}")
+    private static String defaultRam;
+
+    @Value("${scheduler.task-resources.cpus}")
+    private static int defaultCpus;
+
     public static Task buildHardcodedAddInteger(UUID taskUUID) {
         String storageIdentifier = "task-" + taskUUID + "-def";
         String imageRegistryCompliantName = "com/cytomine/dummy/arithmetic/integer/addition:1.0.0";
@@ -54,10 +61,11 @@ public class TestTaskBuilder {
         author.setContact(true);
         authors.add(author);
         task.setAuthors(authors);
+
         // add inputs
 
-        Set<Input> inputs = new HashSet<>();
-        Input inputa = new Input();
+        Set<Parameter> inputs = new HashSet<>();
+        Parameter inputa = new Parameter();
         inputa.setName("a");
         inputa.setDisplayName("Operand A");
         inputa.setDescription("First operand");
@@ -66,8 +74,9 @@ public class TestTaskBuilder {
         inputType1_1.setCharset("UTF_8");
         inputa.setType(inputType1_1);
         inputa.setDefaultValue("0");
+        inputa.setParameterType(ParameterType.INPUT);
 
-        Input inputb = new Input();
+        Parameter inputb = new Parameter();
         inputb.setName("b");
         inputb.setDisplayName("Operand B");
         inputb.setDescription("Second operand");
@@ -76,13 +85,14 @@ public class TestTaskBuilder {
         inputType1_2.setCharset("UTF_8");
         inputb.setType(inputType1_2);
         inputb.setDefaultValue("0");
+        inputb.setParameterType(ParameterType.INPUT);
 
         inputs.add(inputa);
         inputs.add(inputb);
-        task.setInputs(inputs);
+        task.setParameters(inputs);
         // add outputs for task one
-        Set<Output> outputs = new HashSet<>();
-        Output output = new Output();
+        Set<Parameter> outputs = new HashSet<>();
+        Parameter output = new Parameter();
         output.setName("sum");
         output.setDisplayName("Sum");
         output.setDescription("Sum of operands A and B");
@@ -90,8 +100,9 @@ public class TestTaskBuilder {
         outputType.setId("integer");
         outputType.setCharset("UTF_8");
         output.setType(outputType);
+        output.setParameterType(ParameterType.OUTPUT);
         outputs.add(output);
-        task.setOutputs(outputs);
+        task.getParameters().addAll(outputs);
 
         // set resources
         task.setCpus(1);
@@ -124,6 +135,7 @@ public class TestTaskBuilder {
         task.setNamespace("com.cytomine.dummy.arithmetic.integer.subtraction");
         task.setVersion("1.0.0");
         task.setDescription("");
+
         // add authors
         Set<Author> authors = new HashSet<>();
         Author author = new Author();
@@ -134,10 +146,11 @@ public class TestTaskBuilder {
         author.setContact(true);
         authors.add(author);
         task.setAuthors(authors);
+
         // add inputs
 
-        Set<Input> inputs = new HashSet<>();
-        Input inputa = new Input();
+        Set<Parameter> inputs = new HashSet<>();
+        Parameter inputa = new Parameter();
         inputa.setName("a");
         inputa.setDisplayName("Operand A");
         inputa.setDescription("First operand");
@@ -145,8 +158,9 @@ public class TestTaskBuilder {
         inputType1_1.setId("integer");
         inputa.setType(inputType1_1);
         inputa.setDefaultValue("0");
+        inputa.setParameterType(ParameterType.INPUT);
 
-        Input inputb = new Input();
+        Parameter inputb = new Parameter();
         inputb.setName("b");
         inputb.setDisplayName("Operand B");
         inputb.setDescription("Second operand");
@@ -154,21 +168,23 @@ public class TestTaskBuilder {
         inputType1_2.setId("integer");
         inputb.setType(inputType1_2);
         inputb.setDefaultValue("0");
+        inputb.setParameterType(ParameterType.INPUT);
 
         inputs.add(inputa);
         inputs.add(inputb);
-        task.setInputs(inputs);
+        task.setParameters(inputs);
         // add outputs for task one
-        Set<Output> outputs = new HashSet<>();
-        Output output = new Output();
+        Set<Parameter> outputs = new HashSet<>();
+        Parameter output = new Parameter();
         output.setName("out");
         output.setDisplayName("Difference");
         output.setDescription("Difference of operands A and B");
         IntegerType outputType = new IntegerType();
         outputType.setId("integer");
         output.setType(outputType);
+        output.setParameterType(ParameterType.OUTPUT);
         outputs.add(output);
-        task.setOutputs(outputs);
+        task.getParameters().addAll(outputs);
         return task;
     }
 
@@ -230,11 +246,21 @@ public class TestTaskBuilder {
                 task.setDescription(taskDescriptorJson.get("description").textValue());
             }
 
+            JsonNode resources = taskDescriptorJson.get("configuration").get("resources");
+            if (!Objects.nonNull(resources)) {
+                task.setRam(defaultRam);
+                task.setCpus(defaultCpus);
+            } else {
+                task.setRam(resources.path("ram").asText(defaultRam));
+                task.setCpus(resources.path("cpus").asInt(defaultCpus));
+                task.setGpus(resources.path("gpus").asInt(0));
+            }
+
             task.setAuthors(getAuthors(taskArchive));
-            task.setInputs(getInputs(taskArchive));
-            task.setOutputs(getOnputs(taskArchive));
+            task.setParameters(getInputs(taskArchive));
+            task.getParameters().addAll(getOnputs(taskArchive));
             return task;
-        } catch (IOException | BundleArchiveException e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
@@ -243,17 +269,16 @@ public class TestTaskBuilder {
         ClassPathResource resource = buildByBundleFilename(bundleFilename);
         ArchiveUtils archiveUtils = new ArchiveUtils();
         try {
-            MockMultipartFile taskMultipartFile = new MockMultipartFile(bundleFilename,
-                resource.getInputStream());
+            MockMultipartFile taskMultipartFile = new MockMultipartFile(bundleFilename, resource.getInputStream());
             UploadTaskArchive taskArchive = archiveUtils.readArchive(taskMultipartFile);
             return taskArchive.getDescriptorFile();
-        } catch (IOException | BundleArchiveException e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    private static Set<Input> getInputs(UploadTaskArchive uploadTaskArchive) {
-        Set<Input> inputs = new HashSet<>();
+    private static Set<Parameter> getInputs(UploadTaskArchive uploadTaskArchive) {
+        Set<Parameter> inputs = new HashSet<>();
         JsonNode inputsNode = uploadTaskArchive.getDescriptorFileAsJson().get("inputs");
         if (inputsNode.isObject()) {
             Iterator<String> fieldNames = inputsNode.fieldNames();
@@ -261,10 +286,11 @@ public class TestTaskBuilder {
                 String inputKey = fieldNames.next();
                 JsonNode inputValue = inputsNode.get(inputKey);
 
-                Input input = new Input();
+                Parameter input = new Parameter();
                 input.setName(inputKey);
                 input.setDisplayName(inputValue.get("display_name").textValue());
                 input.setDescription(inputValue.get("description").textValue());
+                input.setParameterType(ParameterType.INPUT);
                 // use type factory to generate the correct type
                 input.setType(TypeFactory.createType(inputValue, "UTF_8"));
                 switch (TypeFactory.getTypeId(inputValue.get("type"))) {
@@ -285,8 +311,8 @@ public class TestTaskBuilder {
         return inputs;
     }
 
-    private static Set<Output> getOnputs(UploadTaskArchive uploadTaskArchive) {
-        Set<Output> outputs = new HashSet<>();
+    private static Set<Parameter> getOnputs(UploadTaskArchive uploadTaskArchive) {
+        Set<Parameter> outputs = new HashSet<>();
         JsonNode outputsNode = uploadTaskArchive.getDescriptorFileAsJson().get("outputs");
         if (outputsNode.isObject()) {
             Iterator<String> fieldNames = outputsNode.fieldNames();
@@ -294,10 +320,11 @@ public class TestTaskBuilder {
                 String outputKey = fieldNames.next();
                 JsonNode inputValue = outputsNode.get(outputKey);
 
-                Output output = new Output();
+                Parameter output = new Parameter();
                 output.setName(outputKey);
                 output.setDisplayName(inputValue.get("display_name").textValue());
                 output.setDescription(inputValue.get("description").textValue());
+                output.setParameterType(ParameterType.OUTPUT);
                 // use type factory to generate the correct type
                 output.setType(TypeFactory.createType(inputValue, "UTF_8"));
 

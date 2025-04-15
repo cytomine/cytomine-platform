@@ -18,7 +18,7 @@ import be.cytomine.appengine.exceptions.TypeValidationException;
 import be.cytomine.appengine.handlers.StorageData;
 import be.cytomine.appengine.handlers.StorageDataEntry;
 import be.cytomine.appengine.handlers.StorageDataType;
-import be.cytomine.appengine.models.task.Output;
+import be.cytomine.appengine.models.task.Parameter;
 import be.cytomine.appengine.models.task.ParameterType;
 import be.cytomine.appengine.models.task.Run;
 import be.cytomine.appengine.models.task.Type;
@@ -52,7 +52,7 @@ public class EnumerationType extends Type {
     @Override
     public void validateFiles(
         Run run,
-        Output currentOutput,
+        Parameter currentOutput,
         StorageData currentOutputStorageData)
         throws TypeValidationException {
 
@@ -102,6 +102,7 @@ public class EnumerationType extends Type {
             persistedProvision.setValueType(ValueType.ENUMERATION);
             persistedProvision.setParameterType(ParameterType.INPUT);
             persistedProvision.setParameterName(parameterName);
+            persistedProvision.setProvisioned(true);
             persistedProvision.setRunId(runId);
             persistedProvision.setValue(value);
             repository.save(persistedProvision);
@@ -112,7 +113,7 @@ public class EnumerationType extends Type {
     }
 
     @Override
-    public void persistResult(Run run, Output currentOutput, StorageData outputValue) {
+    public void persistResult(Run run, Parameter currentOutput, StorageData outputValue) {
         EnumerationPersistenceRepository enumerationPersistenceRepository = AppEngineApplicationContext.getBean(EnumerationPersistenceRepository.class);
         EnumerationPersistence result = enumerationPersistenceRepository.findEnumerationPersistenceByParameterNameAndRunIdAndParameterType(currentOutput.getName(), run.getId(), ParameterType.OUTPUT);
         String output = FileHelper.read(outputValue.peek().getData(), getStorageCharset());
@@ -131,7 +132,7 @@ public class EnumerationType extends Type {
     }
 
     @Override
-    public StorageData mapToStorageFileData(JsonNode provision) {
+    public StorageData mapToStorageFileData(JsonNode provision, Run run) {
         String value = provision.get("value").asText();
         String parameterName = provision.get("param_name").asText();
         File data = FileHelper.write(parameterName, value.getBytes(getStorageCharset()));
@@ -140,7 +141,7 @@ public class EnumerationType extends Type {
     }
 
     @Override
-    public JsonNode createTypedParameterResponse(JsonNode provision, Run run) {
+    public JsonNode createInputProvisioningEndpointResponse(JsonNode provision, Run run) {
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode provisionedParameter = mapper.createObjectNode();
         provisionedParameter.put("param_name", provision.get("param_name").asText());
@@ -150,7 +151,7 @@ public class EnumerationType extends Type {
     }
 
     @Override
-    public EnumerationValue buildTaskRunParameterValue(StorageData output, UUID id, String outputName) {
+    public EnumerationValue createOutputProvisioningEndpointResponse(StorageData output, UUID id, String outputName) {
         String outputValue = FileHelper.read(output.peek().getData(), getStorageCharset());
 
         EnumerationValue enumerationValue = new EnumerationValue();
@@ -162,7 +163,7 @@ public class EnumerationType extends Type {
     }
 
     @Override
-    public EnumerationValue buildTaskRunParameterValue(TypePersistence typePersistence) {
+    public EnumerationValue createOutputProvisioningEndpointResponse(TypePersistence typePersistence) {
         EnumerationPersistence enumerationPersistence = (EnumerationPersistence) typePersistence;
         EnumerationValue enumerationValue = new EnumerationValue();
         enumerationValue.setParameterName(enumerationPersistence.getParameterName());

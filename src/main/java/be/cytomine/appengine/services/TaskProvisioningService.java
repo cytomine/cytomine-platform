@@ -8,12 +8,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -30,11 +33,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import be.cytomine.appengine.dto.handlers.filestorage.Storage;
 import be.cytomine.appengine.dto.handlers.scheduler.Schedule;
+import be.cytomine.appengine.dto.inputs.task.GenericParameterCollectionItemProvision;
 import be.cytomine.appengine.dto.inputs.task.GenericParameterProvision;
 import be.cytomine.appengine.dto.inputs.task.Resource;
 import be.cytomine.appengine.dto.inputs.task.State;
 import be.cytomine.appengine.dto.inputs.task.StateAction;
-import be.cytomine.appengine.dto.inputs.task.TaskAuthor;
 import be.cytomine.appengine.dto.inputs.task.TaskDescription;
 import be.cytomine.appengine.dto.inputs.task.TaskRunParameterValue;
 import be.cytomine.appengine.dto.inputs.task.TaskRunResponse;
@@ -51,17 +54,22 @@ import be.cytomine.appengine.handlers.StorageData;
 import be.cytomine.appengine.handlers.StorageDataEntry;
 import be.cytomine.appengine.handlers.StorageDataType;
 import be.cytomine.appengine.handlers.StorageHandler;
-import be.cytomine.appengine.models.task.Author;
-import be.cytomine.appengine.models.task.Input;
-import be.cytomine.appengine.models.task.Output;
+import be.cytomine.appengine.models.CheckTime;
+import be.cytomine.appengine.models.Match;
+import be.cytomine.appengine.models.task.Parameter;
 import be.cytomine.appengine.models.task.ParameterType;
 import be.cytomine.appengine.models.task.Run;
 import be.cytomine.appengine.models.task.Task;
 import be.cytomine.appengine.models.task.Type;
 import be.cytomine.appengine.models.task.TypePersistence;
+import be.cytomine.appengine.models.task.collection.CollectionPersistence;
+import be.cytomine.appengine.models.task.collection.CollectionType;
 import be.cytomine.appengine.repositories.RunRepository;
 import be.cytomine.appengine.repositories.TypePersistenceRepository;
+import be.cytomine.appengine.repositories.collection.CollectionPersistenceRepository;
 import be.cytomine.appengine.states.TaskRunState;
+
+
 
 @Slf4j
 @RequiredArgsConstructor
@@ -70,11 +78,15 @@ public class TaskProvisioningService {
 
     private final TypePersistenceRepository typePersistenceRepository;
 
+    private final CollectionPersistenceRepository collectionPersistenceRepository;
+
     private final RunRepository runRepository;
 
     private final StorageHandler fileStorageHandler;
 
     private final SchedulerHandler schedulerHandler;
+
+    private final TaskService taskService;
 
     public JsonNode provisionRunParameter(
         String runId,
@@ -114,7 +126,7 @@ public class TaskProvisioningService {
             validateProvisionValuesAgainstTaskType(genericParameterProvision, run);
         } catch (TypeValidationException e) {
             AppEngineError error = ErrorBuilder.build(
-                ErrorCode.INTERNAL_PARAMETER_DOES_NOT_EXIST,
+                e.getErrorCode(),
                 new ParameterError(name)
             );
             throw new ProvisioningException(error);
@@ -139,18 +151,34 @@ public class TaskProvisioningService {
         saveInDatabase(name, provision, run);
         log.info("ProvisionParameter: saved");
 
-        if (run.getTask().getInputs().size() == 1) {
-            changeStateToProvisioned(run);
-        }
+        changeStateToProvisioned(run);
 
-        return getInputParameterType(name, run).createTypedParameterResponse(provision, run);
+        return getInputParameterType(name, run)
+            .createInputProvisioningEndpointResponse(provision, run);
     }
 
     private void changeStateToProvisioned(Run run) {
         log.info("ProvisionParameter: Changing run state to PROVISIONED...");
-        run.setState(TaskRunState.PROVISIONED);
-        runRepository.saveAndFlush(run);
-        log.info("ProvisionParameter: RUN PROVISIONED");
+        Set<Parameter> inputParameters = run.getTask()
+            .getParameters()
+            .stream()
+            .filter(parameter -> parameter.getParameterType().equals(ParameterType.INPUT))
+            .collect(Collectors.toSet());
+
+        List<TypePersistence> persistenceList = typePersistenceRepository
+            .findTypePersistenceByRunIdAndParameterTypeAndParameterNameIn(run.getId(),
+            ParameterType.INPUT,
+            inputParameters.stream().map(Parameter::getName).toList());
+        boolean allParametersAreChecked = inputParameters.size() == persistenceList.size();
+        if (allParametersAreChecked
+            && persistenceList.stream().allMatch(TypePersistence::isProvisioned)) {
+            run.setState(TaskRunState.PROVISIONED);
+            runRepository.saveAndFlush(run);
+            log.info("ProvisionParameter: RUN PROVISIONED");
+        } else {
+            log.info("ProvisionParameter: RUN NOT PROVISIONED");
+        }
+
     }
 
     public List<JsonNode> provisionMultipleRunParameters(
@@ -226,28 +254,24 @@ public class TaskProvisioningService {
             saveInDatabase(parameterName, provision, run);
             log.info("ProvisionMultipleParameter: saved");
             JsonNode responseItem = getInputParameterType(parameterName, run)
-                .createTypedParameterResponse(provision, run);
+                .createInputProvisioningEndpointResponse(provision, run);
             response.add(responseItem);
         }
         if (!multipleErrors.isEmpty()) {
             AppEngineError error = ErrorBuilder.buildBatchError(multipleErrors);
             throw new ProvisioningException(error);
         }
-        if (provisions.size() == run.getTask().getInputs().size()) {
-            changeStateToProvisioned(run);
-        }
+
+        changeStateToProvisioned(run);
+
         log.info("ProvisionMultipleParameter: return collection");
         return response;
     }
 
     @NotNull
-    private void saveInDatabase(String parameterName, JsonNode provision, Run run) {
-        Set<Input> inputs = run.getTask().getInputs();
-        Input inputForType = inputs
-            .stream()
-            .filter(input -> input.getName().equalsIgnoreCase(parameterName))
-            .findFirst()
-            .get();
+    private void saveInDatabase(String parameterName, JsonNode provision, Run run)
+        throws ProvisioningException {
+        Parameter inputForType = getParameter(parameterName, ParameterType.INPUT, run);
 
         inputForType
             .getType()
@@ -255,12 +279,8 @@ public class TaskProvisioningService {
     }
 
     private Type getInputParameterType(String parameterName, Run run) {
-        Set<Input> inputs = run.getTask().getInputs();
-        Input inputForType = inputs
-            .stream()
-            .filter(input -> input.getName().equalsIgnoreCase(parameterName))
-            .findFirst()
-            .get();
+        Parameter inputForType = getParameter(parameterName, ParameterType.INPUT, run);
+
         return inputForType.getType();
     }
 
@@ -269,16 +289,14 @@ public class TaskProvisioningService {
         JsonNode provision,
         Run run
     ) throws ProvisioningException {
-        Set<Input> inputs = run.getTask().getInputs();
-        Input inputForType = inputs
-            .stream()
-            .filter(input -> input.getName().equalsIgnoreCase(parameterName))
-            .findFirst()
-            .get();
+        Parameter inputForType = getParameter(parameterName, ParameterType.INPUT, run);
 
         Storage runStorage = new Storage("task-run-inputs-" + run.getId());
-        StorageData inputProvisionFileData = inputForType.getType().mapToStorageFileData(provision);
+
         try {
+            StorageData inputProvisionFileData = inputForType
+                .getType()
+                .mapToStorageFileData(provision, run);
             fileStorageHandler.saveStorageData(runStorage, inputProvisionFileData);
         } catch (FileStorageException e) {
             AppEngineError error = ErrorBuilder.buildParamRelatedError(
@@ -290,26 +308,98 @@ public class TaskProvisioningService {
         }
     }
 
-    private static void validateProvisionValuesAgainstTaskType(
+    private Parameter getParameter(String parameterName, ParameterType parameterType, Run run) {
+        return run
+            .getTask()
+            .getParameters()
+            .stream()
+            .filter(param -> param.getName().equalsIgnoreCase(parameterName)
+                && param.getParameterType().equals(parameterType))
+            .findFirst()
+            .orElse(null);
+    }
+
+    private void validateProvisionValuesAgainstTaskType(
         GenericParameterProvision provision,
         Run run
     ) throws TypeValidationException {
         Task task = run.getTask();
-        Set<Input> inputs = task.getInputs();
+        Set<Parameter> inputs = task
+            .getParameters()
+            .stream()
+            .filter(parameter -> parameter.getParameterType().equals(ParameterType.INPUT))
+            .collect(Collectors.toSet());
+
         boolean inputFound = false;
-        for (Input input : inputs) {
-            if (input.getName().equalsIgnoreCase(provision.getParameterName())) {
+        for (Parameter parameter : inputs) {
+            if (parameter.getName().equalsIgnoreCase(provision.getParameterName())) {
                 inputFound = true;
-                input.getType().validate(provision.getValue());
+                parameter.getType().validate(provision.getValue());
+            }
+        }
+        if (!inputFound) {
+            throw new TypeValidationException(ErrorCode.INTERNAL_PARAMETER_DOES_NOT_EXIST);
+        }
+    }
+
+    private void validateProvisionValuesAgainstTaskType(
+        GenericParameterCollectionItemProvision provision,
+        Run run,
+        String[] indexesArray
+    ) throws TypeValidationException {
+        Task task = run.getTask();
+        Set<Parameter> inputs = task
+            .getParameters()
+            .stream()
+            .filter(parameter -> parameter.getParameterType().equals(ParameterType.INPUT))
+            .collect(Collectors.toSet());
+
+        boolean inputFound = false;
+        for (Parameter parameter : inputs) {
+            if (parameter.getName().equalsIgnoreCase(provision.getParameterName())) {
+                inputFound = true;
+                if (provision.getValue() instanceof ArrayList<?>) {
+                    Type nestedValidationType = validateParents(parameter, indexesArray);
+                    nestedValidationType.validate(provision.getValue());
+                } else {
+                    parameter.getType().validate(provision.getValue());
+                }
+
             }
         }
         if (!inputFound) {
             throw new TypeValidationException(
                 "unknown parameter ["
-                + provision.getParameterName()
-                + "], not found in task descriptor"
-                );
+                    + provision.getParameterName()
+                    + "], not found in task descriptor"
+            );
         }
+    }
+
+    private Type validateParents(
+        Parameter parameter,
+        String[] indexes)
+        throws TypeValidationException {
+        int validationDepth = indexes.length - 1;
+        CollectionType type = (CollectionType) parameter.getType();
+        for (int i = 0; i <= validationDepth; i++) {
+            if (Objects.isNull(type.getTrackingType())) {
+                type.setTrackingType(new CollectionType(type));
+                type.setParentType(type.getTrackingType());
+            } else {
+                if (type.getTrackingType() instanceof CollectionType) {
+                    type.setParentType(type.getTrackingType());
+                    type.setTrackingType(((CollectionType) type.getTrackingType()).getSubType());
+                }
+            }
+            // validate index against
+            int index = Integer.parseInt(indexes[i]);
+            if (index > ((CollectionType) type.getParentType()).getMaxSize() - 1
+                || index < 0) {
+                throw new TypeValidationException("invalid index [{" + index + "}]");
+            }
+        }
+        return type;
     }
 
     public StorageData retrieveIOZipArchive(
@@ -340,12 +430,26 @@ public class TaskProvisioningService {
         Path tempFile = Files.createTempFile(io + "-archive-", runId);
         ZipOutputStream zipOut = new ZipOutputStream(Files.newOutputStream(tempFile));
         for (TypePersistence provision : provisions) {
+            // check that this type persistence is actually associated with a parameter
+            Parameter parameter = getParameter(
+                provision.getParameterName(),
+                provision.getParameterType(),
+                run);
+            if (Objects.isNull(parameter)) {
+                continue;
+            }
             StorageData provisionFileData = fileStorageHandler.readStorageData(
                 new StorageData(provision.getParameterName(), "task-run-" + io + "-" + run.getId())
             );
 
             for (StorageDataEntry current : provisionFileData.getEntryList()) {
-                ZipEntry zipEntry = new ZipEntry(current.getName());
+                String entryName;
+                if (current.getStorageDataType().equals(StorageDataType.FILE)) {
+                    entryName = current.getName();
+                } else {
+                    entryName = current.getName() + "/";
+                }
+                ZipEntry zipEntry = new ZipEntry(entryName);
                 zipOut.putNextEntry(zipEntry);
 
                 if (current.getStorageDataType().equals(StorageDataType.FILE)) {
@@ -359,6 +463,7 @@ public class TaskProvisioningService {
         zipOut.close();
 
         log.info("Retrieving IO Archive: zipped...");
+
         return new StorageData(tempFile.toFile());
     }
 
@@ -378,8 +483,13 @@ public class TaskProvisioningService {
             AppEngineError error = ErrorBuilder.build(ErrorCode.INTERNAL_INVALID_TASK_RUN_STATE);
             throw new ProvisioningException(error);
         }
-        Set<Output> runTaskOutputs = run.getTask().getOutputs();
-        new ArrayList<>();
+        Set<Parameter> runTaskOutputs = run
+            .getTask()
+            .getParameters()
+            .stream()
+            .filter(parameter -> parameter.getParameterType().equals(ParameterType.OUTPUT))
+            .collect(Collectors.toSet());
+
         log.info("Posting Outputs Archive: unzipping...");
         try {
             List<TaskRunParameterValue> outputList = processOutputFiles(
@@ -396,40 +506,57 @@ public class TaskProvisioningService {
         }
     }
 
-    // This fuction should return a JsonNode object to give more freedom
-    // to the type implementer to return complex types
     private List<TaskRunParameterValue> processOutputFiles(
         MultipartFile outputs,
-        Set<Output> runTaskOutputs,
+        Set<Parameter> runTaskOutputs,
         Run run
     ) throws IOException, ProvisioningException {
         // read files from the archive
         try (ZipArchiveInputStream zais = new ZipArchiveInputStream(outputs.getInputStream())) {
             log.info("Posting Outputs Archive: unzipped");
-            List<Output> remainingOutputs = new ArrayList<>(runTaskOutputs);
+            List<Parameter> remainingOutputs = new ArrayList<>(runTaskOutputs);
             List<TaskRunParameterValue> taskRunParameterValues = new ArrayList<>();
             List<StorageData> contentsOfZip = new ArrayList<>();
-            List<Output> remainingUnStoredOutputs = new ArrayList<>(runTaskOutputs);
+            List<Parameter> remainingUnStoredOutputs = new ArrayList<>(runTaskOutputs);
+            boolean remainingOutputsAreCollections = true;
             ZipEntry ze;
             while ((ze = zais.getNextZipEntry()) != null) {
                 // look for output matching file name
-                boolean isDirectory = false;
-                Output currentOutput = null;
+                Parameter currentOutput = null;
                 for (int i = 0; i < remainingOutputs.size(); i++) {
                     currentOutput = remainingOutputs.get(i);
                     if (currentOutput.getName().equals(ze.getName())) { // assuming it's a file
                         remainingOutputs.remove(i);
+                        StorageData parameterZipEntryStorageData;
+                        String outputName = currentOutput.getName();
+                        Path tempFile = Files.createTempFile(outputName, null);
+                        Files.copy(zais, tempFile, StandardCopyOption.REPLACE_EXISTING);
+                        parameterZipEntryStorageData = new StorageData(
+                            tempFile.toFile(),
+                            outputName);
+                        contentsOfZip.add(parameterZipEntryStorageData);
                         break;
                     }
-                    // remove the trailing slash
-                    String noTrailingSlash = ze.getName().replace("/", "");
-                    // assuming it's a directory
-                    if (currentOutput.getName().equals(noTrailingSlash)) {
-                        currentOutput.setName(ze.getName()); // already contains the trailing /
-                        remainingOutputs.remove(i);
-                        isDirectory = true;
+                    // assuming it's the main directory of a collection parameter
+                    if (ze.getName().startsWith(currentOutput.getName() + "/")) {
+                        StorageData partialParameterZipEntryStorageData;
+                        if (ze.isDirectory()) {
+                            partialParameterZipEntryStorageData = new StorageData(ze.getName());
+                            contentsOfZip.add(partialParameterZipEntryStorageData);
+                        } else {
+                            Path tempFile = Files.createTempFile(ze
+                                .getName()
+                                .replace("/", ""), null);
+                            Files.copy(zais, tempFile, StandardCopyOption.REPLACE_EXISTING);
+                            partialParameterZipEntryStorageData = new StorageData(
+                                tempFile.toFile(),
+                                ze.getName());
+                            contentsOfZip.add(partialParameterZipEntryStorageData);
+                        }
+
                         break;
                     }
+
                     currentOutput = null;
                 }
 
@@ -443,28 +570,26 @@ public class TaskProvisioningService {
                     throw new ProvisioningException(error);
                 }
 
-                if (!remainingOutputs.isEmpty()) {
-                    AppEngineError error = ErrorBuilder.build(ErrorCode.INTERNAL_MISSING_OUTPUTS);
-                    log.info("Posting Outputs Archive: output invalid (missing outputs)");
-                    run.setState(TaskRunState.FAILED);
-                    runRepository.saveAndFlush(run);
-                    log.info("Posting Outputs Archive: updated Run state to FAILED");
-                    throw new ProvisioningException(error);
-                }
-
-                // create a StorageData object and add it to the list to make it searchable
-                StorageData parameterZipEntryStorageData;
-                String outputName = currentOutput.getName();
-                if (isDirectory) {
-                    parameterZipEntryStorageData = new StorageData(outputName);
-                    contentsOfZip.add(parameterZipEntryStorageData);
-                } else {
-                    Path tempFile = Files.createTempFile(outputName, null);
-                    Files.copy(zais, tempFile, StandardCopyOption.REPLACE_EXISTING);
-                    parameterZipEntryStorageData = new StorageData(tempFile.toFile(), outputName);
-                    contentsOfZip.add(parameterZipEntryStorageData);
-                }
             }
+
+            // check if remaining outputs are all collections
+            int numberOfCollections = remainingOutputs
+                .stream()
+                .filter(parameter -> parameter.getType() instanceof CollectionType)
+                .toList()
+                .size();
+            remainingOutputsAreCollections = numberOfCollections > 0
+                && numberOfCollections == remainingOutputs.size();
+
+            if (!remainingOutputs.isEmpty() && !remainingOutputsAreCollections) {
+                AppEngineError error = ErrorBuilder.build(ErrorCode.INTERNAL_MISSING_OUTPUTS);
+                log.info("Posting Outputs Archive: output invalid (missing outputs)");
+                run.setState(TaskRunState.FAILED);
+                runRepository.saveAndFlush(run);
+                log.info("Posting Outputs Archive: updated Run state to FAILED");
+                throw new ProvisioningException(error);
+            }
+
             // a compaction step
             // order by the length of name
             // to make sure deeper files and directories are merged first
@@ -474,10 +599,11 @@ public class TaskProvisioningService {
                     s2.peek().getName().length(),
                     s1.peek().getName().length())
                 )
-                .toList();
+                .toList(); // now immutable
+            List<StorageData> sortedContentsOfZip = new CopyOnWriteArrayList<>(contentsOfZip);
             // merge StorageData objects together
-            for (StorageData storageData : contentsOfZip) {
-                for (StorageData compared : contentsOfZip) {
+            for (StorageData storageData : sortedContentsOfZip) {
+                for (StorageData compared : sortedContentsOfZip) {
                     if (storageData.equals(compared)) {
                         continue;
                     }
@@ -486,7 +612,7 @@ public class TaskProvisioningService {
                         .getName()
                         .startsWith(storageData.peek().getName())) {
                         storageData.merge(compared);
-                        contentsOfZip.remove(compared);
+                        sortedContentsOfZip.remove(compared);
                     }
                 }
             }
@@ -495,13 +621,15 @@ public class TaskProvisioningService {
             List<AppEngineError> multipleErrors = new ArrayList<>();
 
             // processing of files
-            for (Output currentOutput : remainingUnStoredOutputs) {
-                Optional<StorageData> currentOutputStorageDataOptional = contentsOfZip
+            for (Parameter currentOutput : remainingUnStoredOutputs) {
+                Optional<StorageData> currentOutputStorageDataOptional = sortedContentsOfZip
                     .stream()
                     .filter(s -> s
                     .peek()
                     .getName()
-                    .equals(currentOutput.getName()))
+                    .equals(
+                    currentOutput.getType() instanceof CollectionType
+                    ? currentOutput.getName() + "/" : currentOutput.getName()))
                     .findFirst();
                 StorageData currentOutputStorageData = null;
                 if (currentOutputStorageDataOptional.isPresent()) {
@@ -527,12 +655,16 @@ public class TaskProvisioningService {
                 // saving to the storage does not care about the type
                 storeOutputInFileStorage(run, currentOutputStorageData, outputName);
                 // based on parsed type build the response
-                taskRunParameterValues.add(currentOutput.getType().buildTaskRunParameterValue(
+                taskRunParameterValues.add(currentOutput
+                    .getType()
+                    .createOutputProvisioningEndpointResponse(
                     currentOutputStorageData,
                     run.getId(),
                     outputName)
                 );
             }
+
+            multipleErrors.addAll(checkAfterExecutionMatches(run));
 
             // throw multiple errors if exist
             if (!multipleErrors.isEmpty()) {
@@ -545,23 +677,15 @@ public class TaskProvisioningService {
         }
     }
 
-    private void validateFiles(Run run, Output currentOutput, StorageData currentOutputStorageData)
-        throws TypeValidationException {
+    private void validateFiles(
+        Run run,
+        Parameter currentOutput,
+        StorageData currentOutputStorageData
+    ) throws TypeValidationException {
         log.info("Posting Outputs Archive: "
             + "validating files and directories contents and structure...");
         currentOutput.getType().validateFiles(run, currentOutput, currentOutputStorageData);
         log.info("Posting Outputs Archive: validated finished...");
-    }
-
-    public Charset getStorageCharset(String charset) {
-        return switch (charset.toUpperCase()) {
-            case "US_ASCII" -> StandardCharsets.US_ASCII;
-            case "ISO_8859_1" -> StandardCharsets.ISO_8859_1;
-            case "UTF_16LE" -> StandardCharsets.UTF_16LE;
-            case "UTF_16BE" -> StandardCharsets.UTF_16BE;
-            case "UTF_16" -> StandardCharsets.UTF_16;
-            default -> StandardCharsets.UTF_8;
-        };
     }
 
     private void storeOutputInFileStorage(
@@ -587,7 +711,8 @@ public class TaskProvisioningService {
         log.info("Posting Outputs Archive: stored");
     }
 
-    private void saveOutput(Run run, Output currentOutput, StorageData outputValue) {
+    private void saveOutput(Run run, Parameter currentOutput, StorageData outputValue)
+        throws ProvisioningException {
         log.info("Posting Outputs Archive: saving...");
         currentOutput.getType().persistResult(run, currentOutput, outputValue);
         log.info("Posting Outputs Archive: saved...");
@@ -675,31 +800,90 @@ public class TaskProvisioningService {
         return data.peek().getData();
     }
 
-    private List<TaskRunParameterValue> buildTaskRunParameterValues(Run run, ParameterType type) {
+    public File retrieveSingleRunCollectionItemIO(
+        String runId,
+        String parameterName,
+        ParameterType type,
+        String[] indexes
+    ) throws ProvisioningException {
+        log.info("Get IO file from storage: searching...");
+
+        String io = type.equals(ParameterType.INPUT) ? "inputs" : "outputs";
+        Storage storage = new Storage("task-run-" + io + "-" + runId);
+        String collectionItem = parameterName
+            + "/"
+            + Arrays.stream(indexes).sequential().collect(Collectors.joining("/"));
+        StorageData data = new StorageData(collectionItem, storage.getIdStorage());
+
+        log.info("Get IO file from storage: read file " + collectionItem + " from storage...");
+        try {
+            data = fileStorageHandler.readStorageData(data);
+        } catch (FileStorageException e) {
+            AppEngineError error = ErrorBuilder.buildParamRelatedError(
+                ErrorCode.STORAGE_READING_FILE_FAILED,
+                parameterName,
+                e.getMessage()
+            );
+            throw new ProvisioningException(error);
+        }
+
+        log.info("Get IO file from storage: done");
+        return data.peek().getData();
+    }
+
+    private List<TaskRunParameterValue> buildTaskRunParameterValues(Run run, ParameterType type)
+        throws ProvisioningException {
         List<TaskRunParameterValue> parameterValues = new ArrayList<>();
         @SuppressWarnings("checkstyle:LineLength")
         List<TypePersistence> results = typePersistenceRepository.findTypePersistenceByRunIdAndParameterType(run.getId(), type);
         if (type.equals(ParameterType.INPUT)) {
-            Set<Input> inputs = run.getTask().getInputs();
+            Set<Parameter> inputs = run
+                .getTask()
+                .getParameters()
+                .stream()
+                .filter(parameter -> parameter.getParameterType().equals(ParameterType.INPUT))
+                .collect(Collectors.toSet());
+
             for (TypePersistence result : results) {
                 // based on the type of the parameter assign the type
-                Input inputForType = inputs
+                Optional<Parameter> inputForTypeOptional = inputs
                     .stream()
-                    .filter(input -> input.getName().equalsIgnoreCase(result.getParameterName()))
-                    .findFirst()
-                    .get();
-                parameterValues.add(inputForType.getType().buildTaskRunParameterValue(result));
+                    .filter(parameter -> parameter
+                    .getName()
+                    .equalsIgnoreCase(result.getParameterName()))
+                    .findFirst();
+                if (inputForTypeOptional.isPresent()) {
+                    parameterValues.add(inputForTypeOptional
+                        .get()
+                        .getType()
+                        .createOutputProvisioningEndpointResponse(result));
+                }
+
             }
         } else {
-            Set<Output> outputs = run.getTask().getOutputs();
+            Set<Parameter> outputs = run
+                .getTask()
+                .getParameters()
+                .stream()
+                .filter(parameter -> parameter.getParameterType().equals(ParameterType.OUTPUT))
+                .collect(Collectors.toSet());
+
             for (TypePersistence result : results) {
                 // based on the type of the parameter assign the type
-                Output outputForType = outputs
+                Optional<Parameter> outputForTypeOptional = outputs
                     .stream()
-                    .filter(output -> output.getName().equalsIgnoreCase(result.getParameterName()))
-                    .findFirst()
-                    .get();
-                parameterValues.add(outputForType.getType().buildTaskRunParameterValue(result));
+                    .filter(parameter -> parameter
+                    .getName()
+                    .equalsIgnoreCase(result.getParameterName()))
+                    .findFirst();
+                if (outputForTypeOptional.isPresent()) {
+                    parameterValues
+                        .add(outputForTypeOptional
+                        .get()
+                        .getType()
+                        .createOutputProvisioningEndpointResponse(result));
+                }
+
             }
         }
 
@@ -725,7 +909,7 @@ public class TaskProvisioningService {
         StateAction action = new StateAction();
         action.setStatus("success");
 
-        TaskDescription description = makeTaskDescription(run.getTask());
+        TaskDescription description = taskService.makeTaskDescription(run.getTask());
         Resource resource = new Resource(
             run.getId(),
             description,
@@ -756,6 +940,9 @@ public class TaskProvisioningService {
         }
         log.info("Running Task: valid run");
 
+
+        checkBeforeExecutionMatches(run);
+
         log.info("Running Task: contacting scheduler...");
         Schedule schedule = new Schedule();
         schedule.setRun(run);
@@ -773,6 +960,97 @@ public class TaskProvisioningService {
         return action;
     }
 
+    private void checkBeforeExecutionMatches(Run run) throws ProvisioningException {
+        AppEngineError error;
+        List<Match> matches = run.getTask().getMatches().stream().filter(match ->
+            match.getCheckTime().equals(CheckTime.BEFORE_EXECUTION)).toList();
+
+        if (!matches.isEmpty()) {
+            for (Match match : matches) {
+                CollectionPersistence matching = collectionPersistenceRepository
+                    .findCollectionPersistenceByParameterNameAndRunIdAndParameterType(match
+                    .getMatching()
+                    .getName(), run.getId(), ParameterType.INPUT);
+                CollectionPersistence matched = collectionPersistenceRepository
+                    .findCollectionPersistenceByParameterNameAndRunIdAndParameterType(match
+                    .getMatched()
+                    .getName(), run.getId(), ParameterType.INPUT);
+                // compare size
+                if (!Objects.equals(matching.getSize(), matched.getSize())) {
+                    error = ErrorBuilder.build(ErrorCode.INTERNAL_NOT_MATCHING_DIFF_SIZE);
+                    throw new ProvisioningException(error);
+                }
+                // map indexes
+                for (TypePersistence item : matching.getItems()) {
+                    String matchingItemIndex = item
+                        .getCollectionIndex()
+                        .substring(item.getCollectionIndex().lastIndexOf('['));
+                    List<TypePersistence> matchedItemIndexes = matched
+                        .getItems()
+                        .stream()
+                        .filter(typePersistence -> typePersistence
+                        .getCollectionIndex()
+                        .endsWith(matchingItemIndex))
+                        .toList();
+                    if (matchedItemIndexes.size() != 1) {
+                        error = ErrorBuilder
+                            .build(ErrorCode.INTERNAL_NOT_MATCHING_NOT_ALIGNED_INDEXES);
+                        throw new ProvisioningException(error);
+                    }
+                }
+            }
+        }
+    }
+
+    private List<AppEngineError> checkAfterExecutionMatches(Run run) throws ProvisioningException {
+        List<AppEngineError> multipleErrors = new ArrayList<>();
+        List<Match> matches = run.getTask().getMatches().stream().filter(match ->
+            match.getCheckTime().equals(CheckTime.AFTER_EXECUTION)).toList();
+
+        if (!matches.isEmpty()) {
+            for (Match match : matches) {
+                CollectionPersistence matching = collectionPersistenceRepository
+                    .findCollectionPersistenceByParameterNameAndRunId(match
+                    .getMatching()
+                    .getName(), run.getId());
+                CollectionPersistence matched = collectionPersistenceRepository
+                    .findCollectionPersistenceByParameterNameAndRunId(match
+                    .getMatched()
+                    .getName(), run.getId());
+                // compare size
+                if (!Objects.equals(matching.getSize(), matched.getSize())) {
+                    ParameterError parameterError = new ParameterError(matching.getParameterName());
+                    AppEngineError error = ErrorBuilder
+                        .build(ErrorCode.INTERNAL_NOT_MATCHING_DIFF_SIZE, parameterError);
+                    multipleErrors.add(error);
+                }
+                // map indexes
+                for (TypePersistence item : matching.getItems()) {
+                    String matchingItemIndex = item
+                        .getCollectionIndex()
+                        .substring(item.getCollectionIndex().lastIndexOf('['));
+                    List<TypePersistence> matchedItemIndexes = matched
+                        .getItems()
+                        .stream()
+                        .filter(typePersistence -> typePersistence
+                        .getCollectionIndex()
+                        .endsWith(matchingItemIndex))
+                        .toList();
+                    if (matchedItemIndexes.size() != 1) {
+                        ParameterError parameterError = new ParameterError(
+                            matching.getParameterName()
+                        );
+                        AppEngineError error = ErrorBuilder
+                            .build(ErrorCode
+                            .INTERNAL_NOT_MATCHING_NOT_ALIGNED_INDEXES, parameterError);
+                        multipleErrors.add(error);
+                    }
+                }
+            }
+        }
+        return multipleErrors;
+    }
+
     private StateAction updateToProvisioned(Run run) throws ProvisioningException {
         log.info("Provisioning: update state to PROVISIONED...");
         if (!run.getState().equals(TaskRunState.CREATED)) {
@@ -787,33 +1065,10 @@ public class TaskProvisioningService {
         return createStateAction(run, TaskRunState.PROVISIONED);
     }
 
-    public TaskDescription makeTaskDescription(Task task) {
-        TaskDescription taskDescription = new TaskDescription(
-            task.getIdentifier(),
-            task.getName(),
-            task.getNamespace(),
-            task.getVersion(),
-            task.getDescription()
-        );
-        Set<TaskAuthor> descriptionAuthors = new HashSet<>();
-        for (Author author : task.getAuthors()) {
-            TaskAuthor taskAuthor = new TaskAuthor(
-                author.getFirstName(),
-                author.getLastName(),
-                author.getOrganization(),
-                author.getEmail(),
-                author.isContact()
-            );
-            descriptionAuthors.add(taskAuthor);
-        }
-        taskDescription.setAuthors(descriptionAuthors);
-        return taskDescription;
-    }
-
     public TaskRunResponse retrieveRun(String runId) throws ProvisioningException {
         log.info("Retrieving Run: retrieving...");
         Run run = getRunIfValid(runId);
-        TaskDescription description = makeTaskDescription(run.getTask());
+        TaskDescription description = taskService.makeTaskDescription(run.getTask());
         log.info("Retrieving Run: retrieved");
         return new TaskRunResponse(
             UUID.fromString(runId),
@@ -823,5 +1078,110 @@ public class TaskProvisioningService {
             run.getUpdatedAt(),
             run.getLastStateTransitionAt()
         );
+    }
+
+    public JsonNode provisionCollectionItem(
+        String runId,
+        String name,
+        Object value,
+        String[] indexesArray)
+        throws ProvisioningException, TypeValidationException {
+        // get run and make sure it is valid
+        log.info("ProvisionCollectionItem: finding associated task run...");
+        Run run = getRunIfValid(runId);
+        log.info("ProvisionCollectionItem: found");
+
+        // create the collection or get if valid
+        Parameter parameter = getParameter(name, ParameterType.INPUT, run);
+        if (Objects.isNull(parameter)) {
+            log.info("ProvisionCollectionItem: parameter does not exist");
+            AppEngineError error = ErrorBuilder.build(
+                ErrorCode.INTERNAL_PARAMETER_DOES_NOT_EXIST,
+                new ParameterError(name)
+            );
+            throw new ProvisioningException(error);
+        }
+        if (!(parameter.getType() instanceof CollectionType)) {
+            log.info("ProvisionCollectionItem: parameter is not a collection ");
+            AppEngineError error = ErrorBuilder.build(
+                ErrorCode.INTERNAL_PARAMETER_TYPE_ERROR,
+                new ParameterError(name)
+            );
+            throw new ProvisioningException(error);
+        }
+
+        log.info("ProvisionCollectionItem: preparing generic provision...");
+
+        // prepare item as generic provision
+        GenericParameterCollectionItemProvision
+            genericParameterProvision = new GenericParameterCollectionItemProvision();
+
+        if (value instanceof JsonNode) {
+            try {
+                ObjectMapper mapper = new ObjectMapper();
+                genericParameterProvision = mapper.treeToValue(
+                    (JsonNode) value,
+                    GenericParameterCollectionItemProvision.class
+                );
+                genericParameterProvision.setParameterName(name);
+            } catch (JsonProcessingException e) {
+                log.info("ProvisionCollectionItem: item provision is not valid");
+                AppEngineError error = ErrorBuilder.build(
+                    ErrorCode.INTERNAL_JSON_PROCESSING_ERROR,
+                    new ParameterError(name)
+                );
+                throw new ProvisioningException(error);
+            }
+        } else if (value instanceof File) {
+            genericParameterProvision.setParameterName(name);
+            genericParameterProvision.setValue(value);
+        }
+
+        genericParameterProvision.setRunId(runId);
+        log.info("ProvisionCollectionItem: generic provision prepared");
+
+        log.info("ProvisionCollectionItem: validating item...");
+        validateProvisionValuesAgainstTaskType(genericParameterProvision, run, indexesArray);
+        log.info("ProvisionCollectionItem: item validated");
+
+        JsonNode provision = null;
+        if (value instanceof JsonNode) {
+            provision = (JsonNode) value;
+            ObjectNode objectNode = (new ObjectMapper()).createObjectNode();
+            objectNode.put("index", name + "/" + String.join("/", indexesArray));
+            objectNode.set("value", provision.get("value"));
+            provision = objectNode;
+        } else if (value instanceof File) {
+            ObjectNode objectNode = (new ObjectMapper()).createObjectNode();
+            objectNode.put("index", name + "/" + String.join("/", indexesArray));
+            objectNode.put("value", ((File) value).getAbsolutePath());
+            provision = objectNode;
+        }
+
+        // store item in storage -> crawl indexes and store
+        log.info("ProvisionCollectionItem: storing provision to storage...");
+        saveProvisionInStorage(name, provision, run);
+        log.info("ProvisionCollectionItem: stored");
+
+        // store item in the database
+        log.info("ProvisionCollectionItem: validating item...");
+        saveInDatabase(name, provision, run);
+        log.info("ProvisionCollectionItem: item validated");
+
+        changeStateToProvisioned(run);
+
+        return getInputParameterType(name, run)
+            .createInputProvisioningEndpointResponse(provision, run);
+    }
+
+    public Charset getStorageCharset(String charset) {
+        return switch (charset.toUpperCase()) {
+            case "US_ASCII" -> StandardCharsets.US_ASCII;
+            case "ISO_8859_1" -> StandardCharsets.ISO_8859_1;
+            case "UTF_16LE" -> StandardCharsets.UTF_16LE;
+            case "UTF_16BE" -> StandardCharsets.UTF_16BE;
+            case "UTF_16" -> StandardCharsets.UTF_16;
+            default -> StandardCharsets.UTF_8;
+        };
     }
 }
