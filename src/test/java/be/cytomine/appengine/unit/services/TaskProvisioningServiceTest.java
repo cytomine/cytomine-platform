@@ -260,13 +260,18 @@ public class TaskProvisioningServiceTest {
     @DisplayName("Failed to retrieve a zip archive and throw 'ProvisioningException' when provisions are empty")
     @Test
     public void retrieveIOZipArchiveShouldThrowProvisioningExceptionWhenEmptyProvisions() throws Exception {
+        Run run = TaskUtils.createTestRun(false);
+        run.setState(TaskRunState.PROVISIONED);
+
         when(runRepository.findById(run.getId())).thenReturn(Optional.of(run));
+        when(typePersistenceRepository.findTypePersistenceByRunIdAndParameterType(run.getId(), ParameterType.INPUT))
+            .thenReturn(List.of());
 
         ProvisioningException exception = assertThrows(
             ProvisioningException.class,
             () -> taskProvisioningService.retrieveIOZipArchive(run.getId().toString(), ParameterType.INPUT)
         );
-        assertEquals("run is in invalid state", exception.getMessage());
+        assertEquals("provisions not found", exception.getMessage());
     }
 
     @DisplayName("Successfully save the outputs archive")
