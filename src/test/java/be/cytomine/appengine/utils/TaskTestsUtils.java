@@ -8,6 +8,7 @@ import java.util.UUID;
 
 import be.cytomine.appengine.dto.inputs.task.GenericParameterCollectionItemProvision;
 import be.cytomine.appengine.dto.inputs.task.ParameterType;
+import be.cytomine.appengine.models.task.number.NumberType;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -155,7 +156,7 @@ public class TaskTestsUtils {
                 break;
             case "number":
                 provision.setType(ParameterType.NUMBER);
-                provision.setValue(Double.parseDouble(value));
+                provision.setValue(NumberType.parseDouble(value));
                 break;
             case "string":
                 provision.setType(ParameterType.STRING);

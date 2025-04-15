@@ -2,6 +2,8 @@ package be.cytomine.appengine.services;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -1170,5 +1172,16 @@ public class TaskProvisioningService {
 
         return getInputParameterType(name, run)
             .createInputProvisioningEndpointResponse(provision, run);
+    }
+
+    public Charset getStorageCharset(String charset) {
+        return switch (charset.toUpperCase()) {
+            case "US_ASCII" -> StandardCharsets.US_ASCII;
+            case "ISO_8859_1" -> StandardCharsets.ISO_8859_1;
+            case "UTF_16LE" -> StandardCharsets.UTF_16LE;
+            case "UTF_16BE" -> StandardCharsets.UTF_16BE;
+            case "UTF_16" -> StandardCharsets.UTF_16;
+            default -> StandardCharsets.UTF_8;
+        };
     }
 }

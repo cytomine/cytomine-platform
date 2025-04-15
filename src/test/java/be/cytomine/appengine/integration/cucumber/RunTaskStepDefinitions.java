@@ -686,7 +686,7 @@ public class RunTaskStepDefinitions {
         persistedTask.setRam(ram);
         persistedTask.setCpus(Integer.parseInt(cpus));
         persistedTask.setGpus(Integer.parseInt(gpus));
-        persistedTask = taskRepository.save(persistedTask);
+        persistedTask = taskRepository.saveAndFlush(persistedTask);
     }
 
     @And("the task has requested {string} RAM, {string} CPUs, and {string} GPUs")
@@ -699,7 +699,10 @@ public class RunTaskStepDefinitions {
     @And("a task run has been created with {string}")
     public void createTaskRun(String uuid) {
         persistedRun = new Run(UUID.fromString(uuid), TaskRunState.CREATED, persistedTask);
-        persistedRun = runRepository.save(persistedRun);
+//        persistedRun = runRepository.save(persistedRun);
+        persistedTask.setRuns(List.of(persistedRun));
+        persistedTask = taskRepository.saveAndFlush(persistedTask);
+
     }
 
     @And("a user provisioned all the parameters")
@@ -715,6 +718,9 @@ public class RunTaskStepDefinitions {
                 apiClient.provisionInput(persistedRun.getId().toString(), name, type, value);
             } catch (RestClientResponseException e) {
                 Assertions.fail("Provisioning '" + name + "' failed: " + e.getMessage());
+            } catch (JsonProcessingException e)
+            {
+                throw new RuntimeException(e);
             }
         }
     }
