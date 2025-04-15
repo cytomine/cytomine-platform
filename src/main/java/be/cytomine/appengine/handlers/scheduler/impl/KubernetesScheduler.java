@@ -3,6 +3,7 @@ package be.cytomine.appengine.handlers.scheduler.impl;
 import java.io.File;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -317,6 +318,11 @@ public class KubernetesScheduler implements SchedulerHandler {
     @Override
     @PostConstruct
     public void monitor() throws SchedulingException {
+        if (Arrays.asList(environment.getActiveProfiles()).contains("test")) {
+            log.info("Monitor: disabled in test mode");
+            return;
+        }
+
         log.info("Monitor: add informer to the cluster");
         kubernetesClient
             .pods()
