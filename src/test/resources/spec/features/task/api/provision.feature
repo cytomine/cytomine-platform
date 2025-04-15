@@ -42,6 +42,8 @@ Feature: [URS00003-TASK] Provision a task run
       | com.cytomine.dummy.identity.wsi                   | 1.0.0        | /task/id/runs                |
       | com.cytomine.dummy.identity.file                  | 1.0.0        | /task/namespace/version/runs |
       | com.cytomine.dummy.identity.file                  | 1.0.0        | /task/id/runs                |
+      | com.cytomine.dummy.identity.integer.collection      | 0.1.0        | /task/namespace/version/runs |
+      | com.cytomine.dummy.identity.integer.collection      | 0.1.0        | /task/id/runs                |
 
 
   Scenario Outline: successful provisioning of a task run with one input parameter using provisioning endpoint
@@ -80,6 +82,7 @@ Feature: [URS00003-TASK] Provision a task run
       | com.cytomine.dummy.identity.image              | 1.0.0        | input      | image       | binary                                                                                                                                                                                                                              | binary                                                                                                                                                                                      | CREATED                | PROVISIONED        | binary                                                                                                                                                                                      |
       | com.cytomine.dummy.identity.wsi                | 1.0.0        | input      | wsi         | binary                                                                                                                                                                                                                              | binary                                                                                                                                                                                      | CREATED                | PROVISIONED        | binary                                                                                                                                                                                      |
       | com.cytomine.dummy.identity.file               | 1.0.0        | input      | file        | binary                                                                                                                                                                                                                              | binary                                                                                                                                                                                      | CREATED                | PROVISIONED        | binary                                                                                                                                                                                      |
+      | com.cytomine.dummy.identity.integer.collection   | 0.1.0        | input      | array       | {\"param_name\": \"input\", \"value\": [ { \"index\": 0, \"value\": 100 }, { \"index\": 1, \"value\": 200 } ] }                                                                                                                     | [ { \"index\": 0, \"value\": 100 }, { \"index\": 1, \"value\": 200 } ]                                                                                                                                                                                 | CREATED                | PROVISIONED        | directory                                                                                                                                                                                   |
 
 
   Scenario Outline: successful partial provisioning of a task run with two input parameters
@@ -183,6 +186,7 @@ Feature: [URS00003-TASK] Provision a task run
       | com.cytomine.dummy.identity.image              | 1.0.0        | binary                                              | my_input           | image              | binary                                                                                      | CREATED                | {\"error_code\": \"APPE-internal-parameter-not-found\", \"message\": \"parameter not found\", \"details\": {\"param_name\": \"my_input\"}}  |
       | com.cytomine.dummy.identity.wsi                | 1.0.0        | binary                                              | my_input           | wsi                | binary                                                                                      | CREATED                | {\"error_code\": \"APPE-internal-parameter-not-found\", \"message\": \"parameter not found\", \"details\": {\"param_name\": \"my_input\"}}  |
       | com.cytomine.dummy.identity.file               | 1.0.0        | binary                                              | my_input           | file               | binary                                                                                      | CREATED                | {\"error_code\": \"APPE-internal-parameter-not-found\", \"message\": \"parameter not found\", \"details\": {\"param_name\": \"my_input\"}}  |
+      | com.cytomine.dummy.identity.integer.collection   | 0.1.0        | [1, 1, 2]                                           | my_input           | array              |{\"param_name\": \"my_input\", \"value\": [1, 1, 2]}                                         | CREATED                | {\"error_code\": \"APPE-internal-parameter-not-found\", \"message\": \"parameter not found\", \"details\": {\"param_name\": \"my_input\"}}  |
 
 
   Scenario Outline: successful re-provisioning of a parameter for a task run
@@ -216,6 +220,28 @@ Feature: [URS00003-TASK] Provision a task run
       | com.cytomine.dummy.identity.image              | 1.0.0        | input      | image       | binary (content 1)                                 | binary (content 2)                                 | binary (content 2)                                                                         | PROVISIONED    | binary (content 1)                                 | binary (content 2)                                 |
       | com.cytomine.dummy.identity.wsi                | 1.0.0        | input      | wsi         | binary (content 1)                                 | binary (content 2)                                 | binary (content 2)                                                                         | PROVISIONED    | binary (content 1)                                 | binary (content 2)                                 |
       | com.cytomine.dummy.identity.file               | 1.0.0        | input      | file        | binary (content 1)                                 | binary (content 2)                                 | binary (content 2)                                                                         | PROVISIONED    | binary (content 1)                                 | binary (content 2)                                 |
+
+
+  Scenario Outline: successful single item provisioning of a task run with one input collection parameter using provisioning endpoint
+  See "src/main/resources/spec/api/openapi_spec_v0.1.0.yml" file, in particular the paths:
+  - '/task-runs/{run_id}/input-provisions/{param_name}'
+
+    Given a task has been successfully uploaded
+    And this task has "<task_namespace>" and "<task_version>"
+    And this task has only one input parameter "<param_name>" of type "array"
+    And this parameter has no validation rules
+    And a task run has been created for this task
+    And this task run is attributed an id in UUID format
+    And this task run has not been provisioned yet and is therefore in state "<task_run_initial_state>"
+    When a user calls the provisioning endpoint with "<payload>" to provision collection "<param_name>" with "<item_value>" of type "<item_type>" in <index>
+    Then the value "<param_value>" is saved and associated collection "<param_name>" in the database
+    And a input file named "<index>" is created in the task run storage "task-run-"+UUID within "<param_name>"
+    And the task run states changes to "<task_run_new_state>" because the task is now completely provisioned
+    And the App Engine returns a '200 OK' HTTP response with the updated task run information as JSON payload
+
+    Examples:
+      | task_namespace                                   | task_version | param_name | item_type  | payload    | index | item_value  | task_run_initial_state | task_run_new_state | param_file_content   |
+      | com.cytomine.dummy.identity.file.collection      | 0.1.0        | input      | file       | item       | 0     | some_random_value       | CREATED                | PROVISIONED        | content             |
 
   # TODO failed re-provisioning of a task of which the state is not one of {'CREATED', 'PROVISIONED'}
 

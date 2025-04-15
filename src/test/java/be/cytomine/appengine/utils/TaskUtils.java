@@ -11,6 +11,8 @@ import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import be.cytomine.appengine.models.task.Parameter;
+import be.cytomine.appengine.models.task.ParameterType;
 import org.springframework.core.io.ClassPathResource;
 
 import be.cytomine.appengine.dto.inputs.task.UploadTaskArchive;
@@ -18,8 +20,6 @@ import be.cytomine.appengine.handlers.StorageData;
 import be.cytomine.appengine.handlers.StorageDataEntry;
 import be.cytomine.appengine.handlers.StorageDataType;
 import be.cytomine.appengine.models.task.Author;
-import be.cytomine.appengine.models.task.Input;
-import be.cytomine.appengine.models.task.Output;
 import be.cytomine.appengine.models.task.Run;
 import be.cytomine.appengine.models.task.Task;
 import be.cytomine.appengine.models.task.Type;
@@ -52,30 +52,32 @@ public class TaskUtils {
         return author;
     }
 
-    public static Input createTestInput(String name, boolean binaryType) {
+    public static Parameter createTestInput(String name, boolean binaryType) {
         Type type = binaryType ? new FileType() : new IntegerType();
         type.setCharset("UTF-8");
 
-        Input input = new Input();
+        Parameter input = new Parameter();
         input.setName(name);
         input.setDisplayName("Input");
         input.setDescription("Input description");
         input.setOptional(false);
         input.setType(type);
+        input.setParameterType(ParameterType.INPUT);
 
         return input;
     }
 
-    public static Output createTestOutput(String name, boolean binaryType) {
+    public static Parameter createTestOutput(String name, boolean binaryType) {
         Type type = binaryType ? new FileType() : new IntegerType();
         type.setCharset("UTF-8");
 
-        Output output = new Output();
+        Parameter output = new Parameter();
         output.setName(name);
         output.setDisplayName("Output");
         output.setDescription("output description");
         output.setOptional(false);
         output.setType(type);
+        output.setParameterType(ParameterType.OUTPUT);
 
         return output;
     }
@@ -88,8 +90,7 @@ public class TaskUtils {
         task.setStorageReference("storageReference");
         task.setDescription("Test Task Description");
         task.setAuthors(Set.of(createTestAuthor()));
-        task.setInputs(Set.of(createTestInput("name", binaryType)));
-        task.setOutputs(Set.of(createTestOutput("out", binaryType)));
+        task.setParameters(Set.of(createTestInput("name", binaryType), createTestOutput("out", binaryType)));
 
         return task;
     }
@@ -102,8 +103,10 @@ public class TaskUtils {
         task.setStorageReference("storageReference");
         task.setDescription("Test Task Description");
         task.setAuthors(Set.of(createTestAuthor()));
-        task.setInputs(Set.of(createTestInput("name 1", false), createTestInput("name 2", false)));
-        task.setOutputs(Set.of(createTestOutput("out 1", false), createTestOutput("out 2", false)));
+        task.setParameters(Set.of(createTestInput("name 1", false),
+            createTestInput("name 2", false),
+            createTestOutput("out 1", false),
+            createTestOutput("out 2", false)));
 
         return task;
     }

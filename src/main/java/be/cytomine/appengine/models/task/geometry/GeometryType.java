@@ -24,7 +24,7 @@ import be.cytomine.appengine.exceptions.TypeValidationException;
 import be.cytomine.appengine.handlers.StorageData;
 import be.cytomine.appengine.handlers.StorageDataEntry;
 import be.cytomine.appengine.handlers.StorageDataType;
-import be.cytomine.appengine.models.task.Output;
+import be.cytomine.appengine.models.task.Parameter;
 import be.cytomine.appengine.models.task.ParameterType;
 import be.cytomine.appengine.models.task.Run;
 import be.cytomine.appengine.models.task.Type;
@@ -75,7 +75,7 @@ public class GeometryType extends Type {
     @Override
     public void validateFiles(
         Run run,
-        Output currentOutput,
+        Parameter currentOutput,
         StorageData currentOutputStorageData)
         throws TypeValidationException {
 
@@ -148,6 +148,7 @@ public class GeometryType extends Type {
             persistedProvision.setParameterType(ParameterType.INPUT);
             persistedProvision.setParameterName(parameterName);
             persistedProvision.setRunId(runId);
+            persistedProvision.setProvisioned(true);
             persistedProvision.setValue(value);
             geometryPersistenceRepository.save(persistedProvision);
         } else {
@@ -158,7 +159,7 @@ public class GeometryType extends Type {
 
 
     @Override
-    public void persistResult(Run run, Output currentOutput, StorageData outputValue) {
+    public void persistResult(Run run, Parameter currentOutput, StorageData outputValue) {
         GeometryPersistenceRepository geometryPersistenceRepository = AppEngineApplicationContext.getBean(GeometryPersistenceRepository.class);
         GeometryPersistence result = geometryPersistenceRepository.findGeometryPersistenceByParameterNameAndRunIdAndParameterType(currentOutput.getName(), run.getId(), ParameterType.OUTPUT);
         String output = FileHelper.read(outputValue.peek().getData(), getStorageCharset());
@@ -177,7 +178,7 @@ public class GeometryType extends Type {
     }
 
     @Override
-    public StorageData mapToStorageFileData(JsonNode provision) {
+    public StorageData mapToStorageFileData(JsonNode provision, Run run) {
         String value = provision.get("value").asText();
         String parameterName = provision.get("param_name").asText();
         File data = FileHelper.write(parameterName, value.getBytes(getStorageCharset()));
@@ -186,7 +187,7 @@ public class GeometryType extends Type {
     }
 
     @Override
-    public JsonNode createTypedParameterResponse(JsonNode provision, Run run) {
+    public JsonNode createInputProvisioningEndpointResponse(JsonNode provision, Run run) {
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode provisionedParameter = mapper.createObjectNode();
         provisionedParameter.put("param_name", provision.get("param_name").asText());
@@ -197,7 +198,7 @@ public class GeometryType extends Type {
     }
 
     @Override
-    public TaskRunParameterValue buildTaskRunParameterValue(StorageData output, UUID id, String outputName) {
+    public TaskRunParameterValue createOutputProvisioningEndpointResponse(StorageData output, UUID id, String outputName) {
         String outputValue = FileHelper.read(output.peek().getData(), getStorageCharset());
 
         GeometryValue geometryValue = new GeometryValue();
@@ -210,7 +211,7 @@ public class GeometryType extends Type {
     }
 
     @Override
-    public TaskRunParameterValue buildTaskRunParameterValue(TypePersistence typePersistence) {
+    public TaskRunParameterValue createOutputProvisioningEndpointResponse(TypePersistence typePersistence) {
         GeometryPersistence geometryPersistence = (GeometryPersistence) typePersistence;
         GeometryValue geometryValue = new GeometryValue();
         geometryValue.setParameterName(geometryPersistence.getParameterName());

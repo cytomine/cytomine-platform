@@ -20,4 +20,9 @@ public interface TypePersistenceRepository extends JpaRepository<TypePersistence
         UUID run,
         ParameterType parameterType
     );
+
+    List<TypePersistence> findTypePersistenceByRunIdAndParameterTypeAndParameterNameIn(
+        UUID run,
+        ParameterType parameterType,
+        List<String> parameterNames);
 }

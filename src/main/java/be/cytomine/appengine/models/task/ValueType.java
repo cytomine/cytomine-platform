@@ -9,5 +9,6 @@ public enum ValueType {
     GEOMETRY,
     IMAGE,
     WSI,
-    FILE
+    FILE,
+    ARRAY
 }

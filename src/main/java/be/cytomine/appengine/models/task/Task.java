@@ -17,6 +17,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import be.cytomine.appengine.models.BaseEntity;
+import be.cytomine.appengine.models.Match;
 
 @Entity
 @Table(name = "task", uniqueConstraints = @UniqueConstraint(columnNames = {"namespace", "version"}))
@@ -52,20 +53,22 @@ public class Task extends BaseEntity {
     private String imageName;
 
     private int cpus;
+
     private int gpus;
+
     private String ram;
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<Author> authors;
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    private Set<Input> inputs;
-
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<Output> outputs;
+    private Set<Parameter> parameters;
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<Run> runs;
+
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private List<Match> matches;
 
     public Task(
         UUID identifier,

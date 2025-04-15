@@ -1,15 +1,18 @@
 package be.cytomine.appengine.utils;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -26,9 +29,9 @@ import be.cytomine.appengine.dto.inputs.task.TaskInput;
 import be.cytomine.appengine.dto.inputs.task.TaskOutput;
 import be.cytomine.appengine.dto.inputs.task.TaskRun;
 import be.cytomine.appengine.dto.inputs.task.TaskRunParameterValue;
-import be.cytomine.appengine.models.task.Input;
-import be.cytomine.appengine.models.task.Output;
+import be.cytomine.appengine.models.task.Parameter;
 import be.cytomine.appengine.states.TaskRunState;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @Component
 public class ApiClient {
@@ -53,6 +56,23 @@ public class ApiClient {
 
     public <T> ResponseEntity<T> get(String url, Class<T> responseType) {
         return restTemplate.getForEntity(url, responseType);
+    }
+
+    public <T> ResponseEntity<Resource> getData(String url, HttpEntity<Object> entity, Map<String,String> params) {
+        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(url);
+
+        for (Map.Entry<String, String> entry : params.entrySet()) {
+            builder.queryParam(entry.getKey(), entry.getValue());
+        }
+        String finalUrl = builder.toUriString();
+
+        return restTemplate.exchange(
+            finalUrl,
+            HttpMethod.GET,
+            entity,
+            Resource.class
+        );
+
     }
 
     public <T> ResponseEntity<T> get(String url, ParameterizedTypeReference<T> responseType) {
@@ -81,6 +101,17 @@ public class ApiClient {
 
     public <T> ResponseEntity<T> put(String url, HttpEntity<Object> entity, Class<T> responseType) {
         return restTemplate.exchange(url, HttpMethod.PUT, entity, responseType);
+    }
+
+    public <T> ResponseEntity<T> put(String url, HttpEntity<Object> entity, Class<T> responseType, Map<String, String> params) {
+        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(url);
+
+        for (Map.Entry<String, String> entry : params.entrySet()) {
+            builder.queryParam(entry.getKey(), entry.getValue());
+        }
+        String finalUrl = builder.toUriString();
+
+        return restTemplate.exchange(finalUrl, HttpMethod.PUT, entity, responseType);
     }
 
     public <T> ResponseEntity<T> put(String url, HttpEntity<Object> entity, ParameterizedTypeReference<T> responseType) {
@@ -150,24 +181,24 @@ public class ApiClient {
         return get(url, new ParameterizedTypeReference<List<TaskOutput>>() {}).getBody();
     }
 
-    public List<Input> getInputs(String namespace, String version) {
+    public List<Parameter> getInputs(String namespace, String version) {
         String url = baseUrl + "/tasks/" + namespace + "/" + version + "/inputs";
-        return get(url, new ParameterizedTypeReference<List<Input>>() {}).getBody();
+        return get(url, new ParameterizedTypeReference<List<Parameter>>() {}).getBody();
     }
 
-    public List<Input> getInputs(String uuid) {
+    public List<Parameter> getInputs(String uuid) {
         String url = baseUrl + "/tasks/" + uuid + "/inputs";
-        return get(url, new ParameterizedTypeReference<List<Input>>() {}).getBody();
+        return get(url, new ParameterizedTypeReference<List<Parameter>>() {}).getBody();
     }
 
-    public List<Output> getOutputs(String namespace, String version) {
+    public List<Parameter> getOutputs(String namespace, String version) {
         String url = baseUrl + "/tasks/" + namespace + "/" + version + "/outputs";
-        return get(url, new ParameterizedTypeReference<List<Output>>() {}).getBody();
+        return get(url, new ParameterizedTypeReference<List<Parameter>>() {}).getBody();
     }
 
-    public List<Output> getOutputs(String uuid) {
+    public List<Parameter> getOutputs(String uuid) {
         String url = baseUrl + "/tasks/" + uuid + "/outputs";
-        return get(url, new ParameterizedTypeReference<List<Output>>() {}).getBody();
+        return get(url, new ParameterizedTypeReference<List<Parameter>>() {}).getBody();
     }
 
     public TaskRun createTaskRun(String namespace, String version) {
@@ -182,11 +213,11 @@ public class ApiClient {
         return get(baseUrl + "/task-runs/" + uuid, TaskRun.class).getBody();
     }
 
-    public JsonNode provisionInput(String uuid, String parameterName, String type, String value) {
+    public JsonNode provisionInput(String uuid, String parameterName, String type, String value)
+        throws JsonProcessingException
+    {
         HttpEntity<Object> entity = null;
-
-        Set<String> binaryTypes = Set.of("image", "wsi", "file");
-        if (binaryTypes.contains(type)) {
+        if (type.equals("image") || type.equals("wsi") || type.equals("file")) {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 
@@ -262,5 +293,49 @@ public class ApiClient {
         String response = get(url, String.class).getBody();
 
         return TaskTestsUtils.convertTo(response);
+    }
+
+    public JsonNode provisionInputPart(String uuid, String parameterName, String type, String value, int index)
+        throws JsonProcessingException
+    {
+        HttpEntity<Object> entity = null;
+        if (type.equals("image") || type.equals("wsi") || type.equals("file")) {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+            MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+            ByteArrayResource fileResource = new ByteArrayResource(value.getBytes()) {
+                @Override
+                public String getFilename() {
+                    return "file.txt";
+                }
+            };
+            body.add("file", fileResource);
+
+            entity = new HttpEntity<>(body, headers);
+        } else {
+            ObjectMapper mapper = new ObjectMapper();
+            ObjectNode jsonNode = mapper.valueToTree(
+                TaskTestsUtils.createProvisionPart(parameterName, type, value, index)
+            );
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            entity = new HttpEntity<>(jsonNode, headers);
+        }
+
+        Map<String,String> params = new HashMap<>();
+        params.put("value", String.valueOf(index));
+
+        return put(baseUrl + "/task-runs/" + uuid + "/input-provisions/" + parameterName + "/indexes", entity, JsonNode.class, params).getBody();
+    }
+
+    public Resource retrieveInputPart(String uuid, String parameterName, int index)  {
+
+        Map<String,String> params = new HashMap<>();
+        params.put("value", String.valueOf(index));
+
+        return getData(baseUrl + "/task-runs/" + uuid + "/input/" + parameterName + "/indexes", null, params).getBody();
     }
 }

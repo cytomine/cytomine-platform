@@ -42,6 +42,7 @@ Feature: [URS00002-TASK] Read task information
       | Task 7 | com.cytomine.dummy.identity.image              | 1.0.0        | acde070d-8c4c-4f0d-9d8a-162843c10333 | task-acde070d-8c4c-4f0d-9d8a-162843c10333-def |
       | Task 8 | com.cytomine.dummy.identity.wsi                | 1.0.0        | acde070d-8c4c-4f0d-9d8a-162843c10333 | task-acde070d-8c4c-4f0d-9d8a-162843c10333-def |
       | Task 9 | com.cytomine.dummy.identity.file               | 1.0.0        | acde070d-8c4c-4f0d-9d8a-162843c10333 | task-acde070d-8c4c-4f0d-9d8a-162843c10333-def |
+      | Task 10 | com.cytomine.dummy.identity.integer.collection       | 0.1.0       | acde070d-8c4c-4f0d-9d8a-162843c10333 | task-acde070d-8c4c-4f0d-9d8a-162843c10333-def |
 
 
   Scenario Outline: successful download of the descriptor file with id
@@ -80,6 +81,7 @@ Feature: [URS00002-TASK] Read task information
       | Task 7 | com.cytomine.dummy.identity.image              | 1.0.0        |
       | Task 8 | com.cytomine.dummy.identity.wsi                | 1.0.0        |
       | Task 9 | com.cytomine.dummy.identity.file               | 1.0.0        |
+      | Task 10 | com.cytomine.dummy.identity.integer.collection      | 0.1.0        |
 
 
   Scenario Outline: successful fetch of a task description using id
@@ -118,6 +120,7 @@ Feature: [URS00002-TASK] Read task information
       | Task 7 | com.cytomine.dummy.identity.image              | 1.0.0        |
       | Task 8 | com.cytomine.dummy.identity.wsi                | 1.0.0        |
       | Task 9 | com.cytomine.dummy.identity.file               | 1.0.0        |
+      | Task 10 | com.cytomine.dummy.identity.integer.collection     | 0.1.0        |
 
 
   Scenario Outline: successful fetch of a task's inputs using id
@@ -156,6 +159,7 @@ Feature: [URS00002-TASK] Read task information
       | Task 7 | com.cytomine.dummy.identity.image              | 1.0.0        |
       | Task 8 | com.cytomine.dummy.identity.wsi                | 1.0.0        |
       | Task 9 | com.cytomine.dummy.identity.file               | 1.0.0        |
+      | Task 10 | com.cytomine.dummy.identity.integer.collection      | 0.1.0        |
 
 
   Scenario Outline: successful fetch of a task's outputs with id
@@ -191,3 +195,19 @@ Feature: [URS00002-TASK] Read task information
       |                                                   |              | acde070d-8c4c-4f0d-9d8a-162843c10313 | GET    | /task/id                                 | APPE-internal-task-not-found |
       | com.cytomine.dummy.arithmetic.integer.subtraction | 1.0.0        |                                      | GET    | /task/namespace/version/descriptor.yml   | APPE-internal-task-not-found |
       |                                                   |              | acde070d-8c4c-4f0d-9d8b-162843c10333 | GET    | /task/id/descriptor.yml                  | APPE-internal-task-not-found |
+
+
+  Scenario Outline: successful fetch of a task's collection parameter item using namespace and version
+
+  See "src/main/resources/spec/api/openapi_spec_v0.1.0.yml" file, in particular the paths:
+  - '/tasks/{namespace}/{version}/inputs'
+
+    Given a valid task has a "<task namespace>", a "<task version>" has been successfully uploaded
+    And a new task run has been created for this task
+    And input "<input name>" with collection item with index <value> is already provisioned
+    When user calls the endpoint "/task-runs/run-id/input/input-name/indexes?value" with "<input name>" and <value> HTTP method GET
+    Then App Engine sends a "200" OK response with a payload containing the task input
+
+    Examples:
+      | task   | task namespace                                     | task version | input name | value |
+      | Task 1 | com.cytomine.dummy.identity.integer.collection     | 0.1.0        | input      | 1     |

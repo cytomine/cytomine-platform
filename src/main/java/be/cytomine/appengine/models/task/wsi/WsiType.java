@@ -22,7 +22,7 @@ import be.cytomine.appengine.exceptions.TypeValidationException;
 import be.cytomine.appengine.handlers.StorageData;
 import be.cytomine.appengine.handlers.StorageDataEntry;
 import be.cytomine.appengine.handlers.StorageDataType;
-import be.cytomine.appengine.models.task.Output;
+import be.cytomine.appengine.models.task.Parameter;
 import be.cytomine.appengine.models.task.ParameterType;
 import be.cytomine.appengine.models.task.Run;
 import be.cytomine.appengine.models.task.Type;
@@ -159,7 +159,7 @@ public class WsiType extends Type {
     @Override
     public void validateFiles(
         Run run,
-        Output currentOutput,
+        Parameter currentOutput,
         StorageData currentOutputStorageData)
         throws TypeValidationException {
 
@@ -182,12 +182,12 @@ public class WsiType extends Type {
         persistedProvision.setParameterType(ParameterType.INPUT);
         persistedProvision.setRunId(runId);
         persistedProvision.setValueType(ValueType.WSI);
-
+        persistedProvision.setProvisioned(true);
         wsiPersistenceRepository.save(persistedProvision);
     }
 
     @Override
-    public void persistResult(Run run, Output currentOutput, StorageData  outputValue) {
+    public void persistResult(Run run, Parameter currentOutput, StorageData  outputValue) {
         WsiPersistenceRepository wsiPersistenceRepository = AppEngineApplicationContext.getBean(WsiPersistenceRepository.class);
         WsiPersistence result = wsiPersistenceRepository.findWsiPersistenceByParameterNameAndRunIdAndParameterType(currentOutput.getName(), run.getId(), ParameterType.OUTPUT);
         if (result != null) {
@@ -204,7 +204,7 @@ public class WsiType extends Type {
     }
 
     @Override
-    public StorageData mapToStorageFileData(JsonNode provision) {
+    public StorageData mapToStorageFileData(JsonNode provision, Run run) {
         String parameterName = provision.get("param_name").asText();
         File data = new File(provision.get("value").asText());
         StorageDataEntry entry = new StorageDataEntry(data, parameterName, StorageDataType.FILE);
@@ -212,7 +212,7 @@ public class WsiType extends Type {
     }
 
     @Override
-    public JsonNode createTypedParameterResponse(JsonNode provision, Run run) {
+    public JsonNode createInputProvisioningEndpointResponse(JsonNode provision, Run run) {
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode provisionedParameter = mapper.createObjectNode();
         provisionedParameter.put("param_name", provision.get("param_name").asText());
@@ -222,7 +222,7 @@ public class WsiType extends Type {
     }
 
     @Override
-    public WsiValue buildTaskRunParameterValue(StorageData output, UUID id, String outputName) {
+    public WsiValue createOutputProvisioningEndpointResponse(StorageData output, UUID id, String outputName) {
         WsiValue wsiValue = new WsiValue();
         wsiValue.setParameterName(outputName);
         wsiValue.setTaskRunId(id);
@@ -232,7 +232,7 @@ public class WsiType extends Type {
     }
 
     @Override
-    public WsiValue buildTaskRunParameterValue(TypePersistence typePersistence) {
+    public WsiValue createOutputProvisioningEndpointResponse(TypePersistence typePersistence) {
         WsiPersistence wsiPersistence = (WsiPersistence) typePersistence;
         WsiValue wsiValue = new WsiValue();
         wsiValue.setParameterName(wsiPersistence.getParameterName());
