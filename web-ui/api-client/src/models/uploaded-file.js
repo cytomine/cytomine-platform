@@ -40,6 +40,9 @@ export default class UploadedFile extends Model {
     this.contentType = null;
     this.size = null;
 
+    this.storageId = null;
+    this.userId = null;
+
     this.parent = null;
     this.thumbURL = null;
 

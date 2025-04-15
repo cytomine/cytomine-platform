@@ -208,6 +208,14 @@ export default class Cytomine {
     return result.data;
   }
 
+
+  async token(username, validity) {
+    let params = {username, validity};
+    let result = await axios.get(`${this._host}/api/token.json`, {withCredentials: true, params});
+    const token = result.data['token'];
+    return token;
+  }
+
   /**
    * Impersonate another user
    *

@@ -136,7 +136,6 @@ export default class AbstractImage extends Model {
     return this._imageServers;
   }
 
-
   /**
    * Fetch the histogram statistics for the abstract image
    *

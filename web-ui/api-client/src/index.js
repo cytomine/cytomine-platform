@@ -1,9 +1,4 @@
-// https://stackoverflow.com/a/54490329
-import 'core-js/stable';
-import 'regenerator-runtime/runtime';
-
 export {default as Cytomine} from './cytomine.js';
-
 export {default as AbstractImage} from './models/abstract-image.js';
 export {default as AbstractSlice} from './models/abstract-slice.js';
 export {default as AlgoAnnotationTerm} from './models/algo-annotation-term.js';
@@ -34,6 +29,8 @@ export {default as Role} from './models/role.js';
 export {default as SampleHistogram} from './models/sample-histogram.js';
 export {default as SliceInstance} from './models/slice-instance.js';
 export {default as Storage} from './models/storage.js';
+export {default as StorageUser} from './models/storage-user.js';
+export {default as StorageAccess} from './models/storage-access.js';
 export {default as Task} from './models/task.js';
 export {default as Tag} from './models/tag.js';
 export {default as TagDomainAssociation} from './models/tag-domain-association.js';
@@ -75,6 +72,8 @@ export {default as RoleCollection} from './collections/role-collection.js';
 export {default as SampleHistogramCollection} from './collections/sample-histogram-collection.js';
 export {default as SliceInstanceCollection} from './collections/slice-instance-collection.js';
 export {default as StorageCollection} from './collections/storage-collection.js';
+export {default as StorageUserCollection} from './collections/storage-user-collection.js';
+export {default as StorageAccessCollection} from './collections/storage-access-collection.js';
 export {default as TagCollection} from './collections/tag-collection.js';
 export {default as TagDomainAssociationCollection} from './collections/tag-domain-association-collection.js';
 export {default as TermCollection} from './collections/term-collection.js';
