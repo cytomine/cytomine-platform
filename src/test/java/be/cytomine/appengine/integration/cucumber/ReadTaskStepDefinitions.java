@@ -3,11 +3,15 @@ package be.cytomine.appengine.integration.cucumber;
 import java.io.*;
 import java.nio.file.Files;
 import java.util.*;
+import java.util.stream.Collectors;
 
+import be.cytomine.appengine.repositories.RunRepository;
+import be.cytomine.appengine.states.TaskRunState;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.cucumber.java.Before;
+import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
@@ -16,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootContextLoader;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.core.io.Resource;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.web.client.RestClientResponseException;
 
@@ -42,6 +47,9 @@ public class ReadTaskStepDefinitions {
     private ApiClient apiClient;
 
     @Autowired
+    private RunRepository taskRunRepository;
+
+    @Autowired
     private TaskRepository taskRepository;
 
     @Autowired
@@ -59,9 +67,9 @@ public class ReadTaskStepDefinitions {
 
     private String persistedUUID;
 
-    private List<Input> persistedInputs;
+    private List<Parameter> persistedInputs;
 
-    private List<Output> persistedOutputs;
+    private List<Parameter> persistedOutputs;
 
     private File persistedDescriptor;
 
@@ -72,6 +80,10 @@ public class ReadTaskStepDefinitions {
     private List<TaskDescription> tasks;
 
     private RestClientResponseException persistedException;
+
+    private Resource resource;
+
+    private Run persistedRun;
 
     @Before
     public void setUp() {
@@ -131,7 +143,7 @@ public class ReadTaskStepDefinitions {
         taskRepository.deleteAll();
         String bundleFilename = namespace + "-" + version + ".zip";
         persistedTask = TestTaskBuilder.buildTaskFromResource(bundleFilename);
-        taskRepository.save(persistedTask);
+        persistedTask = taskRepository.save(persistedTask);
 
         Storage storage = new Storage(persistedTask.getStorageReference());
         if (storageHandler.checkStorageExists(storage)) {
@@ -214,7 +226,12 @@ public class ReadTaskStepDefinitions {
     @Then("App Engine sends a {string} OK response with a payload containing the task inputs as a JSON payload \\(see OpenAPI spec)")
     public void app_engine_sends_a_ok_response_with_a_payload_containing_the_task_inputs_as_a_json_payload_see_open_api_spec(String string) {
         Assertions.assertNotNull(persistedInputs);
-        Assertions.assertTrue(TaskTestsUtils.areSetEquals(persistedTask.getInputs(), persistedInputs));
+        Set<Parameter> persistedTaskInputs = persistedTask
+            .getParameters()
+            .stream()
+            .filter(parameter -> parameter.getParameterType().equals(ParameterType.INPUT))
+            .collect(Collectors.toSet());
+        Assertions.assertTrue(TaskTestsUtils.areSetEquals(persistedTaskInputs, persistedInputs));
     }
 
     @When("user calls the endpoint {string} with {string} and {string} HTTP method GET")
@@ -282,19 +299,34 @@ public class ReadTaskStepDefinitions {
     @Then("App Engine retrieves task outputs with {string}, a {string}  from the database")
     public void app_engine_retrieves_task_outputs_with_a_from_the_database(String namespace, String version) {
         Assertions.assertNotNull(persistedOutputs);
-        Assertions.assertTrue(TaskTestsUtils.areSetEquals(persistedTask.getOutputs(), persistedOutputs));
+        Set<Parameter> persistedTaskOutputs = persistedTask
+            .getParameters()
+            .stream()
+            .filter(parameter -> parameter.getParameterType().equals(ParameterType.OUTPUT))
+            .collect(Collectors.toSet());
+        Assertions.assertTrue(TaskTestsUtils.areSetEquals(persistedTaskOutputs, persistedOutputs));
     }
 
     @Then("App Engine sends a {string} OK response with a payload containing the task outputs as a JSON payload \\(see OpenAPI spec)")
     public void app_engine_sends_a_ok_response_with_a_payload_containing_the_task_outputs_as_a_json_payload_see_open_api_spec(String string) {
         Assertions.assertNotNull(persistedOutputs);
-        Assertions.assertTrue(TaskTestsUtils.areSetEquals(persistedTask.getOutputs(), persistedOutputs));
+        Set<Parameter> persistedTaskOutputs = persistedTask
+            .getParameters()
+            .stream()
+            .filter(parameter -> parameter.getParameterType().equals(ParameterType.OUTPUT))
+            .collect(Collectors.toSet());
+        Assertions.assertTrue(TaskTestsUtils.areSetEquals(persistedTaskOutputs, persistedOutputs));
     }
 
     @Then("App Engine retrieves task outputs with {string} from the database")
     public void app_engine_retrieves_task_outputs_with_from_the_database(String string) {
         Assertions.assertNotNull(persistedOutputs);
-        Assertions.assertTrue(TaskTestsUtils.areSetEquals(persistedTask.getOutputs(), persistedOutputs));
+        Set<Parameter> persistedTaskOutputs = persistedTask
+            .getParameters()
+            .stream()
+            .filter(parameter -> parameter.getParameterType().equals(ParameterType.OUTPUT))
+            .collect(Collectors.toSet());
+        Assertions.assertTrue(TaskTestsUtils.areSetEquals(persistedTaskOutputs, persistedOutputs));
     }
 
     @Given("a task unknown to the App Engine has a {string} and a {string} and a {string}")
@@ -353,5 +385,47 @@ public class ReadTaskStepDefinitions {
         // reply with expected error code
         JsonNode jsonPayLoad = new ObjectMapper().readTree(persistedException.getResponseBodyAsString());
         Assertions.assertTrue(jsonPayLoad.get("error_code").textValue().startsWith(appEngineErrorCode));
+    }
+
+    @When("user calls the endpoint {string} with {string} and {int} HTTP method GET")
+    public void userCallsTheEndpointWithAndAndHTTPMethodGET(String link, String inputName, int indexes) {
+
+        String uuid = persistedTask.getRuns().stream().findFirst().get().getId().toString();
+        try {
+            resource = apiClient.retrieveInputPart(uuid, inputName, indexes);
+        } catch (RestClientResponseException e) {
+            persistedException = e;
+        }
+
+    }
+
+
+    @And("input {string} with collection item with index {int} is already provisioned")
+    public void inputWithCollectionItemWithIndexIsAlreadyProvisioned(String inputName, int indexes)
+        throws JsonProcessingException
+    {
+        String uuid = persistedTask.getRuns().stream().findFirst().get().getId().toString();
+        apiClient.provisionInputPart(uuid, inputName, "integer", "100", indexes);
+    }
+
+    @Then("App Engine sends a {string} OK response with a payload containing the task input")
+    public void appEngineSendsAOKResponseWithAPayloadContainingTheTaskInput(String code)
+    {
+        Assertions.assertNotNull(resource);
+    }
+
+    @Given("a new task run has been created for this task")
+    public void a_task_run_has_been_created_for_this_task() throws FileStorageException {
+        persistedRun = new Run(UUID.randomUUID(), TaskRunState.CREATED, null);
+        persistedRun = taskRunRepository.save(persistedRun);
+        persistedTask.setRuns(List.of(persistedRun));
+        persistedTask = taskRepository.saveAndFlush(persistedTask);
+        persistedTask.setRuns(List.of(persistedRun));
+        persistedRun.setTask(persistedTask);
+        persistedRun = taskRunRepository.saveAndFlush(persistedRun);
+        Storage runStorage = new Storage("task-run-inputs-" + persistedRun.getId().toString());
+        storageHandler.createStorage(runStorage);
+        runStorage = new Storage("task-run-outputs-" + persistedRun.getId().toString());
+        storageHandler.createStorage(runStorage);
     }
 }

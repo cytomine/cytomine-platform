@@ -131,7 +131,7 @@
     "dependencies": {
       "derived_from": {
         "type": "string",
-        "pattern": "^inputs/[a-zA-Z0-9_]+$"
+        "pattern": "^inputs(?:/[a-zA-Z0-9_]+)+$"
 
       },
       "matching": {
@@ -139,7 +139,7 @@
         "min_size": 1,
         "items": {
           "type": "string",
-          "pattern": "^(inputs|outputs)/[a-zA-Z0-9_]+$"
+          "pattern": "^(inputs|outputs)(?:/[a-zA-Z0-9_]+)+$"
         }
       }
     },
@@ -433,9 +433,6 @@
             "max_size": {
               "type": "integer"
             },
-            "allow_missing": {
-              "type": "boolean"
-            },
             "subtype": {
               "oneOf": [
                 {"$ref": "#/$defs/io/type_specs/integer"},
@@ -446,7 +443,8 @@
                 {"$ref": "#/$defs/io/type_specs/datetime"},
                 {"$ref": "#/$defs/io/type_specs/geometry"},
                 {"$ref": "#/$defs/io/type_specs/image"},
-                {"$ref": "#/$defs/io/type_specs/array"}
+                {"$ref": "#/$defs/io/type_specs/array"},
+                {"$ref": "#/$defs/io/type_specs/file"}
               ]
             }
           }

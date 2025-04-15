@@ -19,7 +19,7 @@ import be.cytomine.appengine.exceptions.TypeValidationException;
 import be.cytomine.appengine.handlers.StorageData;
 import be.cytomine.appengine.handlers.StorageDataEntry;
 import be.cytomine.appengine.handlers.StorageDataType;
-import be.cytomine.appengine.models.task.Output;
+import be.cytomine.appengine.models.task.Parameter;
 import be.cytomine.appengine.models.task.ParameterType;
 import be.cytomine.appengine.models.task.Run;
 import be.cytomine.appengine.models.task.Type;
@@ -55,7 +55,7 @@ public class FileType extends Type {
     @Override
     public void validateFiles(
         Run run,
-        Output currentOutput,
+        Parameter currentOutput,
         StorageData currentOutputStorageData)
         throws TypeValidationException {
 
@@ -87,12 +87,12 @@ public class FileType extends Type {
         persistedProvision.setParameterType(ParameterType.INPUT);
         persistedProvision.setRunId(runId);
         persistedProvision.setValueType(ValueType.FILE);
-
+        persistedProvision.setProvisioned(true);
         filePersistenceRepository.save(persistedProvision);
     }
 
     @Override
-    public void persistResult(Run run, Output currentOutput, StorageData outputValue) {
+    public void persistResult(Run run, Parameter currentOutput, StorageData outputValue) {
         FilePersistenceRepository filePersistenceRepository = AppEngineApplicationContext.getBean(FilePersistenceRepository.class);
         FilePersistence result = filePersistenceRepository.findFilePersistenceByParameterNameAndRunIdAndParameterType(currentOutput.getName(), run.getId(), ParameterType.OUTPUT);
         if (result != null) {
@@ -108,7 +108,7 @@ public class FileType extends Type {
     }
 
     @Override
-    public StorageData mapToStorageFileData(JsonNode provision) {
+    public StorageData mapToStorageFileData(JsonNode provision, Run run) {
         String parameterName = provision.get("param_name").asText();
         File data = new File(provision.get("value").asText());
         StorageDataEntry entry = new StorageDataEntry(data, parameterName, StorageDataType.FILE);
@@ -116,7 +116,7 @@ public class FileType extends Type {
     }
 
     @Override
-    public JsonNode createTypedParameterResponse(JsonNode provision, Run run) {
+    public JsonNode createInputProvisioningEndpointResponse(JsonNode provision, Run run) {
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode provisionedParameter = mapper.createObjectNode();
         provisionedParameter.put("param_name", provision.get("param_name").asText());
@@ -125,7 +125,7 @@ public class FileType extends Type {
     }
 
     @Override
-    public FileValue buildTaskRunParameterValue(StorageData output, UUID id, String outputName) {
+    public FileValue createOutputProvisioningEndpointResponse(StorageData output, UUID id, String outputName) {
         FileValue fileValue = new FileValue();
         fileValue.setParameterName(outputName);
         fileValue.setTaskRunId(id);
@@ -134,7 +134,7 @@ public class FileType extends Type {
     }
 
     @Override
-    public FileValue buildTaskRunParameterValue(TypePersistence typePersistence) {
+    public FileValue createOutputProvisioningEndpointResponse(TypePersistence typePersistence) {
         FilePersistence filePersistence = (FilePersistence) typePersistence;
         FileValue fileValue = new FileValue();
         fileValue.setParameterName(filePersistence.getParameterName());

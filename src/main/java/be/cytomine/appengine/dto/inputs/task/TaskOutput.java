@@ -9,9 +9,6 @@ import lombok.Data;
 public class TaskOutput {
     private String id;
 
-    @JsonProperty(value = "default")
-    private int defaultValue; // this matches a reserved keyword
-
     private String name;
 
     @JsonProperty(value = "display_name")

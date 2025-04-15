@@ -30,7 +30,7 @@ Feature: [URS00003-TASK] Execute a task
 
     Examples:
       | task_run_id                          | initial_state | error_code                                  |
-      | acde070d-8c4c-4f0d-9d8a-162843c10333 | CREATED       | APPE-internal-task-run-provisions-not-found |
+      | acde070d-8c4c-4f0d-9d8a-162843c10334 | CREATED       | APPE-internal-task-run-provisions-not-found |
 
   @Scheduler
   Scenario Outline: unsuccessful run request for a task that was already launched

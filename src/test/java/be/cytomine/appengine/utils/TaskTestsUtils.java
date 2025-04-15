@@ -6,12 +6,15 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import be.cytomine.appengine.dto.inputs.task.GenericParameterCollectionItemProvision;
+import be.cytomine.appengine.dto.inputs.task.ParameterType;
+import be.cytomine.appengine.models.task.number.NumberType;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import be.cytomine.appengine.dto.inputs.task.GenericParameterProvision;
-import be.cytomine.appengine.dto.inputs.task.ParameterType;
 import be.cytomine.appengine.dto.inputs.task.TaskRunParameterValue;
 import be.cytomine.appengine.dto.inputs.task.types.bool.BooleanValue;
 import be.cytomine.appengine.dto.inputs.task.types.enumeration.EnumerationValue;
@@ -22,7 +25,6 @@ import be.cytomine.appengine.dto.inputs.task.types.integer.IntegerValue;
 import be.cytomine.appengine.dto.inputs.task.types.string.StringValue;
 import be.cytomine.appengine.dto.inputs.task.types.wsi.WsiValue;
 import be.cytomine.appengine.models.BaseEntity;
-import be.cytomine.appengine.models.task.number.NumberType;
 
 public class TaskTestsUtils {
 
@@ -133,7 +135,9 @@ public class TaskTestsUtils {
         return parameterValues;
     }
 
-    public static GenericParameterProvision createProvision(String parameterName, String type, String value) {
+    public static GenericParameterProvision createProvision(String parameterName, String type, String value)
+        throws JsonProcessingException
+    {
         GenericParameterProvision provision = new GenericParameterProvision();
         provision.setParameterName(parameterName);
         if (type.isEmpty()) {
@@ -153,6 +157,67 @@ public class TaskTestsUtils {
             case "number":
                 provision.setType(ParameterType.NUMBER);
                 provision.setValue(NumberType.parseDouble(value));
+                break;
+            case "string":
+                provision.setType(ParameterType.STRING);
+                provision.setValue(value);
+                break;
+            case "enumeration":
+                provision.setType(ParameterType.ENUMERATION);
+                provision.setValue(value);
+                break;
+            case "geometry":
+                provision.setType(ParameterType.GEOMETRY);
+                provision.setValue(value);
+                break;
+            case "image":
+                provision.setType(ParameterType.IMAGE);
+                provision.setValue(value.getBytes());
+                break;
+            case "wsi":
+                provision.setType(ParameterType.WSI);
+                provision.setValue(value.getBytes());
+                break;
+            case "file":
+                provision.setType(ParameterType.FILE);
+                provision.setValue(value.getBytes());
+                break;
+            case "array":
+                ObjectMapper mapper = new ObjectMapper();
+                JsonNode jsonNode = mapper.readTree(value);
+                provision.setType(ParameterType.ARRAY);
+                provision.setValue(jsonNode);
+                break;
+            default:
+                throw new RuntimeException("Unknown type: " + type);
+        }
+
+        return provision;
+    }
+
+    public static GenericParameterCollectionItemProvision createProvisionPart(String parameterName, String type, String value, int index)
+        throws JsonProcessingException
+    {
+        GenericParameterCollectionItemProvision provision = new GenericParameterCollectionItemProvision();
+        provision.setParameterName(parameterName);
+        provision.setIndex(String.valueOf(index));
+        if (type.isEmpty()) {
+            provision.setValue(value);
+            return provision;
+        }
+
+        switch (type) {
+            case "boolean":
+                provision.setType(ParameterType.BOOLEAN);
+                provision.setValue(Boolean.parseBoolean(value));
+                break;
+            case "integer":
+                provision.setType(ParameterType.INTEGER);
+                provision.setValue(Integer.parseInt(value));
+                break;
+            case "number":
+                provision.setType(be.cytomine.appengine.dto.inputs.task.ParameterType.NUMBER);
+                provision.setValue(Double.parseDouble(value));
                 break;
             case "string":
                 provision.setType(ParameterType.STRING);

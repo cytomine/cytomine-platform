@@ -1,7 +1,4 @@
---liquibase formatted sql
 
---changeset siddig.hamed:2 labels:initial-schema context:provisioning
---comment: this is the initial schema
 
 
 SET statement_timeout = 0;

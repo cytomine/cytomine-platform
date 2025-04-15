@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -186,16 +187,19 @@ public class RunTaskStepDefinitions {
     public void a_task_run_exists_with_identifier(String uuid) throws FileStorageException {
         runRepository.deleteAll();
         Task task = TestTaskBuilder.buildHardcodedAddInteger(UUID.fromString(uuid));
-        task = taskRepository.save(task);
         secret = UUID.randomUUID().toString();
-        persistedRun = new Run(UUID.fromString(uuid), null, task , secret);
+        persistedRun = new Run(UUID.fromString(uuid), null, null , secret);
+        task.setRuns(List.of(persistedRun));
+        task = taskRepository.saveAndFlush(task);
+        persistedRun.setTask(task);
+        persistedRun = runRepository.saveAndFlush(persistedRun);
         createStorage(uuid);
     }
 
     @Given("the task run is in state {string}")
     public void the_task_run_is_in_state(String state) {
         persistedRun.setState(TaskRunState.valueOf(state));
-        persistedRun = runRepository.save(persistedRun);
+        persistedRun = runRepository.saveAndFlush(persistedRun);
     }
 
     @When("user calls the endpoint with {string} HTTP method GET")
@@ -220,7 +224,9 @@ public class RunTaskStepDefinitions {
 
     // successful fetch of task run inputs archive in a launched task run
     @Given("the task run {string} has input parameters: {string} of type {string} with value {string} and {string} of type {string} with value {string}")
-    public void the_task_run_has_input_parameters_of_type_with_value_and_of_type_with_value(String runId, String name1, String type1, String value1, String name2, String type2, String value2) throws FileStorageException {
+    public void the_task_run_has_input_parameters_of_type_with_value_and_of_type_with_value(String runId, String name1, String type1, String value1, String name2, String type2, String value2) throws FileStorageException,
+        JsonProcessingException
+    {
         ObjectMapper mapper = new ObjectMapper();
         List<ObjectNode> provisions = new ArrayList<>();
         provisions.add(mapper.valueToTree(TaskTestsUtils.createProvision(name1, type1, value1)));
@@ -433,13 +439,21 @@ public class RunTaskStepDefinitions {
         taskRepository.deleteAll();
         Task task = TestTaskBuilder.buildHardcodedAddInteger();
         task = taskRepository.save(task);
-        persistedRun = new Run(UUID.fromString(runId), null, task);
+        persistedRun = new Run(UUID.fromString(runId), null, null);
+        persistedRun = runRepository.save(persistedRun);
+        task.setRuns(List.of(persistedRun));
+        task = taskRepository.saveAndFlush(task);
+        task.setRuns(List.of(persistedRun));
+        persistedRun.setTask(task);
+        taskRepository.saveAndFlush(task);
+        persistedRun = runRepository.findById(persistedRun.getId()).get();
+
     }
 
     @Given("this task run has not been successfully provisioned yet and is therefore in state {string}")
     public void this_task_run_has_not_been_successfully_provisioned_yet_and_is_therefore_in_state(String state) {
         persistedRun.setState(TaskRunState.valueOf(state));
-        persistedRun = runRepository.save(persistedRun);
+        persistedRun = runRepository.saveAndFlush(persistedRun);
     }
 
     @When("When user calls the endpoint to run task with HTTP method POST")
@@ -501,9 +515,14 @@ public class RunTaskStepDefinitions {
 
     @Given("the task run has an output parameter {string}")
     public void the_task_run_has_an_output_parameter(String output) {
-        Set<Output> outputs = persistedRun.getTask().getOutputs();
+        Set<Parameter> outputs = persistedRun
+            .getTask()
+            .getParameters()
+            .stream()
+            .filter(parameter -> parameter.getParameterType().equals(ParameterType.OUTPUT))
+            .collect(Collectors.toSet());
         boolean found = false;
-        for (Output runOutput : outputs) {
+        for (Parameter runOutput : outputs) {
             if (runOutput.getName().equalsIgnoreCase(output)) {
                 found = true;
                 break;
@@ -667,7 +686,7 @@ public class RunTaskStepDefinitions {
         persistedTask.setRam(ram);
         persistedTask.setCpus(Integer.parseInt(cpus));
         persistedTask.setGpus(Integer.parseInt(gpus));
-        persistedTask = taskRepository.save(persistedTask);
+        persistedTask = taskRepository.saveAndFlush(persistedTask);
     }
 
     @And("the task has requested {string} RAM, {string} CPUs, and {string} GPUs")
@@ -680,7 +699,10 @@ public class RunTaskStepDefinitions {
     @And("a task run has been created with {string}")
     public void createTaskRun(String uuid) {
         persistedRun = new Run(UUID.fromString(uuid), TaskRunState.CREATED, persistedTask);
-        persistedRun = runRepository.save(persistedRun);
+//        persistedRun = runRepository.save(persistedRun);
+        persistedTask.setRuns(List.of(persistedRun));
+        persistedTask = taskRepository.saveAndFlush(persistedTask);
+
     }
 
     @And("a user provisioned all the parameters")
@@ -696,6 +718,9 @@ public class RunTaskStepDefinitions {
                 apiClient.provisionInput(persistedRun.getId().toString(), name, type, value);
             } catch (RestClientResponseException e) {
                 Assertions.fail("Provisioning '" + name + "' failed: " + e.getMessage());
+            } catch (JsonProcessingException e)
+            {
+                throw new RuntimeException(e);
             }
         }
     }

@@ -19,6 +19,7 @@ public class ErrorDefinitions {
         codes.put(ErrorCode.INTERNAL_INVALID_BUNDLE_FORMAT, new MessageCode("APPE-internal-bundle-validation-error", "invalid bundle format"));
         codes.put(ErrorCode.INTERNAL_INVALID_OUTPUT, new MessageCode("APPE-internal-task_run-invalid-output-archive", "invalid outputs in archive"));
         codes.put(ErrorCode.INTERNAL_INVALID_TASK_RUN_STATE, new MessageCode("APPE-internal-task-run-state-error", "run is in invalid state"));
+        codes.put(ErrorCode.INTERNAL_JSON_PROCESSING_ERROR, new MessageCode("APPE-internal-task-run-state-error", "unable to process json"));
         codes.put(ErrorCode.INTERNAL_MAX_UPLOAD_SIZE_EXCEEDED, new MessageCode("APPE-internal-bundle-validation-error", "maximum upload size for bundle exceeded"));
         codes.put(ErrorCode.INTERNAL_MISSING_OUTPUTS, new MessageCode("APPE-internal-task-run-missing-outputs", "some outputs are missing in the archive"));
         codes.put(ErrorCode.INTERNAL_NOT_PROVISIONED, new MessageCode("APPE-internal-task-run-provisions-not-found", "not provisioned"));
@@ -65,6 +66,16 @@ public class ErrorDefinitions {
         codes.put(ErrorCode.INTERNAL_OUTPUT_FILE_FOR_PARAMETER_IS_DIRECTORY, new MessageCode("APPE-internal-is-directory", "file structure for primitive parameter is a directory"));
         codes.put(ErrorCode.INTERNAL_EXTRA_OUTPUT_FILES_FOR_PARAMETER, new MessageCode("APPE-internal-extra-output-files", "file structure for parameter contains extra files"));
         codes.put(ErrorCode.INTERNAL_OUTPUT_FILE_FOR_PARAMETER_IS_BLANK, new MessageCode("APPE-internal-is-blank", "file for parameter is blank"));
+        codes.put(ErrorCode.INTERNAL_INVALID_INDEXES_PATTERN, new MessageCode("APPE-internal-invalid-indexes", "indexes don't match pattern {^(0(/[0-9]+)*|[1-9][0-9]*(/[0-9]+)*)$}"));
+        codes.put(ErrorCode.INTERNAL_NOT_MATCHING_DIFF_SIZE, new MessageCode("APPE-internal-not-matching", "collections don't have the same size"));
+        codes.put(ErrorCode.INTERNAL_MISSING_METADATA, new MessageCode("APPE-internal-missing-metadata", "collection does not have array.yml file"));
+        codes.put(ErrorCode.INTERNAL_INVALID_FEATURE_COLLECTION, new MessageCode("APPE-internal-invalid-collection", "invalid feature collection"));
+        codes.put(ErrorCode.INTERNAL_WRONG_PROVISION_STRUCTURE, new MessageCode("APPE-internal-invalid-structure", "invalid provision structure"));
+        codes.put(ErrorCode.INTERNAL_INVALID_COLLECTION_DIMENSIONS, new MessageCode("APPE-internal-invalid-dimensions", "invalid collection dimensions"));
+        codes.put(ErrorCode.INTERNAL_UNKNOWN_PARAMETER, new MessageCode("APPE-internal-unknown", "unknown parameter"));
+        codes.put(ErrorCode.INTERNAL_NULL_PROVISION, new MessageCode("APPE-internal-null-provision", "provision object is null"));
+        codes.put(ErrorCode.INTERNAL_UNKNOWN_SUBTYPE, new MessageCode("APPE-internal-unknown-subtype", "collection subtype unknown"));
+        codes.put(ErrorCode.INTERNAL_INVALID_METADATA, new MessageCode("APPE-internal-invalid-metadata", "collection array.yml is malformed"));
     }
 
     public static MessageCode fromCode(ErrorCode code) {

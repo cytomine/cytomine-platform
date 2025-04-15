@@ -77,7 +77,7 @@ public class TaskServiceTest {
 
     @BeforeAll
     public static void setUp() throws Exception {
-        task = TaskUtils.createTestTask();
+        task = TaskUtils.createTestTask(false);
         uploadTaskArchive = TaskUtils.createTestUploadTaskArchive();
     }
 

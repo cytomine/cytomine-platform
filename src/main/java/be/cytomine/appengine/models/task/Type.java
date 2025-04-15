@@ -23,6 +23,8 @@ import org.apache.logging.log4j.util.Strings;
 
 import be.cytomine.appengine.dto.inputs.task.TaskRunParameterValue;
 import be.cytomine.appengine.dto.responses.errors.ErrorCode;
+import be.cytomine.appengine.exceptions.FileStorageException;
+import be.cytomine.appengine.exceptions.ProvisioningException;
 import be.cytomine.appengine.exceptions.TypeValidationException;
 import be.cytomine.appengine.handlers.StorageData;
 import be.cytomine.appengine.models.BaseEntity;
@@ -32,7 +34,7 @@ import be.cytomine.appengine.utils.FileHelper;
 @Table(name = "type")
 @Inheritance(strategy = InheritanceType.JOINED)
 @Data
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(callSuper = false)
 public class Type extends BaseEntity {
     @Id
     @Column(name = "identifier", updatable = false, nullable = false)
@@ -60,11 +62,16 @@ public class Type extends BaseEntity {
 
     public void validate(Object value) throws TypeValidationException {}
 
-    public void persistProvision(JsonNode provision, UUID runId) {}
+    public void persistProvision(JsonNode provision, UUID runId) throws ProvisioningException {}
 
-    public void persistResult(Run runOptional, Output currentOutput, StorageData outputValue) {}
+    public void persistResult(Run runOptional, Parameter currentOutput, StorageData outputValue)
+        throws ProvisioningException
+    {}
 
-    public StorageData mapToStorageFileData(JsonNode provision) {
+    public StorageData mapToStorageFileData(
+        JsonNode provision,
+        Run run)
+        throws FileStorageException {
         return null;
     }
 
@@ -79,30 +86,29 @@ public class Type extends BaseEntity {
         };
     }
 
-    // Todo : rename
-    public JsonNode createTypedParameterResponse(JsonNode provision, Run run) {
+    public JsonNode createInputProvisioningEndpointResponse(JsonNode provision, Run run) {
         return null;
     }
 
-    // Todo : rename
-    public TaskRunParameterValue buildTaskRunParameterValue(
+
+    public TaskRunParameterValue createOutputProvisioningEndpointResponse(
         StorageData outputData,
         UUID id,
         String outputName
-    ) {
+    ) throws ProvisioningException {
         return null;
     }
 
-    // Todo : rename
-    public TaskRunParameterValue buildTaskRunParameterValue(
+
+    public TaskRunParameterValue createOutputProvisioningEndpointResponse(
         TypePersistence typePersistence
-    ) {
+    ) throws ProvisioningException {
         return null;
     }
 
     public void validateFiles(
         Run run,
-        Output currentOutput,
+        Parameter currentOutput,
         StorageData currentOutputStorageData)
         throws TypeValidationException {}
 

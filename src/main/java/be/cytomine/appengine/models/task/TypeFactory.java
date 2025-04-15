@@ -1,10 +1,12 @@
 package be.cytomine.appengine.models.task;
 
 import java.util.Arrays;
+import java.util.Optional;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.validation.constraints.NotNull;
 
+import be.cytomine.appengine.dto.inputs.task.types.collection.CollectionGenericTypeConstraint;
 import be.cytomine.appengine.dto.inputs.task.types.enumeration.EnumerationTypeConstraint;
 import be.cytomine.appengine.dto.inputs.task.types.file.FileTypeConstraint;
 import be.cytomine.appengine.dto.inputs.task.types.image.ImageTypeConstraint;
@@ -13,6 +15,7 @@ import be.cytomine.appengine.dto.inputs.task.types.number.NumberTypeConstraint;
 import be.cytomine.appengine.dto.inputs.task.types.string.StringTypeConstraint;
 import be.cytomine.appengine.dto.inputs.task.types.wsi.WsiTypeConstraint;
 import be.cytomine.appengine.models.task.bool.BooleanType;
+import be.cytomine.appengine.models.task.collection.CollectionType;
 import be.cytomine.appengine.models.task.enumeration.EnumerationType;
 import be.cytomine.appengine.models.task.file.FileType;
 import be.cytomine.appengine.models.task.geometry.GeometryType;
@@ -33,7 +36,8 @@ public class TypeFactory {
     }
 
     public static Type createType(JsonNode node, String charset) {
-        JsonNode typeNode = node.get("type");
+        JsonNode typeNode = Optional.ofNullable(node.get("type"))
+            .orElse(node);
         // add new types here
         String typeId = getTypeId(typeNode);
         return switch (typeId) {
@@ -46,8 +50,34 @@ public class TypeFactory {
             case "image" -> createImageType(typeNode, typeId, charset);
             case "wsi" -> createWsiType(typeNode, typeId, charset);
             case "file" -> createFileType(typeNode, typeId, charset);
+            case "array" -> createCollectionType(typeNode, typeId, charset);
             default -> new Type();
         };
+    }
+
+    private static Type createCollectionType(
+        JsonNode typeNode,
+        String typeId,
+        String charset) {
+        CollectionType type = new CollectionType();
+        type.setId(typeId);
+        type.setCharset(charset);
+
+        // set constraints
+        Arrays.stream(CollectionGenericTypeConstraint.values())
+            .map(CollectionGenericTypeConstraint::getStringKey)
+            .filter(typeNode::has)
+            .forEach(key -> {
+                type.setConstraint(
+                    CollectionGenericTypeConstraint.getConstraint(key),
+                    typeNode.get(key).asText()
+                );
+            });
+
+        // handle nested type
+        JsonNode subtype = typeNode.get("subtype");
+        type.setSubType(TypeFactory.createType(subtype, charset));
+        return type;
     }
 
     @NotNull
