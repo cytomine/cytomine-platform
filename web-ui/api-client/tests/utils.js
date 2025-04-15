@@ -30,7 +30,6 @@ async function getModel(model, collection, forceCreation) {
   // if no model was found or if a new model is explicitly required with the forceCreation parameter
   await model.save();
   createdModels.push(model);
-  console.log('Created ' + model);
   return model;
 }
 
@@ -46,7 +45,7 @@ export async function getAbstractImage({filename=randomString(), uploadedFile, f
   let abstractImageCollection = new cytomine.AbstractImageCollection({nbPerPage: 1});
   abstractImage = await getModel(abstractImage, abstractImageCollection, forceCreation);
 
-  let as = await new cytomine.AbstractSlice({uploadedFile, image: abstractImage.id, mime: 'image/pyrtiff'}).save();
+  await new cytomine.AbstractSlice({uploadedFile, image: abstractImage.id, mime: 'image/pyrtiff'}).save();
   return abstractImage;
 }
 
@@ -96,11 +95,8 @@ export async function getGroup({name=randomString(), forceCreation=true} = {}) {
   return getModel(group, groupCollection, forceCreation);
 }
 
-export async function getImageFilter({name=randomString(), baseUrl='path/', processingServer, forceCreation=true, cascadeForceCreation} = {}) {
+export async function getImageFilter({name=randomString(), baseUrl='path/', processingServer, forceCreation=true} = {}) {
   let imageFilterCollection = new cytomine.ImageFilterCollection({nbPerPage: 1});
-  if(!processingServer) {
-    ({url: processingServer} = await getProcessingServer({forceCreation: cascadeForceCreation}));
-  }
   let imageFilter = new cytomine.ImageFilter({name, baseUrl, processingServer});
   return getModel(imageFilter, imageFilterCollection, forceCreation);
 }
@@ -126,54 +122,12 @@ export async function getImageInstance({baseImage, project, forceCreation=true, 
   return getModel(image, imageCollection, forceCreation);
 }
 
-export async function getJob({software, project, forceCreation=true, cascadeForceCreation} = {}) {
-  if(!software) {
-    ({id: software} = await getSoftware({forceCreation: cascadeForceCreation}));
-  }
-
-  if(!project) {
-    ({id: project} = await getProject({forceCreation: cascadeForceCreation, cascadeForceCreation}));
-  }
-
-  let job = new cytomine.Job({software, project});
-  let jobCollection = new cytomine.JobCollection({software, project, nbPerPage: 1});
-  return getModel(job, jobCollection, forceCreation);
-}
-
-export async function getJobTemplate({software, project, name=randomString(), forceCreation=true, cascadeForceCreation} = {}) {
-  if(!forceCreation && software) {
-    throw new Error('Cannot retrieve job template of a given software. Either set forceCreation to true or remove software.');
-  }
-
-  if(!software) {
-    ({id: software} = await getSoftware({forceCreation: true})); // force creation because we need to add a software parameter
-    await getSoftwareParameter({software, name: 'annotation', forceCreation: true});
-  }
-
-  let jobTemplateCollection = new cytomine.JobTemplateCollection({nbPerPage: 1});
-  if(!project) {
-    ({id: project} = await getProject({forceCreation: cascadeForceCreation, cascadeForceCreation}));
-  }
-  else {
-    jobTemplateCollection.setFilter('project', project);
-  }
-
-  let jobTemplate = new cytomine.JobTemplate({software, project, name});
-  return getModel(jobTemplate, jobTemplateCollection, forceCreation);
-}
-
 // WARNING: if an ontology is created, it may not be possible to delete it afterwards (bug in core preventing deletion
 // if ontology used in deleted project) => leave forceCreation to false if possible
 export async function getOntology({name=randomString(), forceCreation=false} = {}) {
   let ontology = new cytomine.Ontology({name});
   let ontologyCollection = new cytomine.OntologyCollection({nbPerPage: 1});
   return getModel(ontology, ontologyCollection, forceCreation);
-}
-
-export async function getProcessingServer({name=randomString(), host=randomString(), username=randomString(), port=9999, forceCreation=true} = {}) {
-  let processingServerCollection = new cytomine.ProcessingServerCollection({nbPerPage: 1});
-  let processingServer = new cytomine.ProcessingServer({name, host, username, port});
-  return getModel(processingServer, processingServerCollection, forceCreation);
 }
 
 export async function getProject({name=randomString(), ontology, forceCreation=true, cascadeForceCreation} = {}) {
@@ -204,47 +158,6 @@ export async function getMultipleRoles(nb) {
     ids.push(item.id);
   }
   return ids;
-}
-
-export async function getSoftware({name=randomString(), serviceName='createRabbitJobService', executeCommand='clear', pullingCommand = 'test', defaultProcessingServer, forceCreation=true} = {}) {
-  if(!defaultProcessingServer) {
-    ({id: defaultProcessingServer} = await getProcessingServer());
-  }
-  let software = new cytomine.Software({name, serviceName, executeCommand, pullingCommand, defaultProcessingServer});
-  let softwareCollection = new cytomine.SoftwareCollection({nbPerPage: 1});
-  return getModel(software, softwareCollection, forceCreation);
-}
-
-export async function getSoftwareParameter({name=randomString(), software, type='String', forceCreation=true, cascadeForceCreation} = {}) {
-  let softwareParameterCollection = new cytomine.SoftwareParameterCollection({nbPerPage: 1});
-  if(!software) {
-    ({id: software} = await getSoftware({forceCreation: cascadeForceCreation}));
-  }
-  else {
-    softwareParameterCollection.setFilter('software', software);
-  }
-  let softwareParameter = new cytomine.SoftwareParameter({software, name, type});
-  return getModel(softwareParameter, softwareParameterCollection, forceCreation);
-}
-
-export async function getSoftwareProject({software, project, forceCreation=true, cascadeForceCreation} = {}) {
-  if(!forceCreation && software) {
-    throw new Error('Cannot retrieve software project of a given software. Either set forceCreation to true or remove software.');
-  }
-
-  if(!software) {
-    ({id: software} = await getSoftware({forceCreation: cascadeForceCreation}));
-  }
-
-  let softwareProjectCollection = new cytomine.SoftwareProjectCollection({nbPerPage: 1});
-  if(!project) {
-    ({id: project} = await getProject({forceCreation: cascadeForceCreation, cascadeForceCreation}));
-  }
-  else {
-    softwareProjectCollection.setFilter('project', project);
-  }
-  let softwareProject = new cytomine.SoftwareProject({software, project});
-  return getModel(softwareProject, softwareProjectCollection, forceCreation);
 }
 
 // WARNING: bug in core prevents the deletion of storage => it is advised to leave user field to null, so that the
@@ -338,13 +251,7 @@ export async function cleanData() {
   // delete models sequentially and in reverse order to ensure there is no foreign key constraint issues
   for(let i = createdModels.length - 1; i >= 0; i--) {
     let model = createdModels[i];
-    try {
-      await model.delete();
-      console.log('Deleted ' + model);
-    }
-    catch(err) {
-      console.log(`Failed to delete ${model}`);
-    }
+    await model.delete();
   }
   createdModels = [];
 }

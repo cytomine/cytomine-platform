@@ -1,13 +1,4 @@
-import * as utils from './utils.js';
-import {ImageFilter, ImageFilterCollection} from '@';
-
 describe('Image filter', function() {
-  let processingServer;
-  let name = utils.randomString();
-
-  let imageFilter = null;
-  let id = 0;
-
   /*before(async function() {
     await utils.connect(true);
     processingServer = await utils.getProcessingServer();

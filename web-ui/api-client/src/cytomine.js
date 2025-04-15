@@ -327,7 +327,7 @@ export default class Cytomine {
   /**
    * Fetch total count of each model
    *
-   * @returns {{users, projects, images, userAnnotations, jobAnnotations, terms, ontologies, softwares, jobs}}
+   * @returns {{users, projects, images, userAnnotations, terms, ontologies}}
    *          The total count for each model
    */
   async fetchTotalCounts() {

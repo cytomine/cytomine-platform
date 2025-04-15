@@ -1,11 +1,11 @@
 import Collection from './collection.js';
-import JobTemplate from '../models/job-template.js';
+import ImageGroup from '../models/image-group.js';
 
-export default class JobParameterCollection extends Collection {
+export default class ImageGroupCollection extends Collection {
 
   /** @inheritdoc */
   static get model() {
-    return JobTemplate;
+    return ImageGroup;
   }
 
   /** @inheritdoc */

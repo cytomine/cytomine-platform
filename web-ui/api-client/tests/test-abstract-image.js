@@ -1,5 +1,5 @@
 import * as utils from './utils.js';
-import {AbstractImage, AbstractImageCollection, User, UploadedFile} from '@';
+import {AbstractImage, AbstractImageCollection, User} from '@';
 
 // QUESTION: investigate problem of access rights (You don't have the right to read or modity this resource!
 //          be.cytomine.image.AbstractImage : {id}, {id})
@@ -82,10 +82,9 @@ describe('AbstractImage', function() {
 
   describe('AbstractImageCollection', function() {
     let totalNb = 0;
-    let project;
 
     before(async function() {
-      ({id: project} = await utils.getProject());
+      await utils.getProject();
       abstractImage = new AbstractImage({originalFilename, uploadedFile, width : 1000, height : 1000});
       abstractImage = await abstractImage.save();
     });

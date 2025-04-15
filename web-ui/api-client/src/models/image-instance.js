@@ -42,7 +42,6 @@ export default class ImageInstance extends Model {
     this.macroURL = null;
 
     this.numberOfAnnotations = null;
-    this.numberOfJobAnnotations = null;
     this.numberOfReviewedAnnotations = null;
 
     this.reviewStart = null;
@@ -340,6 +339,4 @@ export default class ImageInstance extends Model {
     let {data} = await Cytomine.instance.api.get(`${this.callbackIdentifier}/${this.id}/channelhistogram/bounds.json`);
     return data.collection;
   }
-
-
 }

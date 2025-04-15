@@ -1,16 +1,10 @@
 import * as utils from './utils.js';
-import {UserGroup, UserGroupCollection} from '@';
 
 describe('UserGroup', function() {
 
-  let group;
-  let user;
-
-  let userGroup;
-
   before(async function() {
     await utils.connect(true);
-    ({id: user} = await utils.getUser());
+    await utils.getUser();
     //({id: group} = await utils.getGroup());
   });
 
