@@ -104,6 +104,7 @@ public class DateTimeType extends Type {
             persistedProvision.setValueType(ValueType.DATETIME);
             persistedProvision.setParameterType(ParameterType.INPUT);
             persistedProvision.setParameterName(parameterName);
+            persistedProvision.setProvisioned(true);
             persistedProvision.setRunId(runId);
             persistedProvision.setValue(value);
             dateTimePersistenceRepository.save(persistedProvision);
