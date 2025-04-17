@@ -39,7 +39,6 @@ export {default as Track} from './models/track.js';
 export {default as UploadedFile, UploadedFileStatus} from './models/uploaded-file.js';
 export {default as User} from './models/user.js';
 export {default as UserGroup} from './models/user-group.js';
-export {default as UserJob} from './models/user-job.js';
 export {default as UserPosition} from './models/user-position.js';
 export {default as UserRole} from './models/user-role.js';
 
@@ -81,6 +80,5 @@ export {default as TrackCollection} from './collections/track-collection.js';
 export {default as UploadedFileCollection} from './collections/uploaded-file-collection.js';
 export {default as UserCollection} from './collections/user-collection.js';
 export {default as UserGroupCollection} from './collections/user-group-collection.js';
-export {default as UserJobCollection} from './collections/user-job-collection.js';
 export {default as UserPositionCollection} from './collections/user-position-collection.js';
 export {default as UserRoleCollection} from './collections/user-role-collection.js';
