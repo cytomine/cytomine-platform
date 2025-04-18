@@ -240,14 +240,13 @@ public class KubernetesScheduler implements SchedulerHandler {
             .endVolumeMount()
 
             .withEnv(new EnvVarBuilder()
-                    .withName("POD_NAME")
-                    .withNewValueFrom()
-                    .withNewFieldRef()
-                    .withFieldPath("metadata.name")
-                    .endFieldRef()
-                    .endValueFrom()
-                    .build())
-
+            .withName("POD_NAME")
+            .withNewValueFrom()
+            .withNewFieldRef()
+            .withFieldPath("metadata.name")
+            .endFieldRef()
+            .endValueFrom()
+            .build())
 
             .build();
 

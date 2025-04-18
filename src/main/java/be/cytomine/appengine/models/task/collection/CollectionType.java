@@ -1317,10 +1317,11 @@ public class CollectionType extends Type {
             int minusParameterDirectory = container.getEntryList().size() - 1;
             container.add(itemFileEntry);
             String arrayDotYmpData = "size: " + (minusParameterDirectory + 1);
-            container.add(new StorageDataEntry(FileHelper.write("array.yml",
-                    arrayDotYmpData.getBytes(StandardCharsets.UTF_8)),
-                    ymlPath + "/array.yml",
-                    StorageDataType.FILE));
+            container.add(new StorageDataEntry(
+                FileHelper.write("array.yml", arrayDotYmpData.getBytes(StandardCharsets.UTF_8)),
+                ymlPath + "/array.yml",
+                StorageDataType.FILE
+            ));
         }
         return container;
     }
