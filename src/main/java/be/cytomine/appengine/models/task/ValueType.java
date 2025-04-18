@@ -6,6 +6,7 @@ public enum ValueType {
     NUMBER,
     STRING,
     ENUMERATION,
+    DATETIME,
     GEOMETRY,
     IMAGE,
     WSI,

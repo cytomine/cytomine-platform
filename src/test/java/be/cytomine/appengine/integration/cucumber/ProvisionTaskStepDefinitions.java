@@ -1,7 +1,7 @@
 package be.cytomine.appengine.integration.cucumber;
 
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.time.Instant;
 import java.util.stream.Collectors;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -12,15 +12,11 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 
-import be.cytomine.appengine.handlers.StorageDataType;
-import be.cytomine.appengine.models.task.collection.CollectionPersistence;
-import be.cytomine.appengine.repositories.collection.CollectionPersistenceRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.cucumber.datatable.DataTable;
-
 import io.cucumber.java.Before;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
@@ -44,9 +40,12 @@ import be.cytomine.appengine.dto.inputs.task.types.string.StringTypeConstraint;
 import be.cytomine.appengine.dto.inputs.task.types.wsi.WsiTypeConstraint;
 import be.cytomine.appengine.exceptions.FileStorageException;
 import be.cytomine.appengine.handlers.StorageData;
+import be.cytomine.appengine.handlers.StorageDataType;
 import be.cytomine.appengine.handlers.StorageHandler;
 import be.cytomine.appengine.models.task.*;
 import be.cytomine.appengine.models.task.bool.BooleanPersistence;
+import be.cytomine.appengine.models.task.collection.CollectionPersistence;
+import be.cytomine.appengine.models.task.datetime.DateTimePersistence;
 import be.cytomine.appengine.models.task.enumeration.EnumerationPersistence;
 import be.cytomine.appengine.models.task.file.FilePersistence;
 import be.cytomine.appengine.models.task.geometry.GeometryPersistence;
@@ -62,6 +61,8 @@ import be.cytomine.appengine.models.task.wsi.WsiPersistence;
 import be.cytomine.appengine.models.task.wsi.WsiType;
 import be.cytomine.appengine.repositories.TypePersistenceRepository;
 import be.cytomine.appengine.repositories.bool.BooleanPersistenceRepository;
+import be.cytomine.appengine.repositories.collection.CollectionPersistenceRepository;
+import be.cytomine.appengine.repositories.datetime.DateTimePersistenceRepository;
 import be.cytomine.appengine.repositories.enumeration.EnumerationPersistenceRepository;
 import be.cytomine.appengine.repositories.file.FilePersistenceRepository;
 import be.cytomine.appengine.repositories.geometry.GeometryPersistenceRepository;
@@ -100,7 +101,13 @@ public class ProvisionTaskStepDefinitions {
     private BooleanPersistenceRepository booleanProvisionRepository;
 
     @Autowired
+    private CollectionPersistenceRepository collectionPersistenceRepository;
+
+    @Autowired
     private EnumerationPersistenceRepository enumerationProvisionRepository;
+
+    @Autowired
+    private DateTimePersistenceRepository datetimePersistenceRepository;
 
     @Autowired
     private GeometryPersistenceRepository geometryProvisionRepository;
@@ -137,8 +144,6 @@ public class ProvisionTaskStepDefinitions {
     private Run persistedRun;
 
     private Task persistedTask;
-    @Autowired
-    private CollectionPersistenceRepository collectionPersistenceRepository;
 
     @Before
     public void setUp() {
@@ -263,48 +268,53 @@ public class ProvisionTaskStepDefinitions {
         Assertions.assertNotNull(input);
 
         TypePersistence provision = new TypePersistence();
-        switch (input.getType().getClass().getSimpleName()) {
-            case "BooleanType":
+        switch (input.getType().getId()) {
+            case "boolean":
                 provision = new BooleanPersistence();
                 provision.setValueType(ValueType.BOOLEAN);
                 ((BooleanPersistence) provision).setValue(Boolean.parseBoolean(initialValue));
                 break;
-            case "IntegerType":
+            case "integer":
                 provision = new IntegerPersistence();
                 provision.setValueType(ValueType.INTEGER);
                 ((IntegerPersistence) provision).setValue(Integer.parseInt(initialValue));
                 break;
-            case "NumberType":
+            case "number":
                 provision = new NumberPersistence();
                 provision.setValueType(ValueType.NUMBER);
                 ((NumberPersistence) provision).setValue(Double.parseDouble(initialValue));
                 break;
-            case "StringType":
+            case "string":
                 provision = new StringPersistence();
                 provision.setValueType(ValueType.STRING);
                 ((StringPersistence) provision).setValue(initialValue);
                 break;
-            case "EnumerationType":
+            case "enumeration":
                 provision = new EnumerationPersistence();
                 provision.setValueType(ValueType.ENUMERATION);
                 ((EnumerationPersistence) provision).setValue(initialValue);
                 break;
-            case "GeometryType":
+            case "datetime":
+                provision = new DateTimePersistence();
+                provision.setValueType(ValueType.DATETIME);
+                ((DateTimePersistence) provision).setValue(Instant.parse(initialValue));
+                break;
+            case "geometry":
                 provision = new GeometryPersistence();
                 provision.setValueType(ValueType.GEOMETRY);
                 ((GeometryPersistence) provision).setValue(initialValue);
                 break;
-            case "ImageType":
+            case "image":
                 provision = new ImagePersistence();
                 provision.setValueType(ValueType.IMAGE);
                 ((ImagePersistence) provision).setValue(initialValue.getBytes());
                 break;
-            case "WsiType":
+            case "wsi":
                 provision = new WsiPersistence();
                 provision.setValueType(ValueType.WSI);
                 ((WsiPersistence) provision).setValue(initialValue.getBytes());
                 break;
-            case "FileType":
+            case "file":
                 provision = new FilePersistence();
                 provision.setValueType(ValueType.FILE);
                 ((FilePersistence) provision).setValue(initialValue.getBytes());
@@ -383,41 +393,7 @@ public class ProvisionTaskStepDefinitions {
             .orElse(null);
         Assertions.assertNotNull(input);
 
-        TypePersistence provision = null;
-        switch (input.getType().getClass().getSimpleName()) {
-            case "BooleanType":
-                provision = booleanProvisionRepository.findBooleanPersistenceByParameterNameAndRunIdAndParameterType(parameterName, persistedRun.getId(), ParameterType.INPUT);
-                break;
-            case "IntegerType":
-                provision = integerProvisionRepository.findIntegerPersistenceByParameterNameAndRunIdAndParameterType(parameterName, persistedRun.getId(), ParameterType.INPUT);
-                break;
-            case "NumberType":
-                provision = numberProvisionRepository.findNumberPersistenceByParameterNameAndRunIdAndParameterType(parameterName, persistedRun.getId(), ParameterType.INPUT);
-                break;
-            case "StringType":
-                provision = stringProvisionRepository.findStringPersistenceByParameterNameAndRunIdAndParameterType(parameterName, persistedRun.getId(), ParameterType.INPUT);
-                break;
-            case "EnumerationType":
-                provision = enumerationProvisionRepository.findEnumerationPersistenceByParameterNameAndRunIdAndParameterType(parameterName, persistedRun.getId(), ParameterType.INPUT);
-                break;
-            case "GeometryType":
-                provision = geometryProvisionRepository.findGeometryPersistenceByParameterNameAndRunIdAndParameterType(parameterName, persistedRun.getId(), ParameterType.INPUT);
-                break;
-            case "ImageType":
-                provision = imageProvisionRepository.findImagePersistenceByParameterNameAndRunIdAndParameterType(parameterName, persistedRun.getId(), ParameterType.INPUT);
-                break;
-            case "WsiType":
-                provision = wsiPersistenceRepository.findWsiPersistenceByParameterNameAndRunIdAndParameterType(parameterName, persistedRun.getId(), ParameterType.INPUT);
-                break;
-            case "FileType":
-                provision = filePersistenceRepository.findFilePersistenceByParameterNameAndRunIdAndParameterType(parameterName, persistedRun.getId(), ParameterType.INPUT);
-                break;
-            case "CollectionType":
-                provision = collectionPersistenceRepository.findCollectionPersistenceByParameterNameAndRunIdAndParameterType(parameterName, persistedRun.getId(), ParameterType.INPUT);
-                break;
-            default:
-                throw new RuntimeException("Unknown type: " + input.getType().getId());
-        }
+        TypePersistence provision = typePersistenceRepository.findTypePersistenceByParameterNameAndRunId(parameterName, persistedRun.getId());
 
         Assertions.assertNotNull(provision);
         Assertions.assertTrue(provision.getParameterName().equalsIgnoreCase(parameterName));
@@ -506,7 +482,6 @@ public class ProvisionTaskStepDefinitions {
         Assertions.assertNotNull(provision);
         Assertions.assertTrue(provision.getParameterName().equalsIgnoreCase(parameterName));
     }
-
 
     @Then("the task run state remains as {string} since not all parameters are provisioned yet")
     public void the_task_run_state_remains_as_since_not_all_parameters_are_provisioned_yet(String state) {
@@ -639,38 +614,42 @@ public class ProvisionTaskStepDefinitions {
         Assertions.assertNotNull(input);
 
         TypePersistence provision = null;
-        switch (input.getType().getClass().getSimpleName()) {
-            case "BooleanType":
+        switch (input.getType().getId()) {
+            case "boolean":
                 provision = booleanProvisionRepository.findBooleanPersistenceByParameterNameAndRunIdAndParameterType(parameterName, persistedRun.getId(), ParameterType.INPUT);
                 Assertions.assertEquals(Boolean.parseBoolean(newValue), ((BooleanPersistence) provision).isValue());
                 break;
-            case "IntegerType":
+            case "integer":
                 provision = integerProvisionRepository.findIntegerPersistenceByParameterNameAndRunIdAndParameterType(parameterName, persistedRun.getId(), ParameterType.INPUT);
                 Assertions.assertEquals(Integer.parseInt(newValue), ((IntegerPersistence) provision).getValue());
                 break;
-            case "NumberType":
+            case "number":
                 provision = numberProvisionRepository.findNumberPersistenceByParameterNameAndRunIdAndParameterType(parameterName, persistedRun.getId(), ParameterType.INPUT);
                 Assertions.assertEquals(Double.parseDouble(newValue), ((NumberPersistence) provision).getValue());
                 break;
-            case "StringType":
+            case "string":
                 provision = stringProvisionRepository.findStringPersistenceByParameterNameAndRunIdAndParameterType(parameterName, persistedRun.getId(), ParameterType.INPUT);
                 Assertions.assertEquals(newValue, ((StringPersistence) provision).getValue());
                 break;
-            case "EnumerationType":
+            case "enumeration":
                 provision = enumerationProvisionRepository.findEnumerationPersistenceByParameterNameAndRunIdAndParameterType(parameterName, persistedRun.getId(), ParameterType.INPUT);
                 Assertions.assertEquals(newValue, ((EnumerationPersistence) provision).getValue());
                 break;
-            case "GeometryType":
+            case "datetime":
+                provision = datetimePersistenceRepository.findDateTimePersistenceByParameterNameAndRunIdAndParameterType(parameterName, persistedRun.getId(), ParameterType.INPUT);
+                Assertions.assertEquals(Instant.parse(newValue), ((DateTimePersistence) provision).getValue());
+                break;
+            case "geometry":
                 provision = geometryProvisionRepository.findGeometryPersistenceByParameterNameAndRunIdAndParameterType(parameterName, persistedRun.getId(), ParameterType.INPUT);
                 Assertions.assertEquals(newValue, ((GeometryPersistence) provision).getValue());
                 break;
-            case "ImageType":
+            case "image":
                 provision = imageProvisionRepository.findImagePersistenceByParameterNameAndRunIdAndParameterType(parameterName, persistedRun.getId(), ParameterType.INPUT);
                 break;
-            case "WsiType":
+            case "wsi":
                 provision = wsiPersistenceRepository.findWsiPersistenceByParameterNameAndRunIdAndParameterType(parameterName, persistedRun.getId(), ParameterType.INPUT);
                 break;
-            case "FileType":
+            case "file":
                 provision = filePersistenceRepository.findFilePersistenceByParameterNameAndRunIdAndParameterType(parameterName, persistedRun.getId(), ParameterType.INPUT);
                 break;
         }

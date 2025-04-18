@@ -2,6 +2,7 @@ package be.cytomine.appengine.models.task.collection;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -49,6 +50,7 @@ import be.cytomine.appengine.models.task.Type;
 import be.cytomine.appengine.models.task.TypePersistence;
 import be.cytomine.appengine.models.task.ValueType;
 import be.cytomine.appengine.models.task.bool.BooleanPersistence;
+import be.cytomine.appengine.models.task.datetime.DateTimePersistence;
 import be.cytomine.appengine.models.task.enumeration.EnumerationPersistence;
 import be.cytomine.appengine.models.task.file.FilePersistence;
 import be.cytomine.appengine.models.task.file.FileType;
@@ -62,6 +64,7 @@ import be.cytomine.appengine.models.task.string.StringPersistence;
 import be.cytomine.appengine.models.task.wsi.WsiPersistence;
 import be.cytomine.appengine.repositories.bool.BooleanPersistenceRepository;
 import be.cytomine.appengine.repositories.collection.CollectionPersistenceRepository;
+import be.cytomine.appengine.repositories.datetime.DateTimePersistenceRepository;
 import be.cytomine.appengine.repositories.enumeration.EnumerationPersistenceRepository;
 import be.cytomine.appengine.repositories.geometry.GeometryPersistenceRepository;
 import be.cytomine.appengine.repositories.integer.IntegerPersistenceRepository;
@@ -260,12 +263,17 @@ public class CollectionType extends Type {
                         value = FileHelper.read(entry.getData(), getStorageCharset());
                         item.put("value", Boolean.parseBoolean(value));
                         break;
+                    case "DateTimeType":
+                        value = FileHelper.read(entry.getData(), getStorageCharset());
+                        item.put("value", Instant.parse(value));
+                        break;
                     case "FileType",
                          "ImageType",
                          "WsiType":
                         item.put("value", entry.getData());
                         break;
-                    default: throw new TypeValidationException("unknown leaf type: " + leafType);
+                    default:
+                        throw new TypeValidationException("unknown leaf type: " + leafType);
                 }
                 ((List<Object>) lists.get(parentListName)).add(item);
             }
@@ -436,7 +444,6 @@ public class CollectionType extends Type {
         } else {
             persistCollection(provision, runId);
         }
-
     }
 
     private void persistCollectionItem(JsonNode provision, UUID runId) throws ProvisioningException {
@@ -785,7 +792,10 @@ public class CollectionType extends Type {
                     return getEnumerationPersistence(node, runId, parameterName);
                 case "GeometryType":
                     return getGeometryPersistence(node, runId, parameterName);
-                default: return null;
+                case "DateTimeType":
+                    return getDateTimePersistence(node, runId, parameterName);
+                default:
+                    return null;
             }
         }
 
@@ -978,6 +988,29 @@ public class CollectionType extends Type {
         return geometryPersistence;
     }
 
+    private static DateTimePersistence getDateTimePersistence(
+        JsonNode node,
+        UUID runId,
+        String parameterName
+    ) {
+        DateTimePersistenceRepository datetimePersistenceRepository = AppEngineApplicationContext.getBean(DateTimePersistenceRepository.class);
+        DateTimePersistence datetimePersistence = datetimePersistenceRepository.findDateTimePersistenceByParameterNameAndRunIdAndParameterType(
+            parameterName, runId, ParameterType.INPUT
+        );
+        if (datetimePersistence == null) {
+            datetimePersistence = new DateTimePersistence();
+            datetimePersistence.setParameterType(ParameterType.INPUT);
+            datetimePersistence.setParameterName(parameterName);
+            datetimePersistence.setRunId(runId);
+            datetimePersistence.setValueType(ValueType.DATETIME);
+            datetimePersistence.setValue(Instant.parse(node.asText()));
+            datetimePersistence.setCollectionIndex(parameterName.substring(parameterName.indexOf("[")));
+        } else {
+            datetimePersistence.setValue(Instant.parse(node.asText()));
+        }
+        return datetimePersistence;
+    }
+
     @Transactional
     @Override
     public void persistResult(Run run, Parameter currentOutput, StorageData outputValue)
@@ -1043,8 +1076,7 @@ public class CollectionType extends Type {
                         nameParts[i] = "[" + nameParts[i] + "]";
                     }
                 }
-                CollectionPersistence parentCollection =
-                    (CollectionPersistence) parameterNameToTypePersistence.get(parentName);
+                CollectionPersistence parentCollection = (CollectionPersistence) parameterNameToTypePersistence.get(parentName);
                 String entryValue = null;
                 if (!(leafType.equals("FileType")
                     || leafType.equals("ImageType")
@@ -1073,8 +1105,7 @@ public class CollectionType extends Type {
                     geoJsonCollection.setParameterType(ParameterType.OUTPUT);
                     geoJsonCollection.setParameterName(currentOutput.getName());
                     geoJsonCollection.setRunId(run.getId());
-                    geoJsonCollection.setCollectionIndex(Arrays.stream(nameParts, 1, nameParts.length).collect(
-                        Collectors.joining()));
+                    geoJsonCollection.setCollectionIndex(Arrays.stream(nameParts, 1, nameParts.length).collect(Collectors.joining()));
                     geoJsonCollection.setSize(geoJsonCollectionSize);
                     geoJsonCollection.setCompactValue(entryValue);
 
@@ -1192,7 +1223,19 @@ public class CollectionType extends Type {
 
                         parentCollection.getItems().add(wsiPersistence);
                         break;
-                    default: throw new ProvisioningException("unknown leaf type: " + leafType);
+                    case "DateTimeType":
+                        DateTimePersistence datetimePersistence = new DateTimePersistence();
+                        datetimePersistence.setParameterType(ParameterType.OUTPUT);
+                        datetimePersistence.setRunId(run.getId());
+                        datetimePersistence.setParameterName(String.join("", nameParts));
+                        datetimePersistence.setCollectionIndex(Arrays.stream(nameParts, 1, nameParts.length).collect(Collectors.joining()));
+                        datetimePersistence.setValue(Instant.parse(entryValue));
+                        datetimePersistence.setValueType(ValueType.DATETIME);
+
+                        parentCollection.getItems().add(datetimePersistence);
+                        break;
+                    default:
+                        throw new ProvisioningException("unknown leaf type: " + leafType);
                 }
 
             }
@@ -1249,7 +1292,7 @@ public class CollectionType extends Type {
                 || value.get("type").asText().equals("FeatureCollection"))) {
                 path += ".geojson";
             }
-            String content;
+
             StorageDataEntry itemFileEntry = null;
             if (leafType.equalsIgnoreCase("FileType")
                 || leafType.equalsIgnoreCase("ImageType")
@@ -1274,10 +1317,11 @@ public class CollectionType extends Type {
             int minusParameterDirectory = container.getEntryList().size() - 1;
             container.add(itemFileEntry);
             String arrayDotYmpData = "size: " + (minusParameterDirectory + 1);
-            container.add(new StorageDataEntry(FileHelper.write("array.yml",
-                    arrayDotYmpData.getBytes(StandardCharsets.UTF_8)),
-                    ymlPath + "/array.yml",
-                    StorageDataType.FILE));
+            container.add(new StorageDataEntry(
+                FileHelper.write("array.yml", arrayDotYmpData.getBytes(StandardCharsets.UTF_8)),
+                ymlPath + "/array.yml",
+                StorageDataType.FILE
+            ));
         }
         return container;
     }
@@ -1417,6 +1461,10 @@ public class CollectionType extends Type {
                         collectionItemValue.setValue(Boolean.parseBoolean(entryValue));
                         collectionItemValue.setType(ValueType.BOOLEAN);
                         break;
+                    case "DateTimeType":
+                        collectionItemValue.setValue(Instant.parse(entryValue));
+                        collectionItemValue.setType(ValueType.DATETIME);
+                        break;
                     case "FileType":
                         collectionItemValue.setValue(null);
                         collectionItemValue.setType(ValueType.FILE);
@@ -1429,7 +1477,8 @@ public class CollectionType extends Type {
                         collectionItemValue.setValue(null);
                         collectionItemValue.setType(ValueType.WSI);
                         break;
-                    default: throw new ProvisioningException("unknown leaf type: " + leafType);
+                    default:
+                        throw new ProvisioningException("unknown leaf type: " + leafType);
                 }
                 itemListsDictionary.get(entry.getName().substring(0, entry.getName().lastIndexOf("/") + 1)).add(collectionItemValue);
 
@@ -1439,7 +1488,6 @@ public class CollectionType extends Type {
     }
 
     private int getCollectionSize(StorageDataEntry output) throws ProvisioningException {
-
         String arrayYmlContent = FileHelper.read(output.getData(), getStorageCharset()).trim();
         if (arrayYmlContent.isEmpty()) {
             throw new ProvisioningException(ErrorCode.INTERNAL_MISSING_METADATA);
@@ -1454,11 +1502,7 @@ public class CollectionType extends Type {
         return arrayYml.get("size").asInt();
     }
 
-
-
-    private TaskRunParameterValue buildNode(TypePersistence typePersistence)
-        throws ProvisioningException {
-
+    private TaskRunParameterValue buildNode(TypePersistence typePersistence) throws ProvisioningException {
         Type currentType = new CollectionType(this);
         while (currentType instanceof CollectionType) {
             currentType = ((CollectionType) currentType).getSubType();
@@ -1491,9 +1535,7 @@ public class CollectionType extends Type {
 
                 return geoCollectionValue;
             }
-
         } else {
-
             return getCollectionItemValue(typePersistence, leafType);
         }
     }
@@ -1526,6 +1568,9 @@ public class CollectionType extends Type {
         } else if (typePersistence instanceof EnumerationPersistence) {
             collectionItemValue.setValue(((EnumerationPersistence) typePersistence).getValue());
             collectionItemValue.setType(ValueType.ENUMERATION);
+        } else if (typePersistence instanceof DateTimePersistence) {
+            collectionItemValue.setValue(((DateTimePersistence) typePersistence).getValue());
+            collectionItemValue.setType(ValueType.DATETIME);
         } else if (typePersistence instanceof ImagePersistence) {
             collectionItemValue.setType(ValueType.IMAGE);
         } else if (typePersistence instanceof FilePersistence) {
@@ -1537,5 +1582,4 @@ public class CollectionType extends Type {
         }
         return collectionItemValue;
     }
-
 }

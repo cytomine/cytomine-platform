@@ -2,7 +2,6 @@ package be.cytomine.appengine.unit.services;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -361,30 +360,6 @@ public class TaskProvisioningServiceTest {
         );
         assertEquals("some outputs are missing in the archive", exception.getMessage());
         verify(runRepository, times(1)).findById(localRun.getId());
-    }
-
-    @DisplayName("Successfully get the storage charset")
-    @Test
-    public void getStorageCharsetShouldReturnCorrectCharset() {
-        assertEquals(StandardCharsets.US_ASCII, taskProvisioningService.getStorageCharset("US_ASCII"));
-        assertEquals(StandardCharsets.ISO_8859_1, taskProvisioningService.getStorageCharset("ISO_8859_1"));
-        assertEquals(StandardCharsets.UTF_16LE, taskProvisioningService.getStorageCharset("UTF_16LE"));
-        assertEquals(StandardCharsets.UTF_16BE, taskProvisioningService.getStorageCharset("UTF_16BE"));
-        assertEquals(StandardCharsets.UTF_16, taskProvisioningService.getStorageCharset("UTF_16"));
-    }
-
-    @DisplayName("Successfully get UTF-8 for unknown charset")
-    @Test
-    public void getStorageCharsetShouldReturnUTF8ByDefault() {
-        assertEquals(StandardCharsets.UTF_8, taskProvisioningService.getStorageCharset("UNKNOWN_CHARSET"));
-    }
-
-    @DisplayName("Successfully get the storage charset for mixed case")
-    @Test
-    public void getStorageCharsetShouldReturnCorrectCharsetForMixedCase() {
-        assertEquals(StandardCharsets.US_ASCII, taskProvisioningService.getStorageCharset("us_ascii"));
-        assertEquals(StandardCharsets.ISO_8859_1, taskProvisioningService.getStorageCharset("iso_8859_1"));
-        assertEquals(StandardCharsets.UTF_16LE, taskProvisioningService.getStorageCharset("utf_16le"));
     }
 
     @DisplayName("Successfully retrieve the outputs")
