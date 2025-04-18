@@ -9,6 +9,7 @@ import java.util.Map;
 
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
+import io.fabric8.kubernetes.api.model.EnvVarBuilder;
 import io.fabric8.kubernetes.api.model.HostPathVolumeSourceBuilder;
 import io.fabric8.kubernetes.api.model.PodBuilder;
 import io.fabric8.kubernetes.api.model.Quantity;
@@ -32,7 +33,6 @@ import be.cytomine.appengine.models.task.Task;
 import be.cytomine.appengine.repositories.RunRepository;
 import be.cytomine.appengine.states.TaskRunState;
 
-
 @Slf4j
 public class KubernetesScheduler implements SchedulerHandler {
 
@@ -41,9 +41,6 @@ public class KubernetesScheduler implements SchedulerHandler {
 
     @Autowired
     private KubernetesClient kubernetesClient;
-
-
-    private PodInformer podInformer;
 
     @Autowired
     private RunRepository runRepository;
@@ -65,6 +62,8 @@ public class KubernetesScheduler implements SchedulerHandler {
 
     @Value("${scheduler.helper-containers-resources.cpu}")
     private String helperContainerCpu;
+
+    private PodInformer podInformer;
 
     private String baseUrl;
 
