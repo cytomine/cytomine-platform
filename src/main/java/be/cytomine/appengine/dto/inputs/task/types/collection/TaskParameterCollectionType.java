@@ -1,11 +1,14 @@
 package be.cytomine.appengine.dto.inputs.task.types.collection;
 
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import be.cytomine.appengine.models.task.Type;
 import be.cytomine.appengine.dto.inputs.task.TaskParameterType;
+
 
 @EqualsAndHashCode(callSuper = true)
 @Data
@@ -18,4 +21,6 @@ public class TaskParameterCollectionType extends TaskParameterType {
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Integer maxSize;
+
+    private Type subType;
 }
