@@ -1312,24 +1312,15 @@ public class CollectionType extends Type {
             if (path.contains("/")) {
                 ymlPath = path.substring(1, path.lastIndexOf("/"));
             }
-            CollectionPersistenceRepository collectionPersistenceRepository =
-                AppEngineApplicationContext.getBean(CollectionPersistenceRepository.class);
-            String persistenceParameterName = transform(ymlPath);
-            CollectionPersistence collectionPersistence = collectionPersistenceRepository
-                .findCollectionPersistenceByParameterNameAndRunId(persistenceParameterName, run.getId());
-            int size = 0;
-            if (Objects.isNull(collectionPersistence)) {
-                size = 1;
-            } else {
-                size = collectionPersistence.getSize() + 1;
-            }
-            String arrayDotYmpData = "size: " + size;
-            container.add(new StorageDataEntry(FileHelper.write("array.yml",
-                arrayDotYmpData.getBytes(StandardCharsets.UTF_8)),
-                ymlPath + "/array.yml",
-                StorageDataType.FILE));
 
+            container.getEntryList().removeIf(tempYml -> tempYml.getName().endsWith("array.yml"));
+            int minusParameterDirectory = container.getEntryList().size() - 1;
             container.add(itemFileEntry);
+            String arrayDotYmpData = "size: " + (minusParameterDirectory + 1);
+            container.add(new StorageDataEntry(FileHelper.write("array.yml",
+                    arrayDotYmpData.getBytes(StandardCharsets.UTF_8)),
+                    ymlPath + "/array.yml",
+                    StorageDataType.FILE));
         }
         return container;
     }

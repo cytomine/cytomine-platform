@@ -1,6 +1,7 @@
 package be.cytomine.appengine.dto.inputs.task;
 
 import be.cytomine.appengine.dto.inputs.task.types.bool.TaskParameterBooleanType;
+import be.cytomine.appengine.dto.inputs.task.types.collection.TaskParameterCollectionType;
 import be.cytomine.appengine.dto.inputs.task.types.datetime.TaskParameterDateTimeType;
 import be.cytomine.appengine.dto.inputs.task.types.enumeration.TaskParameterEnumerationType;
 import be.cytomine.appengine.dto.inputs.task.types.file.TaskParameterFileType;
@@ -12,6 +13,7 @@ import be.cytomine.appengine.dto.inputs.task.types.string.TaskParameterStringTyp
 import be.cytomine.appengine.dto.inputs.task.types.wsi.TaskParameterWsiType;
 import be.cytomine.appengine.models.task.Parameter;
 import be.cytomine.appengine.models.task.bool.BooleanType;
+import be.cytomine.appengine.models.task.collection.CollectionType;
 import be.cytomine.appengine.models.task.datetime.DateTimeType;
 import be.cytomine.appengine.models.task.enumeration.EnumerationType;
 import be.cytomine.appengine.models.task.file.FileType;
@@ -84,6 +86,13 @@ public class TaskInputFactory {
             taskParameterType = new TaskParameterFileType(
                 type.getId(),
                 type.getFormats()
+            );
+        } else if (input.getType() instanceof CollectionType type) {
+            taskParameterType = new TaskParameterCollectionType(
+                    type.getId(),
+                    type.getMinSize(),
+                    type.getMaxSize(),
+                    type.getSubType()
             );
         }
 

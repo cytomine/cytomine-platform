@@ -102,7 +102,7 @@ public class KubernetesScheduler implements SchedulerHandler {
     @PostConstruct
     private void initUrl() throws SchedulingException {
         String port = environment.getProperty("server.port");
-        String hostAddress = getHostAddress();
+        String hostAddress = "http://" + getHostAddress();
 
         this.baseUrl = hostAddress + ":" + port + apiPrefix + apiVersion + "/task-runs/";
         this.baseInputPath = "/tmp/app-engine/task-run-inputs-";
@@ -221,8 +221,8 @@ public class KubernetesScheduler implements SchedulerHandler {
         sendOutputs += url + "/" + runSecret + "/outputs.zip";
         String zipOutputs = "cd " + task.getOutputFolder() + and + " zip -r outputs.zip .";
         String wait = "export TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token); ";
-        wait += "while ! curl -k -H \"Authorization: Bearer $TOKEN\" ";
-        wait += "https://${KUBERNETES_SERVICE_HOST}:${KUBERNETES_SERVICE_PORT_HTTPS}/api/v1/namespaces/default/pods/${HOSTNAME}/status ";
+        wait += "while ! curl -vk -H \"Authorization: Bearer $TOKEN\" ";
+        wait += "https://${KUBERNETES_SERVICE_HOST}:${KUBERNETES_SERVICE_PORT_HTTPS}/api/v1/namespaces/default/pods/${POD_NAME}/status ";
         wait += "| jq '.status | .containerStatuses[] | select(.name == \"task\") | .state ";
         wait += "| keys[0]' | grep -q -F \"terminated\"; do sleep 2; done";
 
@@ -240,6 +240,16 @@ public class KubernetesScheduler implements SchedulerHandler {
             .withMountPath(task.getOutputFolder())
             .endVolumeMount()
 
+            .withEnv(new EnvVarBuilder()
+                    .withName("POD_NAME")
+                    .withNewValueFrom()
+                    .withNewFieldRef()
+                    .withFieldPath("metadata.name")
+                    .endFieldRef()
+                    .endValueFrom()
+                    .build())
+
+
             .build();
 
         // Defining the pod image to run
@@ -250,6 +260,8 @@ public class KubernetesScheduler implements SchedulerHandler {
             .endMetadata()
 
             .withNewSpec()
+
+            .withHostNetwork(true)
 
             .addNewInitContainerLike(permissionContainer)
             .endInitContainer()
