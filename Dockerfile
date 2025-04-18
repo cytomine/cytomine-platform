@@ -77,10 +77,10 @@ ARG GRADLE_VERSION
 ARG OPENJDK_VERSION
 
 LABEL org.opencontainers.image.authors="dev@cytomine.com" \
-      org.opencontainers.image.url="https://www.cytomine.com/" \
-      org.opencontainers.image.documentation="https://doc.cytomine.org/" \
-      org.opencontainers.image.source="https://github.com/cytomine/Cytomine-App-Engine" \
-      org.opencontainers.image.vendor="Cytomine Corporation SA" \
+      org.opencontainers.image.url="https://uliege.cytomine.org/" \
+      org.opencontainers.image.documentation="https://doc.cytomine.com/" \
+      org.opencontainers.image.source="https://github.com/cytomine/Cytomine-app-engine" \
+      org.opencontainers.image.vendor="Cytomine ULiege" \
       org.opencontainers.image.version="${APP_ENGINE_VERSION}" \
       org.opencontainers.image.revision="${APP_ENGINE_REVISION}" \
       org.opencontainers.image.deps.openjdk.version="${OPENJDK_VERSION}" \
