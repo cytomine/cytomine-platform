@@ -175,11 +175,11 @@ ARG UBUNTU_VERSION=20.04
 ARG VIPS_URL=https://github.com/libvips/libvips/releases/download
 ARG VIPS_VERSION=8.15.2
 
-LABEL org.opencontainers.image.authors='support@cytomine.com' \
-      org.opencontainers.image.url='https://www.cytomine.org/' \
-      org.opencontainers.image.documentation='https://doc.cytomine.org/' \
-      org.opencontainers.image.source='https://github.com/cytomine/pims' \
-      org.opencontainers.image.vendor='Cytomine Corporation SA' \
+LABEL org.opencontainers.image.authors='uliege@cytomine.org' \
+      org.opencontainers.image.url='https://uliege.cytomine.org/' \
+      org.opencontainers.image.documentation='https://doc.uliege.cytomine.org/' \
+      org.opencontainers.image.source='https://github.com/cytomine/Cytomine-pims' \
+      org.opencontainers.image.vendor='Cytomine ULiege' \
       org.opencontainers.image.deps.entrypoint.scripts.version=${ENTRYPOINT_SCRIPTS_VERSION} \
       org.opencontainers.image.deps.gunicorn.version=${GUNICORN_VERSION} \
       org.opencontainers.image.deps.openjpeg.url=${OPENJPEG_URL} \
