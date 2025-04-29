@@ -85,7 +85,7 @@ idna==3.4
     # via
     #   anyio
     #   requests
-imagecodecs==2023.1.23
+imagecodecs==2025.3.30
     # via cytomine-pims (setup.py)
 imageio==2.26.0
     # via scikit-image
@@ -107,7 +107,7 @@ networkx==3.0
     # via scikit-image
 numcodecs==0.11.0
     # via zarr
-numpy==1.24.2
+numpy==1.24.4
     # via
     #   contourpy
     #   cytomine-pims (setup.py)
