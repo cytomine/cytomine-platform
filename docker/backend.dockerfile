@@ -14,11 +14,11 @@ ARG VIPS_VERSION=8.15.2
 
 #######################################################################################
 ## Stage: entrypoint script. Use a multi-stage because COPY --from cannot interpolate variables
-FROM cytomine/entrypoint-scripts:${ENTRYPOINT_SCRIPTS_VERSION} as entrypoint-scripts
+FROM cytomine/entrypoint-scripts:${ENTRYPOINT_SCRIPTS_VERSION} AS entrypoint-scripts
 
 #######################################################################################
 ## Stage: Pims
-FROM ubuntu:${UBUNTU_VERSION} as base-pims
+FROM ubuntu:${UBUNTU_VERSION} AS base-pims
 
 ENV LANG C.UTF-8
 ENV DEBIAN_FRONTEND noninteractive
