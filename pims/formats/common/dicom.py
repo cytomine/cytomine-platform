@@ -11,15 +11,15 @@
 #  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  * See the License for the specific language governing permissions and
 #  * limitations under the License.
+
 import logging
 from datetime import datetime
-from typing import List, Optional, Union
+from typing import List, Optional
 
 import numpy as np
 import pyvips
 from pint import Quantity
 from pydicom import FileDataset, dcmread
-from pydicom.dicomdir import DicomDir
 from pydicom.multival import MultiValue
 from pydicom.uid import ImplicitVRLittleEndian
 from pyvips import GValue
@@ -56,9 +56,12 @@ def _pydicom_dcmread(path, *args, **kwargs):
     return dcm
 
 
-def cached_dcmread(format: AbstractFormat) -> Union[FileDataset, DicomDir]:
+def cached_dcmread(format: AbstractFormat) -> FileDataset:
     return format.get_cached(
-        '_dcmread', _pydicom_dcmread, format.path.resolve(), force=True
+        '_dcmread',
+        _pydicom_dcmread,
+        format.path.resolve(),
+        force=True,
     )
 
 
