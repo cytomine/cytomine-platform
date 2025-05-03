@@ -25,3 +25,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Software model and SoftwareCollection
 - TrustedSource model and TrustedSourceCollection
 - UserJob model and UserJobCollection
+
+[Unreleased]: https://github.com/cytomine/Cytomine-js-client/compare/3.0.0..HEAD
+[3.0.0]: https://github.com/cytomine/Cytomine-js-client/releases/tag/3.0.0
