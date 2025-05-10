@@ -1,7 +1,7 @@
 import * as utils from './utils.js';
-import {ProjectDefaultLayer, ProjectDefaultLayerCollection} from '@/index.js';
+import { ProjectDefaultLayer, ProjectDefaultLayerCollection } from '@/index.js';
 
-describe('ProjectDefaultLayer', function() {
+describe('ProjectDefaultLayer', () => {
 
   let user;
   let project;
@@ -10,21 +10,21 @@ describe('ProjectDefaultLayer', function() {
   let projectDefaultLayer;
   let id = 0;
 
-  beforeAll(async function() {
+  beforeAll(async () => {
     await utils.connect(true);
     projectObject = await utils.getProject();
     project = projectObject.id;
-    ({id: user} = await utils.getUser());
+    ({ id: user } = await utils.getUser());
     await projectObject.addUser(user);
   });
 
-  afterAll(async function() {
+  afterAll(async () => {
     await utils.cleanData();
   });
 
-  describe('Create', function() {
-    it('Create', async function() {
-      projectDefaultLayer = new ProjectDefaultLayer({user, project});
+  describe('Create', () => {
+    it('Create', async () => {
+      projectDefaultLayer = new ProjectDefaultLayer({ user, project });
       projectDefaultLayer = await projectDefaultLayer.save();
       expect(projectDefaultLayer).toBeInstanceOf(ProjectDefaultLayer);
       id = projectDefaultLayer.id;
@@ -32,26 +32,26 @@ describe('ProjectDefaultLayer', function() {
     });
   });
 
-  describe('Fetch', function() {
-    it('Fetch with static method', async function() {
+  describe('Fetch', () => {
+    it('Fetch with static method', async () => {
       let fetchedProjectDefaultLayer = await ProjectDefaultLayer.fetch(id, project);
       expect(fetchedProjectDefaultLayer).toBeInstanceOf(ProjectDefaultLayer);
       expect(fetchedProjectDefaultLayer).toEqual(projectDefaultLayer);
     });
 
-    it('Fetch with instance method', async function() {
-      let fetchedProjectDefaultLayer = await new ProjectDefaultLayer({project, id}).fetch();
+    it('Fetch with instance method', async () => {
+      let fetchedProjectDefaultLayer = await new ProjectDefaultLayer({ project, id }).fetch();
       expect(fetchedProjectDefaultLayer).toBeInstanceOf(ProjectDefaultLayer);
       expect(fetchedProjectDefaultLayer).toEqual(projectDefaultLayer);
     });
 
-    it('Fetch with wrong ID', function() {
+    it('Fetch with wrong ID', () => {
       expect(ProjectDefaultLayer.fetch(0)).rejects.toThrow();
     });
   });
 
-  describe('Update', function() {
-    it('Update', async function() {
+  describe('Update', () => {
+    it('Update', async () => {
       let hideByDefault = !projectDefaultLayer.hideByDefault;
       projectDefaultLayer.hideByDefault = hideByDefault;
       projectDefaultLayer = await projectDefaultLayer.update();
@@ -60,109 +60,111 @@ describe('ProjectDefaultLayer', function() {
     });
   });
 
-  describe('Delete', function() {
-    it('Delete', async function() {
+  describe('Delete', () => {
+    it('Delete', async () => {
       await ProjectDefaultLayer.delete(id, project);
     });
 
-    it('Fetch deleted', function() {
+    it('Fetch deleted', () => {
       expect(ProjectDefaultLayer.fetch(id, project)).rejects.toThrow();
     });
   });
 
   // --------------------
 
-  describe('ProjectDefaultLayerCollection', function() {
+  describe('ProjectDefaultLayerCollection', () => {
 
     let nbProjectDefaultLayers = 3;
     let projectDefaultLayers;
 
-    beforeAll(async function() {
+    beforeAll(async () => {
       async function createUserAndProjectDefaultLayer() {
         let tempUser = await utils.getUser();
-        let projectDefaultLayer = new ProjectDefaultLayer({project, user: tempUser.id});
+        let projectDefaultLayer = new ProjectDefaultLayer({ project, user: tempUser.id });
         await projectObject.addUser(tempUser.id);
         await projectDefaultLayer.save();
         return projectDefaultLayer;
       }
 
       let projectDefaultLayerPromises = [];
-      for(let i = 0; i < nbProjectDefaultLayers; i++) {
+      for (let i = 0; i < nbProjectDefaultLayers; i++) {
         projectDefaultLayerPromises.push(createUserAndProjectDefaultLayer());
       }
       projectDefaultLayers = await Promise.all(projectDefaultLayerPromises);
     });
 
-    afterAll(async function() {
+    afterAll(async () => {
       let deletionPromises = projectDefaultLayers.map(projectDefaultLayer =>
         ProjectDefaultLayer.delete(projectDefaultLayer.id, project));
       await Promise.all(deletionPromises);
     });
 
-    describe('Fetch', function() {
-      it('Fetch (instance method)', async function() {
-        let collection = await new ProjectDefaultLayerCollection({filterKey: 'project', filterValue: project}).fetchAll();
+    describe('Fetch', () => {
+      it('Fetch (instance method)', async () => {
+        let collection = await new ProjectDefaultLayerCollection({ filterKey: 'project', filterValue: project }).fetchAll();
         expect(collection).toBeInstanceOf(ProjectDefaultLayerCollection);
         expect(collection).toHaveLength(nbProjectDefaultLayers);
       });
 
-      it('Fetch (static method)', async function() {
-        let collection = await ProjectDefaultLayerCollection.fetchAll({filterKey: 'project', filterValue: project});
+      it('Fetch (static method)', async () => {
+        let collection = await ProjectDefaultLayerCollection.fetchAll({ filterKey: 'project', filterValue: project });
         expect(collection).toBeInstanceOf(ProjectDefaultLayerCollection);
         expect(collection).toHaveLength(nbProjectDefaultLayers);
       });
 
-      it('Fetch with several requests', async function() {
-        let collection = await ProjectDefaultLayerCollection.fetchAll({nbPerPage: 1,
-          filterKey: 'project', filterValue: project});
+      it('Fetch with several requests', async () => {
+        let collection = await ProjectDefaultLayerCollection.fetchAll({
+          nbPerPage: 1,
+          filterKey: 'project', filterValue: project
+        });
         expect(collection).toBeInstanceOf(ProjectDefaultLayerCollection);
         expect(collection).toHaveLength(nbProjectDefaultLayers);
       });
 
-      it('Fetch without filter', async function() {
+      it('Fetch without filter', async () => {
         let collection = new ProjectDefaultLayerCollection();
         expect(collection.fetchAll()).rejects.toThrow();
       });
     });
 
-    describe('Working with the collection', function() {
-      it('Iterate through', async function() {
-        let collection = await ProjectDefaultLayerCollection.fetchAll({filterKey: 'project', filterValue: project});
-        for(let projectDefaultLayer of collection) {
+    describe('Working with the collection', () => {
+      it('Iterate through', async () => {
+        let collection = await ProjectDefaultLayerCollection.fetchAll({ filterKey: 'project', filterValue: project });
+        for (let projectDefaultLayer of collection) {
           expect(projectDefaultLayer).toBeInstanceOf(ProjectDefaultLayer);
         }
       });
 
-      it('Add item to the collection', function() {
+      it('Add item to the collection', () => {
         let collection = new ProjectDefaultLayerCollection();
         expect(collection).toHaveLength(0);
         collection.push(new ProjectDefaultLayer());
         expect(collection).toHaveLength(1);
       });
 
-      it('Add arbitrary object to the collection', function() {
+      it('Add arbitrary object to the collection', () => {
         let collection = new ProjectDefaultLayerCollection();
         expect(collection.push.bind(collection, {})).toThrow();
       });
     });
 
-    describe('Pagination', function() {
+    describe('Pagination', () => {
       let nbPerPage = 1;
 
-      it('Fetch arbitrary page', async function() {
-        let collection = new ProjectDefaultLayerCollection({nbPerPage, filterKey: 'project', filterValue: project});
+      it('Fetch arbitrary page', async () => {
+        let collection = new ProjectDefaultLayerCollection({ nbPerPage, filterKey: 'project', filterValue: project });
         await collection.fetchPage(2);
         expect(collection).toHaveLength(nbPerPage);
       });
 
-      it('Fetch next page', async function() {
-        let collection = new ProjectDefaultLayerCollection({nbPerPage, filterKey: 'project', filterValue: project});
+      it('Fetch next page', async () => {
+        let collection = new ProjectDefaultLayerCollection({ nbPerPage, filterKey: 'project', filterValue: project });
         await collection.fetchNextPage();
         expect(collection).toHaveLength(nbPerPage);
       });
 
-      it('Fetch previous page', async function() {
-        let collection = new ProjectDefaultLayerCollection({nbPerPage, filterKey: 'project', filterValue: project});
+      it('Fetch previous page', async () => {
+        let collection = new ProjectDefaultLayerCollection({ nbPerPage, filterKey: 'project', filterValue: project });
         collection.curPage = 2;
         await collection.fetchPreviousPage();
         expect(collection).toHaveLength(nbPerPage);

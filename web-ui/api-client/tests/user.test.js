@@ -1,8 +1,8 @@
 import * as utils from './utils.js';
-import {User, UserCollection, RoleCollection} from '@/index.js';
+import { User, UserCollection, RoleCollection } from '@/index.js';
 import config from './config.js';
 
-describe('User', function() {
+describe('User', () => {
 
   let name = utils.randomString();
   let email = name + '@cytomine.coop';
@@ -12,18 +12,18 @@ describe('User', function() {
   let user = null;
   let id = 0;
 
-  beforeAll(async function() {
+  beforeAll(async () => {
     await utils.connect(true);
     project = await utils.getProject();
   });
 
-  afterAll(async function() {
+  afterAll(async () => {
     await utils.cleanData();
   });
 
-  describe('Create', function() {
-    it('Create', async function() {
-      user = new User({username: name, password: name, firstname: name, lastname: name, email});
+  describe('Create', () => {
+    it('Create', async () => {
+      user = new User({ username: name, password: name, firstname: name, lastname: name, email });
       user = await user.save();
       id = user.id;
       expect(id).toBeDefined();
@@ -31,60 +31,60 @@ describe('User', function() {
     });
   });
 
-  describe('Fetch', function() {
-    it('Fetch with static method', async function() {
+  describe('Fetch', () => {
+    it('Fetch with static method', async () => {
       let fetchedUser = await User.fetch(id);
       expect(fetchedUser).toBeInstanceOf(User);
       expect(fetchedUser.username).toEqual(user.username);
     });
 
-    it('Fetch with instance method', async function() {
-      let fetchedUser = await new User({id}).fetch();
+    it('Fetch with instance method', async () => {
+      let fetchedUser = await new User({ id }).fetch();
       expect(fetchedUser).toBeInstanceOf(User);
       expect(fetchedUser.username).toEqual(user.username);
     });
 
-    it('Fetch with wrong ID', function() {
+    it('Fetch with wrong ID', () => {
       expect(User.fetch(0)).rejects.toThrow();
     });
   });
 
-  describe('Specific operations', function() {
+  describe('Specific operations', () => {
     let role;
 
-    beforeAll(async function() {
-      ({id: role} = await utils.getRole());
+    beforeAll(async () => {
+      ({ id: role } = await utils.getRole());
     });
 
-    it('Fetch current user', async function() {
+    it('Fetch current user', async () => {
       let currentUser = await User.fetchCurrent();
       expect(currentUser).toBeInstanceOf(User);
     });
 
-    it('Fetch number of annotations user', async function() {
+    it('Fetch number of annotations user', async () => {
       let result = await user.fetchNbAnnotations(false);
       expect(Number.isFinite(result)).toBe(true);
       result = await user.fetchNbAnnotations(true);
       expect(Number.isFinite(result)).toBe(true);
     });
 
-    it.skip('Fetch keys', async function() { // Bug in backend
+    it.skip('Fetch keys', async () => { // Bug in backend
       let keys = await user.fetchKeys();
       expect(keys.publicKey).toBeDefined();
       expect(keys.privateKey).toBeDefined();
     });
 
-    it('Regenerate keys', async function() {
+    it('Regenerate keys', async () => {
       await user.regenerateKeys();
       // TODO: once bug in backend preventing from fetching keys is solved, check the values of the keys
     });
 
-    it('Fetch friends', async function() {
+    it('Fetch friends', async () => {
       let friends = await user.fetchFriends();
       expect(friends).toBeInstanceOf(UserCollection);
     });
 
-    it('Fetch activity resume', async function() {
+    it('Fetch activity resume', async () => {
       let activity = await user.fetchResumeActivity(project.id);
       expect(activity.firstConnection).toBeNull();
       expect(activity.lastConnection).toBeNull();
@@ -92,27 +92,27 @@ describe('User', function() {
       expect(activity.totalConnections).toEqual(0);
     });
 
-    it('Lock', async function() {
+    it('Lock', async () => {
       await user.lock();
       expect(user.enabled).toBe(false);
     });
 
-    it('Unlock', async function() {
+    it('Unlock', async () => {
       await user.unlock();
       expect(user.enabled).toBe(true);
     });
 
-    it('Define role', async function() {
+    it('Define role', async () => {
       let roles = await user.defineRole(role);
       expect(roles).toBeInstanceOf(RoleCollection);
     });
 
-    it('Change password', async function() {
+    it('Change password', async () => {
       let newPassword = utils.randomString();
       await user.savePassword(newPassword);
     });
 
-    it('Check password of current user', async function() {
+    it('Check password of current user', async () => {
       let result = await User.checkCurrentPassword(config.password);
       expect(result).toBe(true);
       result = await User.checkCurrentPassword(utils.randomString());
@@ -120,8 +120,8 @@ describe('User', function() {
     });
   });
 
-  describe('Update', function() {
-    it('Update', async function() {
+  describe('Update', () => {
+    it('Update', async () => {
       let newName = utils.randomString();
       user.username = newName;
       user = await user.update();
@@ -130,108 +130,108 @@ describe('User', function() {
     });
   });
 
-  describe('Delete', function() {
-    it('Delete', async function() {
+  describe('Delete', () => {
+    it('Delete', async () => {
       await User.delete(id);
     });
 
-    it('Fetch deleted', function() {
+    it('Fetch deleted', () => {
       expect(User.fetch(id)).rejects.toThrow();
     });
   });
 
   // --------------------
 
-  describe('UserCollection', function() {
+  describe('UserCollection', () => {
 
     let nbUsers = 3;
     let users;
     let totalNb = 0;
 
-    beforeAll(async function() {
+    beforeAll(async () => {
       let userPromises = [];
-      for(let i = 0; i < nbUsers; i++) {
+      for (let i = 0; i < nbUsers; i++) {
         let name = utils.randomString();
         let email = name + '@cytomine.coop';
-        userPromises.push(new User({username: name, password: name, firstname: name, lastname: name, email}).save());
+        userPromises.push(new User({ username: name, password: name, firstname: name, lastname: name, email }).save());
       }
       users = await Promise.all(userPromises);
     });
 
-    afterAll(async function() {
+    afterAll(async () => {
       let deletionPromises = users.map(user => User.delete(user.id));
       await Promise.all(deletionPromises);
     });
 
-    describe('Fetch', function() {
-      it('Fetch (instance method)', async function() {
+    describe('Fetch', () => {
+      it('Fetch (instance method)', async () => {
         let collection = await new UserCollection().fetchAll();
         expect(collection).toBeInstanceOf(UserCollection);
-        expect(collection).toBeGreaterThanOrEqual(nbUsers);
+        expect(collection.length).toBeGreaterThanOrEqual(nbUsers);
         totalNb = collection.length;
       });
 
-      it('Fetch (static method)', async function() {
+      it('Fetch (static method)', async () => {
         let collection = await UserCollection.fetchAll();
         expect(collection).toBeInstanceOf(UserCollection);
         expect(collection).toHaveLength(totalNb);
       });
 
-      it('Fetch with several requests', async function() {
-        let collection = await UserCollection.fetchAll({nbPerPage: Math.ceil(totalNb/3)});
+      it('Fetch with several requests', async () => {
+        let collection = await UserCollection.fetchAll({ nbPerPage: Math.ceil(totalNb / 3) });
         expect(collection).toBeInstanceOf(UserCollection);
         expect(collection).toHaveLength(totalNb);
       });
     });
 
-    describe('Working with the collection', function() {
-      it('Iterate through', async function() {
+    describe('Working with the collection', () => {
+      it('Iterate through', async () => {
         let collection = await UserCollection.fetchAll();
-        for(let user of collection) {
+        for (let user of collection) {
           expect(user).toBeInstanceOf(User);
         }
       });
 
-      it('Add item to the collection', function() {
+      it('Add item to the collection', () => {
         let collection = new UserCollection();
         expect(collection).toHaveLength(0);
         collection.push(new User());
         expect(collection).toHaveLength(1);
       });
 
-      it('Add arbitrary object to the collection', function() {
+      it('Add arbitrary object to the collection', () => {
         let collection = new UserCollection();
         expect(collection.push.bind(collection, {})).toThrow();
       });
     });
 
-    describe('Filtering', function() {
-      it('Filter on project', async function() {
-        await UserCollection.fetchAll({filterKey: 'project', filterValue: project.id});
+    describe('Filtering', () => {
+      it('Filter on project', async () => {
+        await UserCollection.fetchAll({ filterKey: 'project', filterValue: project.id });
       });
 
-      it('Filter on ontology', async function() {
-        await new UserCollection({nbPerPage: 10, filterKey: 'ontology', filterValue: project.ontology}).fetchAll();
+      it('Filter on ontology', async () => {
+        await new UserCollection({ nbPerPage: 10, filterKey: 'ontology', filterValue: project.ontology }).fetchAll();
       });
     });
 
-    describe('Pagination', function() {
+    describe('Pagination', () => {
       let nbPerPage = 1;
 
-      it('Fetch arbitrary page', async function() {
-        let collection = new UserCollection({nbPerPage});
+      it('Fetch arbitrary page', async () => {
+        let collection = new UserCollection({ nbPerPage });
         await collection.fetchPage(2);
         expect(collection).toHaveLength(nbPerPage);
       });
 
-      it('Fetch next page', async function() {
-        let collection = new UserCollection({nbPerPage});
+      it('Fetch next page', async () => {
+        let collection = new UserCollection({ nbPerPage });
         await collection.fetchNextPage();
         expect(collection).toHaveLength(nbPerPage);
       });
 
-      it('Fetch previous page', async function() {
-        let collection = new UserCollection({nbPerPage});
+      it('Fetch previous page', async () => {
+        let collection = new UserCollection({ nbPerPage });
         collection.curPage = 2;
         await collection.fetchPreviousPage();
         expect(collection).toHaveLength(nbPerPage);

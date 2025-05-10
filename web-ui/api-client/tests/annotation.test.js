@@ -1,7 +1,7 @@
 import * as utils from './utils.js';
-import {Cytomine, Annotation, AnnotationType, AnnotationCollection, User} from '@/index.js';
+import { Cytomine, Annotation, AnnotationType, AnnotationCollection, User } from '@/index.js';
 
-describe('Annotation', function() {
+describe('Annotation', () => {
 
   let location = 'POLYGON ((10 10, 10 20, 20 20, 20 10, 15 10, 10 10), (16 16, 18 16, 18 18, 16 18, 16 16))';
   let project;
@@ -10,21 +10,21 @@ describe('Annotation', function() {
   let annotation = null;
   let id = 0;
 
-  beforeAll(async function() {
+  beforeAll(async () => {
     await utils.connect();
-    ({id: project} = await utils.getProject()); // HACK required for "Save collection" test case
-    let imageInstance = await utils.getImageInstance({project, review: true});
+    ({ id: project } = await utils.getProject()); // HACK required for "Save collection" test case
+    let imageInstance = await utils.getImageInstance({ project, review: true });
     await imageInstance.review();
     image = imageInstance.id;
   });
 
-  afterAll(async function() {
+  afterAll(async () => {
     await utils.cleanData();
   });
 
-  describe('Create', function() {
-    it('Create', async function() {
-      annotation = new Annotation({location, image});
+  describe('Create', () => {
+    it('Create', async () => {
+      annotation = new Annotation({ location, image });
       annotation = await annotation.save();
       id = annotation.id;
       expect(annotation).toBeInstanceOf(Annotation);
@@ -33,8 +33,8 @@ describe('Annotation', function() {
     });
   });
 
-  describe('Fetch', function() {
-    it('Fetch with static method', async function() {
+  describe('Fetch', () => {
+    it('Fetch with static method', async () => {
       let fetchedAnnotation = await Annotation.fetch(id);
       expect(fetchedAnnotation).toBeInstanceOf(Annotation);
       //annotationTrack is returned at the creation and not at the fetching.
@@ -42,30 +42,30 @@ describe('Annotation', function() {
       expect(fetchedAnnotation).toEqual(annotation);
     });
 
-    it('Fetch with type', async function() {
+    it('Fetch with type', async () => {
       let fetchedAnnotation = await Annotation.fetch(id, AnnotationType.USER);
       expect(fetchedAnnotation).toBeInstanceOf(Annotation);
       expect(fetchedAnnotation).toEqual(annotation);
     });
 
-    it('Fetch with instance method', async function() {
-      let fetchedAnnotation = await new Annotation({id}).fetch();
+    it('Fetch with instance method', async () => {
+      let fetchedAnnotation = await new Annotation({ id }).fetch();
       expect(fetchedAnnotation).toBeInstanceOf(Annotation);
       expect(fetchedAnnotation).toEqual(annotation);
     });
 
-    it('Fetch with wrong ID', function() {
+    it('Fetch with wrong ID', () => {
       expect(Annotation.fetch(0)).rejects.toThrow();
     });
   });
 
-  describe('Specific operations', function() {
-    it('Annotation action', async function() {
+  describe('Specific operations', () => {
+    it('Annotation action', async () => {
       let annotationAction = await annotation.recordAction();
       expect(annotationAction.id).toBeDefined();
     });
 
-    it('[Correction] Add', async function() {
+    it('[Correction] Add', async () => {
       let currentUser = await User.fetchCurrent();
       let initialArea = annotation.area;
       let result = await Annotation.correctAnnotations({
@@ -74,10 +74,10 @@ describe('Annotation', function() {
         layers: [currentUser.id]
       });
       expect(result.id).toEqual(annotation.id);
-      expect(result.area).toBebove(initialArea);
+      expect(result.area).toBeGreaterThan(initialArea);
     });
 
-    it('[Correction] Remove', async function() {
+    it('[Correction] Remove', async () => {
       let currentUser = await User.fetchCurrent();
       let initialArea = annotation.area;
       let result = await Annotation.correctAnnotations({
@@ -90,7 +90,7 @@ describe('Annotation', function() {
       expect(result.area).toBeLessThan(initialArea);
     });
 
-    it('Review', async function() {
+    it('Review', async () => {
       let reviewedAnnotation = await annotation.review();
       expect(reviewedAnnotation).toBeInstanceOf(Annotation);
       expect(reviewedAnnotation.type).toEqual(AnnotationType.REVIEWED);
@@ -99,35 +99,35 @@ describe('Annotation', function() {
       expect(annotation.reviewed).toBe(true);
     });
 
-    it('Cancel review', async function() {
+    it('Cancel review', async () => {
       await annotation.cancelReview();
       await annotation.fetch();
       expect(annotation.reviewed).toBe(false);
     });
 
-    it('Simplify', async function() {
+    it('Simplify', async () => {
       await annotation.simplify(5, 10);
     });
 
-    it('Fill', async function() {
+    it('Fill', async () => {
       let initialArea = annotation.area;
       await annotation.fill();
-      expect(annotation.area).toBebove(initialArea);
+      expect(annotation.area).toBeGreaterThan(initialArea);
     });
   });
 
-  describe('Undo/redo', function() {
+  describe('Undo/redo', () => {
     let urAnnot;
     let command;
 
-    it('Create', async function() {
-      urAnnot = await new Annotation({location, image}).save();
+    it('Create', async () => {
+      urAnnot = await new Annotation({ location, image }).save();
       command = Cytomine.instance.lastCommand;
       expect(urAnnot.id).toBeDefined();
       expect(command).toBeDefined();
     });
 
-    it('Undo', async function() {
+    it('Undo', async () => {
       let collection = await Cytomine.instance.undo(command);
       expect(collection).toHaveLength(1);
       let annot = collection[0].annotation;
@@ -135,7 +135,7 @@ describe('Annotation', function() {
       expect(Annotation.fetch(urAnnot.id)).rejects.toThrow();
     });
 
-    it('Redo', async function() {
+    it('Redo', async () => {
       let collection = await Cytomine.instance.redo(command);
       expect(collection).toHaveLength(1);
       let annot = collection[0].annotation;
@@ -144,7 +144,7 @@ describe('Annotation', function() {
       expect(fetchedAnnotation.id).toEqual(urAnnot.id);
     });
 
-    it('Undo again', async function() {
+    it('Undo again', async () => {
       let collection = await Cytomine.instance.undo();
       expect(collection).toHaveLength(1);
       let annot = collection[0].annotation;
@@ -152,107 +152,107 @@ describe('Annotation', function() {
     });
   });
 
-  describe('Update', function() {
-    it('Update', async function() {
+  describe('Update', () => {
+    it('Update', async () => {
       let newLocation = 'POLYGON ((10 10, 10 20, 20 20, 20 10, 10 10))';
       annotation.location = newLocation;
       await annotation.update();
       expect(annotation).toBeInstanceOf(Annotation);
-      expect(annotation.centroid).toEqual({x: 15, y: 15});
+      expect(annotation.centroid).toEqual({ x: 15, y: 15 });
     });
   });
 
-  describe('Delete', function() {
-    it('Delete', async function() {
+  describe('Delete', () => {
+    it('Delete', async () => {
       await Annotation.delete(id);
     });
 
-    it('Fetch a deleted element', function() {
+    it('Fetch a deleted element', () => {
       expect(Annotation.fetch(id)).rejects.toThrow();
     });
   });
 
   // --------------------
 
-  describe('AnnotationCollection', function() {
+  describe('AnnotationCollection', () => {
     let nb = 3;
 
-    beforeAll(async function() {
+    beforeAll(async () => {
       let annotationPromises = [];
-      for(let i = 0; i < nb; i++) {
-        annotationPromises.push(new Annotation({image, location}).save());
+      for (let i = 0; i < nb; i++) {
+        annotationPromises.push(new Annotation({ image, location }).save());
       }
       await Promise.all(annotationPromises);
     });
 
-    afterAll(async function() {
-      let collection = await new AnnotationCollection({image}).fetchAll();
+    afterAll(async () => {
+      let collection = await new AnnotationCollection({ image }).fetchAll();
       let deletionPromises = [];
-      for(let annot of collection) {
+      for (let annot of collection) {
         deletionPromises.push(Annotation.delete(annot.id));
       }
       await Promise.all(deletionPromises);
     });
 
-    describe('Fetch', function() {
-      it('Fetch (instance method)', async function() {
-        let collection = await new AnnotationCollection({image}).fetchAll();
+    describe('Fetch', () => {
+      it('Fetch (instance method)', async () => {
+        let collection = await new AnnotationCollection({ image }).fetchAll();
         expect(collection).toBeInstanceOf(AnnotationCollection);
         expect(collection).toHaveLength(nb);
       });
 
-      it('Fetch (static method)', async function() {
-        let collection = await AnnotationCollection.fetchAll({image});
+      it('Fetch (static method)', async () => {
+        let collection = await AnnotationCollection.fetchAll({ image });
         expect(collection).toBeInstanceOf(AnnotationCollection);
         expect(collection).toHaveLength(nb);
       });
 
-      it('Fetch with several requests', async function() {
-        let collection = await AnnotationCollection.fetchAll({image}, 1);
+      it('Fetch with several requests', async () => {
+        let collection = await AnnotationCollection.fetchAll({ image }, 1);
         expect(collection).toBeInstanceOf(AnnotationCollection);
         expect(collection).toHaveLength(nb);
       });
     });
 
-    describe('Working with the collection', function() {
-      it('Iterate through the collection', async function() {
-        let collection = await AnnotationCollection.fetchAll({image});
-        for(let annot of collection) {
+    describe('Working with the collection', () => {
+      it('Iterate through the collection', async () => {
+        let collection = await AnnotationCollection.fetchAll({ image });
+        for (let annot of collection) {
           expect(annot).toBeInstanceOf(Annotation);
         }
       });
 
-      it('Add an item to the collection', function() {
-        let collection = new AnnotationCollection({image});
+      it('Add an item to the collection', () => {
+        let collection = new AnnotationCollection({ image });
         expect(collection).toHaveLength(0);
         collection.push(new Annotation());
         expect(collection).toHaveLength(1);
       });
 
-      it('Add arbitrary object to the collection', function() {
-        let collection = new AnnotationCollection({image});
+      it('Add arbitrary object to the collection', () => {
+        let collection = new AnnotationCollection({ image });
         expect(collection.push.bind(collection, {})).toThrow();
       });
 
-      it('Download URL', function() {
-        let collection = new AnnotationCollection({project});
-        expect(collection.getDownloadURL()).toBe('string');
+      it('Download URL', () => {
+        let collection = new AnnotationCollection({ project });
+        expect(typeof collection.getDownloadURL()).toBe('string');
       });
     });
 
-    describe('Save collection', function() {
-      it('Save', async function() {
+    describe('Save collection', () => {
+      it('Save', async () => {
         let collection = new AnnotationCollection();
-        collection.push(new Annotation({location, image, project}));
-        collection.push(new Annotation({location, image, project}));
+        collection.push(new Annotation({ location, image, project }));
+        collection.push(new Annotation({ location, image, project }));
         await collection.save();
         expect(collection).toHaveLength(2);
       });
     });
 
-    describe('Search service', function() {
-      it('Search', async function() {
-        let collection = new AnnotationCollection({project});
+    describe('Search service', () => {
+      it('Search', async () => {
+        let collection = new AnnotationCollection({ project });
         collection.project = project;
         collection.terms = [1, 2];
         collection.showTerm = true;
@@ -261,29 +261,27 @@ describe('Annotation', function() {
       });
     });
 
-    describe('Pagination', function() {
+    describe('Pagination', () => {
       let nbPerPage = 1;
 
-      it('Fetch arbitrary page', async function() {
-        let collection = new AnnotationCollection({project, nbPerPage});
+      it('Fetch arbitrary page', async () => {
+        let collection = new AnnotationCollection({ project, nbPerPage });
         await collection.fetchPage(2);
         expect(collection).toHaveLength(nbPerPage);
       });
 
-      it('Fetch next page', async function() {
-        let collection = new AnnotationCollection({project, nbPerPage});
+      it('Fetch next page', async () => {
+        let collection = new AnnotationCollection({ project, nbPerPage });
         await collection.fetchNextPage();
         expect(collection).toHaveLength(nbPerPage);
       });
 
-      it('Fetch previous page', async function() {
-        let collection = new AnnotationCollection({project, nbPerPage});
+      it('Fetch previous page', async () => {
+        let collection = new AnnotationCollection({ project, nbPerPage });
         collection.curPage = 2;
         await collection.fetchPreviousPage();
         expect(collection).toHaveLength(nbPerPage);
       });
     });
-
   });
-
 });

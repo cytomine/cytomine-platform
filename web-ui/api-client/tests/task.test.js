@@ -1,16 +1,16 @@
 import * as utils from './utils.js';
-import {Task} from '@/index.js';
+import { Task } from '@/index.js';
 
-describe('Task', function() {
+describe('Task', () => {
   let task = null;
   let id = 0;
 
-  beforeAll(async function() {
+  beforeAll(async () => {
     await utils.connect();
   });
 
-  describe('Create', function() {
-    it('Create', async function() {
+  describe('Create', () => {
+    it('Create', async () => {
       task = new Task();
       await task.save();
       id = task.id;
@@ -19,26 +19,26 @@ describe('Task', function() {
     });
   });
 
-  describe('Fetch', function() {
-    it('Fetch with static method', async function() {
+  describe('Fetch', () => {
+    it('Fetch with static method', async () => {
       let fetchedTask = await Task.fetch(id);
       expect(fetchedTask).toBeInstanceOf(Task);
     });
 
-    it('Fetch with instance method', async function() {
-      let fetchedTask = await new Task({id}).fetch();
+    it('Fetch with instance method', async () => {
+      let fetchedTask = await new Task({ id }).fetch();
       expect(fetchedTask).toBeInstanceOf(Task);
     });
   });
 
-  describe('Update', function() {
-    it('Update', function() {
+  describe('Update', () => {
+    it('Update', () => {
       expect(task.update.bind(task)).toThrow();
     });
   });
 
-  describe('Delete', function() {
-    it('Delete', function() {
+  describe('Delete', () => {
+    it('Delete', () => {
       expect(task.delete.bind(task)).toThrow();
     });
   });

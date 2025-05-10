@@ -1,7 +1,7 @@
 import * as utils from './utils.js';
-import {Track, TrackCollection} from '@/index.js';
+import { Track, TrackCollection } from '@/index.js';
 
-describe('Track', function() {
+describe('Track', () => {
 
   let project;
   let imageInstance;
@@ -11,18 +11,18 @@ describe('Track', function() {
   let track = null;
   let id = 0;
 
-  beforeAll(async function() {
+  beforeAll(async () => {
     await utils.connect(true);
-    ({id: imageInstance, project: project} = await utils.getImageInstance());
+    ({ id: imageInstance, project: project } = await utils.getImageInstance());
   });
 
-  afterAll(async function() {
+  afterAll(async () => {
     await utils.cleanData();
   });
 
-  describe('Create', function() {
-    it('Create', async function() {
-      track = new Track({name, image: imageInstance, color});
+  describe('Create', () => {
+    it('Create', async () => {
+      track = new Track({ name, image: imageInstance, color });
       track = await track.save();
       id = track.id;
       expect(track).toBeInstanceOf(Track);
@@ -30,26 +30,26 @@ describe('Track', function() {
     });
   });
 
-  describe('Fetch', function() {
-    it('Fetch with static method', async function() {
+  describe('Fetch', () => {
+    it('Fetch with static method', async () => {
       let fetchedTrack = await Track.fetch(id);
       expect(fetchedTrack).toBeInstanceOf(Track);
       expect(fetchedTrack.name).toEqual(name);
     });
 
-    it('Fetch with instance method', async function() {
-      let fetchedTrack = await new Track({id}).fetch();
+    it('Fetch with instance method', async () => {
+      let fetchedTrack = await new Track({ id }).fetch();
       expect(fetchedTrack).toBeInstanceOf(Track);
       expect(fetchedTrack.name).toEqual(name);
     });
 
-    it('Fetch with wrong ID', function() {
+    it('Fetch with wrong ID', () => {
       expect(Track.fetch(0)).rejects.toThrow();
     });
   });
 
-  describe('Update', function() {
-    it('Update', async function() {
+  describe('Update', () => {
+    it('Update', async () => {
       let newName = utils.randomString();
       track.name = newName;
       track = await track.update();
@@ -58,109 +58,109 @@ describe('Track', function() {
     });
   });
 
-  describe('Delete', function() {
-    it('Delete', async function() {
+  describe('Delete', () => {
+    it('Delete', async () => {
       await Track.delete(id);
     });
 
-    it('Fetch deleted', function() {
+    it('Fetch deleted', () => {
       expect(Track.fetch(id)).rejects.toThrow();
     });
   });
 
   // --------------------
 
-  describe('TrackCollection', function() {
+  describe('TrackCollection', () => {
 
     let nbTracks = 3;
     let tracks;
     let totalNb = 0;
 
-    beforeAll(async function() {
+    beforeAll(async () => {
       let trackPromises = [];
-      for(let i = 0; i < nbTracks; i++) {
-        trackPromises.push(new Track({name: utils.randomString(), image: imageInstance, color}).save());
+      for (let i = 0; i < nbTracks; i++) {
+        trackPromises.push(new Track({ name: utils.randomString(), image: imageInstance, color }).save());
       }
       tracks = await Promise.all(trackPromises);
     });
 
-    afterAll(async function() {
+    afterAll(async () => {
       let deletionPromises = tracks.map(track => Track.delete(track.id));
       await Promise.all(deletionPromises);
     });
 
-    describe('Fetch', function() {
-      it('Fetch (instance method)', async function() {
-        let collection = await new TrackCollection({filterKey: 'project', filterValue: project}).fetchAll();
+    describe('Fetch', () => {
+      it('Fetch (instance method)', async () => {
+        let collection = await new TrackCollection({ filterKey: 'project', filterValue: project }).fetchAll();
         expect(collection).toBeInstanceOf(TrackCollection);
-        expect(collection).toBeGreaterThanOrEqual(nbTracks);
+        expect(collection.length).toBeGreaterThanOrEqual(nbTracks);
         totalNb = collection.length;
       });
 
-      it('Fetch (static method)', async function() {
-        let collection = await TrackCollection.fetchAll({filterKey: 'project', filterValue: project});
+      it('Fetch (static method)', async () => {
+        let collection = await TrackCollection.fetchAll({ filterKey: 'project', filterValue: project });
         expect(collection).toBeInstanceOf(TrackCollection);
         expect(collection).toHaveLength(totalNb);
       });
 
-      it('Fetch with several requests', async function() {
-        let collection = await TrackCollection.fetchAll({filterKey: 'project', filterValue: project, nbPerPage: Math.ceil(totalNb/3)});
+      it('Fetch with several requests', async () => {
+        let collection = await TrackCollection.fetchAll({ filterKey: 'project', filterValue: project, nbPerPage: Math.ceil(totalNb / 3) });
         expect(collection).toBeInstanceOf(TrackCollection);
         expect(collection).toHaveLength(totalNb);
       });
     });
 
-    describe('Working with the collection', function() {
-      it('Iterate through', async function() {
-        let collection = await TrackCollection.fetchAll({filterKey: 'project', filterValue: project});
-        for(let track of collection) {
+    describe('Working with the collection', () => {
+      it('Iterate through', async () => {
+        let collection = await TrackCollection.fetchAll({ filterKey: 'project', filterValue: project });
+        for (let track of collection) {
           expect(track).toBeInstanceOf(Track);
         }
       });
 
-      it('Add item to the collection', function() {
+      it('Add item to the collection', () => {
         let collection = new TrackCollection();
         expect(collection).toHaveLength(0);
         collection.push(new Track());
         expect(collection).toHaveLength(1);
       });
 
-      it('Add arbitrary object to the collection', function() {
+      it('Add arbitrary object to the collection', () => {
         let collection = new TrackCollection();
         expect(collection.push.bind(collection, {})).toThrow();
       });
     });
 
-    describe('Filtering', function() {
-      it('No filter', async function() {
+    describe('Filtering', () => {
+      it('No filter', async () => {
         let collection = new TrackCollection();
         expect(collection.fetchAll()).rejects.toThrow();
       });
 
-      it('Filter on imageInstance', async function() {
-        let collection = new TrackCollection({filterKey: 'imageinstance', filterValue: imageInstance});
+      it('Filter on imageInstance', async () => {
+        let collection = new TrackCollection({ filterKey: 'imageinstance', filterValue: imageInstance });
         await collection.fetchAll();
-        expect(collection).toBeGreaterThanOrEqual(nbTracks);
+        expect(collection.length).toBeGreaterThanOrEqual(nbTracks);
       });
     });
 
-    describe('Pagination', function() {
+    describe('Pagination', () => {
       let nbPerPage = 1;
 
-      it('Fetch arbitrary page', async function() {
-        let collection = new TrackCollection({filterKey: 'project', filterValue: project, nbPerPage});
+      it('Fetch arbitrary page', async () => {
+        let collection = new TrackCollection({ filterKey: 'project', filterValue: project, nbPerPage });
         await collection.fetchPage(2);
         expect(collection).toHaveLength(nbPerPage);
       });
 
-      it('Fetch next page', async function() {
-        let collection = new TrackCollection({filterKey: 'project', filterValue: project, nbPerPage});
+      it('Fetch next page', async () => {
+        let collection = new TrackCollection({ filterKey: 'project', filterValue: project, nbPerPage });
         await collection.fetchNextPage();
         expect(collection).toHaveLength(nbPerPage);
       });
 
-      it('Fetch previous page', async function() {
-        let collection = new TrackCollection({filterKey: 'project', filterValue: project, nbPerPage});
+      it('Fetch previous page', async () => {
+        let collection = new TrackCollection({ filterKey: 'project', filterValue: project, nbPerPage });
         collection.curPage = 2;
         await collection.fetchPreviousPage();
         expect(collection).toHaveLength(nbPerPage);

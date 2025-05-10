@@ -1,7 +1,7 @@
 import * as utils from './utils.js';
-import {UploadedFile, UploadedFileCollection, User} from '@/index.js';
+import { UploadedFile, UploadedFileCollection, User } from '@/index.js';
 
-describe('UploadedFile', function() {
+describe('UploadedFile', () => {
 
   let storage;
   let user;
@@ -12,18 +12,18 @@ describe('UploadedFile', function() {
   let uploadedFile = null;
   let id = 0;
 
-  beforeAll(async function() {
+  beforeAll(async () => {
     await utils.connect(true);
-    ({id: user} = await User.fetchCurrent());
-    ({id: storage} = await utils.getStorage({user}));
+    ({ id: user } = await User.fetchCurrent());
+    ({ id: storage } = await utils.getStorage({ user }));
   });
 
-  afterAll(async function() {
+  afterAll(async () => {
     await utils.cleanData();
   });
 
-  describe('Create', function() {
-    it('Create', async function() {
+  describe('Create', () => {
+    it('Create', async () => {
       uploadedFile = new UploadedFile({
         storage, user, filename, originalFilename: filename, contentType, ext
       });
@@ -34,32 +34,32 @@ describe('UploadedFile', function() {
     });
   });
 
-  describe('Fetch', function() {
-    it('Fetch with static method', async function() {
+  describe('Fetch', () => {
+    it('Fetch with static method', async () => {
       let fetchedUploadedFile = await UploadedFile.fetch(id);
       expect(fetchedUploadedFile).toBeInstanceOf(UploadedFile);
       expect(fetchedUploadedFile).toEqual(uploadedFile);
     });
 
-    it('Fetch with instance method', async function() {
-      let fetchedUploadedFile = await new UploadedFile({id}).fetch();
+    it('Fetch with instance method', async () => {
+      let fetchedUploadedFile = await new UploadedFile({ id }).fetch();
       expect(fetchedUploadedFile).toBeInstanceOf(UploadedFile);
       expect(fetchedUploadedFile).toEqual(uploadedFile);
     });
 
-    it('Fetch with wrong ID', function() {
+    it('Fetch with wrong ID', () => {
       expect(UploadedFile.fetch(0)).rejects.toThrow();
     });
   });
 
-  describe('Specific operations', function() {
-    it('Download URL', async function() {
-      expect(uploadedFile.downloadURL).toBe('string');
+  describe('Specific operations', () => {
+    it('Download URL', async () => {
+      expect(typeof uploadedFile.downloadURL).toBe('string');
     });
   });
 
-  describe('Update', function() {
-    it('Update', async function() {
+  describe('Update', () => {
+    it('Update', async () => {
       let newFilename = utils.randomString();
       uploadedFile.filename = newFilename;
       uploadedFile = await uploadedFile.update();
@@ -68,27 +68,27 @@ describe('UploadedFile', function() {
     });
   });
 
-  describe('Delete', function() {
-    it('Delete', async function() {
+  describe('Delete', () => {
+    it('Delete', async () => {
       await UploadedFile.delete(id);
     });
 
-    it('Fetch deleted', function() {
+    it('Fetch deleted', () => {
       expect(UploadedFile.fetch(id)).rejects.toThrow();
     });
   });
 
   // --------------------
 
-  describe('UploadedFileCollection', function() {
+  describe('UploadedFileCollection', () => {
     let nbUploadedFiles = 3;
     let totalNb = 0;
 
     let uploadedFiles;
 
-    beforeAll(async function() {
+    beforeAll(async () => {
       let uploadedFilePromises = [];
-      for(let i = 0; i < nbUploadedFiles; i++) {
+      for (let i = 0; i < nbUploadedFiles; i++) {
         let tmp = utils.randomString();
         uploadedFilePromises.push(new UploadedFile({
           storage, user, filename: tmp, originalFilename: tmp, contentType, ext
@@ -97,76 +97,74 @@ describe('UploadedFile', function() {
       uploadedFiles = await Promise.all(uploadedFilePromises);
     });
 
-    afterAll(async function() {
+    afterAll(async () => {
       let deletionPromises = uploadedFiles.map(uf => UploadedFile.delete(uf.id));
       await Promise.all(deletionPromises);
     });
 
-    describe('Fetch', function() {
-      it('Fetch (instance method)', async function() {
+    describe('Fetch', () => {
+      it('Fetch (instance method)', async () => {
         let collection = await new UploadedFileCollection().fetchAll();
         expect(collection).toBeInstanceOf(UploadedFileCollection);
-        expect(collection).toBeGreaterThanOrEqual(nbUploadedFiles);
+        expect(collection.length).toBeGreaterThanOrEqual(nbUploadedFiles);
         totalNb = collection.length;
       });
 
-      it('Fetch (static method)', async function() {
+      it('Fetch (static method)', async () => {
         let collection = await UploadedFileCollection.fetchAll();
         expect(collection).toBeInstanceOf(UploadedFileCollection);
         expect(collection).toHaveLength(totalNb);
       });
 
-      it('Fetch with several requests', async function() {
-        let collection = await UploadedFileCollection.fetchAll({nbPerPage: Math.ceil(totalNb/3)});
+      it('Fetch with several requests', async () => {
+        let collection = await UploadedFileCollection.fetchAll({ nbPerPage: Math.ceil(totalNb / 3) });
         expect(collection).toBeInstanceOf(UploadedFileCollection);
         expect(collection).toHaveLength(totalNb);
       });
     });
 
-    describe('Working with the collection', function() {
-      it('Iterate through', async function() {
+    describe('Working with the collection', () => {
+      it('Iterate through', async () => {
         let collection = await UploadedFileCollection.fetchAll();
-        for(let uploadedFile of collection) {
+        for (let uploadedFile of collection) {
           expect(uploadedFile).toBeInstanceOf(UploadedFile);
         }
       });
 
-      it('Add item to the collection', function() {
+      it('Add item to the collection', () => {
         let collection = new UploadedFileCollection();
         expect(collection).toHaveLength(0);
         collection.push(new UploadedFile());
         expect(collection).toHaveLength(1);
       });
 
-      it('Add arbitrary object to the collection', function() {
+      it('Add arbitrary object to the collection', () => {
         let collection = new UploadedFileCollection();
         expect(collection.push.bind(collection, {})).toThrow();
       });
     });
 
-    describe('Pagination', function() {
+    describe('Pagination', () => {
       let nbPerPage = 1;
 
-      it('Fetch arbitrary page', async function() {
-        let collection = new UploadedFileCollection({nbPerPage});
+      it('Fetch arbitrary page', async () => {
+        let collection = new UploadedFileCollection({ nbPerPage });
         await collection.fetchPage(2);
         expect(collection).toHaveLength(nbPerPage);
       });
 
-      it('Fetch next page', async function() {
-        let collection = new UploadedFileCollection({nbPerPage});
+      it('Fetch next page', async () => {
+        let collection = new UploadedFileCollection({ nbPerPage });
         await collection.fetchNextPage();
         expect(collection).toHaveLength(nbPerPage);
       });
 
-      it('Fetch previous page', async function() {
-        let collection = new UploadedFileCollection({nbPerPage});
+      it('Fetch previous page', async () => {
+        let collection = new UploadedFileCollection({ nbPerPage });
         collection.curPage = 2;
         await collection.fetchPreviousPage();
         expect(collection).toHaveLength(nbPerPage);
       });
     });
-
   });
-
 });

@@ -1,5 +1,5 @@
 import * as utils from './utils.js';
-import { AnnotationTerm } from '@/index.js';
+import { AnnotationTerm, AnnotationTermCollection } from '@/index.js';
 
 describe('AnnotationTerm', () => {
   let userannotation;
@@ -17,7 +17,7 @@ describe('AnnotationTerm', () => {
     let annotationTerms;
 
     beforeAll(async () => {
-      async c => reateTermAndAnnotTerm() {
+      async function createTermAndAnnotTerm() {
         let tempTerm = await utils.getTerm();
         let annotTerm = new AnnotationTerm({ userannotation, term: tempTerm.id });
         await annotTerm.save();

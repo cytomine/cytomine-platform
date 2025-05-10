@@ -1,59 +1,59 @@
 import * as utils from './utils.js';
-import {Description} from '@/index.js';
+import { Description } from '@/index.js';
 
-describe('Description', function() {
+describe('Description', () => {
 
   let annotation = null;
   let data = utils.randomString();
 
   let description = null;
 
-  beforeAll(async function() {
+  beforeAll(async () => {
     await utils.connect();
     annotation = await utils.getAnnotation();
   });
 
-  afterAll(async function() {
+  afterAll(async () => {
     await utils.cleanData();
   });
 
-  describe('Create', function() {
-    it('Create', async function() {
-      description = new Description({data}, annotation);
+  describe('Create', () => {
+    it('Create', async () => {
+      description = new Description({ data }, annotation);
       await description.save();
       expect(description).toBeInstanceOf(Description);
-      expect(description.id).toBebove(0);
+      expect(description.id).toBeGreaterThan(0);
       expect(description.data).toEqual(data);
     });
 
-    it('Create without providing associated object', async function() {
-      let descriptionWithoutObject = new Description({data});
+    it('Create without providing associated object', async () => {
+      let descriptionWithoutObject = new Description({ data });
       expect(descriptionWithoutObject.save()).rejects.toThrow();
     });
   });
 
-  describe('Fetch', function() {
-    it('Fetch with static method', async function() {
+  describe('Fetch', () => {
+    it('Fetch with static method', async () => {
       let fetchedDescription = await Description.fetch(annotation);
       expect(fetchedDescription).toBeInstanceOf(Description);
       expect(fetchedDescription.domainIdent).toEqual(annotation.id);
       expect(fetchedDescription.data).toEqual(data);
     });
 
-    it('Fetch with instance method', async function() {
+    it('Fetch with instance method', async () => {
       let fetchedDescription = await new Description({}, annotation).fetch();
       expect(fetchedDescription).toBeInstanceOf(Description);
       expect(fetchedDescription.domainIdent).toEqual(annotation.id);
       expect(fetchedDescription.data).toEqual(data);
     });
 
-    it('Fetch without providing associated object', function() {
+    it('Fetch without providing associated object', () => {
       expect(Description.fetch({})).rejects.toThrow();
     });
   });
 
-  describe('Update', function() {
-    it('Update', async function() {
+  describe('Update', () => {
+    it('Update', async () => {
       let newData = utils.randomString();
       description.data = newData;
       description = await description.update();
@@ -62,12 +62,12 @@ describe('Description', function() {
     });
   });
 
-  describe('Delete', function() {
-    it('Delete', async function() {
+  describe('Delete', () => {
+    it('Delete', async () => {
       await Description.delete(annotation);
     });
 
-    it('Fetch deleted', function() {
+    it('Fetch deleted', () => {
       expect(Description.fetch(annotation)).rejects.toThrow();
     });
   });
