@@ -49,8 +49,8 @@ describe('AnnotationTrack', () => {
       await AnnotationTrack.delete(annotation, track);
     });
 
-    it('Fetch deleted', () => {
-      expect(AnnotationTrack.fetch(annotation, track)).rejects.toThrow();
+    it('Fetch deleted', async () => {
+      await expect(AnnotationTrack.fetch(annotation, track)).rejects.toThrow();
     });
   });
 
@@ -106,7 +106,7 @@ describe('AnnotationTrack', () => {
 
       it('Fetch without filter', async () => {
         let collection = new AnnotationTrackCollection();
-        expect(collection.fetchAll()).rejects.toThrow();
+        await expect(collection.fetchAll()).rejects.toThrow();
       });
     });
 

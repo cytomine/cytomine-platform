@@ -47,17 +47,17 @@ describe('ImageInstance', () => {
 
     it('Duplicate', async () => {
       let tempImageInstance = new ImageInstance({ baseImage, project });
-      expect(tempImageInstance.save()).rejects.toThrow();
+      await expect(tempImageInstance.save()).rejects.toThrow();
     });
 
     it('Create without base image', async () => {
       let tempImageInstance = new ImageInstance({ baseImage });
-      expect(tempImageInstance.save()).rejects.toThrow();
+      await expect(tempImageInstance.save()).rejects.toThrow();
     });
 
     it('Create without project', async () => {
       let tempImageInstance = new ImageInstance({ project });
-      expect(tempImageInstance.save()).rejects.toThrow();
+      await expect(tempImageInstance.save()).rejects.toThrow();
     });
   });
 
@@ -82,8 +82,8 @@ describe('ImageInstance', () => {
       // expect(previousImageInstance).toEqual(imageInstance);
     });
 
-    it('Fetch with wrong ID', () => {
-      expect(ImageInstance.fetch(0)).rejects.toThrow();
+    it('Fetch with wrong ID', async () => {
+      await expect(ImageInstance.fetch(0)).rejects.toThrow();
     });
   });
 
@@ -191,8 +191,8 @@ describe('ImageInstance', () => {
       await ImageInstance.delete(id);
     });
 
-    it('Fetch deleted', () => {
-      expect(ImageInstance.fetch(id)).rejects.toThrow();
+    it('Fetch deleted', async () => {
+      await expect(ImageInstance.fetch(id)).rejects.toThrow();
     });
   });
 
@@ -245,7 +245,7 @@ describe('ImageInstance', () => {
 
       it('Fetch without filter', async () => {
         let collection = new ImageInstanceCollection();
-        expect(collection.fetchAll()).rejects.toThrow();
+        await expect(collection.fetchAll()).rejects.toThrow();
       });
 
       it('Fetch last opened', async () => {

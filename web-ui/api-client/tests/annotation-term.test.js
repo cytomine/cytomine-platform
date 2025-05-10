@@ -40,8 +40,8 @@ describe('AnnotationTerm', () => {
       expect(fetchedAnnotationTerm).toEqual(annotationTerm);
     });
 
-    it('Fetch with wrong ID', () => {
-      expect(AnnotationTerm.fetch(0)).rejects.toThrow();
+    it('Fetch with wrong ID', async () => {
+      await expect(AnnotationTerm.fetch(0)).rejects.toThrow();
     });
   });
 
@@ -50,8 +50,8 @@ describe('AnnotationTerm', () => {
       await AnnotationTerm.delete(userannotation, term);
     });
 
-    it('Fetch deleted', () => {
-      expect(AnnotationTerm.fetch(userannotation, term)).rejects.toThrow();
+    it('Fetch deleted', async () => {
+      await expect(AnnotationTerm.fetch(userannotation, term)).rejects.toThrow();
     });
   });
 });

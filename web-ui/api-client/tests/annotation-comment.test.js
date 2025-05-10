@@ -34,7 +34,7 @@ describe.skip('AnnotationComment', () => {
 
     it('Create without providing annotation', async () => {
       let annotationCommentWithoutObject = new AnnotationComment({ comment: text });
-      expect(annotationCommentWithoutObject.save()).rejects.toThrow();
+      await expect(annotationCommentWithoutObject.save()).rejects.toThrow();
     });
   });
 
@@ -53,8 +53,8 @@ describe.skip('AnnotationComment', () => {
       expect(fetchedAnnotationComment.comment).toEqual(text);
     });
 
-    it('Fetch without providing associated object', () => {
-      expect(AnnotationComment.fetch({ id })).rejects.toThrow();
+    it('Fetch without providing associated object', async () => {
+      await expect(AnnotationComment.fetch({ id })).rejects.toThrow();
     });
   });
 
@@ -103,7 +103,7 @@ describe.skip('AnnotationComment', () => {
       });
 
       it('Fetch without associated object', async () => {
-        expect(AnnotationCommentCollection.fetchAll()).rejects.toThrow();
+        await expect(AnnotationCommentCollection.fetchAll()).rejects.toThrow();
       });
     });
 

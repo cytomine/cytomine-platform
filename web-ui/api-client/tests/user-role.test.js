@@ -46,8 +46,8 @@ describe('UserRole', () => {
       expect(fetchedUserRole).toEqual(userRole);
     });
 
-    it('Fetch with wrong ID', () => {
-      expect(UserRole.fetch(0)).rejects.toThrow();
+    it('Fetch with wrong ID', async () => {
+      await expect(UserRole.fetch(0)).rejects.toThrow();
     });
   });
 
@@ -56,8 +56,8 @@ describe('UserRole', () => {
       await UserRole.delete(user, role);
     });
 
-    it('Fetch deleted', () => {
-      expect(UserRole.fetch(user, role)).rejects.toThrow();
+    it('Fetch deleted', async () => {
+      await expect(UserRole.fetch(user, role)).rejects.toThrow();
     });
   });
 
@@ -103,7 +103,7 @@ describe('UserRole', () => {
 
       it('Fetch without filter', async () => {
         let collection = new UserRoleCollection();
-        expect(collection.fetchAll()).rejects.toThrow();
+        await expect(collection.fetchAll()).rejects.toThrow();
       });
     });
 

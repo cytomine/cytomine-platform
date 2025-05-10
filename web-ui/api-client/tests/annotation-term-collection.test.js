@@ -3,12 +3,10 @@ import { AnnotationTerm, AnnotationTermCollection } from '@/index.js';
 
 describe('AnnotationTerm', () => {
   let userannotation;
-  let term;
 
   beforeAll(async () => {
     await utils.connect();
     ({ id: userannotation } = await utils.getAnnotation());
-    ({ id: term } = await utils.getTerm());
   });
 
   describe('AnnotationTermCollection', () => {
@@ -60,7 +58,7 @@ describe('AnnotationTerm', () => {
 
       it('Fetch without filter', async () => {
         let collection = new AnnotationTermCollection();
-        expect(collection.fetchAll()).rejects.toThrow();
+        await expect(collection.fetchAll()).rejects.toThrow();
       });
     });
 

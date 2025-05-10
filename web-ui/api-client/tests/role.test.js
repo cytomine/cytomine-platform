@@ -88,8 +88,8 @@ describe('Role', () => {
       expect(fetchedRole).toEqual(role);
     });
 
-    it.skip('Fetch with wrong ID', () => { // Inconsistent behaviour: returns null instead of an error
-      expect(Role.fetch(0)).rejects.toThrow();
+    it.skip('Fetch with wrong ID', async () => { // Inconsistent behaviour: returns null instead of an error
+      await expect(Role.fetch(0)).rejects.toThrow();
     });
   });
 

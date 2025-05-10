@@ -52,8 +52,8 @@ describe('Ontology', () => {
       expect(fetchedOntology.name).toEqual(name);
     });
 
-    it('Fetch with wrong ID', () => {
-      expect(Ontology.fetch(0)).rejects.toThrow();
+    it('Fetch with wrong ID', async () => {
+      await expect(Ontology.fetch(0)).rejects.toThrow();
     });
   });
 
@@ -72,8 +72,8 @@ describe('Ontology', () => {
       await Ontology.delete(id);
     });
 
-    it('Fetch deleted', () => {
-      expect(Ontology.fetch(id)).rejects.toThrow();
+    it('Fetch deleted', async () => {
+      await expect(Ontology.fetch(id)).rejects.toThrow();
     });
   });
 

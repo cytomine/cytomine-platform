@@ -35,8 +35,8 @@ describe('Configuration', () => {
       expect(fetchedConfiguration.value).toEqual(value);
     });
 
-    it('Fetch with unknown key', () => {
-      expect(Configuration.fetch(utils.randomString())).rejects.toThrow();
+    it('Fetch with unknown key', async () => {
+      await expect(Configuration.fetch(utils.randomString())).rejects.toThrow();
     });
   });
 
@@ -55,8 +55,8 @@ describe('Configuration', () => {
       await Configuration.delete(key);
     });
 
-    it('Fetch deleted', () => {
-      expect(Configuration.fetch(key)).rejects.toThrow();
+    it('Fetch deleted', async () => {
+      await expect(Configuration.fetch(key)).rejects.toThrow();
     });
   });
 

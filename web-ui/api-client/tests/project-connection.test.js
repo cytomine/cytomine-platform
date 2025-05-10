@@ -82,7 +82,7 @@ describe('ProjectConnection', () => {
 
       it('Fetch without filter', async () => {
         let collection = new ProjectConnectionCollection();
-        expect(collection.fetchAll()).rejects.toThrow();
+        await expect(collection.fetchAll()).rejects.toThrow();
       });
     });
 

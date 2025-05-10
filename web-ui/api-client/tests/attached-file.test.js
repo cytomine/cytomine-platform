@@ -32,13 +32,13 @@ describe('AttachedFile', () => {
     it('Create without providing associated object', async () => {
       let attachedFileWithoutObject = new AttachedFile({ file });
 
-      expect(attachedFileWithoutObject.save()).rejects.toThrow();
+      await expect(attachedFileWithoutObject.save()).rejects.toThrow();
     });
 
     it('Create without providing file', async () => {
       let attachedFile = new AttachedFile({}, project);
 
-      expect(attachedFile.save()).rejects.toThrow();
+      await expect(attachedFile.save()).rejects.toThrow();
     });
   });
 
@@ -59,8 +59,8 @@ describe('AttachedFile', () => {
       // expect(fetchedFile.filename).toEqual(filename);
     });
 
-    it('Fetch without providing associated object', () => {
-      expect(AttachedFile.fetch({ id })).rejects.toThrow();
+    it('Fetch without providing associated object', async () => {
+      await expect(AttachedFile.fetch({ id })).rejects.toThrow();
     });
   });
 
@@ -77,8 +77,8 @@ describe('AttachedFile', () => {
       await AttachedFile.delete(id);
     });
 
-    it('Fetch a deleted element', () => {
-      expect(AttachedFile.fetch(id)).rejects.toThrow();
+    it('Fetch a deleted element', async () => {
+      await expect(AttachedFile.fetch(id)).rejects.toThrow();
     });
   });
 
@@ -125,7 +125,7 @@ describe('AttachedFile', () => {
       });
 
       it('Fetch without associated object', async () => {
-        expect(AttachedFileCollection.fetchAll()).rejects.toThrow();
+        await expect(AttachedFileCollection.fetchAll()).rejects.toThrow();
       });
     });
 

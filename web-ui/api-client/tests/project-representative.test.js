@@ -45,8 +45,8 @@ describe('ProjectRepresentative', () => {
       expect(fetchedProjectRepresentative).toEqual(projectRepresentative);
     });
 
-    it('Fetch with wrong ID', () => {
-      expect(ProjectRepresentative.fetch(0)).rejects.toThrow();
+    it('Fetch with wrong ID', async () => {
+      await expect(ProjectRepresentative.fetch(0)).rejects.toThrow();
     });
   });
 
@@ -55,8 +55,8 @@ describe('ProjectRepresentative', () => {
       await ProjectRepresentative.delete(id, project);
     });
 
-    it('Fetch deleted', () => {
-      expect(ProjectRepresentative.fetch(id, project)).rejects.toThrow();
+    it('Fetch deleted', async () => {
+      await expect(ProjectRepresentative.fetch(id, project)).rejects.toThrow();
     });
 
     it('Create again', async () => {
@@ -67,7 +67,7 @@ describe('ProjectRepresentative', () => {
 
     it('Delete with project and user', async () => {
       await ProjectRepresentative.delete(0, project, user);
-      expect(ProjectRepresentative.fetch(id, project)).rejects.toThrow();
+      await expect(ProjectRepresentative.fetch(id, project)).rejects.toThrow();
     });
 
   });
@@ -125,7 +125,7 @@ describe('ProjectRepresentative', () => {
 
       it('Fetch without filter', async () => {
         let collection = new ProjectRepresentativeCollection();
-        expect(collection.fetchAll()).rejects.toThrow();
+        await expect(collection.fetchAll()).rejects.toThrow();
       });
     });
 

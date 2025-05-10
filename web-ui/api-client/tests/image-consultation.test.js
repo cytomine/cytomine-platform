@@ -99,7 +99,7 @@ describe('ImageConsultation', () => {
 
       it('Fetch with incorrect parameters', async () => {
         let collection = new ImageConsultationCollection();
-        expect(collection.fetchAll()).rejects.toThrow();
+        await expect(collection.fetchAll()).rejects.toThrow();
       });
     });
 

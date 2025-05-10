@@ -50,8 +50,8 @@ describe('Storage', () => {
       expect(fetchedStorage).toEqual(storage);
     });
 
-    it('Fetch with wrong ID', () => {
-      expect(Storage.fetch(0)).rejects.toThrow();
+    it('Fetch with wrong ID', async () => {
+      await expect(Storage.fetch(0)).rejects.toThrow();
     });
   });
 
@@ -70,8 +70,8 @@ describe('Storage', () => {
       await Storage.delete(id);
     });
 
-    it('Fetch deleted', () => {
-      expect(Storage.fetch(id)).rejects.toThrow();
+    it('Fetch deleted', async () => {
+      await expect(Storage.fetch(id)).rejects.toThrow();
     });
   });
 

@@ -43,8 +43,8 @@ describe('TagDomainAssociation', () => {
       expect(fetchedAssociation.tag).toEqual(tag);
     });
 
-    it('Fetch with wrong ID', () => {
-      expect(TagDomainAssociation.fetch(0)).rejects.toThrow();
+    it('Fetch with wrong ID', async () => {
+      await expect(TagDomainAssociation.fetch(0)).rejects.toThrow();
     });
   });
 
@@ -53,8 +53,8 @@ describe('TagDomainAssociation', () => {
       await TagDomainAssociation.delete(id);
     });
 
-    it('Fetch deleted', () => {
-      expect(TagDomainAssociation.fetch(id)).rejects.toThrow();
+    it('Fetch deleted', async () => {
+      await expect(TagDomainAssociation.fetch(id)).rejects.toThrow();
     });
   });
 

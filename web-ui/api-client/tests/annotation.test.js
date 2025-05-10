@@ -54,8 +54,8 @@ describe('Annotation', () => {
       expect(fetchedAnnotation).toEqual(annotation);
     });
 
-    it('Fetch with wrong ID', () => {
-      expect(Annotation.fetch(0)).rejects.toThrow();
+    it('Fetch with wrong ID', async () => {
+      await expect(Annotation.fetch(0)).rejects.toThrow();
     });
   });
 
@@ -132,7 +132,7 @@ describe('Annotation', () => {
       expect(collection).toHaveLength(1);
       let annot = collection[0].annotation;
       expect(annot.id).toEqual(urAnnot.id);
-      expect(Annotation.fetch(urAnnot.id)).rejects.toThrow();
+      await expect(Annotation.fetch(urAnnot.id)).rejects.toThrow();
     });
 
     it('Redo', async () => {
@@ -167,8 +167,8 @@ describe('Annotation', () => {
       await Annotation.delete(id);
     });
 
-    it('Fetch a deleted element', () => {
-      expect(Annotation.fetch(id)).rejects.toThrow();
+    it('Fetch a deleted element', async () => {
+      await expect(Annotation.fetch(id)).rejects.toThrow();
     });
   });
 

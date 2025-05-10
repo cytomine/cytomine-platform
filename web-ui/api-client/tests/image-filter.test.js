@@ -1,9 +1,11 @@
 import * as utils from './utils.js';
-import { ImageFilter } from '@/index.js';
+import { ImageFilter, ImageFilterCollection } from '@/index.js';
 
 // Skipped
 describe.skip('Image filter', () => {
   let name = utils.randomString();
+  let id;
+  let imageFilter;
 
   beforeAll(async () => {
     await utils.connect(true);
@@ -36,8 +38,8 @@ describe.skip('Image filter', () => {
       expect(fetchedImageFilter.name).toEqual(name);
     });
 
-    it('Fetch with wrong ID', () => {
-      expect(ImageFilter.fetch(0)).rejects.toThrow();
+    it('Fetch with wrong ID', async () => {
+      await expect(ImageFilter.fetch(0)).rejects.toThrow();
     });
   });
 
@@ -52,8 +54,8 @@ describe.skip('Image filter', () => {
       await ImageFilter.delete(id);
     });
 
-    it('Fetch deleted', () => {
-      expect(ImageFilter.fetch(id)).rejects.toThrow();
+    it('Fetch deleted', async () => {
+      await expect(ImageFilter.fetch(id)).rejects.toThrow();
     });
   });
 

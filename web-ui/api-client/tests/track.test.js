@@ -43,8 +43,8 @@ describe('Track', () => {
       expect(fetchedTrack.name).toEqual(name);
     });
 
-    it('Fetch with wrong ID', () => {
-      expect(Track.fetch(0)).rejects.toThrow();
+    it('Fetch with wrong ID', async () => {
+      await expect(Track.fetch(0)).rejects.toThrow();
     });
   });
 
@@ -63,8 +63,8 @@ describe('Track', () => {
       await Track.delete(id);
     });
 
-    it('Fetch deleted', () => {
-      expect(Track.fetch(id)).rejects.toThrow();
+    it('Fetch deleted', async () => {
+      await expect(Track.fetch(id)).rejects.toThrow();
     });
   });
 
@@ -134,7 +134,7 @@ describe('Track', () => {
     describe('Filtering', () => {
       it('No filter', async () => {
         let collection = new TrackCollection();
-        expect(collection.fetchAll()).rejects.toThrow();
+        await expect(collection.fetchAll()).rejects.toThrow();
       });
 
       it('Filter on imageInstance', async () => {

@@ -46,8 +46,8 @@ describe('AbstractImage', () => {
       expect(fetchedImage.originalFilename).toEqual(originalFilename);
     });
 
-    it('Fetch with wrong ID', () => {
-      expect(AbstractImage.fetch(0)).rejects.toThrow();
+    it('Fetch with wrong ID', async () => {
+      await expect(AbstractImage.fetch(0)).rejects.toThrow();
     });
   });
 
@@ -76,8 +76,8 @@ describe('AbstractImage', () => {
       await AbstractImage.delete(id);
     });
 
-    it('Fetch a deleted element', () => {
-      expect(AbstractImage.fetch(id)).rejects.toThrow();
+    it('Fetch a deleted element', async () => {
+      await expect(AbstractImage.fetch(id)).rejects.toThrow();
     });
   });
 });

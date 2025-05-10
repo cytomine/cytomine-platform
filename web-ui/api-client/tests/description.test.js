@@ -28,7 +28,7 @@ describe('Description', () => {
 
     it('Create without providing associated object', async () => {
       let descriptionWithoutObject = new Description({ data });
-      expect(descriptionWithoutObject.save()).rejects.toThrow();
+      await expect(descriptionWithoutObject.save()).rejects.toThrow();
     });
   });
 
@@ -47,8 +47,8 @@ describe('Description', () => {
       expect(fetchedDescription.data).toEqual(data);
     });
 
-    it('Fetch without providing associated object', () => {
-      expect(Description.fetch({})).rejects.toThrow();
+    it('Fetch without providing associated object', async () => {
+      await expect(Description.fetch({})).rejects.toThrow();
     });
   });
 
@@ -67,8 +67,8 @@ describe('Description', () => {
       await Description.delete(annotation);
     });
 
-    it('Fetch deleted', () => {
-      expect(Description.fetch(annotation)).rejects.toThrow();
+    it('Fetch deleted', async () => {
+      await expect(Description.fetch(annotation)).rejects.toThrow();
     });
   });
 

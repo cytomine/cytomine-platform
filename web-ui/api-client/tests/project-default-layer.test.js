@@ -45,8 +45,8 @@ describe('ProjectDefaultLayer', () => {
       expect(fetchedProjectDefaultLayer).toEqual(projectDefaultLayer);
     });
 
-    it('Fetch with wrong ID', () => {
-      expect(ProjectDefaultLayer.fetch(0)).rejects.toThrow();
+    it('Fetch with wrong ID', async () => {
+      await expect(ProjectDefaultLayer.fetch(0)).rejects.toThrow();
     });
   });
 
@@ -65,8 +65,8 @@ describe('ProjectDefaultLayer', () => {
       await ProjectDefaultLayer.delete(id, project);
     });
 
-    it('Fetch deleted', () => {
-      expect(ProjectDefaultLayer.fetch(id, project)).rejects.toThrow();
+    it('Fetch deleted', async () => {
+      await expect(ProjectDefaultLayer.fetch(id, project)).rejects.toThrow();
     });
   });
 
@@ -123,7 +123,7 @@ describe('ProjectDefaultLayer', () => {
 
       it('Fetch without filter', async () => {
         let collection = new ProjectDefaultLayerCollection();
-        expect(collection.fetchAll()).rejects.toThrow();
+        await expect(collection.fetchAll()).rejects.toThrow();
       });
     });
 

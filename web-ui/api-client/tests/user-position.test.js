@@ -93,7 +93,7 @@ describe('UserPosition', () => {
 
       it('Fetch without filter', async () => {
         let collection = new UserPositionCollection();
-        expect(collection.fetchAll()).rejects.toThrow();
+        await expect(collection.fetchAll()).rejects.toThrow();
       });
     });
 

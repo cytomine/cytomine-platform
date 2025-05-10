@@ -47,8 +47,8 @@ describe('UploadedFile', () => {
       expect(fetchedUploadedFile).toEqual(uploadedFile);
     });
 
-    it('Fetch with wrong ID', () => {
-      expect(UploadedFile.fetch(0)).rejects.toThrow();
+    it('Fetch with wrong ID', async () => {
+      await expect(UploadedFile.fetch(0)).rejects.toThrow();
     });
   });
 
@@ -73,8 +73,8 @@ describe('UploadedFile', () => {
       await UploadedFile.delete(id);
     });
 
-    it('Fetch deleted', () => {
-      expect(UploadedFile.fetch(id)).rejects.toThrow();
+    it('Fetch deleted', async () => {
+      await expect(UploadedFile.fetch(id)).rejects.toThrow();
     });
   });
 

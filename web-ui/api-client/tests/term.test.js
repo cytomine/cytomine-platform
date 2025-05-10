@@ -42,8 +42,8 @@ describe('Term', () => {
       expect(fetchedTerm.name).toEqual(name);
     });
 
-    it('Fetch with wrong ID', () => {
-      expect(Term.fetch(0)).rejects.toThrow();
+    it('Fetch with wrong ID', async () => {
+      await expect(Term.fetch(0)).rejects.toThrow();
     });
   });
 
@@ -93,8 +93,8 @@ describe('Term', () => {
       await Term.delete(id);
     });
 
-    it('Fetch deleted', () => {
-      expect(Term.fetch(id)).rejects.toThrow();
+    it('Fetch deleted', async () => {
+      await expect(Term.fetch(id)).rejects.toThrow();
     });
   });
 

@@ -41,8 +41,8 @@ describe('Project', () => {
       expect(fetchedProject.name).toEqual(name);
     });
 
-    it('Fetch with wrong ID', () => {
-      expect(Project.fetch(0)).rejects.toThrow();
+    it('Fetch with wrong ID', async () => {
+      await expect(Project.fetch(0)).rejects.toThrow();
     });
   });
 
@@ -227,8 +227,8 @@ describe('Project', () => {
       await Project.delete(id);
     });
 
-    it('Fetch deleted', () => {
-      expect(Project.fetch(id)).rejects.toThrow();
+    it('Fetch deleted', async () => {
+      await expect(Project.fetch(id)).rejects.toThrow();
     });
   });
 

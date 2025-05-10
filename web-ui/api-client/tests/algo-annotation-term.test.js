@@ -47,7 +47,7 @@ describe('AlgoAnnotationTerm', () => {
 
       it('Fetch without filter', async () => {
         let collection = new AlgoAnnotationTermCollection();
-        expect(collection.fetchAll()).rejects.toThrow();
+        await expect(collection.fetchAll()).rejects.toThrow();
       });
     });
 

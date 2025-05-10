@@ -40,8 +40,8 @@ describe('Tag', () => {
       expect(fetchedTag.name).toEqual(name);
     });
 
-    it('Fetch with wrong ID', () => {
-      expect(Tag.fetch(0)).rejects.toThrow();
+    it('Fetch with wrong ID', async () => {
+      await expect(Tag.fetch(0)).rejects.toThrow();
     });
   });
 
@@ -60,8 +60,8 @@ describe('Tag', () => {
       await Tag.delete(id);
     });
 
-    it('Fetch deleted', () => {
-      expect(Tag.fetch(id)).rejects.toThrow();
+    it('Fetch deleted', async () => {
+      await expect(Tag.fetch(id)).rejects.toThrow();
     });
   });
 

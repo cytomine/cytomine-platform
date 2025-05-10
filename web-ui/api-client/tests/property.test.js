@@ -31,7 +31,7 @@ describe('Property', () => {
 
     it('Create without providing associated object', async () => {
       let propertyWithoutObject = new Property({ key, value });
-      expect(propertyWithoutObject.save()).rejects.toThrow();
+      await expect(propertyWithoutObject.save()).rejects.toThrow();
     });
   });
 
@@ -50,8 +50,8 @@ describe('Property', () => {
       expect(fetchedProperty.value).toEqual(value);
     });
 
-    it('Fetch without providing associated object', () => {
-      expect(Property.fetch({ id })).rejects.toThrow();
+    it('Fetch without providing associated object', async () => {
+      await expect(Property.fetch({ id })).rejects.toThrow();
     });
   });
 
@@ -70,8 +70,8 @@ describe('Property', () => {
       await Property.delete(id, annotation);
     });
 
-    it('Fetch deleted', () => {
-      expect(Property.fetch(annotation)).rejects.toThrow();
+    it('Fetch deleted', async () => {
+      await expect(Property.fetch(annotation)).rejects.toThrow();
     });
   });
 
@@ -122,7 +122,7 @@ describe('Property', () => {
       });
 
       it('Fetch without associated object', async () => {
-        expect(PropertyCollection.fetchAll()).rejects.toThrow();
+        await expect(PropertyCollection.fetchAll()).rejects.toThrow();
       });
     });
 

@@ -44,8 +44,8 @@ describe('User', () => {
       expect(fetchedUser.username).toEqual(user.username);
     });
 
-    it('Fetch with wrong ID', () => {
-      expect(User.fetch(0)).rejects.toThrow();
+    it('Fetch with wrong ID', async () => {
+      await expect(User.fetch(0)).rejects.toThrow();
     });
   });
 
@@ -135,8 +135,8 @@ describe('User', () => {
       await User.delete(id);
     });
 
-    it('Fetch deleted', () => {
-      expect(User.fetch(id)).rejects.toThrow();
+    it('Fetch deleted', async () => {
+      await expect(User.fetch(id)).rejects.toThrow();
     });
   });
 
