@@ -41,6 +41,7 @@
     "chai-as-promised": "^5.3.0",
     "eslint": "^5.16.0",
     "eslint-loader": "^2.1.2",
+    "eslint-plugin-jest": "^23.20.0",
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^29.7.0",
     "karma": "^6.0.0",

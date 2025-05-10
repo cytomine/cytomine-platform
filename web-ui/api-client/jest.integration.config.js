@@ -3,7 +3,7 @@ module.exports = {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
   testEnvironment: 'jsdom',
-  testRegex: "(/tests/.*\\.test\\.js)$",
+  testRegex: '(/tests/.*\\.test\\.js)$',
   transform: {
     '^.+\\.js$': 'babel-jest',
   },

@@ -8,7 +8,10 @@ module.exports = {
     ecmaVersion: 2018,
     sourceType: 'module'
   },
-  extends: 'eslint:recommended',
+  extends: [
+    'eslint:recommended',
+    'plugin:jest/recommended',
+  ],
   rules: {
     'indent': ['error', 2],
     'quotes': ['error', 'single', {'avoidEscape': true}],
