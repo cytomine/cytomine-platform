@@ -28,7 +28,7 @@ describe('ProjectRepresentative', function() {
       projectRepresentative = await projectRepresentative.save();
       expect(projectRepresentative).toBeInstanceOf(ProjectRepresentative);
       id = projectRepresentative.id;
-      expect(id).to.exist;
+      expect(id).toBeDefined();
     });
   });
 
@@ -36,17 +36,17 @@ describe('ProjectRepresentative', function() {
     it('Fetch with static method', async function() {
       let fetchedProjectRepresentative = await ProjectRepresentative.fetch(id, project);
       expect(fetchedProjectRepresentative).toBeInstanceOf(ProjectRepresentative);
-      expect(fetchedProjectRepresentative).to.deep.equal(projectRepresentative);
+      expect(fetchedProjectRepresentative).toEqual(projectRepresentative);
     });
 
     it('Fetch with instance method', async function() {
       let fetchedProjectRepresentative = await new ProjectRepresentative({project, id}).fetch();
       expect(fetchedProjectRepresentative).toBeInstanceOf(ProjectRepresentative);
-      expect(fetchedProjectRepresentative).to.deep.equal(projectRepresentative);
+      expect(fetchedProjectRepresentative).toEqual(projectRepresentative);
     });
 
     it('Fetch with wrong ID', function() {
-      expect(ProjectRepresentative.fetch(0)).rejects..toThrow();
+      expect(ProjectRepresentative.fetch(0)).rejects.toThrow();
     });
   });
 
@@ -56,7 +56,7 @@ describe('ProjectRepresentative', function() {
     });
 
     it('Fetch deleted', function() {
-      expect(ProjectRepresentative.fetch(id, project)).rejects..toThrow();
+      expect(ProjectRepresentative.fetch(id, project)).rejects.toThrow();
     });
 
     it('Create again', async function() {
@@ -67,7 +67,7 @@ describe('ProjectRepresentative', function() {
 
     it('Delete with project and user', async function() {
       await ProjectRepresentative.delete(0, project, user);
-      expect(ProjectRepresentative.fetch(id, project)).rejects..toThrow();
+      expect(ProjectRepresentative.fetch(id, project)).rejects.toThrow();
     });
 
   });
@@ -123,7 +123,7 @@ describe('ProjectRepresentative', function() {
 
       it('Fetch without filter', async function() {
         let collection = new ProjectRepresentativeCollection();
-        expect(collection.fetchAll()).rejects..toThrow();
+        expect(collection.fetchAll()).rejects.toThrow();
       });
     });
 

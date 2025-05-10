@@ -34,22 +34,22 @@ describe('ImageInstance', function() {
       imageInstance = await imageInstance.save();
       id = imageInstance.id;
       expect(imageInstance).toBeInstanceOf(ImageInstance);
-      expect(imageInstance.baseImage).to.equal(baseImage);
+      expect(imageInstance.baseImage).toEqual(baseImage);
     });
 
     it('Duplicate', async function() {
       let tempImageInstance = new ImageInstance({baseImage, project});
-      expect(tempImageInstance.save()).rejects..toThrow();
+      expect(tempImageInstance.save()).rejects.toThrow();
     });
 
     it('Create without base image', async function() {
       let tempImageInstance = new ImageInstance({baseImage});
-      expect(tempImageInstance.save()).rejects..toThrow();
+      expect(tempImageInstance.save()).rejects.toThrow();
     });
 
     it('Create without project', async function() {
       let tempImageInstance = new ImageInstance({project});
-      expect(tempImageInstance.save()).rejects..toThrow();
+      expect(tempImageInstance.save()).rejects.toThrow();
     });
   });
 
@@ -57,25 +57,25 @@ describe('ImageInstance', function() {
     it('Fetch with static method', async function() {
       let fetchedImageInstance = await ImageInstance.fetch(id);
       expect(fetchedImageInstance).toBeInstanceOf(ImageInstance);
-      expect(fetchedImageInstance).to.deep.equal(imageInstance);
+      expect(fetchedImageInstance).toEqual(imageInstance);
     });
 
     it('Fetch with instance method', async function() {
       let fetchedImageInstance = await new ImageInstance({id}).fetch();
       expect(fetchedImageInstance).toBeInstanceOf(ImageInstance);
-      expect(fetchedImageInstance).to.deep.equal(imageInstance);
+      expect(fetchedImageInstance).toEqual(imageInstance);
     });
 
     it('Fetch next/previous', async function() {
       let nextImageInstance = await imageInstance.fetchNext();
       expect(nextImageInstance).toBeInstanceOf(ImageInstance);
-      expect(Number(nextImageInstance.created)).to.be.below(Number(imageInstance.created));
+      expect(Number(nextImageInstance.created)).toBeLessThan(Number(imageInstance.created));
       // let previousImageInstance = await nextImageInstance.fetchPrevious();
-      // expect(previousImageInstance).to.deep.equal(imageInstance);
+      // expect(previousImageInstance).toEqual(imageInstance);
     });
 
     it('Fetch with wrong ID', function() {
-      expect(ImageInstance.fetch(0)).rejects..toThrow();
+      expect(ImageInstance.fetch(0)).rejects.toThrow();
     });
   });
 
@@ -107,32 +107,32 @@ describe('ImageInstance', function() {
 
     it('Fetch connected users', async function() {
       let connectedUsers = await imageInstance.fetchConnectedUsers();
-      expect(connectedUsers).to.be.instanceof(Array);
+      expect(connectedUsers).toBeInstanceOf(Array);
     });
 
     // it('Fetch layers in other projects', async function() {
     //   let layers = await imageInstance.fetchLayersInOtherProjects(imageSource.project);
-    //   expect(layers).to.be.instanceof(Array);
+    //   expect(layers).toBeInstanceOf(Array);
     //   expect(layers).toHaveLength(1);
-    //   expect(layers[0].image).to.equal(imageSource.id);
+    //   expect(layers[0].image).toEqual(imageSource.id);
     // });
 
     // it('Fetch annotations index', async function() {
     //   let layers = await imageInstance.fetchAnnotationsIndex();
-    //   expect(layers).to.be.instanceof(Array);
+    //   expect(layers).toBeInstanceOf(Array);
     // });
 
     // it('Copy metadata', async function() {
     //   await imageInstance.copyMetadata(imageSource.id);
     //
     //   let copiedDescription = await Description.fetch(imageSource);
-    //   expect(copiedDescription.data).to.equal(dataDescription);
+    //   expect(copiedDescription.data).toEqual(dataDescription);
     //
     //   let collection = await new PropertyCollection({object: imageSource}).fetchAll();
     //   expect(collection).toHaveLength(1);
     //   let copiedProperty = collection.get(0);
-    //   expect(copiedProperty.key).to.equal(propKey);
-    //   expect(copiedProperty.value).to.equal(propValue);
+    //   expect(copiedProperty.key).toEqual(propKey);
+    //   expect(copiedProperty.value).toEqual(propValue);
     // });
 
     // it('Copy annotations', async function() {
@@ -140,31 +140,31 @@ describe('ImageInstance', function() {
     //   let collection = await new AnnotationCollection({image: imageSource.id, showGIS: true}).fetchAll();
     //   expect(collection).toHaveLength(1);
     //   let copiedAnnot = collection.get(0);
-    //   expect(copiedAnnot.perimeter).to.equal(annotation.perimeter);
+    //   expect(copiedAnnot.perimeter).toEqual(annotation.perimeter);
     // });
 
     it('Start review', async function() {
       await imageInstance.review();
-      expect(imageInstance.reviewStart).to.exist;
+      expect(imageInstance.reviewStart).toBeDefined();
     });
 
     it('Cancel review', async function() {
       await imageInstance.stopReview(true);
-      expect(imageInstance.inReview).to.be.false;
+      expect(imageInstance.inReview).toBe(false);
     });
 
     it('Fetch review statistics', async function() {
       let stats = await imageInstance.fetchReviewStatistics();
-      expect(stats).to.be.instanceof(Array);
+      expect(stats).toBeInstanceOf(Array);
     });
 
     it('Download URL', async function() {
-      expect(imageInstance.downloadURL).to.be.a('string');
+      expect(imageInstance.downloadURL).toBe('string');
     });
 
     it('Fetch reference slice', async function() {
       let slice = await imageInstance.fetchReferenceSlice();
-      expect(slice).to.be.instanceOf(SliceInstance);
+      expect(slice).toBeInstanceOf(SliceInstance);
     });
   });
 
@@ -174,7 +174,7 @@ describe('ImageInstance', function() {
       imageInstance.instanceFilename = newInstanceFilename;
       imageInstance = await imageInstance.update();
       expect(imageInstance).toBeInstanceOf(ImageInstance);
-      expect(imageInstance.instanceFilename).to.equal(newInstanceFilename);
+      expect(imageInstance.instanceFilename).toEqual(newInstanceFilename);
     });
   });
 
@@ -184,7 +184,7 @@ describe('ImageInstance', function() {
     });
 
     it('Fetch deleted', function() {
-      expect(ImageInstance.fetch(id)).rejects..toThrow();
+      expect(ImageInstance.fetch(id)).rejects.toThrow();
     });
   });
 
@@ -237,7 +237,7 @@ describe('ImageInstance', function() {
 
       it('Fetch without filter', async function() {
         let collection = new ImageInstanceCollection();
-        expect(collection.fetchAll()).rejects..toThrow();
+        expect(collection.fetchAll()).rejects.toThrow();
       });
 
       it('Fetch last opened', async function() {
@@ -245,7 +245,7 @@ describe('ImageInstance', function() {
         expect(collection).toHaveLength(nbImageInstances);
         let listId = collection.map(imageInstance => imageInstance.id);
         imageInstances.forEach(image => {
-          expect(listId).to.include(image.id);
+          expect(listId).toContain(image.id);
         });
       });
 
@@ -258,13 +258,13 @@ describe('ImageInstance', function() {
         expect(collection).toHaveLength(nbImageInstances);
         let listId = collection.map(item => item.image);
         imageInstances.forEach(image => {
-          expect(listId).to.include(image.id);
+          expect(listId).toContain(image.id);
         });
       });
 
       it('Fetch light version', async function() {
         let collection = await ImageInstanceCollection.fetchAllLight();
-        expect(collection).to.have.lengthOf.at.least(nbImageInstances);
+        expect(collection).toBeGreaterThanOrEqual(nbImageInstances);
       });
     });
 
@@ -294,14 +294,13 @@ describe('ImageInstance', function() {
         let collection = await new ImageInstanceCollection({filterKey: 'project', filterValue: project}).fetchAll();
         expect(collection).toBeInstanceOf(ImageInstanceCollection);
         expect(collection).toHaveLength(nbImageInstances);
-        expect(collection.get(0).project).to.be.equals(project);
-
+        expect(collection.get(0).project).toBe(project);
       });
 
       it('Filter by user', async function() {
         let collection = await new ImageInstanceCollection({filterKey: 'user', filterValue: idUser}).fetchAll();
         expect(collection).toBeInstanceOf(ImageInstanceCollection);
-        expect(collection).to.have.length.above(nbImageInstances);
+        expect(collection).toBeGreaterThan(nbImageInstances);
       });
     });
 
@@ -331,7 +330,7 @@ describe('ImageInstance', function() {
     describe('Search', function() {
       it('Get bounds', async function() {
         let result = await new ImageInstanceCollection.fetchBounds({project: project});
-        expect(result.width.max).to.be.at.least(result.width.min);
+        expect(result.width.max).toBeGreaterThanOrEqual(result.width.min);
       });
 
       it('Search by name', async function() {

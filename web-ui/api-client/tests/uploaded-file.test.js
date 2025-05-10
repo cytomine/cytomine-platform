@@ -5,7 +5,6 @@ describe('UploadedFile', function() {
 
   let storage;
   let user;
-  let imageServer;
   let ext = '.ext';
   let filename = utils.randomString() + ext;
   let contentType = 'contentType';
@@ -17,7 +16,6 @@ describe('UploadedFile', function() {
     await utils.connect(true);
     ({id: user} = await User.fetchCurrent());
     ({id: storage} = await utils.getStorage({user}));
-    ({id: imageServer} = await utils.getImageServer());
   });
 
   afterAll(async function() {
@@ -27,12 +25,12 @@ describe('UploadedFile', function() {
   describe('Create', function() {
     it('Create', async function() {
       uploadedFile = new UploadedFile({
-        storage, user, imageServer, filename, originalFilename: filename, contentType, ext
+        storage, user, filename, originalFilename: filename, contentType, ext
       });
       uploadedFile = await uploadedFile.save();
       id = uploadedFile.id;
       expect(uploadedFile).toBeInstanceOf(UploadedFile);
-      expect(uploadedFile.filename).to.equal(filename);
+      expect(uploadedFile.filename).toEqual(filename);
     });
   });
 
@@ -40,23 +38,23 @@ describe('UploadedFile', function() {
     it('Fetch with static method', async function() {
       let fetchedUploadedFile = await UploadedFile.fetch(id);
       expect(fetchedUploadedFile).toBeInstanceOf(UploadedFile);
-      expect(fetchedUploadedFile).to.deep.equal(uploadedFile);
+      expect(fetchedUploadedFile).toEqual(uploadedFile);
     });
 
     it('Fetch with instance method', async function() {
       let fetchedUploadedFile = await new UploadedFile({id}).fetch();
       expect(fetchedUploadedFile).toBeInstanceOf(UploadedFile);
-      expect(fetchedUploadedFile).to.deep.equal(uploadedFile);
+      expect(fetchedUploadedFile).toEqual(uploadedFile);
     });
 
     it('Fetch with wrong ID', function() {
-      expect(UploadedFile.fetch(0)).rejects..toThrow();
+      expect(UploadedFile.fetch(0)).rejects.toThrow();
     });
   });
 
   describe('Specific operations', function() {
     it('Download URL', async function() {
-      expect(uploadedFile.downloadURL).to.be.a('string');
+      expect(uploadedFile.downloadURL).toBe('string');
     });
   });
 
@@ -66,7 +64,7 @@ describe('UploadedFile', function() {
       uploadedFile.filename = newFilename;
       uploadedFile = await uploadedFile.update();
       expect(uploadedFile).toBeInstanceOf(UploadedFile);
-      expect(uploadedFile.filename).to.equal(newFilename);
+      expect(uploadedFile.filename).toEqual(newFilename);
     });
   });
 
@@ -76,7 +74,7 @@ describe('UploadedFile', function() {
     });
 
     it('Fetch deleted', function() {
-      expect(UploadedFile.fetch(id)).rejects..toThrow();
+      expect(UploadedFile.fetch(id)).rejects.toThrow();
     });
   });
 
@@ -93,7 +91,7 @@ describe('UploadedFile', function() {
       for(let i = 0; i < nbUploadedFiles; i++) {
         let tmp = utils.randomString();
         uploadedFilePromises.push(new UploadedFile({
-          storage, user, imageServer, filename: tmp, originalFilename: tmp, contentType, ext
+          storage, user, filename: tmp, originalFilename: tmp, contentType, ext
         }).save());
       }
       uploadedFiles = await Promise.all(uploadedFilePromises);
@@ -108,7 +106,7 @@ describe('UploadedFile', function() {
       it('Fetch (instance method)', async function() {
         let collection = await new UploadedFileCollection().fetchAll();
         expect(collection).toBeInstanceOf(UploadedFileCollection);
-        expect(collection).to.have.lengthOf.at.least(nbUploadedFiles);
+        expect(collection).toBeGreaterThanOrEqual(nbUploadedFiles);
         totalNb = collection.length;
       });
 

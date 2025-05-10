@@ -17,7 +17,7 @@ describe('UserGroup', function() {
       userGroup = new UserGroup({group, user});
       userGroup = await userGroup.save();
       expect(userGroup).toBeInstanceOf(UserGroup);
-      expect(userGroup.id).to.exist;
+      expect(userGroup.id).toBeDefined();
     });
   });
 
@@ -25,17 +25,17 @@ describe('UserGroup', function() {
     it('Fetch with static method', async function() {
       let fetchedUserGroup = await UserGroup.fetch(user, group);
       expect(fetchedUserGroup).toBeInstanceOf(UserGroup);
-      expect(fetchedUserGroup).to.deep.equal(userGroup);
+      expect(fetchedUserGroup).toEqual(userGroup);
     });
 
     it('Fetch with instance method', async function() {
       let fetchedUserGroup = await new UserGroup({user, group}).fetch();
       expect(fetchedUserGroup).toBeInstanceOf(UserGroup);
-      expect(fetchedUserGroup).to.deep.equal(userGroup);
+      expect(fetchedUserGroup).toEqual(userGroup);
     });
 
     it('Fetch with wrong ID', function() {
-      expect(UserGroup.fetch(0)).rejects..toThrow();
+      expect(UserGroup.fetch(0)).rejects.toThrow();
     });
   });
 
@@ -45,7 +45,7 @@ describe('UserGroup', function() {
     });
 
     it('Fetch deleted', function() {
-      expect(UserGroup.fetch(user, group)).rejects..toThrow();
+      expect(UserGroup.fetch(user, group)).rejects.toThrow();
     });
   });
 
@@ -98,7 +98,7 @@ describe('UserGroup', function() {
 
       it('Fetch without filter', async function() {
         let collection = new UserGroupCollection();
-        expect(collection.fetchAll()).rejects..toThrow();
+        expect(collection.fetchAll()).rejects.toThrow();
       });
     });
 

@@ -24,7 +24,7 @@ describe('Storage', function() {
     it.skip('Create for user', async function() {
       storageUser = await Storage.create(user);
       expect(storageUser).toBeInstanceOf(Storage);
-      expect(storageUser.user).to.equal(user);
+      expect(storageUser.user).toEqual(user);
     });
 
     it('Create', async function() {
@@ -32,8 +32,8 @@ describe('Storage', function() {
       storage = await storage.save();
       id = storage.id;
       expect(storage).toBeInstanceOf(Storage);
-      expect(id).to.exist;
-      expect(storage.name).to.equal(name);
+      expect(id).toBeDefined();
+      expect(storage.name).toEqual(name);
     });
   });
 
@@ -41,17 +41,17 @@ describe('Storage', function() {
     it('Fetch with static method', async function() {
       let fetchedStorage = await Storage.fetch(id);
       expect(fetchedStorage).toBeInstanceOf(Storage);
-      expect(fetchedStorage).to.deep.equal(storage);
+      expect(fetchedStorage).toEqual(storage);
     });
 
     it('Fetch with instance method', async function() {
       let fetchedStorage = await new Storage({id}).fetch();
       expect(fetchedStorage).toBeInstanceOf(Storage);
-      expect(fetchedStorage).to.deep.equal(storage);
+      expect(fetchedStorage).toEqual(storage);
     });
 
     it('Fetch with wrong ID', function() {
-      expect(Storage.fetch(0)).rejects..toThrow();
+      expect(Storage.fetch(0)).rejects.toThrow();
     });
   });
 
@@ -61,7 +61,7 @@ describe('Storage', function() {
       storage.name = newName;
       storage = await storage.update();
       expect(storage).toBeInstanceOf(Storage);
-      expect(storage.name).to.equal(newName);
+      expect(storage.name).toEqual(newName);
     });
   });
 
@@ -71,7 +71,7 @@ describe('Storage', function() {
     });
 
     it('Fetch deleted', function() {
-      expect(Storage.fetch(id)).rejects..toThrow();
+      expect(Storage.fetch(id)).rejects.toThrow();
     });
   });
 
@@ -97,7 +97,7 @@ describe('Storage', function() {
       it('Fetch (instance method)', async function() {
         let collection = await new StorageCollection({all: true}).fetchAll();
         expect(collection).toBeInstanceOf(StorageCollection);
-        expect(collection).to.have.lengthOf.at.least(nbStorages);
+        expect(collection).toBeGreaterThanOrEqual(nbStorages);
         totalNb = collection.length;
       });
 

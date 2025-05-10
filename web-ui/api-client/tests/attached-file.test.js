@@ -25,17 +25,17 @@ describe('AttachedFile', function() {
       await attachedFile.save();
       id = attachedFile.id;
       expect(attachedFile).toBeInstanceOf(AttachedFile);
-      expect(attachedFile.id).to.be.above(0);
+      expect(attachedFile.id).toBebove(0);
     });
 
     it('Create without providing associated object', async function() {
       let attachedFileWithoutObject = new AttachedFile({file});
-      expect(attachedFileWithoutObject.save()).rejects..toThrow();
+      expect(attachedFileWithoutObject.save()).rejects.toThrow();
     });
 
     it('Create without providing file', async function() {
       let attachedFile = new AttachedFile({}, project);
-      expect(attachedFile.save()).rejects..toThrow();
+      expect(attachedFile.save()).rejects.toThrow();
     });
   });
 
@@ -43,19 +43,19 @@ describe('AttachedFile', function() {
     it('Fetch with static method', async function() {
       let fetchedFile = await AttachedFile.fetch(id);
       expect(fetchedFile).toBeInstanceOf(AttachedFile);
-      expect(fetchedFile.domainIdent).to.equal(project.id);
-      // expect(fetchedFile.filename).to.equal(filename);
+      expect(fetchedFile.domainIdent).toEqual(project.id);
+      // expect(fetchedFile.filename).toEqual(filename);
     });
 
     it('Fetch with instance method', async function() {
       let fetchedFile = await new AttachedFile({id}).fetch();
       expect(fetchedFile).toBeInstanceOf(AttachedFile);
-      expect(fetchedFile.domainIdent).to.equal(project.id);
-      // expect(fetchedFile.filename).to.equal(filename);
+      expect(fetchedFile.domainIdent).toEqual(project.id);
+      // expect(fetchedFile.filename).toEqual(filename);
     });
 
     it('Fetch without providing associated object', function() {
-      expect(AttachedFile.fetch({id})).rejects..toThrow();
+      expect(AttachedFile.fetch({id})).rejects.toThrow();
     });
   });
 
@@ -72,7 +72,7 @@ describe('AttachedFile', function() {
     });
 
     it('Fetch a deleted element', function() {
-      expect(AttachedFile.fetch(id)).rejects..toThrow();
+      expect(AttachedFile.fetch(id)).rejects.toThrow();
     });
   });
 
@@ -100,7 +100,7 @@ describe('AttachedFile', function() {
       it('Fetch (instance method)', async function() {
         let collection = await new AttachedFileCollection({object: project}).fetchAll();
         expect(collection).toBeInstanceOf(AttachedFileCollection);
-        expect(collection).to.have.lengthOf.at.least(nbAttachedFiles);
+        expect(collection).toBeGreaterThanOrEqual(nbAttachedFiles);
         totalNb = collection.length;
       });
 
@@ -117,7 +117,7 @@ describe('AttachedFile', function() {
       });
 
       it('Fetch without associated object', async function() {
-        expect(AttachedFileCollection.fetchAll()).rejects..toThrow();
+        expect(AttachedFileCollection.fetchAll()).rejects.toThrow();
       });
     });
 

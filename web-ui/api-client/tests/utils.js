@@ -206,11 +206,6 @@ export async function getTag({name=randomString(), forceCreation=true} = {}) {
   return getModel(tag, tagCollection, forceCreation);
 }
 
-export async function getImageServer() {
-  let collection = new ImageServerCollection({nbPerPage: 1});
-  return getModel(null, collection, false);
-}
-
 export async function getMultipleImageServers(nb) {
   let collection = new cytomine.ImageServerCollection({nbPerPage: nb});
   await collection.fetchPage();

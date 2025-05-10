@@ -28,7 +28,7 @@ describe('ProjectDefaultLayer', function() {
       projectDefaultLayer = await projectDefaultLayer.save();
       expect(projectDefaultLayer).toBeInstanceOf(ProjectDefaultLayer);
       id = projectDefaultLayer.id;
-      expect(id).to.exist;
+      expect(id).toBeDefined();
     });
   });
 
@@ -36,17 +36,17 @@ describe('ProjectDefaultLayer', function() {
     it('Fetch with static method', async function() {
       let fetchedProjectDefaultLayer = await ProjectDefaultLayer.fetch(id, project);
       expect(fetchedProjectDefaultLayer).toBeInstanceOf(ProjectDefaultLayer);
-      expect(fetchedProjectDefaultLayer).to.deep.equal(projectDefaultLayer);
+      expect(fetchedProjectDefaultLayer).toEqual(projectDefaultLayer);
     });
 
     it('Fetch with instance method', async function() {
       let fetchedProjectDefaultLayer = await new ProjectDefaultLayer({project, id}).fetch();
       expect(fetchedProjectDefaultLayer).toBeInstanceOf(ProjectDefaultLayer);
-      expect(fetchedProjectDefaultLayer).to.deep.equal(projectDefaultLayer);
+      expect(fetchedProjectDefaultLayer).toEqual(projectDefaultLayer);
     });
 
     it('Fetch with wrong ID', function() {
-      expect(ProjectDefaultLayer.fetch(0)).rejects..toThrow();
+      expect(ProjectDefaultLayer.fetch(0)).rejects.toThrow();
     });
   });
 
@@ -56,7 +56,7 @@ describe('ProjectDefaultLayer', function() {
       projectDefaultLayer.hideByDefault = hideByDefault;
       projectDefaultLayer = await projectDefaultLayer.update();
       expect(projectDefaultLayer).toBeInstanceOf(ProjectDefaultLayer);
-      expect(projectDefaultLayer.hideByDefault).to.equal(hideByDefault);
+      expect(projectDefaultLayer.hideByDefault).toEqual(hideByDefault);
     });
   });
 
@@ -66,7 +66,7 @@ describe('ProjectDefaultLayer', function() {
     });
 
     it('Fetch deleted', function() {
-      expect(ProjectDefaultLayer.fetch(id, project)).rejects..toThrow();
+      expect(ProjectDefaultLayer.fetch(id, project)).rejects.toThrow();
     });
   });
 
@@ -121,7 +121,7 @@ describe('ProjectDefaultLayer', function() {
 
       it('Fetch without filter', async function() {
         let collection = new ProjectDefaultLayerCollection();
-        expect(collection.fetchAll()).rejects..toThrow();
+        expect(collection.fetchAll()).rejects.toThrow();
       });
     });
 

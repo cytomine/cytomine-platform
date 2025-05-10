@@ -33,7 +33,7 @@ describe('Cytomine', function() {
       let config = await Cytomine.instance.fetchUIConfigCurrentUser();
       expect(config).toBeInstanceOf(Object);
       for(let prop in config){
-        expect(config[prop]).to.be.a('boolean');
+        expect(config[prop]).toBe('boolean');
       }
     });
 
@@ -41,7 +41,7 @@ describe('Cytomine', function() {
       let config = await Cytomine.instance.fetchUIConfigCurrentUser(project.id);
       expect(config).toBeInstanceOf(Object);
       for(let prop in config){
-        expect(config[prop]).to.be.a('boolean');
+        expect(config[prop]).toBe('boolean');
       }
     });
   });
@@ -61,13 +61,13 @@ describe('Cytomine', function() {
     it('Switch to another user account', async function() {
       await Cytomine.instance.switchUser(otherUser.username);
       let currentUser = await User.fetchCurrent();
-      expect(currentUser.id).to.equal(otherUser.id);
+      expect(currentUser.id).toEqual(otherUser.id);
     });
 
     it('Switch back to real user account', async function() {
       await Cytomine.instance.stopSwitchUser();
       let currentUser = await User.fetchCurrent();
-      expect(currentUser.id).to.not.equal(otherUser.id);
+      expect(currentUser.id).not.toBe(otherUser.id);
     });
   });
 
@@ -78,7 +78,7 @@ describe('Cytomine', function() {
 
     it('Signature', async function() {
       let signature = await Cytomine.instance.fetchSignature();
-      expect(signature).to.be.a('string');
+      expect(signature).toBe('string');
     });
   });
 
@@ -112,22 +112,22 @@ describe('Cytomine', function() {
       let counts = await Cytomine.instance.fetchTotalCounts();
       expect(counts).toBeInstanceOf(Object);
       for(let prop in counts){
-        expect(counts[prop]).to.be.a('number');
+        expect(counts[prop]).toBe('number');
       }
     });
 
     it('Current stats', async function() {
       let currentStats = await Cytomine.instance.fetchCurrentStats();
       expect(currentStats).toBeInstanceOf(Object);
-      expect(currentStats.users).to.be.a('number');
-      expect(currentStats.projects).to.be.a('number');
+      expect(currentStats.users).toBe('number');
+      expect(currentStats.projects).toBe('number');
     });
 
     it('Storage stats', async function() {
       let storageStats = await Cytomine.instance.fetchStorageStats();
       expect(storageStats).toBeInstanceOf(Object);
       for(let prop in storageStats){
-        expect(storageStats[prop]).to.be.a('number');
+        expect(storageStats[prop]).toBe('number');
       }
     });
   });

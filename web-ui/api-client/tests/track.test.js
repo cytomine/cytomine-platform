@@ -26,7 +26,7 @@ describe('Track', function() {
       track = await track.save();
       id = track.id;
       expect(track).toBeInstanceOf(Track);
-      expect(track.name).to.equal(name);
+      expect(track.name).toEqual(name);
     });
   });
 
@@ -34,17 +34,17 @@ describe('Track', function() {
     it('Fetch with static method', async function() {
       let fetchedTrack = await Track.fetch(id);
       expect(fetchedTrack).toBeInstanceOf(Track);
-      expect(fetchedTrack.name).to.equal(name);
+      expect(fetchedTrack.name).toEqual(name);
     });
 
     it('Fetch with instance method', async function() {
       let fetchedTrack = await new Track({id}).fetch();
       expect(fetchedTrack).toBeInstanceOf(Track);
-      expect(fetchedTrack.name).to.equal(name);
+      expect(fetchedTrack.name).toEqual(name);
     });
 
     it('Fetch with wrong ID', function() {
-      expect(Track.fetch(0)).rejects..toThrow();
+      expect(Track.fetch(0)).rejects.toThrow();
     });
   });
 
@@ -54,7 +54,7 @@ describe('Track', function() {
       track.name = newName;
       track = await track.update();
       expect(track).toBeInstanceOf(Track);
-      expect(track.name).to.equal(newName);
+      expect(track.name).toEqual(newName);
     });
   });
 
@@ -64,7 +64,7 @@ describe('Track', function() {
     });
 
     it('Fetch deleted', function() {
-      expect(Track.fetch(id)).rejects..toThrow();
+      expect(Track.fetch(id)).rejects.toThrow();
     });
   });
 
@@ -93,7 +93,7 @@ describe('Track', function() {
       it('Fetch (instance method)', async function() {
         let collection = await new TrackCollection({filterKey: 'project', filterValue: project}).fetchAll();
         expect(collection).toBeInstanceOf(TrackCollection);
-        expect(collection).to.have.lengthOf.at.least(nbTracks);
+        expect(collection).toBeGreaterThanOrEqual(nbTracks);
         totalNb = collection.length;
       });
 
@@ -134,13 +134,13 @@ describe('Track', function() {
     describe('Filtering', function() {
       it('No filter', async function() {
         let collection = new TrackCollection();
-        expect(collection.fetchAll()).rejects..toThrow();
+        expect(collection.fetchAll()).rejects.toThrow();
       });
 
       it('Filter on imageInstance', async function() {
         let collection = new TrackCollection({filterKey: 'imageinstance', filterValue: imageInstance});
         await collection.fetchAll();
-        expect(collection).to.have.lengthOf.at.least(nbTracks);
+        expect(collection).toBeGreaterThanOrEqual(nbTracks);
       });
     });
 

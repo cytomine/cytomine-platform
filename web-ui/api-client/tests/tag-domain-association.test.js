@@ -25,8 +25,8 @@ describe('TagDomainAssociation', function() {
       association = new TagDomainAssociation({tag}, project);
       association = await association.save();
       id = association.id;
-      expect(id).to.exist;
-      expect(association.tag).to.equal(tag);
+      expect(id).toBeDefined();
+      expect(association.tag).toEqual(tag);
     });
   });
 
@@ -34,17 +34,17 @@ describe('TagDomainAssociation', function() {
     it('Fetch with static method', async function() {
       let fetchedAssociation = await TagDomainAssociation.fetch(id);
       expect(fetchedAssociation).toBeInstanceOf(TagDomainAssociation);
-      expect(fetchedAssociation.tag).to.equal(tag);
+      expect(fetchedAssociation.tag).toEqual(tag);
     });
 
     it('Fetch with instance method', async function() {
       let fetchedAssociation = await new TagDomainAssociation({id}).fetch();
       expect(fetchedAssociation).toBeInstanceOf(TagDomainAssociation);
-      expect(fetchedAssociation.tag).to.equal(tag);
+      expect(fetchedAssociation.tag).toEqual(tag);
     });
 
     it('Fetch with wrong ID', function() {
-      expect(TagDomainAssociation.fetch(0)).rejects..toThrow();
+      expect(TagDomainAssociation.fetch(0)).rejects.toThrow();
     });
   });
 
@@ -54,7 +54,7 @@ describe('TagDomainAssociation', function() {
     });
 
     it('Fetch deleted', function() {
-      expect(TagDomainAssociation.fetch(id)).rejects..toThrow();
+      expect(TagDomainAssociation.fetch(id)).rejects.toThrow();
     });
   });
 
@@ -86,7 +86,7 @@ describe('TagDomainAssociation', function() {
       it('Fetch (instance method)', async function() {
         let collection = await new TagDomainAssociationCollection().fetchAll();
         expect(collection).toBeInstanceOf(TagDomainAssociationCollection);
-        expect(collection).to.have.lengthOf.at.least(nbAssociations);
+        expect(collection).toBeGreaterThanOrEqual(nbAssociations);
         totalNb = collection.length;
       });
 

@@ -79,17 +79,17 @@ describe('Role', function() {
     it('Fetch with static method', async function() {
       let fetchedRole = await Role.fetch(role.id);
       expect(fetchedRole).toBeInstanceOf(Role);
-      expect(fetchedRole).to.deep.equal(role);
+      expect(fetchedRole).toEqual(role);
     });
 
     it('Fetch with instance method', async function() {
       let fetchedRole = await new Role({id: role.id}).fetch();
       expect(fetchedRole).toBeInstanceOf(Role);
-      expect(fetchedRole).to.deep.equal(role);
+      expect(fetchedRole).toEqual(role);
     });
 
     it.skip('Fetch with wrong ID', function() { // Inconsistent behaviour: returns null instead of an error
-      expect(Role.fetch(0)).rejects..toThrow();
+      expect(Role.fetch(0)).rejects.toThrow();
     });
   });
 

@@ -60,7 +60,7 @@ describe('AnnotationTerm', () => {
 
       it('Fetch without filter', async () => {
         let collection = new AnnotationTermCollection();
-        expect(collection.fetchAll()).rejects..toThrow();
+        expect(collection.fetchAll()).rejects.toThrow();
       });
     });
 

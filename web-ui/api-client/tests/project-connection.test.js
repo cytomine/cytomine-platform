@@ -19,7 +19,7 @@ describe('ProjectConnection', function() {
       projectConnection = new ProjectConnection({project});
       await projectConnection.save();
       expect(projectConnection).toBeInstanceOf(ProjectConnection);
-      expect(projectConnection.id).to.be.above(0);
+      expect(projectConnection.id).toBebove(0);
     });
   });
 
@@ -64,7 +64,7 @@ describe('ProjectConnection', function() {
       it('Fetch (instance method)', async function() {
         let collection = await new ProjectConnectionCollection({user, project}).fetchAll();
         expect(collection).toBeInstanceOf(ProjectConnectionCollection);
-        expect(collection).to.have.lengthOf.at.least(nbConnections);
+        expect(collection).toBeGreaterThanOrEqual(nbConnections);
         totalNb = collection.length;
       });
 
@@ -82,7 +82,7 @@ describe('ProjectConnection', function() {
 
       it('Fetch without filter', async function() {
         let collection = new ProjectConnectionCollection();
-        expect(collection.fetchAll()).rejects..toThrow();
+        expect(collection.fetchAll()).rejects.toThrow();
       });
     });
 
@@ -108,19 +108,19 @@ describe('ProjectConnection', function() {
 
       it('Download URL', async function() {
         let collection = new ProjectConnectionCollection({user, project});
-        expect(collection.downloadURL).to.be.a('string');
+        expect(collection.downloadURL).toBe('string');
       });
     });
 
     describe('Specific operations', function() {
       it('Fetch average connections', async function() {
         let result = await ProjectConnectionCollection.fetchAverageConnections({project, beforeThan: new Date().getTime()});
-        expect(result).to.be.instanceof(Array);
+        expect(result).toBeInstanceOf(Array);
       });
 
       it('Fetch connections frequency', async function() {
         let result = await ProjectConnectionCollection.fetchConnectionsFrequency({project, beforeThan: new Date().getTime()});
-        expect(result).to.be.instanceof(Array);
+        expect(result).toBeInstanceOf(Array);
       });
     });
 

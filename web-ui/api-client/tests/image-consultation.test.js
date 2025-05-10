@@ -24,7 +24,7 @@ describe('ImageConsultation', function() {
       imageConsultation = new ImageConsultation({image});
       await imageConsultation.save();
       expect(imageConsultation).toBeInstanceOf(ImageConsultation);
-      expect(imageConsultation.id).to.be.above(0);
+      expect(imageConsultation.id).toBebove(0);
     });
   });
 
@@ -69,7 +69,7 @@ describe('ImageConsultation', function() {
       it('Fetch (instance method)', async function() {
         let collection = await new ImageConsultationCollection({user, project}).fetchAll();
         expect(collection).toBeInstanceOf(ImageConsultationCollection);
-        expect(collection).to.have.lengthOf.at.least(nbConsultations);
+        expect(collection).toBeGreaterThanOrEqual(nbConsultations);
         totalNb = collection.length;
       });
 
@@ -88,18 +88,18 @@ describe('ImageConsultation', function() {
       it.skip('Fetch from project connection', async function() { // erratic core behaviour
         let collection = await new ImageConsultationCollection({projectConnection}).fetchAll();
         expect(collection).toBeInstanceOf(ImageConsultationCollection);
-        expect(collection).to.have.lengthOf.at.least(nbConsultations);
+        expect(collection).toBeGreaterThanOrEqual(nbConsultations);
       });
 
       it('Fetch resume', async function() {
         let collection = await new ImageConsultationCollection({resume: true, user, project}).fetchAll();
         expect(collection).toBeInstanceOf(ImageConsultationCollection);
-        expect(collection).to.have.lengthOf.at.least(1);
+        expect(collection).toBeGreaterThanOrEqual(1);
       });
 
       it('Fetch with incorrect parameters', async function() {
         let collection = new ImageConsultationCollection();
-        expect(collection.fetchAll()).rejects..toThrow();
+        expect(collection.fetchAll()).rejects.toThrow();
       });
     });
 
@@ -125,7 +125,7 @@ describe('ImageConsultation', function() {
 
       it('Download URL', async function() {
         let collection = new ImageConsultationCollection({user, project});
-        expect(collection.downloadURL).to.be.a('string');
+        expect(collection.downloadURL).toBe('string');
       });
     });
 

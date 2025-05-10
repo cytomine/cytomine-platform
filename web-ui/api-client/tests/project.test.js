@@ -24,7 +24,7 @@ describe('Project', function() {
       project = await project.save();
       id = project.id;
       expect(project).toBeInstanceOf(Project);
-      expect(project.name).to.equal(name);
+      expect(project.name).toEqual(name);
     });
   });
 
@@ -32,17 +32,17 @@ describe('Project', function() {
     it('Fetch with static method', async function() {
       let fetchedProject = await Project.fetch(id);
       expect(fetchedProject).toBeInstanceOf(Project);
-      expect(fetchedProject.name).to.equal(name);
+      expect(fetchedProject.name).toEqual(name);
     });
 
     it('Fetch with instance method', async function() {
       let fetchedProject = await new Project({id}).fetch();
       expect(fetchedProject).toBeInstanceOf(Project);
-      expect(fetchedProject.name).to.equal(name);
+      expect(fetchedProject.name).toEqual(name);
     });
 
     it('Fetch with wrong ID', function() {
-      expect(Project.fetch(0)).rejects..toThrow();
+      expect(Project.fetch(0)).rejects.toThrow();
     });
   });
 
@@ -58,157 +58,157 @@ describe('Project', function() {
 
     it('Fetch creator', async function() {
       let user = await project.fetchCreator();
-      expect(user).to.be.instanceof(User);
+      expect(user).toBeInstanceOf(User);
       let currentUser = await User.fetchCurrent();
-      expect(user.id).to.equal(currentUser.id);
+      expect(user.id).toEqual(currentUser.id);
     });
 
     it('Fetch users', async function() {
       let users = await project.fetchUsers();
-      expect(users).to.be.instanceof(UserCollection);
+      expect(users).toBeInstanceOf(UserCollection);
       nbUsers = users.length;
     });
 
     it('Fetch users activity', async function() {
       let users = await project.fetchUsersActivity();
-      expect(users).to.be.instanceof(UserCollection);
+      expect(users).toBeInstanceOf(UserCollection);
     });
 
     it('Fetch connected users', async function() {
       let users = await project.fetchConnectedUsers();
-      expect(users).to.be.instanceof(Array);
+      expect(users).toBeInstanceOf(Array);
     });
 
     it('Fetch user layers', async function() {
       let userLayers = await project.fetchUserLayers();
-      expect(userLayers).to.be.instanceof(UserCollection);
+      expect(userLayers).toBeInstanceOf(UserCollection);
     });
 
     it('Fetch admins', async function() {
       let admins = await project.fetchAdministrators();
-      expect(admins).to.be.instanceof(UserCollection);
+      expect(admins).toBeInstanceOf(UserCollection);
       nbAdmins = admins.length;
     });
 
     it('Fetch representatives', async function() {
       let representatives = await project.fetchRepresentatives();
-      expect(representatives).to.be.instanceof(UserCollection);
+      expect(representatives).toBeInstanceOf(UserCollection);
     });
 
     it('Add user', async function() {
       await project.addUser(idUser);
       let users = await project.fetchUsers();
-      expect(users.length).to.equal(nbUsers + 1);
+      expect(users.length).toEqual(nbUsers + 1);
     });
 
     it('Delete user', async function() {
       await project.deleteUser(idUser);
       let users = await project.fetchUsers();
-      expect(users.length).to.equal(nbUsers);
+      expect(users.length).toEqual(nbUsers);
     });
 
     it('Add users', async function() {
       await project.addUsers([idUser]);
       let users = await project.fetchUsers();
-      expect(users.length).to.equal(nbUsers + 1);
+      expect(users.length).toEqual(nbUsers + 1);
     });
 
     it('Delete users', async function() {
       await project.deleteUsers([idUser]);
       let users = await project.fetchUsers();
-      expect(users.length).to.equal(nbUsers);
+      expect(users.length).toEqual(nbUsers);
     });
 
     it('Add admin', async function() {
       await project.addAdmin(idUser);
       let admins = await project.fetchAdministrators();
-      expect(admins.length).to.equal(nbAdmins + 1);
+      expect(admins.length).toEqual(nbAdmins + 1);
     });
 
     it('Delete admin', async function() {
       await project.deleteAdmin(idUser);
       let admins = await project.fetchAdministrators();
-      expect(admins.length).to.equal(nbAdmins);
+      expect(admins.length).toEqual(nbAdmins);
     });
 
     it('Fetch UI config', async function() {
       uiConfig = await project.fetchUIConfig();
       expect(uiConfig).toBeInstanceOf(Object);
       for(let prop in uiConfig){
-        expect(uiConfig[prop]['CONTRIBUTOR_PROJECT']).to.be.a('boolean');
-        expect(uiConfig[prop]['ADMIN_PROJECT']).to.be.a('boolean');
+        expect(uiConfig[prop]['CONTRIBUTOR_PROJECT']).toBe('boolean');
+        expect(uiConfig[prop]['ADMIN_PROJECT']).toBe('boolean');
       }
     });
 
     it('Set UI config', async function() {
       uiConfig['project-images-tab']['ADMIN_PROJECT'] = false;
       let result = await project.saveUIConfig(uiConfig);
-      expect(result).to.deep.equal(uiConfig);
+      expect(result).toEqual(uiConfig);
     });
 
     it('Fetch command history', async function() {
       let result = await project.fetchCommandHistory({max: 10});
-      expect(result).to.be.instanceof(Array);
+      expect(result).toBeInstanceOf(Array);
     });
 
     it('Fetch evolution of connections', async function() {
       let result = await project.fetchConnectionsEvolution({startDate: new Date().getTime()});
-      expect(result).to.be.instanceof(Array);
+      expect(result).toBeInstanceOf(Array);
     });
 
     it('Fetch evolution of image consultations', async function() {
       let result = await project.fetchImageConsultationsEvolution({startDate: new Date().getTime()});
-      expect(result).to.be.instanceof(Array);
+      expect(result).toBeInstanceOf(Array);
     });
 
     it('Fetch evolution of annotation actions', async function() {
       let result = await project.fetchAnnotationActionsEvolution({startDate: new Date().getTime()});
-      expect(result).to.be.instanceof(Array);
+      expect(result).toBeInstanceOf(Array);
     });
 
     it('Fetch evolution of annotation', async function() {
       let result = await project.fetchAnnotationActionsEvolution({startDate: new Date().getTime(), annotationType: AnnotationType.ALGO});
-      expect(result).to.be.instanceof(Array);
+      expect(result).toBeInstanceOf(Array);
     });
 
     it('Fetch number of connections', async function() {
       let result = await project.fetchNbConnections({startDate: new Date().getTime()});
-      expect(result).to.be.a('number');
+      expect(result).toBe('number');
     });
 
     it('Fetch number of image consultations', async function() {
       let result = await project.fetchNbImageConsultations({startDate: new Date().getTime()});
-      expect(result).to.be.a('number');
+      expect(result).toBe('number');
     });
 
     it('Fetch number of annotation actions', async function() {
       let result = await project.fetchNbAnnotationActions({startDate: new Date().getTime()});
-      expect(result).to.be.a('number');
+      expect(result).toBe('number');
     });
 
     it('Fetch number of annotations', async function() {
       let result = await project.fetchNbAnnotations({startDate: new Date().getTime(), annotationType: AnnotationType.USER});
-      expect(result).to.be.a('number');
+      expect(result).toBe('number');
     });
 
     it('Fetch terms statistics', async function() {
       let result = await project.fetchStatsTerms({startDate: new Date().getTime()});
-      expect(result).to.be.instanceof(Array);
+      expect(result).toBeInstanceOf(Array);
     });
 
     it('Fetch annotated images by terms statistics', async function() {
       let result = await project.fetchStatsAnnotatedImagesByTerm({startDate: new Date().getTime()});
-      expect(result).to.be.instanceof(Array);
+      expect(result).toBeInstanceOf(Array);
     });
 
     it('Fetch contributors statistics', async function() {
       let result = await project.fetchStatsAnnotationCreators({startDate: new Date().getTime()});
-      expect(result).to.be.instanceof(Array);
+      expect(result).toBeInstanceOf(Array);
     });
 
     it('Fetch annotated images by contributor statistics', async function() {
       let result = await project.fetchStatsAnnotatedImagesByCreator({startDate: new Date().getTime()});
-      expect(result).to.be.instanceof(Array);
+      expect(result).toBeInstanceOf(Array);
     });
   });
 
@@ -218,7 +218,7 @@ describe('Project', function() {
       project.name = newName;
       project = await project.update();
       expect(project).toBeInstanceOf(Project);
-      expect(project.name).to.equal(newName);
+      expect(project.name).toEqual(newName);
     });
   });
 
@@ -228,7 +228,7 @@ describe('Project', function() {
     });
 
     it('Fetch deleted', function() {
-      expect(Project.fetch(id)).rejects..toThrow();
+      expect(Project.fetch(id)).rejects.toThrow();
     });
   });
 
@@ -269,7 +269,7 @@ describe('Project', function() {
       it('Fetch (instance method)', async function() {
         let collection = await new ProjectCollection().fetchAll();
         expect(collection).toBeInstanceOf(ProjectCollection);
-        expect(collection).to.have.lengthOf.at.least(nbProjects);
+        expect(collection).toBeGreaterThanOrEqual(nbProjects);
         totalNb = collection.length;
       });
 
@@ -290,7 +290,7 @@ describe('Project', function() {
         expect(collection).toHaveLength(nbProjects);
         let listId = collection.map(project => project.id);
         projects.forEach(project => {
-          expect(listId).to.include(project.id);
+          expect(listId).toContain(project.id);
         });
       });
     });
@@ -319,18 +319,18 @@ describe('Project', function() {
     describe('Filtering', function() {
       it('Filter on user', async function() {
         let collection = await ProjectCollection.fetchAll({filterKey: 'user', filterValue: currentUser.id});
-        expect(collection).to.have.lengthOf.at.least(nbProjects);
+        expect(collection).toBeGreaterThanOrEqual(nbProjects);
       });
 
       it('Filter on user ; light version', async function() {
         let collection = await ProjectCollection.fetchAll({filterKey: 'user', filterValue: currentUser.id, light: true});
-        expect(collection).to.have.lengthOf.at.least(nbProjects);
+        expect(collection).toBeGreaterThanOrEqual(nbProjects);
       });
 
       it('Filter on ontology', async function() {
         let collection = new ProjectCollection({filterKey: 'ontology', filterValue: ontology});
         await collection.fetchAll();
-        expect(collection).to.have.lengthOf.at.least(nbProjects);
+        expect(collection).toBeGreaterThanOrEqual(nbProjects);
       });
     });
 

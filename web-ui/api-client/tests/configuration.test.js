@@ -18,7 +18,7 @@ describe('Configuration', function() {
       config = new Configuration({key, value, readingRole});
       config = await config.save();
       expect(config).toBeInstanceOf(Configuration);
-      expect(config.value).to.equal(value);
+      expect(config.value).toEqual(value);
     });
   });
 
@@ -26,17 +26,17 @@ describe('Configuration', function() {
     it('Fetch with static method', async function() {
       let fetchedConfiguration = await Configuration.fetch(key);
       expect(fetchedConfiguration).toBeInstanceOf(Configuration);
-      expect(fetchedConfiguration.value).to.equal(value);
+      expect(fetchedConfiguration.value).toEqual(value);
     });
 
     it('Fetch with instance method', async function() {
       let fetchedConfiguration = await new Configuration({key}).fetch();
       expect(fetchedConfiguration).toBeInstanceOf(Configuration);
-      expect(fetchedConfiguration.value).to.equal(value);
+      expect(fetchedConfiguration.value).toEqual(value);
     });
 
     it('Fetch with unknown key', function() {
-      expect(Configuration.fetch(utils.randomString())).rejects..toThrow();
+      expect(Configuration.fetch(utils.randomString())).rejects.toThrow();
     });
   });
 
@@ -46,7 +46,7 @@ describe('Configuration', function() {
       config.value = newValue;
       config = await config.update();
       expect(config).toBeInstanceOf(Configuration);
-      expect(config.value).to.equal(newValue);
+      expect(config.value).toEqual(newValue);
     });
   });
 
@@ -56,7 +56,7 @@ describe('Configuration', function() {
     });
 
     it('Fetch deleted', function() {
-      expect(Configuration.fetch(key)).rejects..toThrow();
+      expect(Configuration.fetch(key)).rejects.toThrow();
     });
   });
 
@@ -86,7 +86,7 @@ describe('Configuration', function() {
       it('Fetch (instance method)', async function() {
         let collection = await new ConfigurationCollection().fetchAll();
         expect(collection).toBeInstanceOf(ConfigurationCollection);
-        expect(collection).to.have.lengthOf.at.least(nbConfigurations);
+        expect(collection).toBeGreaterThanOrEqual(nbConfigurations);
         totalNb = collection.length;
       });
 

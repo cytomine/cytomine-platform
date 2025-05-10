@@ -16,7 +16,7 @@ describe('ImageFilterProject', function() {
       imageFilterProject = await imageFilterProject.save();
       id = imageFilterProject.id;
       expect(imageFilterProject).toBeInstanceOf(ImageFilterProject);
-      expect(imageFilterProject.name).to.equal(imageFilterName);
+      expect(imageFilterProject.name).toEqual(imageFilterName);
     });
   });
 
@@ -26,7 +26,7 @@ describe('ImageFilterProject', function() {
     });
 
     it('Fetch deleted', function() {
-      expect(ImageFilterProject.fetch(id)).rejects..toThrow();
+      expect(ImageFilterProject.fetch(id)).rejects.toThrow();
     });
   });
 
@@ -62,7 +62,7 @@ describe('ImageFilterProject', function() {
       it('Fetch (instance method)', async function() {
         let collection = await new ImageFilterProjectCollection().fetchAll();
         expect(collection).toBeInstanceOf(ImageFilterProjectCollection);
-        expect(collection).to.have.lengthOf.at.least(nbImageFilterProjects);
+        expect(collection).toBeGreaterThanOrEqual(nbImageFilterProjects);
         totalNb = collection.length;
       });
 

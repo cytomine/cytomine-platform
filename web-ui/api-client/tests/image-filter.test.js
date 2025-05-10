@@ -14,7 +14,7 @@ describe('Image filter', function() {
       imageFilter = await imageFilter.save();
       id = imageFilter.id;
       expect(imageFilter).toBeInstanceOf(ImageFilter);
-      expect(imageFilter.name).to.equal(name);
+      expect(imageFilter.name).toEqual(name);
     });
   });
 
@@ -22,17 +22,17 @@ describe('Image filter', function() {
     it('Fetch with static method', async function() {
       let fetchedImageFilter = await ImageFilter.fetch(id);
       expect(fetchedImageFilter).toBeInstanceOf(ImageFilter);
-      expect(fetchedImageFilter.name).to.equal(name);
+      expect(fetchedImageFilter.name).toEqual(name);
     });
 
     it('Fetch with instance method', async function() {
       let fetchedImageFilter = await new ImageFilter({id}).fetch();
       expect(fetchedImageFilter).toBeInstanceOf(ImageFilter);
-      expect(fetchedImageFilter.name).to.equal(name);
+      expect(fetchedImageFilter.name).toEqual(name);
     });
 
     it('Fetch with wrong ID', function() {
-      expect(ImageFilter.fetch(0)).rejects..toThrow();
+      expect(ImageFilter.fetch(0)).rejects.toThrow();
     });
   });
 
@@ -48,7 +48,7 @@ describe('Image filter', function() {
     });
 
     it('Fetch deleted', function() {
-      expect(ImageFilter.fetch(id)).rejects..toThrow();
+      expect(ImageFilter.fetch(id)).rejects.toThrow();
     });
   });
 
@@ -81,7 +81,7 @@ describe('Image filter', function() {
       it('Fetch (instance method)', async function() {
         let collection = await new ImageFilterCollection().fetchAll();
         expect(collection).toBeInstanceOf(ImageFilterCollection);
-        expect(collection).to.have.lengthOf.at.least(nbImageFilters);
+        expect(collection).toBeGreaterThanOrEqual(nbImageFilters);
         totalNb = collection.length;
       });
 

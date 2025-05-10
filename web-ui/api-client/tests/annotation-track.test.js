@@ -30,17 +30,17 @@ describe('AnnotationTrack', function() {
     it('Fetch with static method', async function() {
       let fetchedAnnotationTrack = await AnnotationTrack.fetch(annotation, track);
       expect(fetchedAnnotationTrack).toBeInstanceOf(AnnotationTrack);
-      expect(fetchedAnnotationTrack).to.deep.equal(annotationTrack);
+      expect(fetchedAnnotationTrack).toEqual(annotationTrack);
     });
 
     it('Fetch with instance method', async function() {
       let fetchedAnnotationTrack = await new AnnotationTrack({annotation, track}).fetch();
       expect(fetchedAnnotationTrack).toBeInstanceOf(AnnotationTrack);
-      expect(fetchedAnnotationTrack).to.deep.equal(annotationTrack);
+      expect(fetchedAnnotationTrack).toEqual(annotationTrack);
     });
 
     it('Fetch with wrong ID', function() {
-      expect(AnnotationTrack.fetch(0)).rejects..toThrow();
+      expect(AnnotationTrack.fetch(0)).rejects.toThrow();
     });
   });
 
@@ -50,7 +50,7 @@ describe('AnnotationTrack', function() {
     });
 
     it('Fetch deleted', function() {
-      expect(AnnotationTrack.fetch(annotation, track)).rejects..toThrow();
+      expect(AnnotationTrack.fetch(annotation, track)).rejects.toThrow();
     });
   });
 
@@ -104,7 +104,7 @@ describe('AnnotationTrack', function() {
 
       it('Fetch without filter', async function() {
         let collection = new AnnotationTrackCollection();
-        expect(collection.fetchAll()).rejects..toThrow();
+        expect(collection.fetchAll()).rejects.toThrow();
       });
     });
 

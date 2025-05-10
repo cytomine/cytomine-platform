@@ -56,17 +56,17 @@ describe('ImageServer', function() {
     it('Fetch with static method', async function() {
       let fetchedImageServer = await ImageServer.fetch(imageServer.id);
       expect(fetchedImageServer).toBeInstanceOf(ImageServer);
-      expect(fetchedImageServer).to.deep.equal(imageServer);
+      expect(fetchedImageServer).toEqual(imageServer);
     });
 
     it('Fetch with instance method', async function() {
       let fetchedImageServer = await new ImageServer({id: imageServer.id}).fetch();
       expect(fetchedImageServer).toBeInstanceOf(ImageServer);
-      expect(fetchedImageServer).to.deep.equal(imageServer);
+      expect(fetchedImageServer).toEqual(imageServer);
     });
 
     it('Fetch with wrong ID', function() {
-      expect(ImageServer.fetch(0)).rejects..toThrow();
+      expect(ImageServer.fetch(0)).rejects.toThrow();
     });
   });
 

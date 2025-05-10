@@ -25,7 +25,7 @@ describe('Term', function() {
       term = await term.save();
       id = term.id;
       expect(term).toBeInstanceOf(Term);
-      expect(term.name).to.equal(name);
+      expect(term.name).toEqual(name);
     });
   });
 
@@ -33,17 +33,17 @@ describe('Term', function() {
     it('Fetch with static method', async function() {
       let fetchedTerm = await Term.fetch(id);
       expect(fetchedTerm).toBeInstanceOf(Term);
-      expect(fetchedTerm.name).to.equal(name);
+      expect(fetchedTerm.name).toEqual(name);
     });
 
     it('Fetch with instance method', async function() {
       let fetchedTerm = await new Term({id}).fetch();
       expect(fetchedTerm).toBeInstanceOf(Term);
-      expect(fetchedTerm.name).to.equal(name);
+      expect(fetchedTerm.name).toEqual(name);
     });
 
     it('Fetch with wrong ID', function() {
-      expect(Term.fetch(0)).rejects..toThrow();
+      expect(Term.fetch(0)).rejects.toThrow();
     });
   });
 
@@ -58,23 +58,23 @@ describe('Term', function() {
 
     it('Set parent', async function() {
       await term.changeParent(idParent1);
-      expect(term.parent).to.equal(idParent1);
+      expect(term.parent).toEqual(idParent1);
       await term.fetch();
-      expect(term.parent).to.equal(idParent1);
+      expect(term.parent).toEqual(idParent1);
     });
 
     it('Update parent', async function() {
       await term.changeParent(idParent2);
-      expect(term.parent).to.equal(idParent2);
+      expect(term.parent).toEqual(idParent2);
       await term.fetch();
-      expect(term.parent).to.equal(idParent2);
+      expect(term.parent).toEqual(idParent2);
     });
 
     it('Remove parent', async function() {
       await term.changeParent(null);
-      expect(term.parent).to.equal(null);
+      expect(term.parent).toEqual(null);
       await term.fetch();
-      expect(term.parent).to.equal(null);
+      expect(term.parent).toEqual(null);
     });
   });
 
@@ -84,7 +84,7 @@ describe('Term', function() {
       term.name = newName;
       term = await term.update();
       expect(term).toBeInstanceOf(Term);
-      expect(term.name).to.equal(newName);
+      expect(term.name).toEqual(newName);
     });
   });
 
@@ -94,7 +94,7 @@ describe('Term', function() {
     });
 
     it('Fetch deleted', function() {
-      expect(Term.fetch(id)).rejects..toThrow();
+      expect(Term.fetch(id)).rejects.toThrow();
     });
   });
 
@@ -127,7 +127,7 @@ describe('Term', function() {
       it('Fetch (instance method)', async function() {
         let collection = await new TermCollection().fetchAll();
         expect(collection).toBeInstanceOf(TermCollection);
-        expect(collection).to.have.lengthOf.at.least(nbTerms);
+        expect(collection).toBeGreaterThanOrEqual(nbTerms);
         totalNb = collection.length;
       });
 
@@ -170,13 +170,13 @@ describe('Term', function() {
         let collection = new TermCollection();
         collection.setFilter('project', project);
         await collection.fetchAll();
-        expect(collection).to.have.lengthOf.at.least(nbTerms);
+        expect(collection).toBeGreaterThanOrEqual(nbTerms);
       });
 
       it('Filter on ontology', async function() {
         let collection = new TermCollection({filterKey: 'ontology', filterValue: ontology});
         await collection.fetchAll();
-        expect(collection).to.have.lengthOf.at.least(nbTerms);
+        expect(collection).toBeGreaterThanOrEqual(nbTerms);
       });
     });
 

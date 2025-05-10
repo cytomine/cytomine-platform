@@ -27,13 +27,13 @@ describe('AnnotationComment', function() {
       await annotationComment.save();
       expect(annotationComment).toBeInstanceOf(AnnotationComment);
       id = annotationComment.id;
-      expect(id).to.exist;
-      expect(annotationComment.comment).to.equal(text);
+      expect(id).toBeDefined();
+      expect(annotationComment.comment).toEqual(text);
     });
 
     it('Create without providing annotation', async function() {
       let annotationCommentWithoutObject = new AnnotationComment({comment: text});
-      expect(annotationCommentWithoutObject.save()).rejects..toThrow();
+      expect(annotationCommentWithoutObject.save()).rejects.toThrow();
     });
   });
 
@@ -41,19 +41,19 @@ describe('AnnotationComment', function() {
     it('Fetch with static method', async function() {
       let fetchedAnnotationComment = await AnnotationComment.fetch(id, annotation);
       expect(fetchedAnnotationComment).toBeInstanceOf(AnnotationComment);
-      expect(fetchedAnnotationComment.domainIdent).to.equal(annotation.id);
-      expect(fetchedAnnotationComment.comment).to.equal(text);
+      expect(fetchedAnnotationComment.domainIdent).toEqual(annotation.id);
+      expect(fetchedAnnotationComment.comment).toEqual(text);
     });
 
     it('Fetch with instance method', async function() {
       let fetchedAnnotationComment = await new AnnotationComment({id}, annotation).fetch();
       expect(fetchedAnnotationComment).toBeInstanceOf(AnnotationComment);
-      expect(fetchedAnnotationComment.domainIdent).to.equal(annotation.id);
-      expect(fetchedAnnotationComment.comment).to.equal(text);
+      expect(fetchedAnnotationComment.domainIdent).toEqual(annotation.id);
+      expect(fetchedAnnotationComment.comment).toEqual(text);
     });
 
     it('Fetch without providing associated object', function() {
-      expect(AnnotationComment.fetch({id})).rejects..toThrow();
+      expect(AnnotationComment.fetch({id})).rejects.toThrow();
     });
   });
 
@@ -102,7 +102,7 @@ describe('AnnotationComment', function() {
       });
 
       it('Fetch without associated object', async function() {
-        expect(AnnotationCommentCollection.fetchAll()).rejects..toThrow();
+        expect(AnnotationCommentCollection.fetchAll()).rejects.toThrow();
       });
     });
 

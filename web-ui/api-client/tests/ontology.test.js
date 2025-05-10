@@ -17,8 +17,8 @@ describe('Ontology', function() {
       ontology = new Ontology({name});
       ontology = await ontology.save();
       id = ontology.id;
-      expect(id).to.exist;
-      expect(ontology.name).to.equal(name);
+      expect(id).toBeDefined();
+      expect(ontology.name).toEqual(name);
     });
   });
 
@@ -29,12 +29,12 @@ describe('Ontology', function() {
       expect(clone).toBeInstanceOf(Ontology);
 
       expect(clone.children).toBeInstanceOf(TermCollection);
-      expect(clone.children).to.not.equal(fetchedOntology.children);
-      expect(clone.children).to.deep.equal(fetchedOntology.children);
+      expect(clone.children).not.toBe(fetchedOntology.children);
+      expect(clone.children).toEqual(fetchedOntology.children);
 
       if(fetchedOntology.children.length > 0) {
-        expect(clone.children.get(0)).to.not.equal(fetchedOntology.children.get(0));
-        expect(clone.children.get(0)).to.deep.equal(fetchedOntology.children.get(0));
+        expect(clone.children.get(0)).not.toBe(fetchedOntology.children.get(0));
+        expect(clone.children.get(0)).toEqual(fetchedOntology.children.get(0));
       }
     });
   });
@@ -43,17 +43,17 @@ describe('Ontology', function() {
     it('Fetch with static method', async function() {
       let fetchedOntology = await Ontology.fetch(id);
       expect(fetchedOntology).toBeInstanceOf(Ontology);
-      expect(fetchedOntology.name).to.equal(name);
+      expect(fetchedOntology.name).toEqual(name);
     });
 
     it('Fetch with instance method', async function() {
       let fetchedOntology = await new Ontology({id}).fetch();
       expect(fetchedOntology).toBeInstanceOf(Ontology);
-      expect(fetchedOntology.name).to.equal(name);
+      expect(fetchedOntology.name).toEqual(name);
     });
 
     it('Fetch with wrong ID', function() {
-      expect(Ontology.fetch(0)).rejects..toThrow();
+      expect(Ontology.fetch(0)).rejects.toThrow();
     });
   });
 
@@ -63,7 +63,7 @@ describe('Ontology', function() {
       ontology.name = newName;
       ontology = await ontology.update();
       expect(ontology).toBeInstanceOf(Ontology);
-      expect(ontology.name).to.equal(newName);
+      expect(ontology.name).toEqual(newName);
     });
   });
 
@@ -73,7 +73,7 @@ describe('Ontology', function() {
     });
 
     it('Fetch deleted', function() {
-      expect(Ontology.fetch(id)).rejects..toThrow();
+      expect(Ontology.fetch(id)).rejects.toThrow();
     });
   });
 
@@ -102,7 +102,7 @@ describe('Ontology', function() {
       it('Fetch (instance method)', async function() {
         let collection = await new OntologyCollection().fetchAll();
         expect(collection).toBeInstanceOf(OntologyCollection);
-        expect(collection).to.have.lengthOf.at.least(nbOntologies);
+        expect(collection).toBeGreaterThanOrEqual(nbOntologies);
         totalNb = collection.length;
       });
 
@@ -117,7 +117,7 @@ describe('Ontology', function() {
         expect(collection).toBeInstanceOf(OntologyCollection);
         expect(collection).toHaveLength(totalNb);
         let model = collection.get(0);
-        expect(model.user).to.be.null;
+        expect(model.user).toBeNull();
         expect(model.projects).toHaveLength(0);
         expect(model.children).toHaveLength(0);
       });

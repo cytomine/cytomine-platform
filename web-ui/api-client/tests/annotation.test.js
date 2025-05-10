@@ -28,8 +28,8 @@ describe('Annotation', function() {
       annotation = await annotation.save();
       id = annotation.id;
       expect(annotation).toBeInstanceOf(Annotation);
-      expect(annotation.type).to.equal(AnnotationType.USER);
-      expect(id).to.exist;
+      expect(annotation.type).toEqual(AnnotationType.USER);
+      expect(id).toBeDefined();
     });
   });
 
@@ -39,30 +39,30 @@ describe('Annotation', function() {
       expect(fetchedAnnotation).toBeInstanceOf(Annotation);
       //annotationTrack is returned at the creation and not at the fetching.
       delete annotation['annotationTrack'];
-      expect(fetchedAnnotation).to.deep.equal(annotation);
+      expect(fetchedAnnotation).toEqual(annotation);
     });
 
     it('Fetch with type', async function() {
       let fetchedAnnotation = await Annotation.fetch(id, AnnotationType.USER);
       expect(fetchedAnnotation).toBeInstanceOf(Annotation);
-      expect(fetchedAnnotation).to.deep.equal(annotation);
+      expect(fetchedAnnotation).toEqual(annotation);
     });
 
     it('Fetch with instance method', async function() {
       let fetchedAnnotation = await new Annotation({id}).fetch();
       expect(fetchedAnnotation).toBeInstanceOf(Annotation);
-      expect(fetchedAnnotation).to.deep.equal(annotation);
+      expect(fetchedAnnotation).toEqual(annotation);
     });
 
     it('Fetch with wrong ID', function() {
-      expect(Annotation.fetch(0)).rejects..toThrow();
+      expect(Annotation.fetch(0)).rejects.toThrow();
     });
   });
 
   describe('Specific operations', function() {
     it('Annotation action', async function() {
       let annotationAction = await annotation.recordAction();
-      expect(annotationAction.id).to.exist;
+      expect(annotationAction.id).toBeDefined();
     });
 
     it('[Correction] Add', async function() {
@@ -73,8 +73,8 @@ describe('Annotation', function() {
         location: 'POLYGON((5 5, 15 5, 15 15, 5 15, 5 5))',
         layers: [currentUser.id]
       });
-      expect(result.id).to.equal(annotation.id);
-      expect(result.area).to.be.above(initialArea);
+      expect(result.id).toEqual(annotation.id);
+      expect(result.area).toBebove(initialArea);
     });
 
     it('[Correction] Remove', async function() {
@@ -86,23 +86,23 @@ describe('Annotation', function() {
         remove: true,
         layers: [currentUser.id]
       });
-      expect(result.id).to.equal(annotation.id);
-      expect(result.area).to.be.below(initialArea);
+      expect(result.id).toEqual(annotation.id);
+      expect(result.area).toBeLessThan(initialArea);
     });
 
     it('Review', async function() {
       let reviewedAnnotation = await annotation.review();
-      expect(reviewedAnnotation).to.be.instanceof(Annotation);
-      expect(reviewedAnnotation.type).to.equal(AnnotationType.REVIEWED);
-      expect(reviewedAnnotation.parentIdent).to.equal(annotation.id);
+      expect(reviewedAnnotation).toBeInstanceOf(Annotation);
+      expect(reviewedAnnotation.type).toEqual(AnnotationType.REVIEWED);
+      expect(reviewedAnnotation.parentIdent).toEqual(annotation.id);
       await annotation.fetch();
-      expect(annotation.reviewed).to.be.true;
+      expect(annotation.reviewed).toBe(true);
     });
 
     it('Cancel review', async function() {
       await annotation.cancelReview();
       await annotation.fetch();
-      expect(annotation.reviewed).to.be.false;
+      expect(annotation.reviewed).toBe(false);
     });
 
     it('Simplify', async function() {
@@ -112,7 +112,7 @@ describe('Annotation', function() {
     it('Fill', async function() {
       let initialArea = annotation.area;
       await annotation.fill();
-      expect(annotation.area).to.be.above(initialArea);
+      expect(annotation.area).toBebove(initialArea);
     });
   });
 
@@ -123,32 +123,32 @@ describe('Annotation', function() {
     it('Create', async function() {
       urAnnot = await new Annotation({location, image}).save();
       command = Cytomine.instance.lastCommand;
-      expect(urAnnot.id).to.exist;
-      expect(command).to.exist;
+      expect(urAnnot.id).toBeDefined();
+      expect(command).toBeDefined();
     });
 
     it('Undo', async function() {
       let collection = await Cytomine.instance.undo(command);
       expect(collection).toHaveLength(1);
       let annot = collection[0].annotation;
-      expect(annot.id).to.equal(urAnnot.id);
-      expect(Annotation.fetch(urAnnot.id)).rejects..toThrow();
+      expect(annot.id).toEqual(urAnnot.id);
+      expect(Annotation.fetch(urAnnot.id)).rejects.toThrow();
     });
 
     it('Redo', async function() {
       let collection = await Cytomine.instance.redo(command);
       expect(collection).toHaveLength(1);
       let annot = collection[0].annotation;
-      expect(annot.id).to.equal(urAnnot.id);
+      expect(annot.id).toEqual(urAnnot.id);
       let fetchedAnnotation = await Annotation.fetch(urAnnot.id);
-      expect(fetchedAnnotation.id).to.equal(urAnnot.id);
+      expect(fetchedAnnotation.id).toEqual(urAnnot.id);
     });
 
     it('Undo again', async function() {
       let collection = await Cytomine.instance.undo();
       expect(collection).toHaveLength(1);
       let annot = collection[0].annotation;
-      expect(annot.id).to.equal(urAnnot.id);
+      expect(annot.id).toEqual(urAnnot.id);
     });
   });
 
@@ -158,7 +158,7 @@ describe('Annotation', function() {
       annotation.location = newLocation;
       await annotation.update();
       expect(annotation).toBeInstanceOf(Annotation);
-      expect(annotation.centroid).to.deep.equal({x: 15, y: 15});
+      expect(annotation.centroid).toEqual({x: 15, y: 15});
     });
   });
 
@@ -168,7 +168,7 @@ describe('Annotation', function() {
     });
 
     it('Fetch a deleted element', function() {
-      expect(Annotation.fetch(id)).rejects..toThrow();
+      expect(Annotation.fetch(id)).rejects.toThrow();
     });
   });
 
@@ -236,7 +236,7 @@ describe('Annotation', function() {
 
       it('Download URL', function() {
         let collection = new AnnotationCollection({project});
-        expect(collection.getDownloadURL()).to.be.a('string');
+        expect(collection.getDownloadURL()).toBe('string');
       });
     });
 

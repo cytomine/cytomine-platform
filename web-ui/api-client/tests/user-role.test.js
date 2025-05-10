@@ -29,7 +29,7 @@ describe('UserRole', function() {
       userRole = new UserRole({role, user});
       userRole = await userRole.save();
       expect(userRole).toBeInstanceOf(UserRole);
-      expect(userRole.id).to.exist;
+      expect(userRole.id).toBeDefined();
     });
   });
 
@@ -37,17 +37,17 @@ describe('UserRole', function() {
     it('Fetch with static method', async function() {
       let fetchedUserRole = await UserRole.fetch(user, role);
       expect(fetchedUserRole).toBeInstanceOf(UserRole);
-      expect(fetchedUserRole).to.deep.equal(userRole);
+      expect(fetchedUserRole).toEqual(userRole);
     });
 
     it('Fetch with instance method', async function() {
       let fetchedUserRole = await new UserRole({user, role}).fetch();
       expect(fetchedUserRole).toBeInstanceOf(UserRole);
-      expect(fetchedUserRole).to.deep.equal(userRole);
+      expect(fetchedUserRole).toEqual(userRole);
     });
 
     it('Fetch with wrong ID', function() {
-      expect(UserRole.fetch(0)).rejects..toThrow();
+      expect(UserRole.fetch(0)).rejects.toThrow();
     });
   });
 
@@ -57,7 +57,7 @@ describe('UserRole', function() {
     });
 
     it('Fetch deleted', function() {
-      expect(UserRole.fetch(user, role)).rejects..toThrow();
+      expect(UserRole.fetch(user, role)).rejects.toThrow();
     });
   });
 
@@ -101,7 +101,7 @@ describe('UserRole', function() {
 
       it('Fetch without filter', async function() {
         let collection = new UserRoleCollection();
-        expect(collection.fetchAll()).rejects..toThrow();
+        expect(collection.fetchAll()).rejects.toThrow();
       });
     });
 

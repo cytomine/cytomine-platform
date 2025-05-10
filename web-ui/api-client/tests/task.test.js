@@ -15,7 +15,7 @@ describe('Task', function() {
       await task.save();
       id = task.id;
       expect(task).toBeInstanceOf(Task);
-      expect(task.id).to.be.above(0);
+      expect(task.id).toBeGreaterThan(0);
     });
   });
 

@@ -25,13 +25,13 @@ describe('Property', function() {
       await property.save();
       expect(property).toBeInstanceOf(Property);
       id = property.id;
-      expect(id).to.exist;
-      expect(property.value).to.equal(value);
+      expect(id).toBeDefined();
+      expect(property.value).toEqual(value);
     });
 
     it('Create without providing associated object', async function() {
       let propertyWithoutObject = new Property({key, value});
-      expect(propertyWithoutObject.save()).rejects..toThrow();
+      expect(propertyWithoutObject.save()).rejects.toThrow();
     });
   });
 
@@ -39,19 +39,19 @@ describe('Property', function() {
     it('Fetch with static method', async function() {
       let fetchedProperty = await Property.fetch(id, annotation);
       expect(fetchedProperty).toBeInstanceOf(Property);
-      expect(fetchedProperty.domainIdent).to.equal(annotation.id);
-      expect(fetchedProperty.value).to.equal(value);
+      expect(fetchedProperty.domainIdent).toEqual(annotation.id);
+      expect(fetchedProperty.value).toEqual(value);
     });
 
     it('Fetch with instance method', async function() {
       let fetchedProperty = await new Property({id}, annotation).fetch();
       expect(fetchedProperty).toBeInstanceOf(Property);
-      expect(fetchedProperty.domainIdent).to.equal(annotation.id);
-      expect(fetchedProperty.value).to.equal(value);
+      expect(fetchedProperty.domainIdent).toEqual(annotation.id);
+      expect(fetchedProperty.value).toEqual(value);
     });
 
     it('Fetch without providing associated object', function() {
-      expect(Property.fetch({id})).rejects..toThrow();
+      expect(Property.fetch({id})).rejects.toThrow();
     });
   });
 
@@ -61,7 +61,7 @@ describe('Property', function() {
       property.value = newValue;
       property = await property.update();
       expect(property).toBeInstanceOf(Property);
-      expect(property.value).to.equal(newValue);
+      expect(property.value).toEqual(newValue);
     });
   });
 
@@ -71,7 +71,7 @@ describe('Property', function() {
     });
 
     it('Fetch deleted', function() {
-      expect(Property.fetch(annotation)).rejects..toThrow();
+      expect(Property.fetch(annotation)).rejects.toThrow();
     });
   });
 
@@ -122,7 +122,7 @@ describe('Property', function() {
       });
 
       it('Fetch without associated object', async function() {
-        expect(PropertyCollection.fetchAll()).rejects..toThrow();
+        expect(PropertyCollection.fetchAll()).rejects.toThrow();
       });
     });
 
@@ -152,14 +152,14 @@ describe('Property', function() {
         let keys = await PropertyCollection.fetchKeysAnnotationProperties(null, image.id);
         expect(keys).toBeInstanceOf(Array);
         expect(keys).toHaveLength(1);
-        expect(keys[0]).to.equal(key);
+        expect(keys[0]).toEqual(key);
       });
 
       it('Fetch keys of image properties', async function() {
         let keys = await PropertyCollection.fetchKeysImageProperties(image.project);
         expect(keys).toBeInstanceOf(Array);
         expect(keys).toHaveLength(1);
-        expect(keys[0]).to.equal(key);
+        expect(keys[0]).toEqual(key);
       });
 
       it('Fetch the properties positions and values', async function() {
@@ -168,11 +168,11 @@ describe('Property', function() {
         let listId = props.map(item => item.idAnnotation);
         let listValues = props.map(item => item.value);
         listId.forEach(id => {
-          expect(id).to.equal(annotation.id);
+          expect(id).toEqual(annotation.id);
         });
         properties.forEach(prop => {
           if(prop.domainIdent === annotation.id && prop.domainClassName === annotation.class) {
-            expect(listValues).to.include(prop.value);
+            expect(listValues).toContain(prop.value);
           }
         });
       });

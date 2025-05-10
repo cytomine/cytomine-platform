@@ -22,9 +22,9 @@ describe('UserPosition', function() {
       userPosition = await UserPosition.create({image, topLeftX: 0, topLeftY: 10, topRightX: 10, topRightY: 10,
         bottomLeftX: 0, bottomLeftY: 0, bottomRightX: 10, bottomRightY: 0});
       expect(userPosition).toBeInstanceOf(UserPosition);
-      expect(userPosition.location).to.exist;
-      expect(userPosition.x).to.equal(5);
-      expect(userPosition.y).to.equal(5);
+      expect(userPosition.location).toBeDefined();
+      expect(userPosition.x).toEqual(5);
+      expect(userPosition.y).toEqual(5);
     });
   });
 
@@ -33,7 +33,7 @@ describe('UserPosition', function() {
       let currentUser = await User.fetchCurrent();
       let fetchedUserPosition = await UserPosition.fetchLastPosition(image, currentUser.id);
       expect(fetchedUserPosition).toBeInstanceOf(UserPosition);
-      expect(fetchedUserPosition.location).to.equal(userPosition.location);
+      expect(fetchedUserPosition.location).toEqual(userPosition.location);
     });
   });
 
@@ -57,7 +57,7 @@ describe('UserPosition', function() {
       it('Fetch (instance method)', async function() {
         let collection = await new UserPositionCollection({filterKey: 'imageinstance', filterValue: image}).fetchAll();
         expect(collection).toBeInstanceOf(UserPositionCollection);
-        expect(collection).to.have.lengthOf.at.least(nbUserPositions);
+        expect(collection).toBeGreaterThanOrEqual(nbUserPositions);
         totalNb = collection.length;
       });
 
@@ -65,8 +65,8 @@ describe('UserPosition', function() {
         let collection = await new UserPositionCollection({showDetails: false,
           filterKey: 'imageinstance', filterValue: image}).fetchAll();
         expect(collection).toBeInstanceOf(UserPositionCollection);
-        expect(collection).to.have.lengthOf.at.most(totalNb); // some userpositions are aggregated
-        expect(collection).to.have.lengthOf.at.least(1);
+        expect(collection).toBeLessThanOrEqual(totalNb); // some userpositions are aggregated
+        expect(collection).toBeGreaterThanOrEqual(1);
       });
 
       it('Fetch (static method)', async function() {
@@ -84,7 +84,7 @@ describe('UserPosition', function() {
 
       it('Fetch without filter', async function() {
         let collection = new UserPositionCollection();
-        expect(collection.fetchAll()).rejects..toThrow();
+        expect(collection.fetchAll()).rejects.toThrow();
       });
     });
 

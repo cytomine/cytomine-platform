@@ -26,8 +26,8 @@ describe('User', function() {
       user = new User({username: name, password: name, firstname: name, lastname: name, email});
       user = await user.save();
       id = user.id;
-      expect(id).to.exist;
-      expect(user.username).to.equal(name);
+      expect(id).toBeDefined();
+      expect(user.username).toEqual(name);
     });
   });
 
@@ -35,17 +35,17 @@ describe('User', function() {
     it('Fetch with static method', async function() {
       let fetchedUser = await User.fetch(id);
       expect(fetchedUser).toBeInstanceOf(User);
-      expect(fetchedUser.username).to.equal(user.username);
+      expect(fetchedUser.username).toEqual(user.username);
     });
 
     it('Fetch with instance method', async function() {
       let fetchedUser = await new User({id}).fetch();
       expect(fetchedUser).toBeInstanceOf(User);
-      expect(fetchedUser.username).to.equal(user.username);
+      expect(fetchedUser.username).toEqual(user.username);
     });
 
     it('Fetch with wrong ID', function() {
-      expect(User.fetch(0)).rejects..toThrow();
+      expect(User.fetch(0)).rejects.toThrow();
     });
   });
 
@@ -63,15 +63,15 @@ describe('User', function() {
 
     it('Fetch number of annotations user', async function() {
       let result = await user.fetchNbAnnotations(false);
-      expect(result).to.be.finite;
+      expect(Number.isFinite(result)).toBe(true);
       result = await user.fetchNbAnnotations(true);
-      expect(result).to.be.finite;
+      expect(Number.isFinite(result)).toBe(true);
     });
 
     it.skip('Fetch keys', async function() { // Bug in backend
       let keys = await user.fetchKeys();
-      expect(keys.publicKey).to.exist;
-      expect(keys.privateKey).to.exist;
+      expect(keys.publicKey).toBeDefined();
+      expect(keys.privateKey).toBeDefined();
     });
 
     it('Regenerate keys', async function() {
@@ -81,30 +81,30 @@ describe('User', function() {
 
     it('Fetch friends', async function() {
       let friends = await user.fetchFriends();
-      expect(friends).to.be.instanceof(UserCollection);
+      expect(friends).toBeInstanceOf(UserCollection);
     });
 
     it('Fetch activity resume', async function() {
       let activity = await user.fetchResumeActivity(project.id);
-      expect(activity.firstConnection).to.be.null;
-      expect(activity.lastConnection).to.be.null;
-      expect(activity.totalAnnotations).to.equal(0);
-      expect(activity.totalConnections).to.equal(0);
+      expect(activity.firstConnection).toBeNull();
+      expect(activity.lastConnection).toBeNull();
+      expect(activity.totalAnnotations).toEqual(0);
+      expect(activity.totalConnections).toEqual(0);
     });
 
     it('Lock', async function() {
       await user.lock();
-      expect(user.enabled).to.be.false;
+      expect(user.enabled).toBe(false);
     });
 
     it('Unlock', async function() {
       await user.unlock();
-      expect(user.enabled).to.be.true;
+      expect(user.enabled).toBe(true);
     });
 
     it('Define role', async function() {
       let roles = await user.defineRole(role);
-      expect(roles).to.be.instanceof(RoleCollection);
+      expect(roles).toBeInstanceOf(RoleCollection);
     });
 
     it('Change password', async function() {
@@ -114,9 +114,9 @@ describe('User', function() {
 
     it('Check password of current user', async function() {
       let result = await User.checkCurrentPassword(config.password);
-      expect(result).to.be.true;
+      expect(result).toBe(true);
       result = await User.checkCurrentPassword(utils.randomString());
-      expect(result).to.be.false;
+      expect(result).toBe(false);
     });
   });
 
@@ -126,7 +126,7 @@ describe('User', function() {
       user.username = newName;
       user = await user.update();
       expect(user).toBeInstanceOf(User);
-      expect(user.username).to.equal(newName);
+      expect(user.username).toEqual(newName);
     });
   });
 
@@ -136,7 +136,7 @@ describe('User', function() {
     });
 
     it('Fetch deleted', function() {
-      expect(User.fetch(id)).rejects..toThrow();
+      expect(User.fetch(id)).rejects.toThrow();
     });
   });
 
@@ -167,7 +167,7 @@ describe('User', function() {
       it('Fetch (instance method)', async function() {
         let collection = await new UserCollection().fetchAll();
         expect(collection).toBeInstanceOf(UserCollection);
-        expect(collection).to.have.lengthOf.at.least(nbUsers);
+        expect(collection).toBeGreaterThanOrEqual(nbUsers);
         totalNb = collection.length;
       });
 

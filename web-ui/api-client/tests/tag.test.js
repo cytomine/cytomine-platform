@@ -22,8 +22,8 @@ describe('Tag', function() {
       tag = new Tag({name, user});
       tag = await tag.save();
       id = tag.id;
-      expect(id).to.exist;
-      expect(tag.name).to.equal(name);
+      expect(id).toBeDefined();
+      expect(tag.name).toEqual(name);
     });
   });
 
@@ -31,17 +31,17 @@ describe('Tag', function() {
     it('Fetch with static method', async function() {
       let fetchedTag = await Tag.fetch(id);
       expect(fetchedTag).toBeInstanceOf(Tag);
-      expect(fetchedTag.name).to.equal(name);
+      expect(fetchedTag.name).toEqual(name);
     });
 
     it('Fetch with instance method', async function() {
       let fetchedTag = await new Tag({id}).fetch();
       expect(fetchedTag).toBeInstanceOf(Tag);
-      expect(fetchedTag.name).to.equal(name);
+      expect(fetchedTag.name).toEqual(name);
     });
 
     it('Fetch with wrong ID', function() {
-      expect(Tag.fetch(0)).rejects..toThrow();
+      expect(Tag.fetch(0)).rejects.toThrow();
     });
   });
 
@@ -51,7 +51,7 @@ describe('Tag', function() {
       tag.name = newName;
       tag = await tag.update();
       expect(tag).toBeInstanceOf(Tag);
-      expect(tag.name).to.equal(newName);
+      expect(tag.name).toEqual(newName);
     });
   });
 
@@ -61,7 +61,7 @@ describe('Tag', function() {
     });
 
     it('Fetch deleted', function() {
-      expect(Tag.fetch(id)).rejects..toThrow();
+      expect(Tag.fetch(id)).rejects.toThrow();
     });
   });
 
@@ -90,7 +90,7 @@ describe('Tag', function() {
       it('Fetch (instance method)', async function() {
         let collection = await new TagCollection().fetchAll();
         expect(collection).toBeInstanceOf(TagCollection);
-        expect(collection).to.have.lengthOf.at.least(nbTags);
+        expect(collection).toBeGreaterThanOrEqual(nbTags);
         totalNb = collection.length;
       });
 
