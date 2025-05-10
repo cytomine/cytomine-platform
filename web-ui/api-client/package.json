@@ -12,7 +12,7 @@
     "dev": "webpack-cli --mode=development --watch --info-verbosity verbose",
     "build": "webpack-cli --mode=production",
     "lint": "eslint -c .eslintrc.js --ext .js --ignore-path .gitignore .",
-    "test:integration": "jest --config jest.integration.config.js",
+    "test:integration": "jest --config jest.integration.config.js --runInBand",
     "prepack": "npm run build"
   },
   "files": [
