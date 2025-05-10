@@ -1,7 +1,8 @@
-import Cytomine from '@/cytomine.js';
 import randomstring from 'randomstring';
+
+import Cytomine from '@/cytomine.js';
 import config from './config.js';
-import { ImageServerCollection, Storage, StorageCollection, UploadedFile, UploadedFileCollection } from '@/index.js';
+import * as cytomine from '@/index.js';
 
 let createdModels = [];
 
@@ -168,12 +169,12 @@ export async function getStorage({user, name=randomString(), forceCreation=true,
     throw new Error('Cannot retrieve storage of a given user. Either set forceCreation to true or remove user.');
   }
 
-  let storageCollection = new StorageCollection({nbPerPage: 1});
+  let storageCollection = new cytomine.StorageCollection({nbPerPage: 1});
   if(!user) {
     ({id: user} = await getUser({forceCreation: cascadeForceCreation}));
   }
 
-  let storage = new Storage({user, name});
+  let storage = new cytomine.Storage({user, name});
   return getModel(storage, storageCollection, forceCreation);
 }
 
@@ -229,7 +230,7 @@ export async function getUploadedFile({storage, filename, originalFilename, ext,
     ({id: storage, user: user} = await getStorage(cascadeForceCreation));
   }
   else {
-    ({user: user} = await Storage.fetch(storage));
+    ({user: user} = await cytomine.Storage.fetch(storage));
   }
 
   filename = filename || randomString();
@@ -237,8 +238,8 @@ export async function getUploadedFile({storage, filename, originalFilename, ext,
   ext = ext || '.ext';
   contentType = contentType || 'contentType';
 
-  let uploadedFileCollection =new UploadedFileCollection({nbPerPage: 1});
-  let uploadedFile = new UploadedFile({storage, user, filename, originalFilename, contentType, ext});
+  let uploadedFileCollection =new cytomine.UploadedFileCollection({nbPerPage: 1});
+  let uploadedFile = new cytomine.UploadedFile({storage, user, filename, originalFilename, contentType, ext});
   return getModel(uploadedFile, uploadedFileCollection, forceCreation);
 }
 
