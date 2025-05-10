@@ -4,3 +4,7 @@ tests/config.js
 .idea
 *.iml
 .vscode
+
+# Tests
+coverage
+reports
