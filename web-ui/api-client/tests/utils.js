@@ -1,6 +1,7 @@
-import * as cytomine from '@';
+import Cytomine from '@/cytomine.js';
 import randomstring from 'randomstring';
 import config from './config.js';
+import { ImageServerCollection, Storage, StorageCollection, UploadedFile, UploadedFileCollection } from '@/index.js';
 
 let createdModels = [];
 
@@ -9,7 +10,7 @@ export async function wait(ms) {
 }
 
 export async function connect(adminSession=false) {
-  let cytomineInstance = new cytomine.Cytomine(config.host, config.basePath);
+  let cytomineInstance = new Cytomine(config.host, config.basePath);
   await cytomineInstance.login(config.username, config.password);
   if(adminSession) {
     await cytomineInstance.openAdminSession();
@@ -167,12 +168,12 @@ export async function getStorage({user, name=randomString(), forceCreation=true,
     throw new Error('Cannot retrieve storage of a given user. Either set forceCreation to true or remove user.');
   }
 
-  let storageCollection = new cytomine.StorageCollection({nbPerPage: 1});
+  let storageCollection = new StorageCollection({nbPerPage: 1});
   if(!user) {
     ({id: user} = await getUser({forceCreation: cascadeForceCreation}));
   }
 
-  let storage = new cytomine.Storage({user, name});
+  let storage = new Storage({user, name});
   return getModel(storage, storageCollection, forceCreation);
 }
 
@@ -205,7 +206,7 @@ export async function getTag({name=randomString(), forceCreation=true} = {}) {
 }
 
 export async function getImageServer() {
-  let collection = new cytomine.ImageServerCollection({nbPerPage: 1});
+  let collection = new ImageServerCollection({nbPerPage: 1});
   return getModel(null, collection, false);
 }
 
@@ -222,17 +223,13 @@ export async function getMultipleImageServers(nb) {
   return ids;
 }
 
-export async function getUploadedFile({storage, imageServer, filename, originalFilename, ext, contentType, forceCreation = true, cascadeForceCreation} = {}) {
+export async function getUploadedFile({storage, filename, originalFilename, ext, contentType, forceCreation = true, cascadeForceCreation} = {}) {
   let user;
   if (!storage) {
     ({id: storage, user: user} = await getStorage(cascadeForceCreation));
   }
   else {
-    ({user: user} = await cytomine.Storage.fetch(storage));
-  }
-
-  if (!imageServer) {
-    ({id: imageServer} = await getImageServer());
+    ({user: user} = await Storage.fetch(storage));
   }
 
   filename = filename || randomString();
@@ -240,13 +237,13 @@ export async function getUploadedFile({storage, imageServer, filename, originalF
   ext = ext || '.ext';
   contentType = contentType || 'contentType';
 
-  let uploadedFileCollection =new cytomine.UploadedFileCollection({nbPerPage: 1});
-  let uploadedFile = new cytomine.UploadedFile({storage, user, imageServer, filename, originalFilename, contentType, ext});
+  let uploadedFileCollection =new UploadedFileCollection({nbPerPage: 1});
+  let uploadedFile = new UploadedFile({storage, user, filename, originalFilename, contentType, ext});
   return getModel(uploadedFile, uploadedFileCollection, forceCreation);
 }
 
 export async function cleanData() {
-  await cytomine.Cytomine.instance.openAdminSession();
+  await Cytomine.instance.openAdminSession();
 
   // delete models sequentially and in reverse order to ensure there is no foreign key constraint issues
   for(let i = createdModels.length - 1; i >= 0; i--) {
