@@ -23,6 +23,10 @@ describe('AbstractImageCollection', () => {
     abstractImage = await abstractImage.save();
   });
 
+  afterAll(async () => {
+    await utils.cleanData();
+  });
+
   describe('Fetch', () => {
     it('Fetch the whole collection', async () => {
       let collection = await AbstractImageCollection.fetchAll();

@@ -19,6 +19,10 @@ describe('AbstractImage', () => {
     ({ id: uploadedFile } = await utils.getUploadedFile({ storage, originalFilename }));
   });
 
+  afterAll(async () => {
+    await utils.cleanData();
+  });
+
   describe('Create', () => {
     it('Create', async () => {
       abstractImage = new AbstractImage({ originalFilename, uploadedFile, width: 1000, height: 1000 });
