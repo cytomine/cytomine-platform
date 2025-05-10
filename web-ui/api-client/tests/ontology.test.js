@@ -8,7 +8,7 @@ describe('Ontology', function() {
   let ontology = null;
   let id = 0;
 
-  before(async function() {
+  beforeAll(async function() {
     await utils.connect();
   });
 
@@ -26,9 +26,9 @@ describe('Ontology', function() {
     it('Clone', async function() {
       let fetchedOntology = await utils.getOntology();
       let clone = fetchedOntology.clone();
-      expect(clone).to.be.an.instanceof(Ontology);
+      expect(clone).toBeInstanceOf(Ontology);
 
-      expect(clone.children).to.be.an.instanceof(TermCollection);
+      expect(clone.children).toBeInstanceOf(TermCollection);
       expect(clone.children).to.not.equal(fetchedOntology.children);
       expect(clone.children).to.deep.equal(fetchedOntology.children);
 
@@ -42,18 +42,18 @@ describe('Ontology', function() {
   describe('Fetch', function() {
     it('Fetch with static method', async function() {
       let fetchedOntology = await Ontology.fetch(id);
-      expect(fetchedOntology).to.be.an.instanceof(Ontology);
+      expect(fetchedOntology).toBeInstanceOf(Ontology);
       expect(fetchedOntology.name).to.equal(name);
     });
 
     it('Fetch with instance method', async function() {
       let fetchedOntology = await new Ontology({id}).fetch();
-      expect(fetchedOntology).to.be.an.instanceof(Ontology);
+      expect(fetchedOntology).toBeInstanceOf(Ontology);
       expect(fetchedOntology.name).to.equal(name);
     });
 
     it('Fetch with wrong ID', function() {
-      expect(Ontology.fetch(0)).to.be.rejected;
+      expect(Ontology.fetch(0)).rejects..toThrow();
     });
   });
 
@@ -62,7 +62,7 @@ describe('Ontology', function() {
       let newName = utils.randomString();
       ontology.name = newName;
       ontology = await ontology.update();
-      expect(ontology).to.be.an.instanceof(Ontology);
+      expect(ontology).toBeInstanceOf(Ontology);
       expect(ontology.name).to.equal(newName);
     });
   });
@@ -73,7 +73,7 @@ describe('Ontology', function() {
     });
 
     it('Fetch deleted', function() {
-      expect(Ontology.fetch(id)).to.be.rejected;
+      expect(Ontology.fetch(id)).rejects..toThrow();
     });
   });
 
@@ -85,7 +85,7 @@ describe('Ontology', function() {
     let ontologies;
     let totalNb = 0;
 
-    before(async function() {
+    beforeAll(async function() {
       let ontologyPromises = [];
       for(let i = 0; i < nbOntologies; i++) {
         ontologyPromises.push(new Ontology({name: utils.randomString()}).save());
@@ -93,7 +93,7 @@ describe('Ontology', function() {
       ontologies = await Promise.all(ontologyPromises);
     });
 
-    after(async function() {
+    afterAll(async function() {
       let deletionPromises = ontologies.map(ontology => Ontology.delete(ontology.id));
       await Promise.all(deletionPromises);
     });
@@ -101,31 +101,31 @@ describe('Ontology', function() {
     describe('Fetch', function() {
       it('Fetch (instance method)', async function() {
         let collection = await new OntologyCollection().fetchAll();
-        expect(collection).to.be.an.instanceof(OntologyCollection);
+        expect(collection).toBeInstanceOf(OntologyCollection);
         expect(collection).to.have.lengthOf.at.least(nbOntologies);
         totalNb = collection.length;
       });
 
       it('Fetch (static method)', async function() {
         let collection = await OntologyCollection.fetchAll();
-        expect(collection).to.be.an.instanceof(OntologyCollection);
-        expect(collection).to.have.lengthOf(totalNb);
+        expect(collection).toBeInstanceOf(OntologyCollection);
+        expect(collection).toHaveLength(totalNb);
       });
 
       it('Fetch light version', async function() {
         let collection = await OntologyCollection.fetchAll({light: true});
-        expect(collection).to.be.an.instanceof(OntologyCollection);
-        expect(collection).to.have.lengthOf(totalNb);
+        expect(collection).toBeInstanceOf(OntologyCollection);
+        expect(collection).toHaveLength(totalNb);
         let model = collection.get(0);
         expect(model.user).to.be.null;
-        expect(model.projects).to.have.lengthOf(0);
-        expect(model.children).to.have.lengthOf(0);
+        expect(model.projects).toHaveLength(0);
+        expect(model.children).toHaveLength(0);
       });
 
       it('Fetch with several requests', async function() {
         let collection = await OntologyCollection.fetchAll({nbPerPage: Math.ceil(totalNb/3)});
-        expect(collection).to.be.an.instanceof(OntologyCollection);
-        expect(collection).to.have.lengthOf(totalNb);
+        expect(collection).toBeInstanceOf(OntologyCollection);
+        expect(collection).toHaveLength(totalNb);
       });
     });
 
@@ -133,20 +133,20 @@ describe('Ontology', function() {
       it('Iterate through', async function() {
         let collection = await OntologyCollection.fetchAll();
         for(let ontology of collection) {
-          expect(ontology).to.be.an.instanceof(Ontology);
+          expect(ontology).toBeInstanceOf(Ontology);
         }
       });
 
       it('Add item to the collection', function() {
         let collection = new OntologyCollection();
-        expect(collection).to.have.lengthOf(0);
+        expect(collection).toHaveLength(0);
         collection.push(new Ontology());
-        expect(collection).to.have.lengthOf(1);
+        expect(collection).toHaveLength(1);
       });
 
       it('Add arbitrary object to the collection', function() {
         let collection = new OntologyCollection();
-        expect(collection.push.bind(collection, {})).to.throw();
+        expect(collection.push.bind(collection, {})).toThrow();
       });
     });
 
@@ -156,20 +156,20 @@ describe('Ontology', function() {
       it('Fetch arbitrary page', async function() {
         let collection = new OntologyCollection({nbPerPage});
         await collection.fetchPage(2);
-        expect(collection).to.have.lengthOf(nbPerPage);
+        expect(collection).toHaveLength(nbPerPage);
       });
 
       it('Fetch next page', async function() {
         let collection = new OntologyCollection({nbPerPage});
         await collection.fetchNextPage();
-        expect(collection).to.have.lengthOf(nbPerPage);
+        expect(collection).toHaveLength(nbPerPage);
       });
 
       it('Fetch previous page', async function() {
         let collection = new OntologyCollection({nbPerPage});
         collection.curPage = 2;
         await collection.fetchPreviousPage();
-        expect(collection).to.have.lengthOf(nbPerPage);
+        expect(collection).toHaveLength(nbPerPage);
       });
     });
 

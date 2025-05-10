@@ -10,12 +10,12 @@ describe('AttachedFile', function() {
   let attachedFile = null;
   let id = 0;
 
-  before(async function() {
+  beforeAll(async function() {
     await utils.connect();
     project = await utils.getProject();
   });
 
-  after(async function() {
+  afterAll(async function() {
     await utils.cleanData();
   });
 
@@ -24,45 +24,45 @@ describe('AttachedFile', function() {
       attachedFile = new AttachedFile({file, filename}, project);
       await attachedFile.save();
       id = attachedFile.id;
-      expect(attachedFile).to.be.an.instanceof(AttachedFile);
+      expect(attachedFile).toBeInstanceOf(AttachedFile);
       expect(attachedFile.id).to.be.above(0);
     });
 
     it('Create without providing associated object', async function() {
       let attachedFileWithoutObject = new AttachedFile({file});
-      expect(attachedFileWithoutObject.save()).to.be.rejected;
+      expect(attachedFileWithoutObject.save()).rejects..toThrow();
     });
 
     it('Create without providing file', async function() {
       let attachedFile = new AttachedFile({}, project);
-      expect(attachedFile.save()).to.be.rejected;
+      expect(attachedFile.save()).rejects..toThrow();
     });
   });
 
   describe('Fetch', function() {
     it('Fetch with static method', async function() {
       let fetchedFile = await AttachedFile.fetch(id);
-      expect(fetchedFile).to.be.an.instanceof(AttachedFile);
+      expect(fetchedFile).toBeInstanceOf(AttachedFile);
       expect(fetchedFile.domainIdent).to.equal(project.id);
       // expect(fetchedFile.filename).to.equal(filename);
     });
 
     it('Fetch with instance method', async function() {
       let fetchedFile = await new AttachedFile({id}).fetch();
-      expect(fetchedFile).to.be.an.instanceof(AttachedFile);
+      expect(fetchedFile).toBeInstanceOf(AttachedFile);
       expect(fetchedFile.domainIdent).to.equal(project.id);
       // expect(fetchedFile.filename).to.equal(filename);
     });
 
     it('Fetch without providing associated object', function() {
-      expect(AttachedFile.fetch({id})).to.be.rejected;
+      expect(AttachedFile.fetch({id})).rejects..toThrow();
     });
   });
 
   describe('Update', function() {
     it('Update', function() {
       attachedFile.filename = 'new_filename.xml';
-      expect(attachedFile.update.bind(attachedFile)).to.throw();
+      expect(attachedFile.update.bind(attachedFile)).toThrow();
     });
   });
 
@@ -72,7 +72,7 @@ describe('AttachedFile', function() {
     });
 
     it('Fetch a deleted element', function() {
-      expect(AttachedFile.fetch(id)).to.be.rejected;
+      expect(AttachedFile.fetch(id)).rejects..toThrow();
     });
   });
 
@@ -83,7 +83,7 @@ describe('AttachedFile', function() {
     let attachedFiles;
     let totalNb = 0;
 
-    before(async function() {
+    beforeAll(async function() {
       let attachedFilePromises = [];
       for(let i = 0; i < nbAttachedFiles; i++) {
         attachedFilePromises.push(new AttachedFile({file}, project).save());
@@ -91,7 +91,7 @@ describe('AttachedFile', function() {
       attachedFiles = await Promise.all(attachedFilePromises);
     });
 
-    after(async function() {
+    afterAll(async function() {
       let deletionPromises = attachedFiles.map(attachedFile => AttachedFile.delete(attachedFile.id));
       await Promise.all(deletionPromises);
     });
@@ -99,25 +99,25 @@ describe('AttachedFile', function() {
     describe('Fetch', function() {
       it('Fetch (instance method)', async function() {
         let collection = await new AttachedFileCollection({object: project}).fetchAll();
-        expect(collection).to.be.an.instanceof(AttachedFileCollection);
+        expect(collection).toBeInstanceOf(AttachedFileCollection);
         expect(collection).to.have.lengthOf.at.least(nbAttachedFiles);
         totalNb = collection.length;
       });
 
       it('Fetch (static method)', async function() {
         let collection = await AttachedFileCollection.fetchAll({object: project});
-        expect(collection).to.be.an.instanceof(AttachedFileCollection);
-        expect(collection).to.have.lengthOf(totalNb);
+        expect(collection).toBeInstanceOf(AttachedFileCollection);
+        expect(collection).toHaveLength(totalNb);
       });
 
       it('Fetch with several requests', async function() {
         let collection = await AttachedFileCollection.fetchAll({object: project, nbPerPage: Math.ceil(totalNb/3)});
-        expect(collection).to.be.an.instanceof(AttachedFileCollection);
-        expect(collection).to.have.lengthOf(totalNb);
+        expect(collection).toBeInstanceOf(AttachedFileCollection);
+        expect(collection).toHaveLength(totalNb);
       });
 
       it('Fetch without associated object', async function() {
-        expect(AttachedFileCollection.fetchAll()).to.be.rejected;
+        expect(AttachedFileCollection.fetchAll()).rejects..toThrow();
       });
     });
 
@@ -125,20 +125,20 @@ describe('AttachedFile', function() {
       it('Iterate through', async function() {
         let collection = await AttachedFileCollection.fetchAll({object: project});
         for(let attachedFile of collection) {
-          expect(attachedFile).to.be.an.instanceof(AttachedFile);
+          expect(attachedFile).toBeInstanceOf(AttachedFile);
         }
       });
 
       it('Add item to the collection', function() {
         let collection = new AttachedFileCollection({object: project});
-        expect(collection).to.have.lengthOf(0);
+        expect(collection).toHaveLength(0);
         collection.push(new AttachedFile({file}, project));
-        expect(collection).to.have.lengthOf(1);
+        expect(collection).toHaveLength(1);
       });
 
       it('Add arbitrary object to the collection', function() {
         let collection = new AttachedFileCollection({object: project});
-        expect(collection.push.bind(collection, {})).to.throw();
+        expect(collection.push.bind(collection, {})).toThrow();
       });
     });
 
@@ -148,20 +148,20 @@ describe('AttachedFile', function() {
       it('Fetch arbitrary page', async function() {
         let collection = new AttachedFileCollection({object: project, nbPerPage});
         await collection.fetchPage(2);
-        expect(collection).to.have.lengthOf(nbPerPage);
+        expect(collection).toHaveLength(nbPerPage);
       });
 
       it('Fetch next page', async function() {
         let collection = new AttachedFileCollection({object: project, nbPerPage});
         await collection.fetchNextPage();
-        expect(collection).to.have.lengthOf(nbPerPage);
+        expect(collection).toHaveLength(nbPerPage);
       });
 
       it('Fetch previous page', async function() {
         let collection = new AttachedFileCollection({object: project, nbPerPage});
         collection.curPage = 2;
         await collection.fetchPreviousPage();
-        expect(collection).to.have.lengthOf(nbPerPage);
+        expect(collection).toHaveLength(nbPerPage);
       });
     });
 

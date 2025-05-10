@@ -10,12 +10,12 @@ describe('Property', function() {
   let property = null;
   let id = 0;
 
-  before(async function() {
+  beforeAll(async function() {
     await utils.connect();
     annotation = await utils.getAnnotation();
   });
 
-  after(async function() {
+  afterAll(async function() {
     await utils.cleanData();
   });
 
@@ -23,7 +23,7 @@ describe('Property', function() {
     it('Create', async function() {
       property = new Property({key, value}, annotation);
       await property.save();
-      expect(property).to.be.an.instanceof(Property);
+      expect(property).toBeInstanceOf(Property);
       id = property.id;
       expect(id).to.exist;
       expect(property.value).to.equal(value);
@@ -31,27 +31,27 @@ describe('Property', function() {
 
     it('Create without providing associated object', async function() {
       let propertyWithoutObject = new Property({key, value});
-      expect(propertyWithoutObject.save()).to.be.rejected;
+      expect(propertyWithoutObject.save()).rejects..toThrow();
     });
   });
 
   describe('Fetch', function() {
     it('Fetch with static method', async function() {
       let fetchedProperty = await Property.fetch(id, annotation);
-      expect(fetchedProperty).to.be.an.instanceof(Property);
+      expect(fetchedProperty).toBeInstanceOf(Property);
       expect(fetchedProperty.domainIdent).to.equal(annotation.id);
       expect(fetchedProperty.value).to.equal(value);
     });
 
     it('Fetch with instance method', async function() {
       let fetchedProperty = await new Property({id}, annotation).fetch();
-      expect(fetchedProperty).to.be.an.instanceof(Property);
+      expect(fetchedProperty).toBeInstanceOf(Property);
       expect(fetchedProperty.domainIdent).to.equal(annotation.id);
       expect(fetchedProperty.value).to.equal(value);
     });
 
     it('Fetch without providing associated object', function() {
-      expect(Property.fetch({id})).to.be.rejected;
+      expect(Property.fetch({id})).rejects..toThrow();
     });
   });
 
@@ -60,7 +60,7 @@ describe('Property', function() {
       let newValue = utils.randomString();
       property.value = newValue;
       property = await property.update();
-      expect(property).to.be.an.instanceof(Property);
+      expect(property).toBeInstanceOf(Property);
       expect(property.value).to.equal(newValue);
     });
   });
@@ -71,7 +71,7 @@ describe('Property', function() {
     });
 
     it('Fetch deleted', function() {
-      expect(Property.fetch(annotation)).to.be.rejected;
+      expect(Property.fetch(annotation)).rejects..toThrow();
     });
   });
 
@@ -84,7 +84,7 @@ describe('Property', function() {
 
     let image;
 
-    before(async function() {
+    beforeAll(async function() {
       image = await ImageInstance.fetch(annotation.image);
 
       let propertiesPromises = [];
@@ -97,7 +97,7 @@ describe('Property', function() {
       properties = await Promise.all(propertiesPromises);
     });
 
-    after(async function() {
+    afterAll(async function() {
       let deletionPromises = properties.map(property => Property.delete(property.id, annotation));
       await Promise.all(deletionPromises);
     });
@@ -105,24 +105,24 @@ describe('Property', function() {
     describe('Fetch', function() {
       it('Fetch (instance method)', async function() {
         let collection = await new PropertyCollection({object: annotation}).fetchAll();
-        expect(collection).to.be.an.instanceof(PropertyCollection);
-        expect(collection).to.have.lengthOf(nbPropertiesAnnot);
+        expect(collection).toBeInstanceOf(PropertyCollection);
+        expect(collection).toHaveLength(nbPropertiesAnnot);
       });
 
       it('Fetch (static method)', async function() {
         let collection = await PropertyCollection.fetchAll({object: image});
-        expect(collection).to.be.an.instanceof(PropertyCollection);
-        expect(collection).to.have.lengthOf(nbPropertiesImage);
+        expect(collection).toBeInstanceOf(PropertyCollection);
+        expect(collection).toHaveLength(nbPropertiesImage);
       });
 
       it('Fetch with several requests', async function() {
         let collection = await PropertyCollection.fetchAll({nbPerPage: 1, object: annotation});
-        expect(collection).to.be.an.instanceof(PropertyCollection);
-        expect(collection).to.have.lengthOf(nbPropertiesAnnot);
+        expect(collection).toBeInstanceOf(PropertyCollection);
+        expect(collection).toHaveLength(nbPropertiesAnnot);
       });
 
       it('Fetch without associated object', async function() {
-        expect(PropertyCollection.fetchAll()).to.be.rejected;
+        expect(PropertyCollection.fetchAll()).rejects..toThrow();
       });
     });
 
@@ -130,35 +130,35 @@ describe('Property', function() {
       it('Iterate through', async function() {
         let collection = await PropertyCollection.fetchAll({object: annotation});
         for(let property of collection) {
-          expect(property).to.be.an.instanceof(Property);
+          expect(property).toBeInstanceOf(Property);
         }
       });
 
       it('Add item to the collection', function() {
         let collection = new PropertyCollection({object: annotation});
-        expect(collection).to.have.lengthOf(0);
+        expect(collection).toHaveLength(0);
         collection.push(new Property({}, annotation));
-        expect(collection).to.have.lengthOf(1);
+        expect(collection).toHaveLength(1);
       });
 
       it('Add arbitrary object to the collection', function() {
         let collection = new PropertyCollection(annotation);
-        expect(collection.push.bind(collection, {})).to.throw();
+        expect(collection.push.bind(collection, {})).toThrow();
       });
     });
 
     describe('Specific operations', function() {
       it('Fetch keys of annotation properties', async function() {
         let keys = await PropertyCollection.fetchKeysAnnotationProperties(null, image.id);
-        expect(keys).to.be.an.instanceof(Array);
-        expect(keys).to.have.lengthOf(1);
+        expect(keys).toBeInstanceOf(Array);
+        expect(keys).toHaveLength(1);
         expect(keys[0]).to.equal(key);
       });
 
       it('Fetch keys of image properties', async function() {
         let keys = await PropertyCollection.fetchKeysImageProperties(image.project);
-        expect(keys).to.be.an.instanceof(Array);
-        expect(keys).to.have.lengthOf(1);
+        expect(keys).toBeInstanceOf(Array);
+        expect(keys).toHaveLength(1);
         expect(keys[0]).to.equal(key);
       });
 
@@ -184,20 +184,20 @@ describe('Property', function() {
       it('Fetch arbitrary page', async function() {
         let collection = new PropertyCollection({nbPerPage, object: annotation});
         await collection.fetchPage(2);
-        expect(collection).to.have.lengthOf(nbPerPage);
+        expect(collection).toHaveLength(nbPerPage);
       });
 
       it('Fetch next page', async function() {
         let collection = new PropertyCollection({nbPerPage, object: annotation});
         await collection.fetchNextPage();
-        expect(collection).to.have.lengthOf(nbPerPage);
+        expect(collection).toHaveLength(nbPerPage);
       });
 
       it('Fetch previous page', async function() {
         let collection = new PropertyCollection({nbPerPage, object: annotation});
         collection.curPage = 2;
         await collection.fetchPreviousPage();
-        expect(collection).to.have.lengthOf(nbPerPage);
+        expect(collection).toHaveLength(nbPerPage);
       });
     });
 

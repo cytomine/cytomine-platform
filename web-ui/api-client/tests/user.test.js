@@ -12,12 +12,12 @@ describe('User', function() {
   let user = null;
   let id = 0;
 
-  before(async function() {
+  beforeAll(async function() {
     await utils.connect(true);
     project = await utils.getProject();
   });
 
-  after(async function() {
+  afterAll(async function() {
     await utils.cleanData();
   });
 
@@ -34,31 +34,31 @@ describe('User', function() {
   describe('Fetch', function() {
     it('Fetch with static method', async function() {
       let fetchedUser = await User.fetch(id);
-      expect(fetchedUser).to.be.an.instanceof(User);
+      expect(fetchedUser).toBeInstanceOf(User);
       expect(fetchedUser.username).to.equal(user.username);
     });
 
     it('Fetch with instance method', async function() {
       let fetchedUser = await new User({id}).fetch();
-      expect(fetchedUser).to.be.an.instanceof(User);
+      expect(fetchedUser).toBeInstanceOf(User);
       expect(fetchedUser.username).to.equal(user.username);
     });
 
     it('Fetch with wrong ID', function() {
-      expect(User.fetch(0)).to.be.rejected;
+      expect(User.fetch(0)).rejects..toThrow();
     });
   });
 
   describe('Specific operations', function() {
     let role;
 
-    before(async function() {
+    beforeAll(async function() {
       ({id: role} = await utils.getRole());
     });
 
     it('Fetch current user', async function() {
       let currentUser = await User.fetchCurrent();
-      expect(currentUser).to.be.an.instanceof(User);
+      expect(currentUser).toBeInstanceOf(User);
     });
 
     it('Fetch number of annotations user', async function() {
@@ -125,7 +125,7 @@ describe('User', function() {
       let newName = utils.randomString();
       user.username = newName;
       user = await user.update();
-      expect(user).to.be.an.instanceof(User);
+      expect(user).toBeInstanceOf(User);
       expect(user.username).to.equal(newName);
     });
   });
@@ -136,7 +136,7 @@ describe('User', function() {
     });
 
     it('Fetch deleted', function() {
-      expect(User.fetch(id)).to.be.rejected;
+      expect(User.fetch(id)).rejects..toThrow();
     });
   });
 
@@ -148,7 +148,7 @@ describe('User', function() {
     let users;
     let totalNb = 0;
 
-    before(async function() {
+    beforeAll(async function() {
       let userPromises = [];
       for(let i = 0; i < nbUsers; i++) {
         let name = utils.randomString();
@@ -158,7 +158,7 @@ describe('User', function() {
       users = await Promise.all(userPromises);
     });
 
-    after(async function() {
+    afterAll(async function() {
       let deletionPromises = users.map(user => User.delete(user.id));
       await Promise.all(deletionPromises);
     });
@@ -166,21 +166,21 @@ describe('User', function() {
     describe('Fetch', function() {
       it('Fetch (instance method)', async function() {
         let collection = await new UserCollection().fetchAll();
-        expect(collection).to.be.an.instanceof(UserCollection);
+        expect(collection).toBeInstanceOf(UserCollection);
         expect(collection).to.have.lengthOf.at.least(nbUsers);
         totalNb = collection.length;
       });
 
       it('Fetch (static method)', async function() {
         let collection = await UserCollection.fetchAll();
-        expect(collection).to.be.an.instanceof(UserCollection);
-        expect(collection).to.have.lengthOf(totalNb);
+        expect(collection).toBeInstanceOf(UserCollection);
+        expect(collection).toHaveLength(totalNb);
       });
 
       it('Fetch with several requests', async function() {
         let collection = await UserCollection.fetchAll({nbPerPage: Math.ceil(totalNb/3)});
-        expect(collection).to.be.an.instanceof(UserCollection);
-        expect(collection).to.have.lengthOf(totalNb);
+        expect(collection).toBeInstanceOf(UserCollection);
+        expect(collection).toHaveLength(totalNb);
       });
     });
 
@@ -188,20 +188,20 @@ describe('User', function() {
       it('Iterate through', async function() {
         let collection = await UserCollection.fetchAll();
         for(let user of collection) {
-          expect(user).to.be.an.instanceof(User);
+          expect(user).toBeInstanceOf(User);
         }
       });
 
       it('Add item to the collection', function() {
         let collection = new UserCollection();
-        expect(collection).to.have.lengthOf(0);
+        expect(collection).toHaveLength(0);
         collection.push(new User());
-        expect(collection).to.have.lengthOf(1);
+        expect(collection).toHaveLength(1);
       });
 
       it('Add arbitrary object to the collection', function() {
         let collection = new UserCollection();
-        expect(collection.push.bind(collection, {})).to.throw();
+        expect(collection.push.bind(collection, {})).toThrow();
       });
     });
 
@@ -221,20 +221,20 @@ describe('User', function() {
       it('Fetch arbitrary page', async function() {
         let collection = new UserCollection({nbPerPage});
         await collection.fetchPage(2);
-        expect(collection).to.have.lengthOf(nbPerPage);
+        expect(collection).toHaveLength(nbPerPage);
       });
 
       it('Fetch next page', async function() {
         let collection = new UserCollection({nbPerPage});
         await collection.fetchNextPage();
-        expect(collection).to.have.lengthOf(nbPerPage);
+        expect(collection).toHaveLength(nbPerPage);
       });
 
       it('Fetch previous page', async function() {
         let collection = new UserCollection({nbPerPage});
         collection.curPage = 2;
         await collection.fetchPreviousPage();
-        expect(collection).to.have.lengthOf(nbPerPage);
+        expect(collection).toHaveLength(nbPerPage);
       });
     });
 

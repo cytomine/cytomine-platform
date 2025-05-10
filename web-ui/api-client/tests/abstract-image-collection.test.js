@@ -60,7 +60,7 @@ describe('AbstractImageCollection', () => {
 
     it('Add arbitrary object to the collection', () => {
       let collection = new AbstractImageCollection();
-      expect(collection.push.bind(collection, {})).toThrow();
+      expect(collection.push.bind(collection, {}))..toThrow();
     });
   });
 

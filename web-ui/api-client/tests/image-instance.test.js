@@ -12,7 +12,7 @@ describe('ImageInstance', function() {
 
   let idUser;
 
-  before(async function() {
+  beforeAll(async function() {
     await utils.connect();
 
     let currentUser = await User.fetchCurrent();
@@ -24,7 +24,7 @@ describe('ImageInstance', function() {
     await new ProjectConnection({project}).save(); // required for image consultation
   });
 
-  after(async function() {
+  afterAll(async function() {
     await utils.cleanData();
   });
 
@@ -33,49 +33,49 @@ describe('ImageInstance', function() {
       imageInstance = new ImageInstance({baseImage, project});
       imageInstance = await imageInstance.save();
       id = imageInstance.id;
-      expect(imageInstance).to.be.an.instanceof(ImageInstance);
+      expect(imageInstance).toBeInstanceOf(ImageInstance);
       expect(imageInstance.baseImage).to.equal(baseImage);
     });
 
     it('Duplicate', async function() {
       let tempImageInstance = new ImageInstance({baseImage, project});
-      expect(tempImageInstance.save()).to.be.rejected;
+      expect(tempImageInstance.save()).rejects..toThrow();
     });
 
     it('Create without base image', async function() {
       let tempImageInstance = new ImageInstance({baseImage});
-      expect(tempImageInstance.save()).to.be.rejected;
+      expect(tempImageInstance.save()).rejects..toThrow();
     });
 
     it('Create without project', async function() {
       let tempImageInstance = new ImageInstance({project});
-      expect(tempImageInstance.save()).to.be.rejected;
+      expect(tempImageInstance.save()).rejects..toThrow();
     });
   });
 
   describe('Fetch', function() {
     it('Fetch with static method', async function() {
       let fetchedImageInstance = await ImageInstance.fetch(id);
-      expect(fetchedImageInstance).to.be.an.instanceof(ImageInstance);
+      expect(fetchedImageInstance).toBeInstanceOf(ImageInstance);
       expect(fetchedImageInstance).to.deep.equal(imageInstance);
     });
 
     it('Fetch with instance method', async function() {
       let fetchedImageInstance = await new ImageInstance({id}).fetch();
-      expect(fetchedImageInstance).to.be.an.instanceof(ImageInstance);
+      expect(fetchedImageInstance).toBeInstanceOf(ImageInstance);
       expect(fetchedImageInstance).to.deep.equal(imageInstance);
     });
 
     it('Fetch next/previous', async function() {
       let nextImageInstance = await imageInstance.fetchNext();
-      expect(nextImageInstance).to.be.an.instanceof(ImageInstance);
+      expect(nextImageInstance).toBeInstanceOf(ImageInstance);
       expect(Number(nextImageInstance.created)).to.be.below(Number(imageInstance.created));
       // let previousImageInstance = await nextImageInstance.fetchPrevious();
       // expect(previousImageInstance).to.deep.equal(imageInstance);
     });
 
     it('Fetch with wrong ID', function() {
-      expect(ImageInstance.fetch(0)).to.be.rejected;
+      expect(ImageInstance.fetch(0)).rejects..toThrow();
     });
   });
 
@@ -91,7 +91,7 @@ describe('ImageInstance', function() {
     // let annotation;
     // let location = 'POLYGON((10 10, 20 10, 20 20, 10 20, 10 10), (16 16, 18 16, 18 18, 16 18, 16 16))';
 
-    before(async function() {
+    beforeAll(async function() {
       imageSource = await utils.getImageInstance({baseImage});
 
       await new Description({data: dataDescription}, imageSource).save();
@@ -99,7 +99,7 @@ describe('ImageInstance', function() {
       // annotation = await new Annotation({location, image: imageSource.id}).save();
     });
 
-    after(async function() {
+    afterAll(async function() {
       await Description.delete(imageSource);
       await Property.delete(property.id, imageSource);
       // await Annotation.delete(annotation.id);
@@ -113,7 +113,7 @@ describe('ImageInstance', function() {
     // it('Fetch layers in other projects', async function() {
     //   let layers = await imageInstance.fetchLayersInOtherProjects(imageSource.project);
     //   expect(layers).to.be.instanceof(Array);
-    //   expect(layers).to.have.lengthOf(1);
+    //   expect(layers).toHaveLength(1);
     //   expect(layers[0].image).to.equal(imageSource.id);
     // });
 
@@ -129,7 +129,7 @@ describe('ImageInstance', function() {
     //   expect(copiedDescription.data).to.equal(dataDescription);
     //
     //   let collection = await new PropertyCollection({object: imageSource}).fetchAll();
-    //   expect(collection).to.have.lengthOf(1);
+    //   expect(collection).toHaveLength(1);
     //   let copiedProperty = collection.get(0);
     //   expect(copiedProperty.key).to.equal(propKey);
     //   expect(copiedProperty.value).to.equal(propValue);
@@ -138,7 +138,7 @@ describe('ImageInstance', function() {
     // it('Copy annotations', async function() {
     //   await imageInstance.copyData([{image: imageSource.id, user: idUser}]);
     //   let collection = await new AnnotationCollection({image: imageSource.id, showGIS: true}).fetchAll();
-    //   expect(collection).to.have.lengthOf(1);
+    //   expect(collection).toHaveLength(1);
     //   let copiedAnnot = collection.get(0);
     //   expect(copiedAnnot.perimeter).to.equal(annotation.perimeter);
     // });
@@ -173,7 +173,7 @@ describe('ImageInstance', function() {
       let newInstanceFilename = utils.randomString();
       imageInstance.instanceFilename = newInstanceFilename;
       imageInstance = await imageInstance.update();
-      expect(imageInstance).to.be.an.instanceof(ImageInstance);
+      expect(imageInstance).toBeInstanceOf(ImageInstance);
       expect(imageInstance.instanceFilename).to.equal(newInstanceFilename);
     });
   });
@@ -184,7 +184,7 @@ describe('ImageInstance', function() {
     });
 
     it('Fetch deleted', function() {
-      expect(ImageInstance.fetch(id)).to.be.rejected;
+      expect(ImageInstance.fetch(id)).rejects..toThrow();
     });
   });
 
@@ -195,7 +195,7 @@ describe('ImageInstance', function() {
     let imageInstances;
     let nbImageInstances = 3;
 
-    before(async function() {
+    beforeAll(async function() {
       let imageInstancePromises = [];
       for(let i = 0; i < nbImageInstances; i++) {
         let tmp = utils.randomString();
@@ -211,7 +211,7 @@ describe('ImageInstance', function() {
       await Promise.all(consultationsPromise);
     });
 
-    after(async function() {
+    afterAll(async function() {
       let deletionPromises = imageInstances.map(imageInstance => ImageInstance.delete(imageInstance.id));
       await Promise.all(deletionPromises);
     });
@@ -219,30 +219,30 @@ describe('ImageInstance', function() {
     describe('Fetch', function() {
       it('Fetch (instance method)', async function() {
         let collection = await new ImageInstanceCollection({filterKey: 'project', filterValue: project}).fetchAll();
-        expect(collection).to.be.an.instanceof(ImageInstanceCollection);
-        expect(collection).to.have.lengthOf(nbImageInstances);
+        expect(collection).toBeInstanceOf(ImageInstanceCollection);
+        expect(collection).toHaveLength(nbImageInstances);
       });
 
       it('Fetch (static method)', async function() {
         let collection = await ImageInstanceCollection.fetchAll({filterKey: 'project', filterValue: project});
-        expect(collection).to.be.an.instanceof(ImageInstanceCollection);
-        expect(collection).to.have.lengthOf(nbImageInstances);
+        expect(collection).toBeInstanceOf(ImageInstanceCollection);
+        expect(collection).toHaveLength(nbImageInstances);
       });
 
       it('Fetch with several requests', async function() {
         let collection = await ImageInstanceCollection.fetchAll({nbPerPage: 1, filterKey: 'project', filterValue: project});
-        expect(collection).to.be.an.instanceof(ImageInstanceCollection);
-        expect(collection).to.have.lengthOf(nbImageInstances);
+        expect(collection).toBeInstanceOf(ImageInstanceCollection);
+        expect(collection).toHaveLength(nbImageInstances);
       });
 
       it('Fetch without filter', async function() {
         let collection = new ImageInstanceCollection();
-        expect(collection.fetchAll()).to.be.rejected;
+        expect(collection.fetchAll()).rejects..toThrow();
       });
 
       it('Fetch last opened', async function() {
         let collection = await ImageInstanceCollection.fetchLastOpened({max: nbImageInstances});
-        expect(collection).to.have.lengthOf(nbImageInstances);
+        expect(collection).toHaveLength(nbImageInstances);
         let listId = collection.map(imageInstance => imageInstance.id);
         imageInstances.forEach(image => {
           expect(listId).to.include(image.id);
@@ -255,7 +255,7 @@ describe('ImageInstance', function() {
           user: idUser,
           max: nbImageInstances
         });
-        expect(collection).to.have.lengthOf(nbImageInstances);
+        expect(collection).toHaveLength(nbImageInstances);
         let listId = collection.map(item => item.image);
         imageInstances.forEach(image => {
           expect(listId).to.include(image.id);
@@ -272,35 +272,35 @@ describe('ImageInstance', function() {
       it('Iterate through', async function() {
         let collection = await ImageInstanceCollection.fetchAll({filterKey: 'project', filterValue: project});
         for(let imageInstance of collection) {
-          expect(imageInstance).to.be.an.instanceof(ImageInstance);
+          expect(imageInstance).toBeInstanceOf(ImageInstance);
         }
       });
 
       it('Add item to the collection', function() {
         let collection = new ImageInstanceCollection();
-        expect(collection).to.have.lengthOf(0);
+        expect(collection).toHaveLength(0);
         collection.push(new ImageInstance());
-        expect(collection).to.have.lengthOf(1);
+        expect(collection).toHaveLength(1);
       });
 
       it('Add arbitrary object to the collection', function() {
         let collection = new ImageInstanceCollection();
-        expect(collection.push.bind(collection, {})).to.throw();
+        expect(collection.push.bind(collection, {})).toThrow();
       });
     });
 
     describe('Specific operations', function() {
       it('Filter by project', async function() {
         let collection = await new ImageInstanceCollection({filterKey: 'project', filterValue: project}).fetchAll();
-        expect(collection).to.be.an.instanceof(ImageInstanceCollection);
-        expect(collection).to.have.lengthOf(nbImageInstances);
+        expect(collection).toBeInstanceOf(ImageInstanceCollection);
+        expect(collection).toHaveLength(nbImageInstances);
         expect(collection.get(0).project).to.be.equals(project);
 
       });
 
       it('Filter by user', async function() {
         let collection = await new ImageInstanceCollection({filterKey: 'user', filterValue: idUser}).fetchAll();
-        expect(collection).to.be.an.instanceof(ImageInstanceCollection);
+        expect(collection).toBeInstanceOf(ImageInstanceCollection);
         expect(collection).to.have.length.above(nbImageInstances);
       });
     });
@@ -311,20 +311,20 @@ describe('ImageInstance', function() {
       it('Fetch arbitrary page', async function() {
         let collection = new ImageInstanceCollection({nbPerPage, filterKey: 'project', filterValue: project});
         await collection.fetchPage(2);
-        expect(collection).to.have.lengthOf(nbPerPage);
+        expect(collection).toHaveLength(nbPerPage);
       });
 
       it('Fetch next page', async function() {
         let collection = new ImageInstanceCollection({nbPerPage, filterKey: 'project', filterValue: project});
         await collection.fetchNextPage();
-        expect(collection).to.have.lengthOf(nbPerPage);
+        expect(collection).toHaveLength(nbPerPage);
       });
 
       it('Fetch previous page', async function() {
         let collection = new ImageInstanceCollection({nbPerPage, filterKey: 'project', filterValue: project});
         collection.curPage = 2;
         await collection.fetchPreviousPage();
-        expect(collection).to.have.lengthOf(nbPerPage);
+        expect(collection).toHaveLength(nbPerPage);
       });
     });
 
@@ -338,12 +338,12 @@ describe('ImageInstance', function() {
         let searchString = imageInstances[0].instanceFilename;
         let collection = new ImageInstanceCollection({filterKey: 'project', filterValue: project, 'name': {'ilike': searchString}});
         await collection.fetchAll();
-        expect(collection).to.have.lengthOf(1);
+        expect(collection).toHaveLength(1);
 
         searchString = '';
         collection = new ImageInstanceCollection({filterKey: 'project', filterValue: project, 'name': {'ilike': searchString}});
         await collection.fetchAll();
-        expect(collection).to.have.lengthOf(imageInstances.length);
+        expect(collection).toHaveLength(imageInstances.length);
       });
     });
 

@@ -8,7 +8,7 @@ describe('TagDomainAssociation', function() {
   let association = null;
   let id = 0;
 
-  before(async function() {
+  beforeAll(async function() {
     await utils.connect();
     utils.randomString();
     await utils.getUser();
@@ -16,7 +16,7 @@ describe('TagDomainAssociation', function() {
     project = await utils.getProject();
   });
 
-  after(async function() {
+  afterAll(async function() {
     await utils.cleanData();
   });
 
@@ -33,18 +33,18 @@ describe('TagDomainAssociation', function() {
   describe('Fetch', function() {
     it('Fetch with static method', async function() {
       let fetchedAssociation = await TagDomainAssociation.fetch(id);
-      expect(fetchedAssociation).to.be.an.instanceof(TagDomainAssociation);
+      expect(fetchedAssociation).toBeInstanceOf(TagDomainAssociation);
       expect(fetchedAssociation.tag).to.equal(tag);
     });
 
     it('Fetch with instance method', async function() {
       let fetchedAssociation = await new TagDomainAssociation({id}).fetch();
-      expect(fetchedAssociation).to.be.an.instanceof(TagDomainAssociation);
+      expect(fetchedAssociation).toBeInstanceOf(TagDomainAssociation);
       expect(fetchedAssociation.tag).to.equal(tag);
     });
 
     it('Fetch with wrong ID', function() {
-      expect(TagDomainAssociation.fetch(0)).to.be.rejected;
+      expect(TagDomainAssociation.fetch(0)).rejects..toThrow();
     });
   });
 
@@ -54,7 +54,7 @@ describe('TagDomainAssociation', function() {
     });
 
     it('Fetch deleted', function() {
-      expect(TagDomainAssociation.fetch(id)).to.be.rejected;
+      expect(TagDomainAssociation.fetch(id)).rejects..toThrow();
     });
   });
 
@@ -66,7 +66,7 @@ describe('TagDomainAssociation', function() {
     let associations;
     let totalNb = 0;
 
-    before(async function() {
+    beforeAll(async function() {
       let associationPromises = [];
       for(let i = 0; i < nbAssociations; i++) {
         let tag;
@@ -76,7 +76,7 @@ describe('TagDomainAssociation', function() {
       associations = await Promise.all(associationPromises);
     });
 
-    after(async function() {
+    afterAll(async function() {
       let deletionPromises = associations.map(association => TagDomainAssociation.delete(association.id));
       await Promise.all(deletionPromises);
       await utils.cleanData();
@@ -85,21 +85,21 @@ describe('TagDomainAssociation', function() {
     describe('Fetch', function() {
       it('Fetch (instance method)', async function() {
         let collection = await new TagDomainAssociationCollection().fetchAll();
-        expect(collection).to.be.an.instanceof(TagDomainAssociationCollection);
+        expect(collection).toBeInstanceOf(TagDomainAssociationCollection);
         expect(collection).to.have.lengthOf.at.least(nbAssociations);
         totalNb = collection.length;
       });
 
       it('Fetch (static method)', async function() {
         let collection = await TagDomainAssociationCollection.fetchAll();
-        expect(collection).to.be.an.instanceof(TagDomainAssociationCollection);
-        expect(collection).to.have.lengthOf(totalNb);
+        expect(collection).toBeInstanceOf(TagDomainAssociationCollection);
+        expect(collection).toHaveLength(totalNb);
       });
 
       it('Fetch with several requests', async function() {
         let collection = await TagDomainAssociationCollection.fetchAll({nbPerPage: 1});
-        expect(collection).to.be.an.instanceof(TagDomainAssociationCollection);
-        expect(collection).to.have.lengthOf(totalNb);
+        expect(collection).toBeInstanceOf(TagDomainAssociationCollection);
+        expect(collection).toHaveLength(totalNb);
       });
     });
 
@@ -107,20 +107,20 @@ describe('TagDomainAssociation', function() {
       it('Iterate through', async function() {
         let collection = await TagDomainAssociationCollection.fetchAll();
         for(let association of collection) {
-          expect(association).to.be.an.instanceof(TagDomainAssociation);
+          expect(association).toBeInstanceOf(TagDomainAssociation);
         }
       });
 
       it('Add item to the collection', function() {
         let collection = new TagDomainAssociationCollection();
-        expect(collection).to.have.lengthOf(0);
+        expect(collection).toHaveLength(0);
         collection.push(new TagDomainAssociation());
-        expect(collection).to.have.lengthOf(1);
+        expect(collection).toHaveLength(1);
       });
 
       it('Add arbitrary object to the collection', function() {
         let collection = new TagDomainAssociationCollection();
-        expect(collection.push.bind(collection, {})).to.throw();
+        expect(collection.push.bind(collection, {})).toThrow();
       });
     });
 
@@ -130,7 +130,7 @@ describe('TagDomainAssociation', function() {
         await new TagDomainAssociation({tag}, project2).save();
 
         let collection = await new TagDomainAssociationCollection({object: project2}).fetchAll();
-        expect(collection).to.have.lengthOf(1);
+        expect(collection).toHaveLength(1);
       });
     });
 
@@ -140,20 +140,20 @@ describe('TagDomainAssociation', function() {
       it('Fetch arbitrary page', async function() {
         let collection = new TagDomainAssociationCollection({nbPerPage});
         await collection.fetchPage(2);
-        expect(collection).to.have.lengthOf(nbPerPage);
+        expect(collection).toHaveLength(nbPerPage);
       });
 
       /*it('Fetch next page', async function() {
         let collection = new TagDomainAssociationCollection({nbPerPage});
         await collection.fetchNextPage();
-        expect(collection).to.have.lengthOf(nbPerPage);
+        expect(collection).toHaveLength(nbPerPage);
       });
 
       /*it('Fetch previous page', async function() {
         let collection = new TagDomainAssociationCollection({nbPerPage});
         collection.curPage = 2;
         await collection.fetchPreviousPage();
-        expect(collection).to.have.lengthOf(nbPerPage);
+        expect(collection).toHaveLength(nbPerPage);
       });*/
     });
 

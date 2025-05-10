@@ -2,13 +2,13 @@ import * as utils from './utils.js';
 
 describe('UserGroup', function() {
 
-  before(async function() {
+  beforeAll(async function() {
     await utils.connect(true);
     await utils.getUser();
     //({id: group} = await utils.getGroup());
   });
 
-  /*after(async function() {
+  /*afterAll(async function() {
     await utils.cleanData();
   });
 
@@ -16,7 +16,7 @@ describe('UserGroup', function() {
     it('Create', async function() {
       userGroup = new UserGroup({group, user});
       userGroup = await userGroup.save();
-      expect(userGroup).to.be.an.instanceof(UserGroup);
+      expect(userGroup).toBeInstanceOf(UserGroup);
       expect(userGroup.id).to.exist;
     });
   });
@@ -24,18 +24,18 @@ describe('UserGroup', function() {
   describe('Fetch', function() {
     it('Fetch with static method', async function() {
       let fetchedUserGroup = await UserGroup.fetch(user, group);
-      expect(fetchedUserGroup).to.be.an.instanceof(UserGroup);
+      expect(fetchedUserGroup).toBeInstanceOf(UserGroup);
       expect(fetchedUserGroup).to.deep.equal(userGroup);
     });
 
     it('Fetch with instance method', async function() {
       let fetchedUserGroup = await new UserGroup({user, group}).fetch();
-      expect(fetchedUserGroup).to.be.an.instanceof(UserGroup);
+      expect(fetchedUserGroup).toBeInstanceOf(UserGroup);
       expect(fetchedUserGroup).to.deep.equal(userGroup);
     });
 
     it('Fetch with wrong ID', function() {
-      expect(UserGroup.fetch(0)).to.be.rejected;
+      expect(UserGroup.fetch(0)).rejects..toThrow();
     });
   });
 
@@ -45,7 +45,7 @@ describe('UserGroup', function() {
     });
 
     it('Fetch deleted', function() {
-      expect(UserGroup.fetch(user, group)).to.be.rejected;
+      expect(UserGroup.fetch(user, group)).rejects..toThrow();
     });
   });
 
@@ -56,7 +56,7 @@ describe('UserGroup', function() {
     let nbUserGroups = 3;
     let userGroups;
 
-    before(async function() {
+    beforeAll(async function() {
       async function createGroupAndUserGroup() {
         let tempGroup = await utils.getGroup();
         let userGroup = new UserGroup({user, group: tempGroup.id});
@@ -71,7 +71,7 @@ describe('UserGroup', function() {
       userGroups = await Promise.all(userGroupPromises);
     });
 
-    after(async function() {
+    afterAll(async function() {
       let deletionPromises = userGroups.map(userGroup => UserGroup.delete(userGroup.user, userGroup.group));
       await Promise.all(deletionPromises);
     });
@@ -79,26 +79,26 @@ describe('UserGroup', function() {
     describe('Fetch', function() {
       it('Fetch (instance method)', async function() {
         let collection = await new UserGroupCollection({filterKey: 'user', filterValue: user}).fetchAll();
-        expect(collection).to.be.an.instanceof(UserGroupCollection);
-        expect(collection).to.have.lengthOf(nbUserGroups);
+        expect(collection).toBeInstanceOf(UserGroupCollection);
+        expect(collection).toHaveLength(nbUserGroups);
       });
 
       it('Fetch (static method)', async function() {
         let collection = await UserGroupCollection.fetchAll({filterKey: 'user', filterValue: user});
-        expect(collection).to.be.an.instanceof(UserGroupCollection);
-        expect(collection).to.have.lengthOf(nbUserGroups);
+        expect(collection).toBeInstanceOf(UserGroupCollection);
+        expect(collection).toHaveLength(nbUserGroups);
       });
 
       it('Fetch with several requests', async function() {
         let collection = await UserGroupCollection.fetchAll({nbPerPage: 1,
           filterKey: 'user', filterValue: user});
-        expect(collection).to.be.an.instanceof(UserGroupCollection);
-        expect(collection).to.have.lengthOf(nbUserGroups);
+        expect(collection).toBeInstanceOf(UserGroupCollection);
+        expect(collection).toHaveLength(nbUserGroups);
       });
 
       it('Fetch without filter', async function() {
         let collection = new UserGroupCollection();
-        expect(collection.fetchAll()).to.be.rejected;
+        expect(collection.fetchAll()).rejects..toThrow();
       });
     });
 
@@ -106,20 +106,20 @@ describe('UserGroup', function() {
       it('Iterate through', async function() {
         let collection = await UserGroupCollection.fetchAll({filterKey: 'user', filterValue: user});
         for(let userGroup of collection) {
-          expect(userGroup).to.be.an.instanceof(UserGroup);
+          expect(userGroup).toBeInstanceOf(UserGroup);
         }
       });
 
       it('Add item to the collection', function() {
         let collection = new UserGroupCollection();
-        expect(collection).to.have.lengthOf(0);
+        expect(collection).toHaveLength(0);
         collection.push(new UserGroup());
-        expect(collection).to.have.lengthOf(1);
+        expect(collection).toHaveLength(1);
       });
 
       it('Add arbitrary object to the collection', function() {
         let collection = new UserGroupCollection();
-        expect(collection.push.bind(collection, {})).to.throw();
+        expect(collection.push.bind(collection, {})).toThrow();
       });
     });
 
@@ -129,20 +129,20 @@ describe('UserGroup', function() {
       it('Fetch arbitrary page', async function() {
         let collection = new UserGroupCollection({nbPerPage, filterKey: 'user', filterValue: user});
         await collection.fetchPage(2);
-        expect(collection).to.have.lengthOf(nbPerPage);
+        expect(collection).toHaveLength(nbPerPage);
       });
 
       it('Fetch next page', async function() {
         let collection = new UserGroupCollection({nbPerPage, filterKey: 'user', filterValue: user});
         await collection.fetchNextPage();
-        expect(collection).to.have.lengthOf(nbPerPage);
+        expect(collection).toHaveLength(nbPerPage);
       });
 
       it('Fetch previous page', async function() {
         let collection = new UserGroupCollection({nbPerPage, filterKey: 'user', filterValue: user});
         collection.curPage = 2;
         await collection.fetchPreviousPage();
-        expect(collection).to.have.lengthOf(nbPerPage);
+        expect(collection).toHaveLength(nbPerPage);
       });
     });
 

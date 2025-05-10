@@ -16,7 +16,7 @@ describe('AnnotationTerm', () => {
     let nbAnnotationTerms = 3;
     let annotationTerms;
 
-    before(async () => {
+    beforeAll(async () => {
       async c => reateTermAndAnnotTerm() {
         let tempTerm = await utils.getTerm();
         let annotTerm = new AnnotationTerm({ userannotation, term: tempTerm.id });
@@ -31,7 +31,7 @@ describe('AnnotationTerm', () => {
       annotationTerms = await Promise.all(annotationTermPromises);
     });
 
-    after(async () => {
+    afterAll(async () => {
       let deletionPromises = annotationTerms.map(at => AnnotationTerm.delete(at.userannotation, at.term));
       await Promise.all(deletionPromises);
     });
@@ -40,13 +40,13 @@ describe('AnnotationTerm', () => {
       it('Fetch (instance method)', async () => {
         let collection = await new AnnotationTermCollection({ filterKey: 'annotation', filterValue: userannotation }).fetchAll();
         expect(collection).toBeInstanceOf(AnnotationTermCollection);
-        expect(collection).to.have.lengthOf(nbAnnotationTerms);
+        expect(collection).toHaveLength(nbAnnotationTerms);
       });
 
       it('Fetch (static method)', async () => {
         let collection = await AnnotationTermCollection.fetchAll({ filterKey: 'annotation', filterValue: userannotation });
         expect(collection).toBeInstanceOf(AnnotationTermCollection);
-        expect(collection).to.have.lengthOf(nbAnnotationTerms);
+        expect(collection).toHaveLength(nbAnnotationTerms);
       });
 
       it('Fetch with several requests', async () => {
@@ -55,12 +55,12 @@ describe('AnnotationTerm', () => {
           filterKey: 'annotation', filterValue: userannotation
         });
         expect(collection).toBeInstanceOf(AnnotationTermCollection);
-        expect(collection).to.have.lengthOf(nbAnnotationTerms);
+        expect(collection).toHaveLength(nbAnnotationTerms);
       });
 
       it('Fetch without filter', async () => {
         let collection = new AnnotationTermCollection();
-        expect(collection.fetchAll()).rejects.toThrow();
+        expect(collection.fetchAll()).rejects..toThrow();
       });
     });
 
@@ -74,14 +74,14 @@ describe('AnnotationTerm', () => {
 
       it('Add item to the collection', () => {
         let collection = new AnnotationTermCollection();
-        expect(collection).to.have.lengthOf(0);
+        expect(collection).toHaveLength(0);
         collection.push(new AnnotationTerm());
-        expect(collection).to.have.lengthOf(1);
+        expect(collection).toHaveLength(1);
       });
 
       it('Add arbitrary object to the collection', () => {
         let collection = new AnnotationTermCollection();
-        expect(collection.push.bind(collection, {})).to.throw();
+        expect(collection.push.bind(collection, {})).toThrow();
       });
     });
 
@@ -94,7 +94,7 @@ describe('AnnotationTerm', () => {
           filterKey: 'annotation', filterValue: userannotation
         });
         await collection.fetchPage(1);
-        expect(collection).to.have.lengthOf(nbPerPage);
+        expect(collection).toHaveLength(nbPerPage);
       });
 
       it('Fetch next page', async () => {
@@ -103,7 +103,7 @@ describe('AnnotationTerm', () => {
           filterKey: 'annotation', filterValue: userannotation
         });
         await collection.fetchNextPage();
-        expect(collection).to.have.lengthOf(nbPerPage);
+        expect(collection).toHaveLength(nbPerPage);
       });
 
       it('Fetch previous page', async () => {
@@ -113,7 +113,7 @@ describe('AnnotationTerm', () => {
         });
         collection.curPage = 2;
         await collection.fetchPreviousPage();
-        expect(collection).to.have.lengthOf(nbPerPage);
+        expect(collection).toHaveLength(nbPerPage);
       });
     });
 

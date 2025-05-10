@@ -3,7 +3,7 @@ import {Cytomine, User} from '@';
 import config from './config.js';
 
 describe('Cytomine', function() {
-  before(function() {
+  beforeAll(function() {
     new Cytomine(config.host);
   });
 
@@ -20,18 +20,18 @@ describe('Cytomine', function() {
   describe('UI config', function() {
     let project;
 
-    before(async function() {
+    beforeAll(async function() {
       await utils.connect();
       project = await utils.getProject();
     });
 
-    after(async function() {
+    afterAll(async function() {
       await utils.cleanData();
     });
 
     it('Global UI config', async function() {
       let config = await Cytomine.instance.fetchUIConfigCurrentUser();
-      expect(config).to.be.an.instanceof(Object);
+      expect(config).toBeInstanceOf(Object);
       for(let prop in config){
         expect(config[prop]).to.be.a('boolean');
       }
@@ -39,7 +39,7 @@ describe('Cytomine', function() {
 
     it('Project UI config', async function() {
       let config = await Cytomine.instance.fetchUIConfigCurrentUser(project.id);
-      expect(config).to.be.an.instanceof(Object);
+      expect(config).toBeInstanceOf(Object);
       for(let prop in config){
         expect(config[prop]).to.be.a('boolean');
       }
@@ -49,12 +49,12 @@ describe('Cytomine', function() {
   describe('Switch user', function() {
     let otherUser;
 
-    before(async function() {
+    beforeAll(async function() {
       await utils.connect(true);
       otherUser = await utils.getUser();
     });
 
-    after(async function() {
+    afterAll(async function() {
       await utils.cleanData();
     });
 
@@ -72,7 +72,7 @@ describe('Cytomine', function() {
   });
 
   describe('Signature', function() {
-    before(async function() {
+    beforeAll(async function() {
       await utils.connect();
     });
 
@@ -85,12 +85,12 @@ describe('Cytomine', function() {
   describe('Forgot credentials', function() {
     let user;
 
-    before(async function() {
+    beforeAll(async function() {
       await utils.connect();
       user = await utils.getUser();
     });
 
-    after(async function() {
+    afterAll(async function() {
       await utils.cleanData();
     });
 
@@ -104,13 +104,13 @@ describe('Cytomine', function() {
   });
 
   describe('Stats', function() {
-    before(async function() {
+    beforeAll(async function() {
       await utils.connect();
     });
 
     it('Total counts', async function() {
       let counts = await Cytomine.instance.fetchTotalCounts();
-      expect(counts).to.be.an.instanceof(Object);
+      expect(counts).toBeInstanceOf(Object);
       for(let prop in counts){
         expect(counts[prop]).to.be.a('number');
       }
@@ -118,14 +118,14 @@ describe('Cytomine', function() {
 
     it('Current stats', async function() {
       let currentStats = await Cytomine.instance.fetchCurrentStats();
-      expect(currentStats).to.be.an.instanceof(Object);
+      expect(currentStats).toBeInstanceOf(Object);
       expect(currentStats.users).to.be.a('number');
       expect(currentStats.projects).to.be.a('number');
     });
 
     it('Storage stats', async function() {
       let storageStats = await Cytomine.instance.fetchStorageStats();
-      expect(storageStats).to.be.an.instanceof(Object);
+      expect(storageStats).toBeInstanceOf(Object);
       for(let prop in storageStats){
         expect(storageStats[prop]).to.be.a('number');
       }

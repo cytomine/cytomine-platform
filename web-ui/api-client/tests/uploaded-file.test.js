@@ -13,14 +13,14 @@ describe('UploadedFile', function() {
   let uploadedFile = null;
   let id = 0;
 
-  before(async function() {
+  beforeAll(async function() {
     await utils.connect(true);
     ({id: user} = await User.fetchCurrent());
     ({id: storage} = await utils.getStorage({user}));
     ({id: imageServer} = await utils.getImageServer());
   });
 
-  after(async function() {
+  afterAll(async function() {
     await utils.cleanData();
   });
 
@@ -31,7 +31,7 @@ describe('UploadedFile', function() {
       });
       uploadedFile = await uploadedFile.save();
       id = uploadedFile.id;
-      expect(uploadedFile).to.be.an.instanceof(UploadedFile);
+      expect(uploadedFile).toBeInstanceOf(UploadedFile);
       expect(uploadedFile.filename).to.equal(filename);
     });
   });
@@ -39,18 +39,18 @@ describe('UploadedFile', function() {
   describe('Fetch', function() {
     it('Fetch with static method', async function() {
       let fetchedUploadedFile = await UploadedFile.fetch(id);
-      expect(fetchedUploadedFile).to.be.an.instanceof(UploadedFile);
+      expect(fetchedUploadedFile).toBeInstanceOf(UploadedFile);
       expect(fetchedUploadedFile).to.deep.equal(uploadedFile);
     });
 
     it('Fetch with instance method', async function() {
       let fetchedUploadedFile = await new UploadedFile({id}).fetch();
-      expect(fetchedUploadedFile).to.be.an.instanceof(UploadedFile);
+      expect(fetchedUploadedFile).toBeInstanceOf(UploadedFile);
       expect(fetchedUploadedFile).to.deep.equal(uploadedFile);
     });
 
     it('Fetch with wrong ID', function() {
-      expect(UploadedFile.fetch(0)).to.be.rejected;
+      expect(UploadedFile.fetch(0)).rejects..toThrow();
     });
   });
 
@@ -65,7 +65,7 @@ describe('UploadedFile', function() {
       let newFilename = utils.randomString();
       uploadedFile.filename = newFilename;
       uploadedFile = await uploadedFile.update();
-      expect(uploadedFile).to.be.an.instanceof(UploadedFile);
+      expect(uploadedFile).toBeInstanceOf(UploadedFile);
       expect(uploadedFile.filename).to.equal(newFilename);
     });
   });
@@ -76,7 +76,7 @@ describe('UploadedFile', function() {
     });
 
     it('Fetch deleted', function() {
-      expect(UploadedFile.fetch(id)).to.be.rejected;
+      expect(UploadedFile.fetch(id)).rejects..toThrow();
     });
   });
 
@@ -88,7 +88,7 @@ describe('UploadedFile', function() {
 
     let uploadedFiles;
 
-    before(async function() {
+    beforeAll(async function() {
       let uploadedFilePromises = [];
       for(let i = 0; i < nbUploadedFiles; i++) {
         let tmp = utils.randomString();
@@ -99,7 +99,7 @@ describe('UploadedFile', function() {
       uploadedFiles = await Promise.all(uploadedFilePromises);
     });
 
-    after(async function() {
+    afterAll(async function() {
       let deletionPromises = uploadedFiles.map(uf => UploadedFile.delete(uf.id));
       await Promise.all(deletionPromises);
     });
@@ -107,21 +107,21 @@ describe('UploadedFile', function() {
     describe('Fetch', function() {
       it('Fetch (instance method)', async function() {
         let collection = await new UploadedFileCollection().fetchAll();
-        expect(collection).to.be.an.instanceof(UploadedFileCollection);
+        expect(collection).toBeInstanceOf(UploadedFileCollection);
         expect(collection).to.have.lengthOf.at.least(nbUploadedFiles);
         totalNb = collection.length;
       });
 
       it('Fetch (static method)', async function() {
         let collection = await UploadedFileCollection.fetchAll();
-        expect(collection).to.be.an.instanceof(UploadedFileCollection);
-        expect(collection).to.have.lengthOf(totalNb);
+        expect(collection).toBeInstanceOf(UploadedFileCollection);
+        expect(collection).toHaveLength(totalNb);
       });
 
       it('Fetch with several requests', async function() {
         let collection = await UploadedFileCollection.fetchAll({nbPerPage: Math.ceil(totalNb/3)});
-        expect(collection).to.be.an.instanceof(UploadedFileCollection);
-        expect(collection).to.have.lengthOf(totalNb);
+        expect(collection).toBeInstanceOf(UploadedFileCollection);
+        expect(collection).toHaveLength(totalNb);
       });
     });
 
@@ -129,20 +129,20 @@ describe('UploadedFile', function() {
       it('Iterate through', async function() {
         let collection = await UploadedFileCollection.fetchAll();
         for(let uploadedFile of collection) {
-          expect(uploadedFile).to.be.an.instanceof(UploadedFile);
+          expect(uploadedFile).toBeInstanceOf(UploadedFile);
         }
       });
 
       it('Add item to the collection', function() {
         let collection = new UploadedFileCollection();
-        expect(collection).to.have.lengthOf(0);
+        expect(collection).toHaveLength(0);
         collection.push(new UploadedFile());
-        expect(collection).to.have.lengthOf(1);
+        expect(collection).toHaveLength(1);
       });
 
       it('Add arbitrary object to the collection', function() {
         let collection = new UploadedFileCollection();
-        expect(collection.push.bind(collection, {})).to.throw();
+        expect(collection.push.bind(collection, {})).toThrow();
       });
     });
 
@@ -152,20 +152,20 @@ describe('UploadedFile', function() {
       it('Fetch arbitrary page', async function() {
         let collection = new UploadedFileCollection({nbPerPage});
         await collection.fetchPage(2);
-        expect(collection).to.have.lengthOf(nbPerPage);
+        expect(collection).toHaveLength(nbPerPage);
       });
 
       it('Fetch next page', async function() {
         let collection = new UploadedFileCollection({nbPerPage});
         await collection.fetchNextPage();
-        expect(collection).to.have.lengthOf(nbPerPage);
+        expect(collection).toHaveLength(nbPerPage);
       });
 
       it('Fetch previous page', async function() {
         let collection = new UploadedFileCollection({nbPerPage});
         collection.curPage = 2;
         await collection.fetchPreviousPage();
-        expect(collection).to.have.lengthOf(nbPerPage);
+        expect(collection).toHaveLength(nbPerPage);
       });
     });
 

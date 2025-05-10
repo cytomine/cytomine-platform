@@ -5,7 +5,7 @@ describe('Task', function() {
   let task = null;
   let id = 0;
 
-  before(async function() {
+  beforeAll(async function() {
     await utils.connect();
   });
 
@@ -14,7 +14,7 @@ describe('Task', function() {
       task = new Task();
       await task.save();
       id = task.id;
-      expect(task).to.be.an.instanceof(Task);
+      expect(task).toBeInstanceOf(Task);
       expect(task.id).to.be.above(0);
     });
   });
@@ -22,24 +22,24 @@ describe('Task', function() {
   describe('Fetch', function() {
     it('Fetch with static method', async function() {
       let fetchedTask = await Task.fetch(id);
-      expect(fetchedTask).to.be.an.instanceof(Task);
+      expect(fetchedTask).toBeInstanceOf(Task);
     });
 
     it('Fetch with instance method', async function() {
       let fetchedTask = await new Task({id}).fetch();
-      expect(fetchedTask).to.be.an.instanceof(Task);
+      expect(fetchedTask).toBeInstanceOf(Task);
     });
   });
 
   describe('Update', function() {
     it('Update', function() {
-      expect(task.update.bind(task)).to.throw();
+      expect(task.update.bind(task)).toThrow();
     });
   });
 
   describe('Delete', function() {
     it('Delete', function() {
-      expect(task.delete.bind(task)).to.throw();
+      expect(task.delete.bind(task)).toThrow();
     });
   });
 

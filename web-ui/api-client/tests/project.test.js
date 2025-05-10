@@ -9,12 +9,12 @@ describe('Project', function() {
   let project = null;
   let id = 0;
 
-  before(async function() {
+  beforeAll(async function() {
     await utils.connect();
     ({id: ontology} = await utils.getOntology());
   });
 
-  after(async function() {
+  afterAll(async function() {
     await utils.cleanData();
   });
 
@@ -23,7 +23,7 @@ describe('Project', function() {
       project = new Project({name, ontology});
       project = await project.save();
       id = project.id;
-      expect(project).to.be.an.instanceof(Project);
+      expect(project).toBeInstanceOf(Project);
       expect(project.name).to.equal(name);
     });
   });
@@ -31,18 +31,18 @@ describe('Project', function() {
   describe('Fetch', function() {
     it('Fetch with static method', async function() {
       let fetchedProject = await Project.fetch(id);
-      expect(fetchedProject).to.be.an.instanceof(Project);
+      expect(fetchedProject).toBeInstanceOf(Project);
       expect(fetchedProject.name).to.equal(name);
     });
 
     it('Fetch with instance method', async function() {
       let fetchedProject = await new Project({id}).fetch();
-      expect(fetchedProject).to.be.an.instanceof(Project);
+      expect(fetchedProject).toBeInstanceOf(Project);
       expect(fetchedProject.name).to.equal(name);
     });
 
     it('Fetch with wrong ID', function() {
-      expect(Project.fetch(0)).to.be.rejected;
+      expect(Project.fetch(0)).rejects..toThrow();
     });
   });
 
@@ -52,7 +52,7 @@ describe('Project', function() {
     let idUser;
     let uiConfig;
 
-    before(async function() {
+    beforeAll(async function() {
       ({id: idUser} = await utils.getUser());
     });
 
@@ -133,7 +133,7 @@ describe('Project', function() {
 
     it('Fetch UI config', async function() {
       uiConfig = await project.fetchUIConfig();
-      expect(uiConfig).to.be.an.instanceof(Object);
+      expect(uiConfig).toBeInstanceOf(Object);
       for(let prop in uiConfig){
         expect(uiConfig[prop]['CONTRIBUTOR_PROJECT']).to.be.a('boolean');
         expect(uiConfig[prop]['ADMIN_PROJECT']).to.be.a('boolean');
@@ -217,7 +217,7 @@ describe('Project', function() {
       let newName = utils.randomString();
       project.name = newName;
       project = await project.update();
-      expect(project).to.be.an.instanceof(Project);
+      expect(project).toBeInstanceOf(Project);
       expect(project.name).to.equal(newName);
     });
   });
@@ -228,7 +228,7 @@ describe('Project', function() {
     });
 
     it('Fetch deleted', function() {
-      expect(Project.fetch(id)).to.be.rejected;
+      expect(Project.fetch(id)).rejects..toThrow();
     });
   });
 
@@ -242,7 +242,7 @@ describe('Project', function() {
 
     let currentUser;
 
-    before(async function() {
+    beforeAll(async function() {
 
       currentUser = await User.fetchCurrent();
 
@@ -260,7 +260,7 @@ describe('Project', function() {
       projects = await Promise.all(projectPromises);
     });
 
-    after(async function() {
+    afterAll(async function() {
       let deletionPromises = projects.map(project => Project.delete(project.id));
       await Promise.all(deletionPromises);
     });
@@ -268,26 +268,26 @@ describe('Project', function() {
     describe('Fetch', function() {
       it('Fetch (instance method)', async function() {
         let collection = await new ProjectCollection().fetchAll();
-        expect(collection).to.be.an.instanceof(ProjectCollection);
+        expect(collection).toBeInstanceOf(ProjectCollection);
         expect(collection).to.have.lengthOf.at.least(nbProjects);
         totalNb = collection.length;
       });
 
       it('Fetch (static method)', async function() {
         let collection = await ProjectCollection.fetchAll();
-        expect(collection).to.be.an.instanceof(ProjectCollection);
-        expect(collection).to.have.lengthOf(totalNb);
+        expect(collection).toBeInstanceOf(ProjectCollection);
+        expect(collection).toHaveLength(totalNb);
       });
 
       it('Fetch with several requests', async function() {
         let collection = await ProjectCollection.fetchAll({nbPerPage: Math.ceil(totalNb/3)});
-        expect(collection).to.be.an.instanceof(ProjectCollection);
-        expect(collection).to.have.lengthOf(totalNb);
+        expect(collection).toBeInstanceOf(ProjectCollection);
+        expect(collection).toHaveLength(totalNb);
       });
 
       it('Fetch last opened projects', async function() {
         let collection = await ProjectCollection.fetchLastOpened(nbProjects);
-        expect(collection).to.have.lengthOf(nbProjects);
+        expect(collection).toHaveLength(nbProjects);
         let listId = collection.map(project => project.id);
         projects.forEach(project => {
           expect(listId).to.include(project.id);
@@ -299,20 +299,20 @@ describe('Project', function() {
       it('Iterate through', async function() {
         let collection = await ProjectCollection.fetchAll();
         for(let project of collection) {
-          expect(project).to.be.an.instanceof(Project);
+          expect(project).toBeInstanceOf(Project);
         }
       });
 
       it('Add item to the collection', function() {
         let collection = new ProjectCollection();
-        expect(collection).to.have.lengthOf(0);
+        expect(collection).toHaveLength(0);
         collection.push(new Project());
-        expect(collection).to.have.lengthOf(1);
+        expect(collection).toHaveLength(1);
       });
 
       it('Add arbitrary object to the collection', function() {
         let collection = new ProjectCollection();
-        expect(collection.push.bind(collection, {})).to.throw();
+        expect(collection.push.bind(collection, {})).toThrow();
       });
     });
 
@@ -340,20 +340,20 @@ describe('Project', function() {
       it('Fetch arbitrary page', async function() {
         let collection = new ProjectCollection({nbPerPage});
         await collection.fetchPage(1);
-        expect(collection).to.have.lengthOf(nbPerPage);
+        expect(collection).toHaveLength(nbPerPage);
       });
 
       it('Fetch next page', async function() {
         let collection = new ProjectCollection({nbPerPage});
         await collection.fetchNextPage();
-        expect(collection).to.have.lengthOf(nbPerPage);
+        expect(collection).toHaveLength(nbPerPage);
       });
 
       it('Fetch previous page', async function() {
         let collection = new ProjectCollection({nbPerPage});
         collection.curPage = 2;
         await collection.fetchPreviousPage();
-        expect(collection).to.have.lengthOf(nbPerPage);
+        expect(collection).toHaveLength(nbPerPage);
       });
     });
 

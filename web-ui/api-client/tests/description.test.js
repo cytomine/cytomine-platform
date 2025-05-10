@@ -8,12 +8,12 @@ describe('Description', function() {
 
   let description = null;
 
-  before(async function() {
+  beforeAll(async function() {
     await utils.connect();
     annotation = await utils.getAnnotation();
   });
 
-  after(async function() {
+  afterAll(async function() {
     await utils.cleanData();
   });
 
@@ -21,34 +21,34 @@ describe('Description', function() {
     it('Create', async function() {
       description = new Description({data}, annotation);
       await description.save();
-      expect(description).to.be.an.instanceof(Description);
+      expect(description).toBeInstanceOf(Description);
       expect(description.id).to.be.above(0);
       expect(description.data).to.equal(data);
     });
 
     it('Create without providing associated object', async function() {
       let descriptionWithoutObject = new Description({data});
-      expect(descriptionWithoutObject.save()).to.be.rejected;
+      expect(descriptionWithoutObject.save()).rejects..toThrow();
     });
   });
 
   describe('Fetch', function() {
     it('Fetch with static method', async function() {
       let fetchedDescription = await Description.fetch(annotation);
-      expect(fetchedDescription).to.be.an.instanceof(Description);
+      expect(fetchedDescription).toBeInstanceOf(Description);
       expect(fetchedDescription.domainIdent).to.equal(annotation.id);
       expect(fetchedDescription.data).to.equal(data);
     });
 
     it('Fetch with instance method', async function() {
       let fetchedDescription = await new Description({}, annotation).fetch();
-      expect(fetchedDescription).to.be.an.instanceof(Description);
+      expect(fetchedDescription).toBeInstanceOf(Description);
       expect(fetchedDescription.domainIdent).to.equal(annotation.id);
       expect(fetchedDescription.data).to.equal(data);
     });
 
     it('Fetch without providing associated object', function() {
-      expect(Description.fetch({})).to.be.rejected;
+      expect(Description.fetch({})).rejects..toThrow();
     });
   });
 
@@ -57,7 +57,7 @@ describe('Description', function() {
       let newData = utils.randomString();
       description.data = newData;
       description = await description.update();
-      expect(description).to.be.an.instanceof(Description);
+      expect(description).toBeInstanceOf(Description);
       expect(description.data).to.equal(newData);
     });
   });
@@ -68,7 +68,7 @@ describe('Description', function() {
     });
 
     it('Fetch deleted', function() {
-      expect(Description.fetch(annotation)).to.be.rejected;
+      expect(Description.fetch(annotation)).rejects..toThrow();
     });
   });
 

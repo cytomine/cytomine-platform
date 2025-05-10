@@ -10,7 +10,7 @@ describe('ProjectRepresentative', function() {
   let projectRepresentative;
   let id = 0;
 
-  before(async function() {
+  beforeAll(async function() {
     await utils.connect(true);
     projectInstance = await utils.getProject();
     project = projectInstance.id;
@@ -18,7 +18,7 @@ describe('ProjectRepresentative', function() {
     await projectInstance.addUser(user);
   });
 
-  after(async function() {
+  afterAll(async function() {
     await utils.cleanData();
   });
 
@@ -26,7 +26,7 @@ describe('ProjectRepresentative', function() {
     it('Create', async function() {
       projectRepresentative = new ProjectRepresentative({user, project});
       projectRepresentative = await projectRepresentative.save();
-      expect(projectRepresentative).to.be.an.instanceof(ProjectRepresentative);
+      expect(projectRepresentative).toBeInstanceOf(ProjectRepresentative);
       id = projectRepresentative.id;
       expect(id).to.exist;
     });
@@ -35,18 +35,18 @@ describe('ProjectRepresentative', function() {
   describe('Fetch', function() {
     it('Fetch with static method', async function() {
       let fetchedProjectRepresentative = await ProjectRepresentative.fetch(id, project);
-      expect(fetchedProjectRepresentative).to.be.an.instanceof(ProjectRepresentative);
+      expect(fetchedProjectRepresentative).toBeInstanceOf(ProjectRepresentative);
       expect(fetchedProjectRepresentative).to.deep.equal(projectRepresentative);
     });
 
     it('Fetch with instance method', async function() {
       let fetchedProjectRepresentative = await new ProjectRepresentative({project, id}).fetch();
-      expect(fetchedProjectRepresentative).to.be.an.instanceof(ProjectRepresentative);
+      expect(fetchedProjectRepresentative).toBeInstanceOf(ProjectRepresentative);
       expect(fetchedProjectRepresentative).to.deep.equal(projectRepresentative);
     });
 
     it('Fetch with wrong ID', function() {
-      expect(ProjectRepresentative.fetch(0)).to.be.rejected;
+      expect(ProjectRepresentative.fetch(0)).rejects..toThrow();
     });
   });
 
@@ -56,7 +56,7 @@ describe('ProjectRepresentative', function() {
     });
 
     it('Fetch deleted', function() {
-      expect(ProjectRepresentative.fetch(id, project)).to.be.rejected;
+      expect(ProjectRepresentative.fetch(id, project)).rejects..toThrow();
     });
 
     it('Create again', async function() {
@@ -67,7 +67,7 @@ describe('ProjectRepresentative', function() {
 
     it('Delete with project and user', async function() {
       await ProjectRepresentative.delete(0, project, user);
-      expect(ProjectRepresentative.fetch(id, project)).to.be.rejected;
+      expect(ProjectRepresentative.fetch(id, project)).rejects..toThrow();
     });
 
   });
@@ -79,7 +79,7 @@ describe('ProjectRepresentative', function() {
     let nbProjectRepresentatives = 3;
     let projectRepresentatives;
 
-    before(async function() {
+    beforeAll(async function() {
       async function createUserAndProjectRepresentative() {
         let {id: tempUser} = await utils.getUser();
         await projectInstance.addUser(tempUser);
@@ -95,7 +95,7 @@ describe('ProjectRepresentative', function() {
       projectRepresentatives = await Promise.all(projectRepresentativePromises);
     });
 
-    after(async function() {
+    afterAll(async function() {
       let deletionPromises = projectRepresentatives.map(projectRepresentative =>
         ProjectRepresentative.delete(projectRepresentative.id, project));
       await Promise.all(deletionPromises);
@@ -104,26 +104,26 @@ describe('ProjectRepresentative', function() {
     describe('Fetch', function() {
       it('Fetch (instance method)', async function() {
         let collection = await new ProjectRepresentativeCollection({filterKey: 'project', filterValue: project}).fetchAll();
-        expect(collection).to.be.an.instanceof(ProjectRepresentativeCollection);
-        expect(collection).to.have.lengthOf(nbProjectRepresentatives + 1); // creator is by default representative
+        expect(collection).toBeInstanceOf(ProjectRepresentativeCollection);
+        expect(collection).toHaveLength(nbProjectRepresentatives + 1); // creator is by default representative
       });
 
       it('Fetch (static method)', async function() {
         let collection = await ProjectRepresentativeCollection.fetchAll({filterKey: 'project', filterValue: project});
-        expect(collection).to.be.an.instanceof(ProjectRepresentativeCollection);
-        expect(collection).to.have.lengthOf(nbProjectRepresentatives + 1); // creator is by default representative
+        expect(collection).toBeInstanceOf(ProjectRepresentativeCollection);
+        expect(collection).toHaveLength(nbProjectRepresentatives + 1); // creator is by default representative
       });
 
       it('Fetch with several requests', async function() {
         let collection = await ProjectRepresentativeCollection.fetchAll({nbPerPage: 1,
           filterKey: 'project', filterValue: project});
-        expect(collection).to.be.an.instanceof(ProjectRepresentativeCollection);
-        expect(collection).to.have.lengthOf(nbProjectRepresentatives+1);
+        expect(collection).toBeInstanceOf(ProjectRepresentativeCollection);
+        expect(collection).toHaveLength(nbProjectRepresentatives+1);
       });
 
       it('Fetch without filter', async function() {
         let collection = new ProjectRepresentativeCollection();
-        expect(collection.fetchAll()).to.be.rejected;
+        expect(collection.fetchAll()).rejects..toThrow();
       });
     });
 
@@ -131,20 +131,20 @@ describe('ProjectRepresentative', function() {
       it('Iterate through', async function() {
         let collection = await ProjectRepresentativeCollection.fetchAll({filterKey: 'project', filterValue: project});
         for(let projectRepresentative of collection) {
-          expect(projectRepresentative).to.be.an.instanceof(ProjectRepresentative);
+          expect(projectRepresentative).toBeInstanceOf(ProjectRepresentative);
         }
       });
 
       it('Add item to the collection', function() {
         let collection = new ProjectRepresentativeCollection();
-        expect(collection).to.have.lengthOf(0);
+        expect(collection).toHaveLength(0);
         collection.push(new ProjectRepresentative());
-        expect(collection).to.have.lengthOf(1);
+        expect(collection).toHaveLength(1);
       });
 
       it('Add arbitrary object to the collection', function() {
         let collection = new ProjectRepresentativeCollection();
-        expect(collection.push.bind(collection, {})).to.throw();
+        expect(collection.push.bind(collection, {})).toThrow();
       });
     });
 
@@ -154,20 +154,20 @@ describe('ProjectRepresentative', function() {
       it('Fetch arbitrary page', async function() {
         let collection = new ProjectRepresentativeCollection({nbPerPage, filterKey: 'project', filterValue: project});
         await collection.fetchPage(2);
-        expect(collection).to.have.lengthOf(nbPerPage);
+        expect(collection).toHaveLength(nbPerPage);
       });
 
       it('Fetch next page', async function() {
         let collection = new ProjectRepresentativeCollection({nbPerPage, filterKey: 'project', filterValue: project});
         await collection.fetchNextPage();
-        expect(collection).to.have.lengthOf(nbPerPage);
+        expect(collection).toHaveLength(nbPerPage);
       });
 
       it('Fetch previous page', async function() {
         let collection = new ProjectRepresentativeCollection({nbPerPage, filterKey: 'project', filterValue: project});
         collection.curPage = 2;
         await collection.fetchPreviousPage();
-        expect(collection).to.have.lengthOf(nbPerPage);
+        expect(collection).toHaveLength(nbPerPage);
       });
     });
 

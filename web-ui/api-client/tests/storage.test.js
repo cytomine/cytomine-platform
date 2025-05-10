@@ -10,12 +10,12 @@ describe('Storage', function() {
   let storage = null;
   let id = 0;
 
-  before(async function() {
+  beforeAll(async function() {
     await utils.connect(true);
     ({id: user} = await utils.getUser());
   });
 
-  after(async function() {
+  afterAll(async function() {
     await utils.cleanData();
   });
 
@@ -23,7 +23,7 @@ describe('Storage', function() {
     // skipped because a storage for the user seems to be created automatically and this method throws error if the user already possesses a storage
     it.skip('Create for user', async function() {
       storageUser = await Storage.create(user);
-      expect(storageUser).to.be.an.instanceof(Storage);
+      expect(storageUser).toBeInstanceOf(Storage);
       expect(storageUser.user).to.equal(user);
     });
 
@@ -31,7 +31,7 @@ describe('Storage', function() {
       storage = new Storage({name, user});
       storage = await storage.save();
       id = storage.id;
-      expect(storage).to.be.an.instanceof(Storage);
+      expect(storage).toBeInstanceOf(Storage);
       expect(id).to.exist;
       expect(storage.name).to.equal(name);
     });
@@ -40,18 +40,18 @@ describe('Storage', function() {
   describe('Fetch', function() {
     it('Fetch with static method', async function() {
       let fetchedStorage = await Storage.fetch(id);
-      expect(fetchedStorage).to.be.an.instanceof(Storage);
+      expect(fetchedStorage).toBeInstanceOf(Storage);
       expect(fetchedStorage).to.deep.equal(storage);
     });
 
     it('Fetch with instance method', async function() {
       let fetchedStorage = await new Storage({id}).fetch();
-      expect(fetchedStorage).to.be.an.instanceof(Storage);
+      expect(fetchedStorage).toBeInstanceOf(Storage);
       expect(fetchedStorage).to.deep.equal(storage);
     });
 
     it('Fetch with wrong ID', function() {
-      expect(Storage.fetch(0)).to.be.rejected;
+      expect(Storage.fetch(0)).rejects..toThrow();
     });
   });
 
@@ -60,7 +60,7 @@ describe('Storage', function() {
       let newName = utils.randomString();
       storage.name = newName;
       storage = await storage.update();
-      expect(storage).to.be.an.instanceof(Storage);
+      expect(storage).toBeInstanceOf(Storage);
       expect(storage.name).to.equal(newName);
     });
   });
@@ -71,7 +71,7 @@ describe('Storage', function() {
     });
 
     it('Fetch deleted', function() {
-      expect(Storage.fetch(id)).to.be.rejected;
+      expect(Storage.fetch(id)).rejects..toThrow();
     });
   });
 
@@ -82,7 +82,7 @@ describe('Storage', function() {
     let nbStorages = 3;
     let totalNb = 0;
 
-    before(async function() {
+    beforeAll(async function() {
       let storagePromises = [];
       for(let i = 0; i < nbStorages - 1; i++) {
         let str = utils.randomString();
@@ -96,21 +96,21 @@ describe('Storage', function() {
     describe('Fetch', function() {
       it('Fetch (instance method)', async function() {
         let collection = await new StorageCollection({all: true}).fetchAll();
-        expect(collection).to.be.an.instanceof(StorageCollection);
+        expect(collection).toBeInstanceOf(StorageCollection);
         expect(collection).to.have.lengthOf.at.least(nbStorages);
         totalNb = collection.length;
       });
 
       it('Fetch (static method)', async function() {
         let collection = await StorageCollection.fetchAll({all: true});
-        expect(collection).to.be.an.instanceof(StorageCollection);
-        expect(collection).to.have.lengthOf(totalNb);
+        expect(collection).toBeInstanceOf(StorageCollection);
+        expect(collection).toHaveLength(totalNb);
       });
 
       it('Fetch with several requests', async function() {
         let collection = await StorageCollection.fetchAll({nbPerPage: Math.ceil(totalNb/3), all: true});
-        expect(collection).to.be.an.instanceof(StorageCollection);
-        expect(collection).to.have.lengthOf(totalNb);
+        expect(collection).toBeInstanceOf(StorageCollection);
+        expect(collection).toHaveLength(totalNb);
       });
     });
 
@@ -118,20 +118,20 @@ describe('Storage', function() {
       it('Iterate through', async function() {
         let collection = await StorageCollection.fetchAll();
         for(let storage of collection) {
-          expect(storage).to.be.an.instanceof(Storage);
+          expect(storage).toBeInstanceOf(Storage);
         }
       });
 
       it('Add item to the collection', function() {
         let collection = new StorageCollection();
-        expect(collection).to.have.lengthOf(0);
+        expect(collection).toHaveLength(0);
         collection.push(new Storage());
-        expect(collection).to.have.lengthOf(1);
+        expect(collection).toHaveLength(1);
       });
 
       it('Add arbitrary object to the collection', function() {
         let collection = new StorageCollection();
-        expect(collection.push.bind(collection, {})).to.throw();
+        expect(collection.push.bind(collection, {})).toThrow();
       });
     });
 
@@ -142,20 +142,20 @@ describe('Storage', function() {
       it('Fetch arbitrary page', async function() {
         let collection = new StorageCollection({nbPerPage, all});
         await collection.fetchPage(2);
-        expect(collection).to.have.lengthOf(nbPerPage);
+        expect(collection).toHaveLength(nbPerPage);
       });
 
       it('Fetch next page', async function() {
         let collection = new StorageCollection({nbPerPage, all});
         await collection.fetchNextPage();
-        expect(collection).to.have.lengthOf(nbPerPage);
+        expect(collection).toHaveLength(nbPerPage);
       });
 
       it('Fetch previous page', async function() {
         let collection = new StorageCollection({nbPerPage, all});
         collection.curPage = 2;
         await collection.fetchPreviousPage();
-        expect(collection).to.have.lengthOf(nbPerPage);
+        expect(collection).toHaveLength(nbPerPage);
       });
     });
 

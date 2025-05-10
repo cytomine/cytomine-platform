@@ -10,7 +10,7 @@ describe('ProjectDefaultLayer', function() {
   let projectDefaultLayer;
   let id = 0;
 
-  before(async function() {
+  beforeAll(async function() {
     await utils.connect(true);
     projectObject = await utils.getProject();
     project = projectObject.id;
@@ -18,7 +18,7 @@ describe('ProjectDefaultLayer', function() {
     await projectObject.addUser(user);
   });
 
-  after(async function() {
+  afterAll(async function() {
     await utils.cleanData();
   });
 
@@ -26,7 +26,7 @@ describe('ProjectDefaultLayer', function() {
     it('Create', async function() {
       projectDefaultLayer = new ProjectDefaultLayer({user, project});
       projectDefaultLayer = await projectDefaultLayer.save();
-      expect(projectDefaultLayer).to.be.an.instanceof(ProjectDefaultLayer);
+      expect(projectDefaultLayer).toBeInstanceOf(ProjectDefaultLayer);
       id = projectDefaultLayer.id;
       expect(id).to.exist;
     });
@@ -35,18 +35,18 @@ describe('ProjectDefaultLayer', function() {
   describe('Fetch', function() {
     it('Fetch with static method', async function() {
       let fetchedProjectDefaultLayer = await ProjectDefaultLayer.fetch(id, project);
-      expect(fetchedProjectDefaultLayer).to.be.an.instanceof(ProjectDefaultLayer);
+      expect(fetchedProjectDefaultLayer).toBeInstanceOf(ProjectDefaultLayer);
       expect(fetchedProjectDefaultLayer).to.deep.equal(projectDefaultLayer);
     });
 
     it('Fetch with instance method', async function() {
       let fetchedProjectDefaultLayer = await new ProjectDefaultLayer({project, id}).fetch();
-      expect(fetchedProjectDefaultLayer).to.be.an.instanceof(ProjectDefaultLayer);
+      expect(fetchedProjectDefaultLayer).toBeInstanceOf(ProjectDefaultLayer);
       expect(fetchedProjectDefaultLayer).to.deep.equal(projectDefaultLayer);
     });
 
     it('Fetch with wrong ID', function() {
-      expect(ProjectDefaultLayer.fetch(0)).to.be.rejected;
+      expect(ProjectDefaultLayer.fetch(0)).rejects..toThrow();
     });
   });
 
@@ -55,7 +55,7 @@ describe('ProjectDefaultLayer', function() {
       let hideByDefault = !projectDefaultLayer.hideByDefault;
       projectDefaultLayer.hideByDefault = hideByDefault;
       projectDefaultLayer = await projectDefaultLayer.update();
-      expect(projectDefaultLayer).to.be.an.instanceof(ProjectDefaultLayer);
+      expect(projectDefaultLayer).toBeInstanceOf(ProjectDefaultLayer);
       expect(projectDefaultLayer.hideByDefault).to.equal(hideByDefault);
     });
   });
@@ -66,7 +66,7 @@ describe('ProjectDefaultLayer', function() {
     });
 
     it('Fetch deleted', function() {
-      expect(ProjectDefaultLayer.fetch(id, project)).to.be.rejected;
+      expect(ProjectDefaultLayer.fetch(id, project)).rejects..toThrow();
     });
   });
 
@@ -77,7 +77,7 @@ describe('ProjectDefaultLayer', function() {
     let nbProjectDefaultLayers = 3;
     let projectDefaultLayers;
 
-    before(async function() {
+    beforeAll(async function() {
       async function createUserAndProjectDefaultLayer() {
         let tempUser = await utils.getUser();
         let projectDefaultLayer = new ProjectDefaultLayer({project, user: tempUser.id});
@@ -93,7 +93,7 @@ describe('ProjectDefaultLayer', function() {
       projectDefaultLayers = await Promise.all(projectDefaultLayerPromises);
     });
 
-    after(async function() {
+    afterAll(async function() {
       let deletionPromises = projectDefaultLayers.map(projectDefaultLayer =>
         ProjectDefaultLayer.delete(projectDefaultLayer.id, project));
       await Promise.all(deletionPromises);
@@ -102,26 +102,26 @@ describe('ProjectDefaultLayer', function() {
     describe('Fetch', function() {
       it('Fetch (instance method)', async function() {
         let collection = await new ProjectDefaultLayerCollection({filterKey: 'project', filterValue: project}).fetchAll();
-        expect(collection).to.be.an.instanceof(ProjectDefaultLayerCollection);
-        expect(collection).to.have.lengthOf(nbProjectDefaultLayers);
+        expect(collection).toBeInstanceOf(ProjectDefaultLayerCollection);
+        expect(collection).toHaveLength(nbProjectDefaultLayers);
       });
 
       it('Fetch (static method)', async function() {
         let collection = await ProjectDefaultLayerCollection.fetchAll({filterKey: 'project', filterValue: project});
-        expect(collection).to.be.an.instanceof(ProjectDefaultLayerCollection);
-        expect(collection).to.have.lengthOf(nbProjectDefaultLayers);
+        expect(collection).toBeInstanceOf(ProjectDefaultLayerCollection);
+        expect(collection).toHaveLength(nbProjectDefaultLayers);
       });
 
       it('Fetch with several requests', async function() {
         let collection = await ProjectDefaultLayerCollection.fetchAll({nbPerPage: 1,
           filterKey: 'project', filterValue: project});
-        expect(collection).to.be.an.instanceof(ProjectDefaultLayerCollection);
-        expect(collection).to.have.lengthOf(nbProjectDefaultLayers);
+        expect(collection).toBeInstanceOf(ProjectDefaultLayerCollection);
+        expect(collection).toHaveLength(nbProjectDefaultLayers);
       });
 
       it('Fetch without filter', async function() {
         let collection = new ProjectDefaultLayerCollection();
-        expect(collection.fetchAll()).to.be.rejected;
+        expect(collection.fetchAll()).rejects..toThrow();
       });
     });
 
@@ -129,20 +129,20 @@ describe('ProjectDefaultLayer', function() {
       it('Iterate through', async function() {
         let collection = await ProjectDefaultLayerCollection.fetchAll({filterKey: 'project', filterValue: project});
         for(let projectDefaultLayer of collection) {
-          expect(projectDefaultLayer).to.be.an.instanceof(ProjectDefaultLayer);
+          expect(projectDefaultLayer).toBeInstanceOf(ProjectDefaultLayer);
         }
       });
 
       it('Add item to the collection', function() {
         let collection = new ProjectDefaultLayerCollection();
-        expect(collection).to.have.lengthOf(0);
+        expect(collection).toHaveLength(0);
         collection.push(new ProjectDefaultLayer());
-        expect(collection).to.have.lengthOf(1);
+        expect(collection).toHaveLength(1);
       });
 
       it('Add arbitrary object to the collection', function() {
         let collection = new ProjectDefaultLayerCollection();
-        expect(collection.push.bind(collection, {})).to.throw();
+        expect(collection.push.bind(collection, {})).toThrow();
       });
     });
 
@@ -152,20 +152,20 @@ describe('ProjectDefaultLayer', function() {
       it('Fetch arbitrary page', async function() {
         let collection = new ProjectDefaultLayerCollection({nbPerPage, filterKey: 'project', filterValue: project});
         await collection.fetchPage(2);
-        expect(collection).to.have.lengthOf(nbPerPage);
+        expect(collection).toHaveLength(nbPerPage);
       });
 
       it('Fetch next page', async function() {
         let collection = new ProjectDefaultLayerCollection({nbPerPage, filterKey: 'project', filterValue: project});
         await collection.fetchNextPage();
-        expect(collection).to.have.lengthOf(nbPerPage);
+        expect(collection).toHaveLength(nbPerPage);
       });
 
       it('Fetch previous page', async function() {
         let collection = new ProjectDefaultLayerCollection({nbPerPage, filterKey: 'project', filterValue: project});
         collection.curPage = 2;
         await collection.fetchPreviousPage();
-        expect(collection).to.have.lengthOf(nbPerPage);
+        expect(collection).toHaveLength(nbPerPage);
       });
     });
 
