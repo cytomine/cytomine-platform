@@ -39,8 +39,8 @@ describe('AnnotationTrack', () => {
       expect(fetchedAnnotationTrack).toEqual(annotationTrack);
     });
 
-    it('Fetch with wrong ID', () => {
-      expect(AnnotationTrack.fetch(0)).rejects.toThrow();
+    it('Fetch with wrong ID', async () => {
+      await expect(AnnotationTrack.fetch(0)).rejects.toThrow();
     });
   });
 

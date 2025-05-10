@@ -17,6 +17,9 @@ module.exports = {
     'quotes': ['error', 'single', {'avoidEscape': true}],
     'array-bracket-spacing': ['error', 'never'],
     'camelcase': ['error', {'properties': 'always'}],
-    'semi': ['error', 'always']
+    'semi': ['error', 'always'],
+    'jest/expect-expect': 'off',
+    'jest/no-commented-out-tests': 'off',
+    'jest/no-disabled-tests': 'off',
   }
 }
