@@ -1,5 +1,5 @@
 import * as utils from './utils.js';
-import {AnnotationComment, AnnotationCommentCollection} from '@';
+import {AnnotationComment, AnnotationCommentCollection} from '@/index.js';
 
 describe('AnnotationComment', function() {
 

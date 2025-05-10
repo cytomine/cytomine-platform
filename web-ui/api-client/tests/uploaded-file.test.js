@@ -1,5 +1,5 @@
 import * as utils from './utils.js';
-import {UploadedFile, UploadedFileCollection, User} from '@';
+import {UploadedFile, UploadedFileCollection, User} from '@/index.js';
 
 describe('UploadedFile', function() {
 

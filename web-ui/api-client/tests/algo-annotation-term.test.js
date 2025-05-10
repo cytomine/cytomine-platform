@@ -1,5 +1,5 @@
 import * as utils from './utils.js';
-import {AlgoAnnotationTerm, AlgoAnnotationTermCollection} from '@';
+import {AlgoAnnotationTerm, AlgoAnnotationTermCollection} from '@/index.js';
 
 describe('AlgoAnnotationTerm', function() {
 

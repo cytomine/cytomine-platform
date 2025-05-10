@@ -1,5 +1,5 @@
 import * as utils from './utils.js';
-import {Description} from '@';
+import {Description} from '@/index.js';
 
 describe('Description', function() {
 

@@ -1,5 +1,5 @@
 import * as utils from './utils.js';
-import {ProjectRepresentative, ProjectRepresentativeCollection} from '@';
+import {ProjectRepresentative, ProjectRepresentativeCollection} from '@/index.js';
 
 describe('ProjectRepresentative', function() {
 

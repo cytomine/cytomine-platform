@@ -1,5 +1,5 @@
 import * as utils from './utils.js';
-import {Property, PropertyCollection, ImageInstance, User} from '@';
+import {Property, PropertyCollection, ImageInstance, User} from '@/index.js';
 
 describe('Property', function() {
 

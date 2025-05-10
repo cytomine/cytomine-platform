@@ -1,5 +1,5 @@
 import * as utils from './utils.js';
-import {Task} from '@';
+import {Task} from '@/index.js';
 
 describe('Task', function() {
   let task = null;

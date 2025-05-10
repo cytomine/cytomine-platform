@@ -1,5 +1,5 @@
 import * as utils from './utils.js';
-import {Configuration, ConfigurationCollection} from '@';
+import {Configuration, ConfigurationCollection} from '@/index.js';
 
 describe('Configuration', function() {
 

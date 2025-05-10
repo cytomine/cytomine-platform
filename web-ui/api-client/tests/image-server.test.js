@@ -1,5 +1,5 @@
 import * as utils from './utils.js';
-import {ImageServer, ImageServerCollection} from '@';
+import {ImageServer, ImageServerCollection} from '@/index.js';
 
 describe('ImageServer', function() {
   let totalNb = 0;

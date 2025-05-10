@@ -1,5 +1,5 @@
 import * as utils from './utils.js';
-import {TagDomainAssociation, TagDomainAssociationCollection} from '@';
+import {TagDomainAssociation, TagDomainAssociationCollection} from '@/index.js';
 
 describe('TagDomainAssociation', function() {
 

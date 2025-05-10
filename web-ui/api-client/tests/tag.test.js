@@ -1,5 +1,5 @@
 import * as utils from './utils.js';
-import {Tag, TagCollection} from '@';
+import {Tag, TagCollection} from '@/index.js';
 
 describe('Tag', function() {
 

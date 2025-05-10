@@ -1,5 +1,5 @@
 import * as utils from './utils.js';
-import {UserPosition, UserPositionCollection, User} from '@';
+import {UserPosition, UserPositionCollection, User} from '@/index.js';
 
 // WARNING the user positions created by these tests are not deleted
 describe('UserPosition', function() {

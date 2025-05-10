@@ -1,5 +1,5 @@
 import * as utils from './utils.js';
-import {Cytomine, Annotation, AnnotationType, AnnotationCollection, User} from '@';
+import {Cytomine, Annotation, AnnotationType, AnnotationCollection, User} from '@/index.js';
 
 describe('Annotation', function() {
 

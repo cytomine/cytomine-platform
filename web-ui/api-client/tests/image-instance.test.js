@@ -1,6 +1,6 @@
 import * as utils from './utils.js';
 import {ImageInstance, ImageInstanceCollection, ImageConsultation, ProjectConnection,
-  User, Description, Property, SliceInstance} from '@';
+  User, Description, Property, SliceInstance} from '@/index.js';
 
 describe('ImageInstance', function() {
 

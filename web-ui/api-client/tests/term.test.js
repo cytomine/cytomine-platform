@@ -1,5 +1,5 @@
 import * as utils from './utils.js';
-import {Term, TermCollection} from '@';
+import {Term, TermCollection} from '@/index.js';
 
 describe('Term', function() {
 

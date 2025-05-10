@@ -1,5 +1,5 @@
 import * as utils from './utils.js';
-import {Ontology, OntologyCollection, TermCollection} from '@';
+import {Ontology, OntologyCollection, TermCollection} from '@/index.js';
 
 describe('Ontology', function() {
 

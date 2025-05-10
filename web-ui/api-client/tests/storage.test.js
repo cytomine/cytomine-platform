@@ -1,5 +1,5 @@
 import * as utils from './utils.js';
-import {Storage, StorageCollection} from '@';
+import {Storage, StorageCollection} from '@/index.js';
 
 describe('Storage', function() {
 

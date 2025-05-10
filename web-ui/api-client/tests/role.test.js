@@ -1,5 +1,5 @@
 import * as utils from './utils.js';
-import {Role, RoleCollection} from '@';
+import {Role, RoleCollection} from '@/index.js';
 
 describe('Role', function() {
   let totalNb = 0;

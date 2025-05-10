@@ -1,5 +1,5 @@
 import * as utils from './utils.js';
-import {ProjectConnection, ProjectConnectionCollection, User} from '@';
+import {ProjectConnection, ProjectConnectionCollection, User} from '@/index.js';
 
 describe('ProjectConnection', function() {
   let project;

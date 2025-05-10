@@ -1,5 +1,5 @@
 import * as utils from './utils.js';
-import {Track, TrackCollection} from '@';
+import {Track, TrackCollection} from '@/index.js';
 
 describe('Track', function() {
 

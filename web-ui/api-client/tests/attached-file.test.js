@@ -1,5 +1,5 @@
 import * as utils from './utils.js';
-import {AttachedFile, AttachedFileCollection} from '@';
+import {AttachedFile, AttachedFileCollection} from '@/index.js';
 
 describe('AttachedFile', function() {
 

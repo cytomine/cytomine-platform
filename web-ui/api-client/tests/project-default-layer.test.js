@@ -1,5 +1,5 @@
 import * as utils from './utils.js';
-import {ProjectDefaultLayer, ProjectDefaultLayerCollection} from '@';
+import {ProjectDefaultLayer, ProjectDefaultLayerCollection} from '@/index.js';
 
 describe('ProjectDefaultLayer', function() {
 

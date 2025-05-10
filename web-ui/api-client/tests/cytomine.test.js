@@ -1,5 +1,5 @@
 import * as utils from './utils.js';
-import {Cytomine, User} from '@';
+import {Cytomine, User} from '@/index.js';
 import config from './config.js';
 
 describe('Cytomine', function() {

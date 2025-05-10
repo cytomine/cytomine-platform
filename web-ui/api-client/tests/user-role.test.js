@@ -1,5 +1,5 @@
 import * as utils from './utils.js';
-import {UserRole, UserRoleCollection} from '@';
+import {UserRole, UserRoleCollection} from '@/index.js';
 
 describe('UserRole', function() {
 

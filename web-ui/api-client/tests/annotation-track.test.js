@@ -1,5 +1,5 @@
 import * as utils from './utils.js';
-import {AnnotationTrack, AnnotationTrackCollection} from '@';
+import {AnnotationTrack, AnnotationTrackCollection} from '@/index.js';
 
 describe('AnnotationTrack', function() {
 
