@@ -91,12 +91,6 @@ export async function getTrack({ name = randomString(), image, color = '#ffffff'
   return getModel(track, trackCollection, forceCreation);
 }
 
-export async function getGroup({ name = randomString(), forceCreation = true } = {}) {
-  let group = new cytomine.Group({ name });
-  let groupCollection = new cytomine.GroupCollection({ nbPerPage: 1 });
-  return getModel(group, groupCollection, forceCreation);
-}
-
 export async function getImageFilter({ name = randomString(), baseUrl = 'path/', processingServer, forceCreation = true } = {}) {
   let imageFilterCollection = new cytomine.ImageFilterCollection({ nbPerPage: 1 });
   let imageFilter = new cytomine.ImageFilter({ name, baseUrl, processingServer });

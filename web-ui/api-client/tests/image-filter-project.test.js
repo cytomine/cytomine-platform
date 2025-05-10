@@ -1,6 +1,7 @@
-describe('ImageFilterProject', function() {
+// Skipped tests
+describe.skip('ImageFilterProject', function() {
 
-  /*beforeAll(async function() {
+  beforeAll(async function() {
     await utils.connect(true);
     ({id: project} = await utils.getProject());
     ({id: imageFilter, name: imageFilterName} = await utils.getImageFilter());
@@ -129,6 +130,6 @@ describe('ImageFilterProject', function() {
       });
     });
 
-  });*/
+  });
 
 });
