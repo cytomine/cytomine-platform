@@ -1,0 +1,54 @@
+services:
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - core
+
+  postgis:
+    container_name: postgis
+    image: cytomine/postgis:1.5.1
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_NAME=docker
+      - POSTGRES_USER=docker
+      - POSTGRES_PASSWORD=docker
+
+  mongo:
+    container_name: mongo
+    image: cytomine/mongo:1.0.0
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=mongoadmin
+      - MONGO_INITDB_ROOT_PASSWORD=secret
+      - MONGO_INITDB_DATABASE=cytomine
+
+  core:
+    container_name: core
+    image: cytomine/core:5.1.0
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgis
+      - mongo
+    environment:
+      - ADMIN_PASSWORD=lEiddTDyQN6FXygJeIqQKOBjb0RlSnc/MoaDeiQ7ejQ=
+      - ADMIN_PRIVATE_KEY=7d8bf4d4-29c2-4f41-84b4-9f1948dfe0df
+      - ADMIN_PUBLIC_KEY=d981df03-e105-4895-b035-f0fe77a5a035
+      - JWT_SECRET=+E85;BlNzyfNgaUGhrmauVkaTPunx2zdPxKm2ki43rpNsxeqfh760jau2V.UQ9O5A3JH0Ct1QHUI3Nqk3O13^q6b+9ztOgzFYuEv~GGtW2cJ~mFZBrzA1LRL6A6iTi8N61npP99hnCupiiNh798RbBqGYF81KJexSe75r7^ANvcfZdkTeWOvH6i_GHyoEYB10DlmVYv5QO8GHSl.0Khzc+0Hk~S6^qzdVDA1iH'D9__eCnPQxX^habv5RObIEc1e
+      - MONGO_DB_NAME=cytomine
+      - MONGO_HOST=mongo
+      - MONGO_PASS=secret
+      - MONGO_PORT=27017
+      - MONGO_USER=mongoadmin
+      - POSTGIS_DB_NAME=docker
+      - POSTGIS_HOST=postgis
+      - POSTGIS_PASS=docker
+      - POSTGIS_PORT=5432
+      - POSTGIS_USER=docker
