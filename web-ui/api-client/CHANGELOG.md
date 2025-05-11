@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.1] - 2025-05-11
+
 ### Changed
 
 - Migrate from Karma and Chai to Jest for tests
@@ -14,6 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 - Docker support
+
+### Fixed
+
+- Add missing main directive in package.json
 
 ## [3.0.0] - 2025-04-17
 
@@ -34,5 +40,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - TrustedSource model and TrustedSourceCollection
 - UserJob model and UserJobCollection
 
-[Unreleased]: https://github.com/cytomine/Cytomine-js-client/compare/3.0.0..HEAD
+[Unreleased]: https://github.com/cytomine/Cytomine-js-client/compare/3.0.1..HEAD
+[3.0.1]: https://github.com/cytomine/Cytomine-js-client/releases/tag/3.0.1
 [3.0.0]: https://github.com/cytomine/Cytomine-js-client/releases/tag/3.0.0
