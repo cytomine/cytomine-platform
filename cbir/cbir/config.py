@@ -21,6 +21,9 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     """Configurable settings."""
 
+    # App
+    api_base_path: str = "/api"
+
     # Faiss index
     filename: str = "db"
     data_path: str = "/data"
