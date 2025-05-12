@@ -48,6 +48,7 @@ async def lifespan(local_app: FastAPI) -> AsyncGenerator[None, None]:
 
     yield
 
+prefix = get_settings().api_base_path
 
 app = FastAPI(
     title="Cytomine Content Based Image Retrieval Server",
@@ -60,6 +61,6 @@ app = FastAPI(
         "url": "https://www.apache.org/licenses/LICENSE-2.0.html",
     },
 )
-app.include_router(router=images.router, prefix="/api")
-app.include_router(router=searches.router, prefix="/api")
-app.include_router(router=storages.router, prefix="/api")
+app.include_router(router=images.router, prefix=prefix)
+app.include_router(router=searches.router, prefix=prefix)
+app.include_router(router=storages.router, prefix=prefix)
