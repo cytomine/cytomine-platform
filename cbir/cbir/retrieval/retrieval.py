@@ -8,6 +8,7 @@ from PIL import Image
 from torchvision import transforms
 
 from cbir.models.model import Model
+from cbir.models.utils import run_inference
 from cbir.retrieval.indexer import Indexer
 from cbir.retrieval.store import Store
 
@@ -53,8 +54,7 @@ class ImageRetrieval:
         inputs = features_extraction(Image.open(BytesIO(image)).convert("RGB"))
         inputs = torch.unsqueeze(inputs, dim=0)
 
-        with torch.no_grad():
-            outputs = model(inputs.to(model.device)).cpu().numpy()
+        outputs = run_inference(model, inputs)
 
         last_id = self.store.last()
         ids = self.indexer.add(last_id, outputs)
@@ -118,8 +118,7 @@ class ImageRetrieval:
         inputs = features_extraction(Image.open(BytesIO(image)).convert("RGB"))
         inputs = torch.unsqueeze(inputs, dim=0)
 
-        with torch.no_grad():
-            outputs = model(inputs).cpu().numpy()
+        outputs = run_inference(model, inputs)
 
         labels, distances = self.indexer.search(outputs, nrt_neigh)
         filenames = [self.store.get(str(l)) or "" for l in labels]
