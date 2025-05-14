@@ -14,7 +14,7 @@ output-format = "colorized"
 
 [tool.poetry]
 name = "cytomine-cbir"
-version = "0.3.0"
+version = "0.4.0"
 description = ""
 authors = ["Ba Thien Le <ba.le@uliege.be>"]
 license = "Apache 2.0"
