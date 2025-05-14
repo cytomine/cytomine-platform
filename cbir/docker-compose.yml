@@ -1,6 +1,26 @@
-version: "3.9"
-
 services:
+  cbir:
+    container_name: cbir
+    image: cbir:dev-latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: dev-server
+    ports:
+      - 6000:6000
+    command: ["/bin/bash"]
+    stdin_open: true
+    restart: unless-stopped
+    environment:
+      - PYTHONUNBUFFERED=1
+      - DATA_PATH=/data
+      - DB=0
+      - HOST=redis
+      - PORT=6379
+    volumes:
+      - ./:/app
+      - cbir-data:/data
+
   redis:
     container_name: redis
     image: redis:7.2.3-alpine3.18
@@ -11,4 +31,5 @@ services:
       - redis-data:/data
 
 volumes:
+  cbir-data:
   redis-data:
