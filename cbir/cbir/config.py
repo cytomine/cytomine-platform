@@ -36,7 +36,6 @@ class Settings(BaseSettings):
     # Deep learning model
     device: torch.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     extractor: str = "resnet"
-    n_features: int = 128
     weights: str = f"/weights/{extractor}"
 
 

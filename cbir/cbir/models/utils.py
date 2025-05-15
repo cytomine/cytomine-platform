@@ -28,7 +28,7 @@ def load_model(settings: Settings) -> Model:
     """Load the model given by the settings."""
 
     model_class = get_model_class(settings.extractor)
-    model = model_class(n_features=settings.n_features, device=settings.device)
+    model = model_class(device=settings.device)
 
     if os.path.exists(settings.weights):
         state = torch.load(settings.weights, map_location=settings.device)

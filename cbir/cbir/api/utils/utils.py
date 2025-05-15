@@ -1,8 +1,7 @@
 """Utility functions for dependency injection."""
 
 from typing import List
-
-from fastapi import Depends, Query
+from fastapi import Depends, Query, Request
 from redis import Redis  # type: ignore
 
 from cbir.config import Settings, get_settings
@@ -51,6 +50,7 @@ def get_stores(
 
 
 def get_indexer(
+    request: Request,
     storage_name: str = Query(..., alias="storage"),
     index_name: str = Query(default="index", alias="index"),
     settings: Settings = Depends(get_settings),
@@ -70,12 +70,13 @@ def get_indexer(
         settings.data_path,
         storage_name,
         index_name,
-        settings.n_features,
+        request.app.state.model.n_features,
         settings.device.type == "cuda",
     )
 
 
 def get_indexers(
+    request: Request,
     storage_names: List[str] = Query(..., alias="storage"),
     index_name: str = Query(default="index", alias="index"),
     settings: Settings = Depends(get_settings),
@@ -97,7 +98,7 @@ def get_indexers(
             settings.data_path,
             storage_name,
             index_name,
-            settings.n_features,
+            request.app.state.model.n_features,
             device,
         )
         for storage_name in storage_names
