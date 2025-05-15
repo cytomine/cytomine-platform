@@ -2,6 +2,7 @@
 
 import os
 import torch
+from contextlib import nullcontext
 
 from cbir.config import Settings
 from cbir.models.hoptimus import HOptimus
@@ -51,7 +52,13 @@ def hoptim_forward(model: Model, inputs: torch.Tensor) -> torch.Tensor:
     """Forward pass for H-Optimus model."""
 
     device = model.device
-    with torch.autocast(device, dtype=torch.float16), torch.inference_mode():
+
+    amp_context = (
+        torch.autocast(device_type='cuda', dtype=torch.float16)
+        if model.device.type == 'cuda' else nullcontext()
+    )
+
+    with amp_context, torch.inference_mode():
         outputs = model(inputs)
 
     return outputs.cpu().numpy()
