@@ -6,6 +6,7 @@ RUN apt-get update \
 
 COPY cbir /app/cbir
 COPY pyproject.toml poetry.lock README.md /app
+COPY weights/resnet /app/weights/resnet
 
 WORKDIR /app
 

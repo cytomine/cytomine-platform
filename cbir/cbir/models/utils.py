@@ -1,8 +1,9 @@
 """Utilities functions for the model."""
 
 import os
-import torch
 from contextlib import nullcontext
+
+import torch
 
 from cbir.config import Settings
 from cbir.models.hoptimus import HOptimus
@@ -30,6 +31,12 @@ def load_model(settings: Settings) -> Model:
     model_class = get_model_class(settings.extractor)
     model = model_class(device=settings.device)
 
+    # Load the default weights
+    if settings.extractor == "resnet":
+        state = torch.load("/app/weights/resnet", map_location=settings.device)
+        model.load_state_dict(state, strict=True)
+
+    # Load the custom weights if provided
     if os.path.exists(settings.weights):
         state = torch.load(settings.weights, map_location=settings.device)
         model.load_state_dict(state, strict=True)
@@ -51,11 +58,10 @@ def resnet_forward(model: Model, inputs: torch.Tensor) -> torch.Tensor:
 def hoptim_forward(model: Model, inputs: torch.Tensor) -> torch.Tensor:
     """Forward pass for H-Optimus model."""
 
-    device = model.device
-
     amp_context = (
-        torch.autocast(device_type='cuda', dtype=torch.float16)
-        if model.device.type == 'cuda' else nullcontext()
+        torch.autocast(device_type="cuda", dtype=torch.float16)
+        if model.device.type == "cuda"
+        else nullcontext()
     )
 
     with amp_context, torch.inference_mode():
@@ -64,10 +70,12 @@ def hoptim_forward(model: Model, inputs: torch.Tensor) -> torch.Tensor:
     return outputs.cpu().numpy()
 
 
-def run_inference(model, inputs):
+def run_inference(model: Model, inputs: torch.Tensor) -> torch.Tensor:
+    """Run inference on the model with the given inputs."""
+
     forwards = {
-        HOptimus: lambda m, x: hoptim_forward(m, x),
-        Resnet: lambda m, x: resnet_forward(m, x),
+        HOptimus: hoptim_forward,
+        Resnet: resnet_forward,
     }
 
     extractor = type(model)
