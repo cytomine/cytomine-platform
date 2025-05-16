@@ -31,8 +31,9 @@ pillow = "^10.1.0"
 pydantic-settings = "^2.0.3"
 python-multipart = "^0.0.6"
 redis = "3.5.3"
-torch = {version = "2.1.0+cu118", source = "torch-gpu"}
-torchvision = {version = "^0.16.0+cu118", source = "torch-gpu"}
+timm = "1.0.15"
+torch = {version = "2.3.0+cu118", source = "torch-gpu"}
+torchvision = {version = "^0.18.0+cu118", source = "torch-gpu"}
 uvicorn = {extras = ["standard"], version = "^0.24.0.post1"}
 
 [tool.poetry.group.dev.dependencies]
