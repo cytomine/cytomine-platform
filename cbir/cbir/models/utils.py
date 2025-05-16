@@ -30,6 +30,12 @@ def load_model(settings: Settings) -> Model:
     model_class = get_model_class(settings.extractor)
     model = model_class(device=settings.device)
 
+    # Load the default weights
+    if settings.extractor == "resnet":
+        state = torch.load("/app/weights/resnet", map_location=settings.device)
+        model.load_state_dict(state, strict=True)
+
+    # Load the custom weights if provided
     if os.path.exists(settings.weights):
         state = torch.load(settings.weights, map_location=settings.device)
         model.load_state_dict(state, strict=True)
