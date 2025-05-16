@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2025-05-16
+
 ### Added
 
 - Add H-Optimus-0 model
@@ -49,7 +51,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add removal of an index given the image endpoint
 - Add the retrieval of similar image given a query image
 
-[Unreleased]: https://github.com/Cytomine-ULiege/Cytomine-cbir/compare/0.4.0..HEAD
+[Unreleased]: https://github.com/Cytomine-ULiege/Cytomine-cbir/compare/0.5.0..HEAD
+[0.5.0]: https://github.com/Cytomine-ULiege/Cytomine-cbir/releases/tag/0.5.0
 [0.4.0]: https://github.com/Cytomine-ULiege/Cytomine-cbir/releases/tag/0.4.0
 [0.3.0]: https://github.com/Cytomine-ULiege/Cytomine-cbir/releases/tag/0.3.0
 [0.2.0]: https://github.com/Cytomine-ULiege/Cytomine-cbir/releases/tag/0.2.0
