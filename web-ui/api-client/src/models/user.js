@@ -14,27 +14,9 @@ export default class User extends Model {
   _initProperties() {
     super._initProperties();
 
-    this.firstname = null;
-    this.lastname = null;
+    this.name = null;
+    this.fullName = null;
     this.username = null;
-    this.email = null;
-
-    this.color = null;
-
-    this.guest = null;
-    this.user = null;
-    this.admin = null;
-    this.algo = null;
-
-    this.sipAccount = null;
-
-    // properties defined only when fetching current user
-    this.passwordExpired = null;
-    this.publicKey = null;
-    this.privateKey = null;
-    this.guestByNow = null;
-    this.userByNow = null;
-    this.adminByNow = null;
   }
 
   /**
@@ -121,15 +103,19 @@ export default class User extends Model {
     return data.total;
   }
 
+  static async fetchCurrentUserKeys() {
+    const {data} = await Cytomine.instance.api.get('user/current/keys');
+    return data;
+  }
+
   /**
    * Regenerate API keys.
    *
    * @returns {this} The updated user (with new API keys)
    */
-  async regenerateKeys() {
-    this.publicKey = '';
-    this.privateKey = '';
-    return this.update();
+  static async regenerateKeys() {
+    const {data} = await Cytomine.instance.api.post('user/current/keys');
+    return data;
   }
 
   /**
@@ -177,62 +163,4 @@ export default class User extends Model {
     data.collection.forEach(item => collection.push(new Role(item)));
     return collection;
   }
-
-  /**
-   * Check the password of the current user
-   *
-   * @param {string} password       The password to check
-   * @returns {boolean}    Whether or not the password is valid
-   */
-  static async checkCurrentPassword(password) {
-    try {
-      await Cytomine.instance.api.post('user/security_check.json', {password});
-      return true;
-    }
-    catch(error) {
-      return false;
-    }
-  }
-
-  /**
-   * Change the password of the user
-   *
-   * @param {string} password       The new password
-   * @returns {this}    The user
-   */
-  async savePassword(password) {
-    if(this.isNew()) {
-      throw new Error('Cannot change password of a user with no ID.');
-    }
-    await Cytomine.instance.api.put(`user/${this.id}/password.json`, {password});
-    return this;
-  }
-
-  // TODO: uncomment once issue in core is solved (ID parameter not correctly handled)
-  // /**
-  //  * @static Fetch the API keys of the provided user
-  //  *
-  //  * @param {number} [id]         The identifier of the user (mandatory if publicKey is null)
-  //  * @param {string} [publicKey]  The public key of the user (mandatory if id is null)
-  //  *
-  //  * @returns {{publicKey: String, privateKey: String}} The API keys
-  //  */
-  // static async fetchKeys(id, publicKey) {
-  //   let {data} = await Cytomine.instance.api.get(`userkey/${publicKey}/keys.json?id=${id}`);
-  //   return data;
-  // }
-  //
-  // /**
-  //  * Fetch the API keys of the user
-  //  *
-  //  * @returns {{publicKey: String, privateKey: String}} The keys
-  //  */
-  // async fetchKeys() {
-  //   if(this.isNew()) {
-  //     throw new Error("Cannot fetch the keys of a user with no ID.");
-  //   }
-  //   return User.fetchKeys(this.id);
-  // }
-
-  // TODO: LDAP
 }

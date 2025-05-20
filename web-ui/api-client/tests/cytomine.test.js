@@ -1,20 +1,10 @@
 import * as utils from './utils.js';
-import { Cytomine, User } from '@/index.js';
+import { Cytomine } from '@/index.js';
 import config from './config.js';
 
 describe('Cytomine', () => {
   beforeAll(() => {
     new Cytomine(config.host);
-  });
-
-  describe('Login/logout', () => {
-    it('Login', async () => {
-      await Cytomine.instance.login(config.username, config.password);
-    });
-
-    it('Logout', async () => {
-      await Cytomine.instance.logout();
-    });
   });
 
   describe('UI config', () => {
@@ -46,31 +36,6 @@ describe('Cytomine', () => {
     });
   });
 
-  describe('Switch user', () => {
-    let otherUser;
-
-    beforeAll(async () => {
-      await utils.connect(true);
-      otherUser = await utils.getUser();
-    });
-
-    afterAll(async () => {
-      await utils.cleanData();
-    });
-
-    it('Switch to another user account', async () => {
-      await Cytomine.instance.switchUser(otherUser.username);
-      let currentUser = await User.fetchCurrent();
-      expect(currentUser.id).toEqual(otherUser.id);
-    });
-
-    it('Switch back to real user account', async () => {
-      await Cytomine.instance.stopSwitchUser();
-      let currentUser = await User.fetchCurrent();
-      expect(currentUser.id).not.toBe(otherUser.id);
-    });
-  });
-
   describe('Signature', () => {
     beforeAll(async () => {
       await utils.connect();
@@ -79,28 +44,6 @@ describe('Cytomine', () => {
     it('Signature', async () => {
       let signature = await Cytomine.instance.fetchSignature();
       expect(typeof signature).toBe('string');
-    });
-  });
-
-  // Failing in core
-  describe.skip('Forgot credentials', () => {
-    let user;
-
-    beforeAll(async () => {
-      await utils.connect();
-      user = await utils.getUser();
-    });
-
-    afterAll(async () => {
-      await utils.cleanData();
-    });
-
-    it('Forgot username', async () => {
-      await Cytomine.instance.forgotUsername(user.email);
-    });
-
-    it('Forgot password', async () => {
-      await Cytomine.instance.forgotPassword(user.username);
     });
   });
 

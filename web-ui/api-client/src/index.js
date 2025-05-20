@@ -1,7 +1,6 @@
 export {default as Cytomine} from './cytomine.js';
 export {default as AbstractImage} from './models/abstract-image.js';
 export {default as AbstractSlice} from './models/abstract-slice.js';
-export {default as AlgoAnnotationTerm} from './models/algo-annotation-term.js';
 export {default as Annotation, AnnotationType} from './models/annotation.js';
 export {default as AnnotationComment} from './models/annotation-comment.js';
 export {default as AnnotationGroup} from './models/annotation-group.js';
@@ -18,7 +17,6 @@ export {default as ImageFilterProject} from './models/image-filter-project.js';
 export {default as ImageGroup} from './models/image-group.js';
 export {default as ImageGroupImageInstance} from './models/image-group-image-instance.js';
 export {default as ImageInstance} from './models/image-instance.js';
-export {default as ImageServer} from './models/image-server.js';
 export {default as Ontology} from './models/ontology.js';
 export {default as Project, ProjectMemberRole} from './models/project.js';
 export {default as ProjectConnection} from './models/project-connection.js';
@@ -43,7 +41,6 @@ export {default as UserRole} from './models/user-role.js';
 
 export {default as AbstractImageCollection} from './collections/abstract-image-collection.js';
 export {default as AbstractSliceCollection} from './collections/abstract-slice-collection.js';
-export {default as AlgoAnnotationTermCollection} from './collections/algo-annotation-term-collection.js';
 export {default as AnnotationCollection} from './collections/annotation-collection.js';
 export {default as AnnotationCommentCollection} from './collections/annotation-comment-collection.js';
 export {default as AnnotationGroupCollection} from './collections/annotation-group-collection.js';
@@ -59,7 +56,6 @@ export {default as ImageFilterProjectCollection} from './collections/image-filte
 export {default as ImageGroupCollection} from './collections/image-group-collection.js';
 export {default as ImageGroupImageInstanceCollection} from './collections/image-group-image-instance-collection.js';
 export {default as ImageInstanceCollection} from './collections/image-instance-collection.js';
-export {default as ImageServerCollection} from './collections/image-server-collection.js';
 export {default as OntologyCollection} from './collections/ontology-collection.js';
 export {default as ProjectCollection} from './collections/project-collection.js';
 export {default as ProjectConnectionCollection} from './collections/project-connection-collection.js';
