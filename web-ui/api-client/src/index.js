@@ -17,6 +17,7 @@ export {default as ImageFilterProject} from './models/image-filter-project.js';
 export {default as ImageGroup} from './models/image-group.js';
 export {default as ImageGroupImageInstance} from './models/image-group-image-instance.js';
 export {default as ImageInstance} from './models/image-instance.js';
+export {default as MyAccount} from './models/my-account.js';
 export {default as Ontology} from './models/ontology.js';
 export {default as Project, ProjectMemberRole} from './models/project.js';
 export {default as ProjectConnection} from './models/project-connection.js';
