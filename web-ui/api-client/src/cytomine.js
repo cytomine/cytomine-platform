@@ -1,14 +1,28 @@
 import axios from 'axios';
 
+function prepareBasePath(basePath) {
+  if (!basePath.startsWith('/')) {
+    basePath = '/' + basePath;
+  }
+
+  if (!basePath.endsWith('/')) {
+    basePath = basePath + '/';
+  }
+
+  return basePath;
+}
+
 export default class Cytomine {
 
   /**
    * @param {string}   host             The Cytomine host
    * @param {string} [basePath=/api/]   The base path to perform API requests
+   * @param {string} iamPath            The base path to perform IAM requests
+   * @param {function} authorizationHeaderInterceptor   The Axios request interceptor for authorization header
    *
    * @returns {this} The singleton instance
    */
-  constructor(host, basePath = '/api/') {
+  constructor(host, basePath = '/api/', iamPath = '/iam/realms/cytomine/', authorizationHeaderInterceptor = null) {
     if(!Cytomine._instance) {
       if(!host.startsWith('http://') && !host.startsWith('https://')) {
         host = 'http://' + host;
@@ -17,29 +31,32 @@ export default class Cytomine {
         host = host.slice(0, -1);
       }
 
-      if(!basePath.startsWith('/')) {
-        basePath = '/' + basePath;
-      }
-
-      if(!basePath.endsWith('/')) {
-        basePath = basePath + '/';
-      }
-
       this._host = host;
-      this._basePath = basePath;
+      this._basePath = prepareBasePath(basePath);
+      this._iamPath = prepareBasePath(iamPath);
+
+      const onRejectedResponseInterceptor = error => {
+        error.message += ' - Response data: ' + JSON.stringify(error.response.data);
+        return Promise.reject(error);
+      }
+
+      this.iam = axios.create({
+        baseURL: this._host + this._iamPath,
+        withCredentials: true
+      })
+      if (authorizationHeaderInterceptor !== null) {
+        this.iam.interceptors.request.use(authorizationHeaderInterceptor);
+      }
+      this.iam.interceptors.response.use(response => response, onRejectedResponseInterceptor);
 
       this.api = axios.create({
         baseURL: this._host + this._basePath,
         withCredentials: true
       });
-
-      this.api.interceptors.response.use(function (response) {
-        return response;
-      }, function (error) {
-        error.message += ' - Response data: ' + JSON.stringify(error.response.data);
-        return Promise.reject(error);
-      });
-
+      if (authorizationHeaderInterceptor !== null) {
+        this.api.interceptors.request.use(authorizationHeaderInterceptor);
+      }
+      this.api.interceptors.response.use(response => response,  onRejectedResponseInterceptor);
       this.lastCommand = null;
 
       Cytomine._instance = this;
@@ -79,7 +96,7 @@ export default class Cytomine {
    * @returns {{alive, authenticated, version, serverURL, serverID, user}} The data returned by the server
    */
   async ping(project) {
-    let {data} = await axios.post(`${this._host}/server/ping.json`, {project}, {withCredentials: true});
+    let {data} = await this.api.post(`${this._host}/server/ping.json`, {project});
 
     return data;
   }
@@ -110,11 +127,11 @@ export default class Cytomine {
    */
   async fetchUIConfigCurrentUser(project) {
     let params = {};
-    if(project) {
+    if (project) {
       params.project = project;
     }
 
-    let {data} = await axios.get(`${this._host}/custom-ui/config.json`, {params, withCredentials: true});
+    let {data} = await this.api.get(`${this._host}/custom-ui/config.json`, {params});
     return data;
   }
 
