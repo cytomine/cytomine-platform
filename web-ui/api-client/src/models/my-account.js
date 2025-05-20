@@ -40,15 +40,15 @@ export default class MyAccount {
   }
 
   getPublicProperties() {
-    let attributes = {}
+    let attributes = {};
     let props = {};
     for (let key in this) {
       let value = this[key];
       if (value != null) {
         if (key === 'locale') {
-          attributes[key] = [value]
+          attributes[key] = [value];
         } else if (key === 'isDeveloper') {
-          attributes[key] = [String(Number(value))]
+          attributes[key] = [String(Number(value))];
         }
         else {
           props[key] = value;

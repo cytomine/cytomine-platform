@@ -38,12 +38,12 @@ export default class Cytomine {
       const onRejectedResponseInterceptor = error => {
         error.message += ' - Response data: ' + JSON.stringify(error.response.data);
         return Promise.reject(error);
-      }
+      };
 
       this.iam = axios.create({
         baseURL: this._host + this._iamPath,
         withCredentials: true
-      })
+      });
       if (authorizationHeaderInterceptor !== null) {
         this.iam.interceptors.request.use(authorizationHeaderInterceptor);
       }
