@@ -263,8 +263,7 @@ export default class Project extends Model {
       throw new Error('Cannot fetch UI configuration of a project with no ID.');
     }
 
-    let {data} = await axios.get(`${Cytomine.instance._host}/custom-ui/project/${this.id}.json`,
-      {withCredentials: true});
+    let {data} = await this.api.get(`${Cytomine.instance._host}/custom-ui/project/${this.id}.json`);
     return data;
   }
 
@@ -279,8 +278,7 @@ export default class Project extends Model {
       throw new Error('Cannot save UI configuration of a project with no ID.');
     }
 
-    let {data} = await axios.post(`${Cytomine.instance.host}/custom-ui/project/${this.id}.json`, config,
-      {withCredentials: true});
+    let {data} = await this.api.post(`${Cytomine.instance.host}/custom-ui/project/${this.id}.json`, config);
     return data;
   }
 

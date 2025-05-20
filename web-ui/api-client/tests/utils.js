@@ -91,12 +91,6 @@ export async function getTrack({ name = randomString(), image, color = '#ffffff'
   return getModel(track, trackCollection, forceCreation);
 }
 
-export async function getImageFilter({ name = randomString(), baseUrl = 'path/', processingServer, forceCreation = true } = {}) {
-  let imageFilterCollection = new cytomine.ImageFilterCollection({ nbPerPage: 1 });
-  let imageFilter = new cytomine.ImageFilter({ name, baseUrl, processingServer });
-  return getModel(imageFilter, imageFilterCollection, forceCreation);
-}
-
 export async function getImageInstance({ baseImage, project, forceCreation = true, cascadeForceCreation } = {}) {
   if (!forceCreation && baseImage) {
     throw new Error('Cannot retrieve image instance of a given base image. Either set forceCreation to true or remove baseImage');
@@ -198,19 +192,6 @@ export async function getTag({ name = randomString(), forceCreation = true } = {
   let tagCollection = new cytomine.TagCollection({ nbPerPage: 1 });
   let tag = new cytomine.Tag({ name });
   return getModel(tag, tagCollection, forceCreation);
-}
-
-export async function getMultipleImageServers(nb) {
-  let collection = new cytomine.ImageServerCollection({ nbPerPage: nb });
-  await collection.fetchPage();
-  if (collection.length < nb) {
-    throw new Error(`Not able to retrieve ${nb} image servers.`);
-  }
-  let ids = [];
-  for (let item of collection) {
-    ids.push(item.id);
-  }
-  return ids;
 }
 
 export async function getUploadedFile({ storage, filename, originalFilename, ext, contentType, forceCreation = true, cascadeForceCreation } = {}) {

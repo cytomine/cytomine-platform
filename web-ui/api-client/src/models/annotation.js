@@ -108,22 +108,6 @@ export default class Annotation extends Model {
   }
 
   /**
-   * Get the profile of the annotation, if available
-   */
-  async fetchProfile() {
-    if(this.isNew()) {
-      throw new Error('Cannot get profile for an annotation with no ID.');
-    }
-
-    if(!this._profile) {
-      let {data} = await Cytomine.instance.api.get(`${this.callbackIdentifier}/${this.id}/profile.json`);
-      this._profile = data;
-    }
-
-    return this._profile;
-  }
-
-  /**
    * Get the projections of the annotation profile, if available.
    *
    * @param {null|string} axis The axis along which the projection is performed. If null, use highest order axis

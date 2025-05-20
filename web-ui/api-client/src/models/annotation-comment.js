@@ -18,7 +18,6 @@ export default class AnnotationComment extends DomainModel {
     // used for creation only
     this.subject = null;
     this.from = null;
-    this.emails = null;
     this.annotationURL = null;
     this.shareAnnotationURL = null;
     // ---
