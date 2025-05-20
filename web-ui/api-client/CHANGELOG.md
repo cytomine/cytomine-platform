@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Authentication using IAM service instead of Core
+
+### Removed
+
+- AlgoAnnotationTerm model
+- ImageServer model
+
 ## [3.0.1] - 2025-05-11
 
 ### Changed
