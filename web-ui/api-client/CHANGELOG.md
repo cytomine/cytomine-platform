@@ -16,6 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - AlgoAnnotationTerm model
 - ImageServer model
 
+### Fixed
+
+- Fix save and fetch custom ui configurations
+
 ## [3.0.1] - 2025-05-11
 
 ### Changed
