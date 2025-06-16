@@ -258,11 +258,11 @@ export default class Project extends Model {
    *                   user (each property is an object {CONTRIBUTOR_PROJECT: boolean, ADMIN_PROJECT: boolean})
    */
   async fetchUIConfig() {
-    if(this.isNew()) {
+    if (this.isNew()) {
       throw new Error('Cannot fetch UI configuration of a project with no ID.');
     }
 
-    let {data} = await this.api.get(`${Cytomine.instance._host}/custom-ui/project/${this.id}.json`);
+    let {data} = await Cytomine.instance.api.get(`${Cytomine.instance.host}/custom-ui/project/${this.id}.json`);
     return data;
   }
 
@@ -273,11 +273,11 @@ export default class Project extends Model {
    * @returns {Object}        Resulting UI config as returned by backend (same structure as input)
    */
   async saveUIConfig(config) {
-    if(this.isNew()) {
+    if (this.isNew()) {
       throw new Error('Cannot save UI configuration of a project with no ID.');
     }
 
-    let {data} = await this.api.post(`${Cytomine.instance.host}/custom-ui/project/${this.id}.json`, config);
+    let {data} = await Cytomine.instance.api.post(`${Cytomine.instance.host}/custom-ui/project/${this.id}.json`, config);
     return data;
   }
 
