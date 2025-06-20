@@ -14,7 +14,7 @@ export default class DomainModel extends Model {
     }
 
     super(props);
-    if(object) {
+    if (object) {
       this.object = object;
     }
   }
@@ -57,11 +57,11 @@ export default class DomainModel extends Model {
   }
 
   set object(obj) {
-    if(!(obj instanceof Model)) {
+    if (!(obj instanceof Model)) {
       throw new Error('The object must be a model instance.');
     }
 
-    if(obj.isNew() || !obj.class) {
+    if (obj.isNew() || !obj.class) {
       throw new Error('The object must be fetched or saved.');
     }
 
@@ -72,14 +72,13 @@ export default class DomainModel extends Model {
 
   /** @inheritdoc */
   get uri() {
-    if(!this.domainClassName || !this.domainIdent) {
+    if (!this.domainClassName || !this.domainIdent) {
       throw new Error('The reference object must be defined to construct the URI.');
     }
 
-    if(this.isNew()) {
+    if (this.isNew()) {
       return `domain/${this.domainClassName}/${this.domainIdent}/${this.callbackIdentifier}.json`;
-    }
-    else {
+    } else {
       return `domain/${this.domainClassName}/${this.domainIdent}/${this.callbackIdentifier}/${this.id}.json`;
     }
   }

@@ -1,5 +1,5 @@
 import * as utils from './utils.js';
-import { UserRole, UserRoleCollection } from '@/index.js';
+import {UserRole, UserRoleCollection} from '@/index.js';
 
 describe('UserRole', () => {
 
@@ -10,11 +10,11 @@ describe('UserRole', () => {
 
   beforeAll(async () => {
     await utils.connect(true);
-    ({ id: user } = await utils.getUser());
-    ({ id: role } = await utils.getRole());
+    ({id: user} = await utils.getUser());
+    ({id: role} = await utils.getRole());
 
     // clean the roles automatically associated to the user during its creation (otherwise, duplicate errors)
-    let collection = await UserRoleCollection.fetchAll({ filterKey: 'user', filterValue: user });
+    let collection = await UserRoleCollection.fetchAll({filterKey: 'user', filterValue: user});
     for (let userRole of collection) {
       await userRole.delete();
     }
@@ -26,7 +26,7 @@ describe('UserRole', () => {
 
   describe('Create', () => {
     it('Create', async () => {
-      userRole = new UserRole({ role, user });
+      userRole = new UserRole({role, user});
       userRole = await userRole.save();
       expect(userRole).toBeInstanceOf(UserRole);
       expect(userRole.id).toBeDefined();
@@ -41,7 +41,7 @@ describe('UserRole', () => {
     });
 
     it('Fetch with instance method', async () => {
-      let fetchedUserRole = await new UserRole({ user, role }).fetch();
+      let fetchedUserRole = await new UserRole({user, role}).fetch();
       expect(fetchedUserRole).toBeInstanceOf(UserRole);
       expect(fetchedUserRole).toEqual(userRole);
     });
@@ -70,7 +70,7 @@ describe('UserRole', () => {
 
     beforeAll(async () => {
       let roles = await utils.getMultipleRoles(nbUserRoles);
-      let userRolePromises = roles.map(role => new UserRole({ role, user }).save());
+      let userRolePromises = roles.map(role => new UserRole({role, user}).save());
       userRoles = await Promise.all(userRolePromises);
     });
 
@@ -81,13 +81,13 @@ describe('UserRole', () => {
 
     describe('Fetch', () => {
       it('Fetch (instance method)', async () => {
-        let collection = await new UserRoleCollection({ filterKey: 'user', filterValue: user }).fetchAll();
+        let collection = await new UserRoleCollection({filterKey: 'user', filterValue: user}).fetchAll();
         expect(collection).toBeInstanceOf(UserRoleCollection);
         expect(collection).toHaveLength(nbUserRoles);
       });
 
       it('Fetch (static method)', async () => {
-        let collection = await UserRoleCollection.fetchAll({ filterKey: 'user', filterValue: user });
+        let collection = await UserRoleCollection.fetchAll({filterKey: 'user', filterValue: user});
         expect(collection).toBeInstanceOf(UserRoleCollection);
         expect(collection).toHaveLength(nbUserRoles);
       });
@@ -109,7 +109,7 @@ describe('UserRole', () => {
 
     describe('Working with the collection', () => {
       it('Iterate through', async () => {
-        let collection = await UserRoleCollection.fetchAll({ filterKey: 'user', filterValue: user });
+        let collection = await UserRoleCollection.fetchAll({filterKey: 'user', filterValue: user});
         for (let userRole of collection) {
           expect(userRole).toBeInstanceOf(UserRole);
         }
@@ -132,19 +132,19 @@ describe('UserRole', () => {
       let nbPerPage = 1;
 
       it('Fetch arbitrary page', async () => {
-        let collection = new UserRoleCollection({ nbPerPage, filterKey: 'user', filterValue: user });
+        let collection = new UserRoleCollection({nbPerPage, filterKey: 'user', filterValue: user});
         await collection.fetchPage(2);
         expect(collection).toHaveLength(nbPerPage);
       });
 
       it('Fetch next page', async () => {
-        let collection = new UserRoleCollection({ nbPerPage, filterKey: 'user', filterValue: user });
+        let collection = new UserRoleCollection({nbPerPage, filterKey: 'user', filterValue: user});
         await collection.fetchNextPage();
         expect(collection).toHaveLength(nbPerPage);
       });
 
       it('Fetch previous page', async () => {
-        let collection = new UserRoleCollection({ nbPerPage, filterKey: 'user', filterValue: user });
+        let collection = new UserRoleCollection({nbPerPage, filterKey: 'user', filterValue: user});
         collection.curPage = 2;
         await collection.fetchPreviousPage();
         expect(collection).toHaveLength(nbPerPage);

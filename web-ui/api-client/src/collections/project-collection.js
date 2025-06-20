@@ -30,7 +30,7 @@ export default class ProjectCollection extends Collection {
    *
    * @returns {Array<{id: Number, date: String, opened: Boolean}>} The last opened projects
    */
-  static async fetchLastOpened(max=0, offset=0) {
+  static async fetchLastOpened(max = 0, offset = 0) {
     let {data} = await Cytomine.instance.api.get(`project/method/lastopened.json?max=${max}&offset=${offset}`);
     return data.collection;
   }
@@ -38,10 +38,9 @@ export default class ProjectCollection extends Collection {
   // HACK: remove (temporary hack due to lack of consistency in API endpoint)
   /** @inheritdoc */
   get uri() {
-    if(this._filter.key === 'user' && this._filter.value && this.light) {
+    if (this._filter.key === 'user' && this._filter.value && this.light) {
       return `user/${this._filter.value}/project/light.json`;
-    }
-    else {
+    } else {
       return super.uri;
     }
   }
@@ -53,9 +52,9 @@ export default class ProjectCollection extends Collection {
    * @returns {{numberOfAnnotations: {min: Long, max: Long}, numberOfReviewedAnnotations: {min: Long, max: Long}, numberOfImages: {min: Long, max: Long}, members: {min: Long, max: Long}}}
    *          The max, min or list of all the projects properties. members is returned iif withMembersCount parameter is set to true
    */
-  static async fetchBounds({withMembersCount=true}={}) {
+  static async fetchBounds({withMembersCount = true} = {}) {
     let suffix = withMembersCount ? '?withMembersCount=true' : '';
-    let {data} = await Cytomine.instance.api.get('bounds/project.json'+ suffix);
+    let {data} = await Cytomine.instance.api.get('bounds/project.json' + suffix);
     return data;
   }
 

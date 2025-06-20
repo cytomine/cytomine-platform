@@ -1,5 +1,5 @@
 import * as utils from './utils.js';
-import { Cytomine } from '@/index.js';
+import {Cytomine} from '@/index.js';
 import config from './config.js';
 
 describe('Cytomine', () => {

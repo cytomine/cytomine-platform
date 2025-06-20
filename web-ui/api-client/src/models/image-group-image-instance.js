@@ -54,7 +54,7 @@ export default class ImageGroupImageInstance extends Model {
 
   /** @inheritdoc */
   get uri() {
-    if(!this.group || !this.image) {
+    if (!this.group || !this.image) {
       throw new Error('Impossible to construct ImageGroupImageInstance URI with no group ID or image ID.');
     }
 
@@ -66,8 +66,8 @@ export default class ImageGroupImageInstance extends Model {
    *
    * @returns {ImageInstance}
    */
-  async fetchNext(circular=true) {
-    if(!this.group || !this.image) {
+  async fetchNext(circular = true) {
+    if (!this.group || !this.image) {
       throw new Error('Cannot fetch next image of an image instance with no ID.');
     }
 
@@ -80,8 +80,8 @@ export default class ImageGroupImageInstance extends Model {
    *
    * @returns {ImageInstance}
    */
-  async fetchPrevious(circular=true) {
-    if(!this.group || !this.image) {
+  async fetchPrevious(circular = true) {
+    if (!this.group || !this.image) {
       throw new Error('Cannot fetch next image of an image instance with no ID.');
     }
 

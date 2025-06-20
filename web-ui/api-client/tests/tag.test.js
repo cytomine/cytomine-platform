@@ -75,7 +75,7 @@ describe('Tag', () => {
 
     beforeAll(async () => {
       let tagPromises = [];
-      for(let i = 0; i < nbTags; i++) {
+      for (let i = 0; i < nbTags; i++) {
         tagPromises.push(new Tag({name: utils.randomString(), user}).save());
       }
       tags = await Promise.all(tagPromises);
@@ -101,7 +101,7 @@ describe('Tag', () => {
       });
 
       it('Fetch with several requests', async () => {
-        let collection = await TagCollection.fetchAll({nbPerPage: Math.ceil(totalNb/3)});
+        let collection = await TagCollection.fetchAll({nbPerPage: Math.ceil(totalNb / 3)});
         expect(collection).toBeInstanceOf(TagCollection);
         expect(collection).toHaveLength(totalNb);
       });
@@ -110,7 +110,7 @@ describe('Tag', () => {
     describe('Working with the collection', () => {
       it('Iterate through', async () => {
         let collection = await TagCollection.fetchAll();
-        for(let tag of collection) {
+        for (let tag of collection) {
           expect(tag).toBeInstanceOf(Tag);
         }
       });

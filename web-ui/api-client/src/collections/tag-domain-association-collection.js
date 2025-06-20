@@ -15,10 +15,9 @@ export default class TagDomainAssociationCollection extends DomainCollection {
 
   /** @inheritdoc */
   get uri() {
-    if(this.domainClassName && this.domainIdent) {
+    if (this.domainClassName && this.domainIdent) {
       return `domain/${this.domainClassName}/${this.domainIdent}/${this.uriWithoutFilter}`;
-    }
-    else {
+    } else {
       return this.uriWithoutFilter;
     }
   }

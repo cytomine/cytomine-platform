@@ -71,14 +71,13 @@ export default class AnnotationLink extends Model {
 
   /** @inheritdoc */
   get uri() {
-    if(!this.annotation || !this.group) {
+    if (!this.annotation || !this.group) {
       throw new Error('Impossible to construct Annotation Track URI with no annotation ID or group ID.');
     }
 
-    if(this.isNew()) {
+    if (this.isNew()) {
       return 'annotationlink.json';
-    }
-    else {
+    } else {
       return `annotationgroup/${this.group}/annotation/${this.annotation}.json`;
     }
   }

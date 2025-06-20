@@ -1,5 +1,5 @@
 import * as utils from './utils.js';
-import { Configuration, ConfigurationCollection } from '@/index.js';
+import {Configuration, ConfigurationCollection} from '@/index.js';
 
 describe('Configuration', () => {
 
@@ -15,7 +15,7 @@ describe('Configuration', () => {
 
   describe('Create', () => {
     it('Create', async () => {
-      config = new Configuration({ key, value, readingRole });
+      config = new Configuration({key, value, readingRole});
       config = await config.save();
       expect(config).toBeInstanceOf(Configuration);
       expect(config.value).toEqual(value);
@@ -30,7 +30,7 @@ describe('Configuration', () => {
     });
 
     it('Fetch with instance method', async () => {
-      let fetchedConfiguration = await new Configuration({ key }).fetch();
+      let fetchedConfiguration = await new Configuration({key}).fetch();
       expect(fetchedConfiguration).toBeInstanceOf(Configuration);
       expect(fetchedConfiguration.value).toEqual(value);
     });
@@ -72,7 +72,7 @@ describe('Configuration', () => {
       let configPromises = [];
       for (let i = 0; i < nbConfigurations; i++) {
         let str = utils.randomString();
-        configPromises.push(new Configuration({ key: str, value: str, readingRole }).save());
+        configPromises.push(new Configuration({key: str, value: str, readingRole}).save());
       }
       configs = await Promise.all(configPromises);
     });
@@ -97,7 +97,7 @@ describe('Configuration', () => {
       });
 
       it('Fetch with several requests', async () => {
-        let collection = await ConfigurationCollection.fetchAll({ nbPerPage: Math.ceil(totalNb / 3) });
+        let collection = await ConfigurationCollection.fetchAll({nbPerPage: Math.ceil(totalNb / 3)});
         expect(collection).toBeInstanceOf(ConfigurationCollection);
         expect(collection).toHaveLength(totalNb);
       });
@@ -128,19 +128,19 @@ describe('Configuration', () => {
       let nbPerPage = 1;
 
       it('Fetch arbitrary page', async () => {
-        let collection = new ConfigurationCollection({ nbPerPage });
+        let collection = new ConfigurationCollection({nbPerPage});
         await collection.fetchPage(2);
         expect(collection).toHaveLength(nbPerPage);
       });
 
       it('Fetch next page', async () => {
-        let collection = new ConfigurationCollection({ nbPerPage });
+        let collection = new ConfigurationCollection({nbPerPage});
         await collection.fetchNextPage();
         expect(collection).toHaveLength(nbPerPage);
       });
 
       it('Fetch previous page', async () => {
-        let collection = new ConfigurationCollection({ nbPerPage });
+        let collection = new ConfigurationCollection({nbPerPage});
         collection.curPage = 2;
         await collection.fetchPreviousPage();
         expect(collection).toHaveLength(nbPerPage);

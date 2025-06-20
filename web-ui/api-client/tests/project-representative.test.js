@@ -1,5 +1,5 @@
 import * as utils from './utils.js';
-import { ProjectRepresentative, ProjectRepresentativeCollection } from '@/index.js';
+import {ProjectRepresentative, ProjectRepresentativeCollection} from '@/index.js';
 
 describe('ProjectRepresentative', () => {
 
@@ -14,7 +14,7 @@ describe('ProjectRepresentative', () => {
     await utils.connect(true);
     projectInstance = await utils.getProject();
     project = projectInstance.id;
-    ({ id: user } = await utils.getUser());
+    ({id: user} = await utils.getUser());
     await projectInstance.addUser(user);
   });
 
@@ -24,7 +24,7 @@ describe('ProjectRepresentative', () => {
 
   describe('Create', () => {
     it('Create', async () => {
-      projectRepresentative = new ProjectRepresentative({ user, project });
+      projectRepresentative = new ProjectRepresentative({user, project});
       projectRepresentative = await projectRepresentative.save();
       expect(projectRepresentative).toBeInstanceOf(ProjectRepresentative);
       id = projectRepresentative.id;
@@ -40,7 +40,7 @@ describe('ProjectRepresentative', () => {
     });
 
     it('Fetch with instance method', async () => {
-      let fetchedProjectRepresentative = await new ProjectRepresentative({ project, id }).fetch();
+      let fetchedProjectRepresentative = await new ProjectRepresentative({project, id}).fetch();
       expect(fetchedProjectRepresentative).toBeInstanceOf(ProjectRepresentative);
       expect(fetchedProjectRepresentative).toEqual(projectRepresentative);
     });
@@ -60,7 +60,7 @@ describe('ProjectRepresentative', () => {
     });
 
     it('Create again', async () => {
-      projectRepresentative = new ProjectRepresentative({ user, project });
+      projectRepresentative = new ProjectRepresentative({user, project});
       projectRepresentative = await projectRepresentative.save();
       id = projectRepresentative.id;
     });
@@ -81,9 +81,9 @@ describe('ProjectRepresentative', () => {
 
     beforeAll(async () => {
       async function createUserAndProjectRepresentative() {
-        let { id: tempUser } = await utils.getUser();
+        let {id: tempUser} = await utils.getUser();
         await projectInstance.addUser(tempUser);
-        let projectRepresentative = new ProjectRepresentative({ project, user: tempUser });
+        let projectRepresentative = new ProjectRepresentative({project, user: tempUser});
         await projectRepresentative.save();
         return projectRepresentative;
       }
@@ -103,13 +103,13 @@ describe('ProjectRepresentative', () => {
 
     describe('Fetch', () => {
       it('Fetch (instance method)', async () => {
-        let collection = await new ProjectRepresentativeCollection({ filterKey: 'project', filterValue: project }).fetchAll();
+        let collection = await new ProjectRepresentativeCollection({filterKey: 'project', filterValue: project}).fetchAll();
         expect(collection).toBeInstanceOf(ProjectRepresentativeCollection);
         expect(collection).toHaveLength(nbProjectRepresentatives + 1); // creator is by default representative
       });
 
       it('Fetch (static method)', async () => {
-        let collection = await ProjectRepresentativeCollection.fetchAll({ filterKey: 'project', filterValue: project });
+        let collection = await ProjectRepresentativeCollection.fetchAll({filterKey: 'project', filterValue: project});
         expect(collection).toBeInstanceOf(ProjectRepresentativeCollection);
         expect(collection).toHaveLength(nbProjectRepresentatives + 1); // creator is by default representative
       });
@@ -131,7 +131,7 @@ describe('ProjectRepresentative', () => {
 
     describe('Working with the collection', () => {
       it('Iterate through', async () => {
-        let collection = await ProjectRepresentativeCollection.fetchAll({ filterKey: 'project', filterValue: project });
+        let collection = await ProjectRepresentativeCollection.fetchAll({filterKey: 'project', filterValue: project});
         for (let projectRepresentative of collection) {
           expect(projectRepresentative).toBeInstanceOf(ProjectRepresentative);
         }
@@ -154,19 +154,19 @@ describe('ProjectRepresentative', () => {
       let nbPerPage = 1;
 
       it('Fetch arbitrary page', async () => {
-        let collection = new ProjectRepresentativeCollection({ nbPerPage, filterKey: 'project', filterValue: project });
+        let collection = new ProjectRepresentativeCollection({nbPerPage, filterKey: 'project', filterValue: project});
         await collection.fetchPage(2);
         expect(collection).toHaveLength(nbPerPage);
       });
 
       it('Fetch next page', async () => {
-        let collection = new ProjectRepresentativeCollection({ nbPerPage, filterKey: 'project', filterValue: project });
+        let collection = new ProjectRepresentativeCollection({nbPerPage, filterKey: 'project', filterValue: project});
         await collection.fetchNextPage();
         expect(collection).toHaveLength(nbPerPage);
       });
 
       it('Fetch previous page', async () => {
-        let collection = new ProjectRepresentativeCollection({ nbPerPage, filterKey: 'project', filterValue: project });
+        let collection = new ProjectRepresentativeCollection({nbPerPage, filterKey: 'project', filterValue: project});
         collection.curPage = 2;
         await collection.fetchPreviousPage();
         expect(collection).toHaveLength(nbPerPage);

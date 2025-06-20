@@ -1,5 +1,5 @@
 import * as utils from './utils.js';
-import { UserPosition, UserPositionCollection, User } from '@/index.js';
+import {UserPosition, UserPositionCollection, User} from '@/index.js';
 
 // WARNING the user positions created by these tests are not deleted
 describe('UserPosition', () => {
@@ -10,7 +10,7 @@ describe('UserPosition', () => {
 
   beforeAll(async () => {
     await utils.connect();
-    ({ id: image } = await utils.getImageInstance());
+    ({id: image} = await utils.getImageInstance());
   });
 
   afterAll(async () => {
@@ -59,7 +59,7 @@ describe('UserPosition', () => {
 
     describe('Fetch', () => {
       it('Fetch (instance method)', async () => {
-        let collection = await new UserPositionCollection({ filterKey: 'imageinstance', filterValue: image }).fetchAll();
+        let collection = await new UserPositionCollection({filterKey: 'imageinstance', filterValue: image}).fetchAll();
         expect(collection).toBeInstanceOf(UserPositionCollection);
         expect(collection.length).toBeGreaterThanOrEqual(nbUserPositions);
         totalNb = collection.length;
@@ -77,7 +77,7 @@ describe('UserPosition', () => {
       });
 
       it('Fetch (static method)', async () => {
-        let collection = await UserPositionCollection.fetchAll({ filterKey: 'imageinstance', filterValue: image });
+        let collection = await UserPositionCollection.fetchAll({filterKey: 'imageinstance', filterValue: image});
         expect(collection).toBeInstanceOf(UserPositionCollection);
         expect(collection).toHaveLength(totalNb);
       });
@@ -99,7 +99,7 @@ describe('UserPosition', () => {
 
     describe('Working with the collection', () => {
       it('Iterate through', async () => {
-        let collection = await UserPositionCollection.fetchAll({ filterKey: 'imageinstance', filterValue: image });
+        let collection = await UserPositionCollection.fetchAll({filterKey: 'imageinstance', filterValue: image});
         for (let userPosition of collection) {
           expect(userPosition).toBeInstanceOf(UserPosition);
         }
@@ -122,19 +122,19 @@ describe('UserPosition', () => {
       let nbPerPage = 1;
 
       it('Fetch arbitrary page', async () => {
-        let collection = new UserPositionCollection({ nbPerPage, filterKey: 'imageinstance', filterValue: image });
+        let collection = new UserPositionCollection({nbPerPage, filterKey: 'imageinstance', filterValue: image});
         await collection.fetchPage(2);
         expect(collection).toHaveLength(nbPerPage);
       });
 
       it('Fetch next page', async () => {
-        let collection = new UserPositionCollection({ nbPerPage, filterKey: 'imageinstance', filterValue: image });
+        let collection = new UserPositionCollection({nbPerPage, filterKey: 'imageinstance', filterValue: image});
         await collection.fetchNextPage();
         expect(collection).toHaveLength(nbPerPage);
       });
 
       it('Fetch previous page', async () => {
-        let collection = new UserPositionCollection({ nbPerPage, filterKey: 'imageinstance', filterValue: image });
+        let collection = new UserPositionCollection({nbPerPage, filterKey: 'imageinstance', filterValue: image});
         collection.curPage = 2;
         await collection.fetchPreviousPage();
         expect(collection).toHaveLength(nbPerPage);

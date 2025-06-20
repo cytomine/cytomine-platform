@@ -1,5 +1,5 @@
 import * as utils from './utils.js';
-import { UploadedFile, UploadedFileCollection, User } from '@/index.js';
+import {UploadedFile, UploadedFileCollection, User} from '@/index.js';
 
 describe('UploadedFile', () => {
 
@@ -14,8 +14,8 @@ describe('UploadedFile', () => {
 
   beforeAll(async () => {
     await utils.connect(true);
-    ({ id: user } = await User.fetchCurrent());
-    ({ id: storage } = await utils.getStorage({ user }));
+    ({id: user} = await User.fetchCurrent());
+    ({id: storage} = await utils.getStorage({user}));
   });
 
   afterAll(async () => {
@@ -42,7 +42,7 @@ describe('UploadedFile', () => {
     });
 
     it('Fetch with instance method', async () => {
-      let fetchedUploadedFile = await new UploadedFile({ id }).fetch();
+      let fetchedUploadedFile = await new UploadedFile({id}).fetch();
       expect(fetchedUploadedFile).toBeInstanceOf(UploadedFile);
       expect(fetchedUploadedFile).toEqual(uploadedFile);
     });
@@ -117,7 +117,7 @@ describe('UploadedFile', () => {
       });
 
       it('Fetch with several requests', async () => {
-        let collection = await UploadedFileCollection.fetchAll({ nbPerPage: Math.ceil(totalNb / 3) });
+        let collection = await UploadedFileCollection.fetchAll({nbPerPage: Math.ceil(totalNb / 3)});
         expect(collection).toBeInstanceOf(UploadedFileCollection);
         expect(collection).toHaveLength(totalNb);
       });
@@ -148,19 +148,19 @@ describe('UploadedFile', () => {
       let nbPerPage = 1;
 
       it('Fetch arbitrary page', async () => {
-        let collection = new UploadedFileCollection({ nbPerPage });
+        let collection = new UploadedFileCollection({nbPerPage});
         await collection.fetchPage(2);
         expect(collection).toHaveLength(nbPerPage);
       });
 
       it('Fetch next page', async () => {
-        let collection = new UploadedFileCollection({ nbPerPage });
+        let collection = new UploadedFileCollection({nbPerPage});
         await collection.fetchNextPage();
         expect(collection).toHaveLength(nbPerPage);
       });
 
       it('Fetch previous page', async () => {
-        let collection = new UploadedFileCollection({ nbPerPage });
+        let collection = new UploadedFileCollection({nbPerPage});
         collection.curPage = 2;
         await collection.fetchPreviousPage();
         expect(collection).toHaveLength(nbPerPage);

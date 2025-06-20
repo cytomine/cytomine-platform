@@ -1,12 +1,12 @@
 import * as utils from './utils.js';
-import { AnnotationTerm, AnnotationTermCollection } from '@/index.js';
+import {AnnotationTerm, AnnotationTermCollection} from '@/index.js';
 
 describe('AnnotationTerm', () => {
   let userannotation;
 
   beforeAll(async () => {
     await utils.connect();
-    ({ id: userannotation } = await utils.getAnnotation());
+    ({id: userannotation} = await utils.getAnnotation());
   });
 
   describe('AnnotationTermCollection', () => {
@@ -17,7 +17,7 @@ describe('AnnotationTerm', () => {
     beforeAll(async () => {
       async function createTermAndAnnotTerm() {
         let tempTerm = await utils.getTerm();
-        let annotTerm = new AnnotationTerm({ userannotation, term: tempTerm.id });
+        let annotTerm = new AnnotationTerm({userannotation, term: tempTerm.id});
         await annotTerm.save();
         return annotTerm;
       }
@@ -36,13 +36,13 @@ describe('AnnotationTerm', () => {
 
     describe('Fetch', () => {
       it('Fetch (instance method)', async () => {
-        let collection = await new AnnotationTermCollection({ filterKey: 'annotation', filterValue: userannotation }).fetchAll();
+        let collection = await new AnnotationTermCollection({filterKey: 'annotation', filterValue: userannotation}).fetchAll();
         expect(collection).toBeInstanceOf(AnnotationTermCollection);
         expect(collection).toHaveLength(nbAnnotationTerms);
       });
 
       it('Fetch (static method)', async () => {
-        let collection = await AnnotationTermCollection.fetchAll({ filterKey: 'annotation', filterValue: userannotation });
+        let collection = await AnnotationTermCollection.fetchAll({filterKey: 'annotation', filterValue: userannotation});
         expect(collection).toBeInstanceOf(AnnotationTermCollection);
         expect(collection).toHaveLength(nbAnnotationTerms);
       });
@@ -64,7 +64,7 @@ describe('AnnotationTerm', () => {
 
     describe('Working with the collection', () => {
       it('Iterate through', async () => {
-        let collection = await AnnotationTermCollection.fetchAll({ filterKey: 'annotation', filterValue: userannotation });
+        let collection = await AnnotationTermCollection.fetchAll({filterKey: 'annotation', filterValue: userannotation});
         for (let annotationTerm of collection) {
           expect(annotationTerm).toBeInstanceOf(AnnotationTerm);
         }

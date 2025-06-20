@@ -21,10 +21,9 @@ export default class StorageUserCollection extends Collection {
   }
 
   get uri() {
-    if(this._filter.key === 'storage' && this._filter.value) {
+    if (this._filter.key === 'storage' && this._filter.value) {
       return `storage/${this._filter.value}/usersstats.json`;
-    }
-    else {
+    } else {
       throw new Error('Filter "storage" is mandatory.');
     }
   }

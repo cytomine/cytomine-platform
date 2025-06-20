@@ -23,13 +23,12 @@ export default class ProjectConnection extends Model {
 
   /** @override */
   async save() {
-    if(this.isNew()) {
+    if (this.isNew()) {
       let {data} = await Cytomine.instance.api.post(this.uri, this.getPublicProperties());
       this.populate(data);
       // TODO: store command ID (currently not returned by backend)
       return this;
-    }
-    else {
+    } else {
       this.update();
     }
   }
@@ -52,7 +51,7 @@ export default class ProjectConnection extends Model {
   // HACK: remove (temporary hack due to lack of consistency in API endpoint)
   /** @inheritdoc */
   get uri() {
-    if(!this.image) {
+    if (!this.image) {
       throw new Error('The URI cannot be constructed if the image is not set.');
     }
     return `imageinstance/${this.image}/consultation.json`;

@@ -71,14 +71,13 @@ export default class AnnotationTrack extends Model {
 
   /** @inheritdoc */
   get uri() {
-    if(!this.annotation || !this.track) {
+    if (!this.annotation || !this.track) {
       throw new Error('Impossible to construct Annotation Track URI with no annotation ID or track ID.');
     }
 
-    if(this.isNew()) {
+    if (this.isNew()) {
       return 'annotationtrack.json';
-    }
-    else {
+    } else {
       return `annotationtrack/${this.annotation}/${this.track}.json`;
     }
   }

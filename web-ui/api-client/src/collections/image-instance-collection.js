@@ -16,7 +16,7 @@ export default class ImageInstanceCollection extends Collection {
 
   /** @inheritdoc */
   static get allowedFilters() {
-    return ['project','user', 'imagegroup'];
+    return ['project', 'user', 'imagegroup'];
   }
 
   /**
@@ -33,7 +33,7 @@ export default class ImageInstanceCollection extends Collection {
    *                    imageName: String, countCreatedAnnotations: Number, project: Number}>}
    *          The last opened images (second format used iff project and user are specified)
    */
-  static async fetchLastOpened({project, user, distinctImages=true, max=0, offset=0}={}) {
+  static async fetchLastOpened({project, user, distinctImages = true, max = 0, offset = 0} = {}) {
     let uri = project && user ? `project/${project}/user/${user}/imageconsultation.json`
       : 'imageinstance/method/lastopened.json';
     let {data} = await Cytomine.instance.api.get(`${uri}?max=${max}&offset=${offset}&distinctImages=${distinctImages}`);
@@ -49,7 +49,7 @@ export default class ImageInstanceCollection extends Collection {
    * @returns {Array<{id: Number, filename: String, originalFilename: String, projectName: String, project: Number}>}
    *          The list of images (light format)
    */
-  static async fetchAllLight({max=0, offset=0}={}) {
+  static async fetchAllLight({max = 0, offset = 0} = {}) {
     let {data} = await Cytomine.instance.api.get(`user/0/imageinstance/light.json?max=${max}&offset=${offset}`); // {user} value ignored in backend => set to 0
     return data.collection;
   }
@@ -63,7 +63,7 @@ export default class ImageInstanceCollection extends Collection {
    *          The max, min or list of all the image instances properties
    */
 
-  static async fetchBounds({project}={}) {
+  static async fetchBounds({project} = {}) {
     let {data} = await Cytomine.instance.api.get(`project/${project}/bounds/imageinstance.json`);
     return data;
   }

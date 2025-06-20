@@ -1,5 +1,5 @@
-var path = require('path');
-var config = {
+const path = require('path');
+const config = {
   mode: 'development',
   entry: ['idempotent-babel-polyfill', './src/index.js'],
   output: {
@@ -27,7 +27,6 @@ var config = {
   },
   resolve: {
     alias: {
-      //"@": path.resolve(__dirname, "dist/cytomine-client.min.js")
       '@': path.resolve(__dirname, 'src')
     }
   },

@@ -1,5 +1,5 @@
 import * as utils from './utils.js';
-import { AnnotationTrack, AnnotationTrackCollection } from '@/index.js';
+import {AnnotationTrack, AnnotationTrackCollection} from '@/index.js';
 
 describe('AnnotationTrack', () => {
 
@@ -10,8 +10,8 @@ describe('AnnotationTrack', () => {
 
   beforeAll(async () => {
     await utils.connect();
-    ({ id: annotation } = await utils.getAnnotation());
-    ({ id: track } = await utils.getTrack());
+    ({id: annotation} = await utils.getAnnotation());
+    ({id: track} = await utils.getTrack());
   });
 
   afterAll(async () => {
@@ -20,7 +20,7 @@ describe('AnnotationTrack', () => {
 
   describe('Create', () => {
     it('Create', async () => {
-      annotationTrack = new AnnotationTrack({ annotation, track });
+      annotationTrack = new AnnotationTrack({annotation, track});
       annotationTrack = await annotationTrack.save();
       expect(annotationTrack).toBeInstanceOf(AnnotationTrack);
     });
@@ -34,7 +34,7 @@ describe('AnnotationTrack', () => {
     });
 
     it('Fetch with instance method', async () => {
-      let fetchedAnnotationTrack = await new AnnotationTrack({ annotation, track }).fetch();
+      let fetchedAnnotationTrack = await new AnnotationTrack({annotation, track}).fetch();
       expect(fetchedAnnotationTrack).toBeInstanceOf(AnnotationTrack);
       expect(fetchedAnnotationTrack).toEqual(annotationTrack);
     });
@@ -64,8 +64,8 @@ describe('AnnotationTrack', () => {
     beforeAll(async () => {
       let tempImage = await utils.getImageInstance();
       async function createTrackAndAnnotTrack() {
-        let tempTrack = await utils.getTrack({ image: tempImage.id });
-        let annotTrack = new AnnotationTrack({ annotation: annotation, track: tempTrack.id });
+        let tempTrack = await utils.getTrack({image: tempImage.id});
+        let annotTrack = new AnnotationTrack({annotation: annotation, track: tempTrack.id});
         await annotTrack.save();
         return annotTrack;
       }
@@ -84,13 +84,13 @@ describe('AnnotationTrack', () => {
 
     describe('Fetch', () => {
       it('Fetch (instance method)', async () => {
-        let collection = await new AnnotationTrackCollection({ filterKey: 'annotation', filterValue: annotation }).fetchAll();
+        let collection = await new AnnotationTrackCollection({filterKey: 'annotation', filterValue: annotation}).fetchAll();
         expect(collection).toBeInstanceOf(AnnotationTrackCollection);
         expect(collection).toHaveLength(nbAnnotationTracks);
       });
 
       it('Fetch (static method)', async () => {
-        let collection = await AnnotationTrackCollection.fetchAll({ filterKey: 'annotation', filterValue: annotation });
+        let collection = await AnnotationTrackCollection.fetchAll({filterKey: 'annotation', filterValue: annotation});
         expect(collection).toBeInstanceOf(AnnotationTrackCollection);
         expect(collection).toHaveLength(nbAnnotationTracks);
       });
@@ -112,7 +112,7 @@ describe('AnnotationTrack', () => {
 
     describe('Working with the collection', () => {
       it('Iterate through', async () => {
-        let collection = await AnnotationTrackCollection.fetchAll({ filterKey: 'annotation', filterValue: annotation });
+        let collection = await AnnotationTrackCollection.fetchAll({filterKey: 'annotation', filterValue: annotation});
         for (let annotationTrack of collection) {
           expect(annotationTrack).toBeInstanceOf(AnnotationTrack);
         }

@@ -43,7 +43,7 @@ export default class Configuration extends Model {
 
   /** @override */
   get uri() {
-    if(!this.key) {
+    if (!this.key) {
       throw new Error('The URI cannot be constructed if the key is not set.');
     }
     return `${this.callbackIdentifier}/key/${this.key}.json`;

@@ -50,10 +50,9 @@ export default class Annotation extends Model {
   }
 
   set type(value) {
-    if(Object.values(AnnotationType).includes(value)) {
+    if (Object.values(AnnotationType).includes(value)) {
       this._type = value;
-    }
-    else {
+    } else {
       throw new Error('Invalid assignment: the provided annotation type does not exist.');
     }
   }
@@ -62,9 +61,9 @@ export default class Annotation extends Model {
   populate(props) {
     super.populate(props);
 
-    if(props && props.class) {
-      for(let key in AnnotationType) {
-        if(props.class.endsWith(AnnotationType[key])) {
+    if (props && props.class) {
+      for (let key in AnnotationType) {
+        if (props.class.endsWith(AnnotationType[key])) {
           this._type = AnnotationType[key];
           break;
         }
@@ -84,7 +83,7 @@ export default class Annotation extends Model {
     if (this.cropURL === null) {
       return null;
     }
-    let url = this.cropURL.split('?')[0].split('.').slice(0,-1).join('.');
+    let url = this.cropURL.split('?')[0].split('.').slice(0, -1).join('.');
     let parameters = {maxSize, ...otherParameters};
     let query = new URLSearchParams(parameters).toString();
     return `${url}.${format}?${query}`;
@@ -101,7 +100,7 @@ export default class Annotation extends Model {
    */
   static async fetch(id, annotationType = null) {
     let annotation = new this({id});
-    if(annotationType) {
+    if (annotationType) {
       annotation.type = annotationType;
     }
     return annotation.fetch();
@@ -115,15 +114,14 @@ export default class Annotation extends Model {
    *
    * @returns {Object} The annotation profile projection
    */
-  async fetchProfileProjections(axis=null, cache=false) {
-    if(this.isNew()) {
+  async fetchProfileProjections(axis = null, cache = false) {
+    if (this.isNew()) {
       throw new Error('Cannot get profile for an annotation with no ID.');
     }
 
     if (this._profileProjections && cache) {
       return this._profileProjections;
-    }
-    else {
+    } else {
       let {data} = await Cytomine.instance.api.get(`${this.callbackIdentifier}/${this.id}/profile/projections.json`,
         {params: {axis}});
       if (cache) {
@@ -140,8 +138,8 @@ export default class Annotation extends Model {
    *
    * @returns {Object} The annotation action
    */
-  async recordAction(action='select') {
-    if(this.isNew()) {
+  async recordAction(action = 'select') {
+    if (this.isNew()) {
       throw new Error('Cannot record an action on an annotation with no ID.');
     }
 
@@ -160,7 +158,7 @@ export default class Annotation extends Model {
    * @returns {Annotation} The newly created reviewed annotation
    */
   async review(terms) {
-    if(this.isNew()) {
+    if (this.isNew()) {
       throw new Error('Cannot review an annotation with no ID.');
     }
 
@@ -171,7 +169,7 @@ export default class Annotation extends Model {
   }
 
   async repeat(slice, number) {
-    if(this.isNew()) {
+    if (this.isNew()) {
       throw new Error('Cannot repeat an annotation with no ID.');
     }
 
@@ -186,7 +184,7 @@ export default class Annotation extends Model {
    * Cancel the review of the current annotation (thus deleting associated reviewed annotations)
    */
   async cancelReview() {
-    if(this.isNew()) {
+    if (this.isNew()) {
       throw new Error('Cannot cancel review an annotation with no ID.');
     }
 
@@ -203,7 +201,7 @@ export default class Annotation extends Model {
    * @returns {Annotation} The simplified annotation
    */
   async simplify(minNbPoints, maxNbPoints) {
-    if(this.isNew()) {
+    if (this.isNew()) {
       throw new Error('Cannot simplify an annotation with no ID.');
     }
 
@@ -220,7 +218,7 @@ export default class Annotation extends Model {
    * @returns {Annotation} The filled annotation
    */
   async fill() {
-    if(this.isNew()) {
+    if (this.isNew()) {
       throw new Error('Cannot fill an annotation with no ID.');
     }
 
@@ -253,15 +251,13 @@ export default class Annotation extends Model {
 
   /** @inheritdoc */
   get uri() { // cannot override callbackIdentifier because in response data, model is returned in "annotation" prop
-    if(!this._type) {
+    if (!this._type) {
       return super.uri;
-    }
-    else {
+    } else {
       let name = this._type.toLowerCase();
-      if(this.isNew()) {
+      if (this.isNew()) {
         return `${name}.json`;
-      }
-      else {
+      } else {
         return `${name}/${this.id}.json`;
       }
     }

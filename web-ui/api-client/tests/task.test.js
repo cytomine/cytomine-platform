@@ -1,5 +1,5 @@
 import * as utils from './utils.js';
-import { Task } from '@/index.js';
+import {Task} from '@/index.js';
 
 describe('Task', () => {
   let task = null;
@@ -26,7 +26,7 @@ describe('Task', () => {
     });
 
     it('Fetch with instance method', async () => {
-      let fetchedTask = await new Task({ id }).fetch();
+      let fetchedTask = await new Task({id}).fetch();
       expect(fetchedTask).toBeInstanceOf(Task);
     });
   });

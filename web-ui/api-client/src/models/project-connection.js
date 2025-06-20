@@ -27,7 +27,7 @@ export default class ProjectConnection extends Model {
     const {detect} = require('detect-browser');
     const browser = detect();
 
-    if(browser) {
+    if (browser) {
       this.browser = browser.name;
       this.browserVersion = browser.version;
       this.os = browser.os;
@@ -35,13 +35,12 @@ export default class ProjectConnection extends Model {
 
     // super.save(); // TODO: uncomment once lack of consistency in core is fixed
 
-    if(this.isNew()) {
+    if (this.isNew()) {
       let {data} = await Cytomine.instance.api.post(this.uri, this.getPublicProperties());
       this.populate(data);
       // TODO: store command ID (currently not returned by backend)
       return this;
-    }
-    else {
+    } else {
       this.update();
     }
   }
@@ -64,7 +63,7 @@ export default class ProjectConnection extends Model {
   // HACK: remove (temporary hack due to lack of consistency in API endpoint)
   /** @inheritdoc */
   get uri() {
-    if(!this.project) {
+    if (!this.project) {
       throw new Error('The URI cannot be constructed if the project is not set.');
     }
     return `project/${this.project}/userconnection.json`;

@@ -54,15 +54,14 @@ export default class UserRole extends Model {
   // HACK: remove (temporary hack due to lack of consistency in API endpoint)
   /** @inheritdoc */
   get uri() {
-    if(!this.user) {
+    if (!this.user) {
       throw new Error('The URI cannot be constructed if the user is not set.');
     }
 
-    if(this.isNew()) {
+    if (this.isNew()) {
       return `user/${this.user}/role.json`;
-    }
-    else {
-      if(!this.role) {
+    } else {
+      if (!this.role) {
         throw new Error('The URI cannot be constructed if the role is not set.');
       }
       return `user/${this.user}/role/${this.role}.json`;

@@ -32,7 +32,7 @@ export default class SliceInstance extends Model {
    * @returns {Array<user, slice, countAnnotation, countReviewedAnnotation>} The list of annotation layers with counts
    */
   async fetchAnnotationsIndex() {
-    if(this.isNew()) {
+    if (this.isNew()) {
       throw new Error('Cannot fetch annotations index of slice with no ID.');
     }
 

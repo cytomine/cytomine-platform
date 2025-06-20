@@ -9,14 +9,14 @@ export default class Collection {
    * @param {Object}  [props]         Properties of the collection to set (the allowed props are model-dependent and
    *                                  defined in _initProperties())
    */
-  constructor({nbPerPage=0, filterKey, filterValue, ...props} = {}) {
+  constructor({nbPerPage = 0, filterKey, filterValue, ...props} = {}) {
     if (new.target === Collection) {
       throw new Error('Collection is an abstract class and cannot be constructed directly.');
     }
 
     this._data = [];
     this._filter = {};
-    if(filterKey && filterValue) {
+    if (filterKey && filterValue) {
       this.setFilter(filterKey, filterValue);
     }
 
@@ -72,8 +72,8 @@ export default class Collection {
    * @param {Object} props Object containing the properties to set
    */
   setProps(props) {
-    for(let key in props) {
-      if(!key.startsWith('_')) {
+    for (let key in props) {
+      if (!key.startsWith('_')) {
         this[key] = props[key];
       }
     }
@@ -86,7 +86,7 @@ export default class Collection {
    * @param {number} value The filter value (an identifier)
    */
   setFilter(key, value) {
-    if(!this.constructor.allowedFilters.includes(key)) {
+    if (!this.constructor.allowedFilters.includes(key)) {
       throw new Error(`${key} filter not allowed for a ${this.callbackIdentifier} collection.`);
     }
     this._filter.key = key;
@@ -107,14 +107,14 @@ export default class Collection {
     return data;
   }
 
-  async _fetch(append=false) {
-    if(!this._filter.key && !this.constructor.allowedFilters.includes(null)) {
+  async _fetch(append = false) {
+    if (!this._filter.key && !this.constructor.allowedFilters.includes(null)) {
       throw new Error(`A ${this.callbackIdentifier} collection cannot be fetched without filter.`);
     }
 
     let data = await this._doFetch();
 
-    if(!append) {
+    if (!append) {
       this._data = [];
     }
 
@@ -132,21 +132,19 @@ export default class Collection {
 
   getParameters() {
     let params = {};
-    for(let key in this) {
+    for (let key in this) {
       let value = this[key];
-      if(!key.startsWith('_') && value != null) {
-        if(Array.isArray(value)) {
+      if (!key.startsWith('_') && value !== null) {
+        if (Array.isArray(value)) {
           params[key] = value.join();
-        }
-        else if(typeof value === 'object') {
-          for(let subkey in value) {
-            if(value[subkey]!= null) {
+        } else if (typeof value === 'object') {
+          for (let subkey in value) {
+            if (value[subkey] !== null) {
               let subkeyEncoded = encodeURI(`[${subkey}]`); // [ and ] are unsafe char in URL
               params[`${key}` + subkeyEncoded] = value[subkey];
             }
           }
-        }
-        else {
+        } else {
           params[key] = value;
         }
       }
@@ -160,15 +158,14 @@ export default class Collection {
    * @returns {this} collection containing all available items
    */
   async fetchAll() {
-    if(this.max > 0) {
+    if (this.max > 0) {
       this.offset = 0;
       await this.fetchPage();
-      while(this.length < this._total) {
+      while (this.length < this._total) {
         await this.fetchNextPage(true);
       }
       return this;
-    }
-    else {
+    } else {
       return this._fetch();
     }
   }
@@ -184,7 +181,7 @@ export default class Collection {
    *
    * @returns {this} collection containing all available items
    */
-  static async fetchAll({nbPerPage, filterKey, filterValue, ...props}={}) {
+  static async fetchAll({nbPerPage, filterKey, filterValue, ...props} = {}) {
     return new this({nbPerPage, filterKey, filterValue, ...props}).fetchAll();
   }
 
@@ -197,8 +194,8 @@ export default class Collection {
    *
    * @returns {this} collection containing the fetched items
    */
-  async fetchPage(numPage=0, append=false) {
-    if(numPage != null) {
+  async fetchPage(numPage = 0, append = false) {
+    if (numPage !== null) {
       this._curPage = numPage;
     }
 
@@ -206,14 +203,14 @@ export default class Collection {
     // if the nb of pages is not known yet, the verification on the upper bound will be performed after the fetch
     let postVerif = (!this._nbPages);
 
-    if(this._curPage < 0 || (!postVerif && this._curPage >= this._nbPages && this._curPage > 0)) {
+    if (this._curPage < 0 || (!postVerif && this._curPage >= this._nbPages && this._curPage > 0)) {
       throw oobError;
     }
 
-    this.offset = this._curPage*this.max;
+    this.offset = this._curPage * this.max;
     await this._fetch(append);
 
-    if(postVerif && this._curPage >= this._nbPages && this._curPage > 0) {
+    if (postVerif && this._curPage >= this._nbPages && this._curPage > 0) {
       throw oobError;
     }
 
@@ -228,7 +225,7 @@ export default class Collection {
    *
    * @returns {this} collection containing the fetched items
    */
-  async fetchNextPage(append=false) {
+  async fetchNextPage(append = false) {
     return this.fetchPage(this._curPage + 1, append);
   }
 
@@ -240,7 +237,7 @@ export default class Collection {
    *
    * @returns {this} collection containing the fetched items
    */
-  async fetchPreviousPage(append=false) {
+  async fetchPreviousPage(append = false) {
     return this.fetchPage(this._curPage - 1, append);
   }
 
@@ -250,7 +247,7 @@ export default class Collection {
    * @param {Model} model The item to add
    */
   push(model) {
-    if(!(model instanceof this.constructor.model)) {
+    if (!(model instanceof this.constructor.model)) {
       throw new Error(`A ${this.callbackIdentifier} collection can only contain ${this.callbackIdentifier} instances.`);
     }
     this._data.push(model);
@@ -271,7 +268,7 @@ export default class Collection {
    * Persist the items of the collection in the database
    */
   async save() {
-    if(!this.constructor.isSaveAllowed) {
+    if (!this.constructor.isSaveAllowed) {
       throw new Error(`A ${this.callbackIdentifier} collection cannot be saved through the API.`);
     }
     await Cytomine.instance.api.post(this.uriWithoutFilter, this._data);
@@ -313,10 +310,9 @@ export default class Collection {
    * filter was set)
    */
   get uri() {
-    if(this._filter.key && this._filter.value) {
+    if (this._filter.key && this._filter.value) {
       return `${this._filter.key}/${this._filter.value}/${this.uriWithoutFilter}`;
-    }
-    else {
+    } else {
       return this.uriWithoutFilter;
     }
   }

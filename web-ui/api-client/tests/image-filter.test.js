@@ -1,5 +1,5 @@
 import * as utils from './utils.js';
-import { ImageFilter, ImageFilterCollection } from '@/index.js';
+import {ImageFilter, ImageFilterCollection} from '@/index.js';
 
 // Skipped
 describe.skip('Image filter', () => {
@@ -17,7 +17,7 @@ describe.skip('Image filter', () => {
 
   describe('Create', () => {
     it('Create', async () => {
-      imageFilter = new ImageFilter({ name, baseUrl: 'path/' });
+      imageFilter = new ImageFilter({name, baseUrl: 'path/'});
       imageFilter = await imageFilter.save();
       id = imageFilter.id;
       expect(imageFilter).toBeInstanceOf(ImageFilter);
@@ -33,7 +33,7 @@ describe.skip('Image filter', () => {
     });
 
     it('Fetch with instance method', async () => {
-      let fetchedImageFilter = await new ImageFilter({ id }).fetch();
+      let fetchedImageFilter = await new ImageFilter({id}).fetch();
       expect(fetchedImageFilter).toBeInstanceOf(ImageFilter);
       expect(fetchedImageFilter.name).toEqual(name);
     });
@@ -98,7 +98,7 @@ describe.skip('Image filter', () => {
       });
 
       it('Fetch with several requests', async () => {
-        let collection = await ImageFilterCollection.fetchAll({ nbPerPage: Math.ceil(totalNb / 3) });
+        let collection = await ImageFilterCollection.fetchAll({nbPerPage: Math.ceil(totalNb / 3)});
         expect(collection).toBeInstanceOf(ImageFilterCollection);
         expect(collection).toHaveLength(totalNb);
       });
@@ -129,19 +129,19 @@ describe.skip('Image filter', () => {
       let nbPerPage = 1;
 
       it('Fetch arbitrary page', async () => {
-        let collection = new ImageFilterCollection({ nbPerPage });
+        let collection = new ImageFilterCollection({nbPerPage});
         await collection.fetchPage(2);
         expect(collection).toHaveLength(nbPerPage);
       });
 
       it('Fetch next page', async () => {
-        let collection = new ImageFilterCollection({ nbPerPage });
+        let collection = new ImageFilterCollection({nbPerPage});
         await collection.fetchNextPage();
         expect(collection).toHaveLength(nbPerPage);
       });
 
       it('Fetch previous page', async () => {
-        let collection = new ImageFilterCollection({ nbPerPage });
+        let collection = new ImageFilterCollection({nbPerPage});
         collection.curPage = 2;
         await collection.fetchPreviousPage();
         expect(collection).toHaveLength(nbPerPage);

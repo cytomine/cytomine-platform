@@ -44,18 +44,17 @@ export default class MyAccount {
     let props = {};
     for (let key in this) {
       let value = this[key];
-      if (value != null) {
+      if (value !== null) {
         if (key === 'locale') {
           attributes[key] = [value];
         } else if (key === 'isDeveloper') {
           attributes[key] = [String(Number(value))];
-        }
-        else {
+        } else {
           props[key] = value;
         }
       }
     }
-    props['attributes'] = { ...props['attributes'], ...attributes };
+    props['attributes'] = {...props['attributes'], ...attributes};
     return props;
   }
 
@@ -64,7 +63,7 @@ export default class MyAccount {
   }
 
   static async fetch() {
-    let { data } = await Cytomine.instance.iam.get('account');
+    let {data} = await Cytomine.instance.iam.get('account');
     return new this(data);
   }
 
@@ -74,7 +73,7 @@ export default class MyAccount {
   }
 
   static async fetchCredentials() {
-    let { data } = await Cytomine.instance.iam.get('account/credentials');
+    let {data} = await Cytomine.instance.iam.get('account/credentials');
     return data;
   }
 }

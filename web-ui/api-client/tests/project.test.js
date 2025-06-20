@@ -1,5 +1,5 @@
 import * as utils from './utils.js';
-import { Project, ProjectCollection, ProjectConnection, User, UserCollection, AnnotationType } from '@/index.js';
+import {Project, ProjectCollection, ProjectConnection, User, UserCollection, AnnotationType} from '@/index.js';
 
 describe('Project', () => {
 
@@ -11,7 +11,7 @@ describe('Project', () => {
 
   beforeAll(async () => {
     await utils.connect();
-    ({ id: ontology } = await utils.getOntology());
+    ({id: ontology} = await utils.getOntology());
   });
 
   afterAll(async () => {
@@ -20,7 +20,7 @@ describe('Project', () => {
 
   describe('Create', () => {
     it('Create', async () => {
-      project = new Project({ name, ontology });
+      project = new Project({name, ontology});
       project = await project.save();
       id = project.id;
       expect(project).toBeInstanceOf(Project);
@@ -36,7 +36,7 @@ describe('Project', () => {
     });
 
     it('Fetch with instance method', async () => {
-      let fetchedProject = await new Project({ id }).fetch();
+      let fetchedProject = await new Project({id}).fetch();
       expect(fetchedProject).toBeInstanceOf(Project);
       expect(fetchedProject.name).toEqual(name);
     });
@@ -53,7 +53,7 @@ describe('Project', () => {
     let uiConfig;
 
     beforeAll(async () => {
-      ({ id: idUser } = await utils.getUser());
+      ({id: idUser} = await utils.getUser());
     });
 
     it('Fetch creator', async () => {
@@ -147,67 +147,67 @@ describe('Project', () => {
     });
 
     it('Fetch command history', async () => {
-      let result = await project.fetchCommandHistory({ max: 10 });
+      let result = await project.fetchCommandHistory({max: 10});
       expect(result).toBeInstanceOf(Array);
     });
 
     it('Fetch evolution of connections', async () => {
-      let result = await project.fetchConnectionsEvolution({ startDate: new Date().getTime() });
+      let result = await project.fetchConnectionsEvolution({startDate: new Date().getTime()});
       expect(result).toBeInstanceOf(Array);
     });
 
     it('Fetch evolution of image consultations', async () => {
-      let result = await project.fetchImageConsultationsEvolution({ startDate: new Date().getTime() });
+      let result = await project.fetchImageConsultationsEvolution({startDate: new Date().getTime()});
       expect(result).toBeInstanceOf(Array);
     });
 
     it('Fetch evolution of annotation actions', async () => {
-      let result = await project.fetchAnnotationActionsEvolution({ startDate: new Date().getTime() });
+      let result = await project.fetchAnnotationActionsEvolution({startDate: new Date().getTime()});
       expect(result).toBeInstanceOf(Array);
     });
 
     it('Fetch evolution of annotation', async () => {
-      let result = await project.fetchAnnotationActionsEvolution({ startDate: new Date().getTime(), annotationType: AnnotationType.ALGO });
+      let result = await project.fetchAnnotationActionsEvolution({startDate: new Date().getTime(), annotationType: AnnotationType.ALGO});
       expect(result).toBeInstanceOf(Array);
     });
 
     it('Fetch number of connections', async () => {
-      let result = await project.fetchNbConnections({ startDate: new Date().getTime() });
+      let result = await project.fetchNbConnections({startDate: new Date().getTime()});
       expect(typeof result).toBe('number');
     });
 
     it('Fetch number of image consultations', async () => {
-      let result = await project.fetchNbImageConsultations({ startDate: new Date().getTime() });
+      let result = await project.fetchNbImageConsultations({startDate: new Date().getTime()});
       expect(typeof result).toBe('number');
     });
 
     it('Fetch number of annotation actions', async () => {
-      let result = await project.fetchNbAnnotationActions({ startDate: new Date().getTime() });
+      let result = await project.fetchNbAnnotationActions({startDate: new Date().getTime()});
       expect(typeof result).toBe('number');
     });
 
     it('Fetch number of annotations', async () => {
-      let result = await project.fetchNbAnnotations({ startDate: new Date().getTime(), annotationType: AnnotationType.USER });
+      let result = await project.fetchNbAnnotations({startDate: new Date().getTime(), annotationType: AnnotationType.USER});
       expect(typeof result).toBe('number');
     });
 
     it('Fetch terms statistics', async () => {
-      let result = await project.fetchStatsTerms({ startDate: new Date().getTime() });
+      let result = await project.fetchStatsTerms({startDate: new Date().getTime()});
       expect(result).toBeInstanceOf(Array);
     });
 
     it('Fetch annotated images by terms statistics', async () => {
-      let result = await project.fetchStatsAnnotatedImagesByTerm({ startDate: new Date().getTime() });
+      let result = await project.fetchStatsAnnotatedImagesByTerm({startDate: new Date().getTime()});
       expect(result).toBeInstanceOf(Array);
     });
 
     it('Fetch contributors statistics', async () => {
-      let result = await project.fetchStatsAnnotationCreators({ startDate: new Date().getTime() });
+      let result = await project.fetchStatsAnnotationCreators({startDate: new Date().getTime()});
       expect(result).toBeInstanceOf(Array);
     });
 
     it('Fetch annotated images by contributor statistics', async () => {
-      let result = await project.fetchStatsAnnotatedImagesByCreator({ startDate: new Date().getTime() });
+      let result = await project.fetchStatsAnnotatedImagesByCreator({startDate: new Date().getTime()});
       expect(result).toBeInstanceOf(Array);
     });
   });
@@ -247,9 +247,9 @@ describe('Project', () => {
       currentUser = await User.fetchCurrent();
 
       async function createAndAccessProject() {
-        let project = new Project({ name: utils.randomString(), ontology });
+        let project = new Project({name: utils.randomString(), ontology});
         await project.save();
-        await new ProjectConnection({ project: project.id }).save();
+        await new ProjectConnection({project: project.id}).save();
         return project;
       }
 
@@ -280,7 +280,7 @@ describe('Project', () => {
       });
 
       it('Fetch with several requests', async () => {
-        let collection = await ProjectCollection.fetchAll({ nbPerPage: Math.ceil(totalNb / 3) });
+        let collection = await ProjectCollection.fetchAll({nbPerPage: Math.ceil(totalNb / 3)});
         expect(collection).toBeInstanceOf(ProjectCollection);
         expect(collection).toHaveLength(totalNb);
       });
@@ -318,17 +318,17 @@ describe('Project', () => {
 
     describe('Filtering', () => {
       it('Filter on user', async () => {
-        let collection = await ProjectCollection.fetchAll({ filterKey: 'user', filterValue: currentUser.id });
+        let collection = await ProjectCollection.fetchAll({filterKey: 'user', filterValue: currentUser.id});
         expect(collection.length).toBeGreaterThanOrEqual(nbProjects);
       });
 
       it('Filter on user ; light version', async () => {
-        let collection = await ProjectCollection.fetchAll({ filterKey: 'user', filterValue: currentUser.id, light: true });
+        let collection = await ProjectCollection.fetchAll({filterKey: 'user', filterValue: currentUser.id, light: true});
         expect(collection.length).toBeGreaterThanOrEqual(nbProjects);
       });
 
       it('Filter on ontology', async () => {
-        let collection = new ProjectCollection({ filterKey: 'ontology', filterValue: ontology });
+        let collection = new ProjectCollection({filterKey: 'ontology', filterValue: ontology});
         await collection.fetchAll();
         expect(collection.length).toBeGreaterThanOrEqual(nbProjects);
       });
@@ -338,19 +338,19 @@ describe('Project', () => {
       let nbPerPage = 1;
 
       it('Fetch arbitrary page', async () => {
-        let collection = new ProjectCollection({ nbPerPage });
+        let collection = new ProjectCollection({nbPerPage});
         await collection.fetchPage(1);
         expect(collection).toHaveLength(nbPerPage);
       });
 
       it('Fetch next page', async () => {
-        let collection = new ProjectCollection({ nbPerPage });
+        let collection = new ProjectCollection({nbPerPage});
         await collection.fetchNextPage();
         expect(collection).toHaveLength(nbPerPage);
       });
 
       it('Fetch previous page', async () => {
-        let collection = new ProjectCollection({ nbPerPage });
+        let collection = new ProjectCollection({nbPerPage});
         collection.curPage = 2;
         await collection.fetchPreviousPage();
         expect(collection).toHaveLength(nbPerPage);

@@ -1,5 +1,5 @@
 import * as utils from './utils.js';
-import { AnnotationTerm } from '@/index.js';
+import {AnnotationTerm} from '@/index.js';
 
 describe('AnnotationTerm', () => {
   let userannotation;
@@ -9,19 +9,19 @@ describe('AnnotationTerm', () => {
 
   beforeAll(async () => {
     await utils.connect();
-    ({ id: userannotation } = await utils.getAnnotation());
-    ({ id: term } = await utils.getTerm());
+    ({id: userannotation} = await utils.getAnnotation());
+    ({id: term} = await utils.getTerm());
   });
 
   describe('Create', () => {
     it('Create', async () => {
-      annotationTerm = new AnnotationTerm({ userannotation, term });
+      annotationTerm = new AnnotationTerm({userannotation, term});
       annotationTerm = await annotationTerm.save();
       expect(annotationTerm).toBeInstanceOf(AnnotationTerm);
     });
 
     it('Create and clear previous', async () => {
-      annotationTerm = new AnnotationTerm({ userannotation, term });
+      annotationTerm = new AnnotationTerm({userannotation, term});
       annotationTerm = await annotationTerm.saveAndClearPrevious();
       expect(annotationTerm).toBeInstanceOf(AnnotationTerm);
     });
@@ -35,7 +35,7 @@ describe('AnnotationTerm', () => {
     });
 
     it('Fetch with instance method', async () => {
-      let fetchedAnnotationTerm = await new AnnotationTerm({ userannotation, term }).fetch();
+      let fetchedAnnotationTerm = await new AnnotationTerm({userannotation, term}).fetch();
       expect(fetchedAnnotationTerm).toBeInstanceOf(AnnotationTerm);
       expect(fetchedAnnotationTerm).toEqual(annotationTerm);
     });

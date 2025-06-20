@@ -26,10 +26,10 @@ describe('ImageInstance', () => {
     let currentUser = await User.fetchCurrent();
     idUser = currentUser.id;
 
-    ({ id: baseImage } = await utils.getAbstractImage());
+    ({id: baseImage} = await utils.getAbstractImage());
     let projectInstance = await utils.getProject();
     project = projectInstance.id;
-    await new ProjectConnection({ project }).save(); // required for image consultation
+    await new ProjectConnection({project}).save(); // required for image consultation
   });
 
   afterAll(async () => {
@@ -38,7 +38,7 @@ describe('ImageInstance', () => {
 
   describe('Create', () => {
     it('Create', async () => {
-      imageInstance = new ImageInstance({ baseImage, project });
+      imageInstance = new ImageInstance({baseImage, project});
       imageInstance = await imageInstance.save();
       id = imageInstance.id;
       expect(imageInstance).toBeInstanceOf(ImageInstance);
@@ -46,17 +46,17 @@ describe('ImageInstance', () => {
     });
 
     it('Duplicate', async () => {
-      let tempImageInstance = new ImageInstance({ baseImage, project });
+      let tempImageInstance = new ImageInstance({baseImage, project});
       await expect(tempImageInstance.save()).rejects.toThrow();
     });
 
     it('Create without base image', async () => {
-      let tempImageInstance = new ImageInstance({ baseImage });
+      let tempImageInstance = new ImageInstance({baseImage});
       await expect(tempImageInstance.save()).rejects.toThrow();
     });
 
     it('Create without project', async () => {
-      let tempImageInstance = new ImageInstance({ project });
+      let tempImageInstance = new ImageInstance({project});
       await expect(tempImageInstance.save()).rejects.toThrow();
     });
   });
@@ -69,7 +69,7 @@ describe('ImageInstance', () => {
     });
 
     it('Fetch with instance method', async () => {
-      let fetchedImageInstance = await new ImageInstance({ id }).fetch();
+      let fetchedImageInstance = await new ImageInstance({id}).fetch();
       expect(fetchedImageInstance).toBeInstanceOf(ImageInstance);
       expect(fetchedImageInstance).toEqual(imageInstance);
     });
@@ -100,10 +100,10 @@ describe('ImageInstance', () => {
     // let location = 'POLYGON((10 10, 20 10, 20 20, 10 20, 10 10), (16 16, 18 16, 18 18, 16 18, 16 16))';
 
     beforeAll(async () => {
-      imageSource = await utils.getImageInstance({ baseImage });
+      imageSource = await utils.getImageInstance({baseImage});
 
-      await new Description({ data: dataDescription }, imageSource).save();
-      property = await new Property({ key: propKey, value: propValue }, imageSource).save();
+      await new Description({data: dataDescription}, imageSource).save();
+      property = await new Property({key: propKey, value: propValue}, imageSource).save();
       // annotation = await new Annotation({location, image: imageSource.id}).save();
     });
 
@@ -208,13 +208,13 @@ describe('ImageInstance', () => {
       for (let i = 0; i < nbImageInstances; i++) {
         let tmp = utils.randomString();
         let baseImage = await utils.getAbstractImage(tmp);
-        imageInstancePromises.push(new ImageInstance({ baseImage: baseImage.id, project }).save());
+        imageInstancePromises.push(new ImageInstance({baseImage: baseImage.id, project}).save());
       }
       imageInstances = await Promise.all(imageInstancePromises);
 
       let consultationsPromise = [];
       for (let i = 0; i < nbImageInstances; i++) {
-        consultationsPromise.push(new ImageConsultation({ image: imageInstances[i].id }).save());
+        consultationsPromise.push(new ImageConsultation({image: imageInstances[i].id}).save());
       }
       await Promise.all(consultationsPromise);
     });
@@ -226,19 +226,19 @@ describe('ImageInstance', () => {
 
     describe('Fetch', () => {
       it('Fetch (instance method)', async () => {
-        let collection = await new ImageInstanceCollection({ filterKey: 'project', filterValue: project }).fetchAll();
+        let collection = await new ImageInstanceCollection({filterKey: 'project', filterValue: project}).fetchAll();
         expect(collection).toBeInstanceOf(ImageInstanceCollection);
         expect(collection).toHaveLength(nbImageInstances);
       });
 
       it('Fetch (static method)', async () => {
-        let collection = await ImageInstanceCollection.fetchAll({ filterKey: 'project', filterValue: project });
+        let collection = await ImageInstanceCollection.fetchAll({filterKey: 'project', filterValue: project});
         expect(collection).toBeInstanceOf(ImageInstanceCollection);
         expect(collection).toHaveLength(nbImageInstances);
       });
 
       it('Fetch with several requests', async () => {
-        let collection = await ImageInstanceCollection.fetchAll({ nbPerPage: 1, filterKey: 'project', filterValue: project });
+        let collection = await ImageInstanceCollection.fetchAll({nbPerPage: 1, filterKey: 'project', filterValue: project});
         expect(collection).toBeInstanceOf(ImageInstanceCollection);
         expect(collection).toHaveLength(nbImageInstances);
       });
@@ -249,7 +249,7 @@ describe('ImageInstance', () => {
       });
 
       it('Fetch last opened', async () => {
-        let collection = await ImageInstanceCollection.fetchLastOpened({ max: nbImageInstances });
+        let collection = await ImageInstanceCollection.fetchLastOpened({max: nbImageInstances});
         expect(collection).toHaveLength(nbImageInstances);
         let listId = collection.map(imageInstance => imageInstance.id);
         imageInstances.forEach(image => {
@@ -278,7 +278,7 @@ describe('ImageInstance', () => {
 
     describe('Working with the collection', () => {
       it('Iterate through', async () => {
-        let collection = await ImageInstanceCollection.fetchAll({ filterKey: 'project', filterValue: project });
+        let collection = await ImageInstanceCollection.fetchAll({filterKey: 'project', filterValue: project});
         for (let imageInstance of collection) {
           expect(imageInstance).toBeInstanceOf(ImageInstance);
         }
@@ -299,14 +299,14 @@ describe('ImageInstance', () => {
 
     describe('Specific operations', () => {
       it('Filter by project', async () => {
-        let collection = await new ImageInstanceCollection({ filterKey: 'project', filterValue: project }).fetchAll();
+        let collection = await new ImageInstanceCollection({filterKey: 'project', filterValue: project}).fetchAll();
         expect(collection).toBeInstanceOf(ImageInstanceCollection);
         expect(collection).toHaveLength(nbImageInstances);
         expect(collection.get(0).project).toBe(project);
       });
 
       it('Filter by user', async () => {
-        let collection = await new ImageInstanceCollection({ filterKey: 'user', filterValue: idUser }).fetchAll();
+        let collection = await new ImageInstanceCollection({filterKey: 'user', filterValue: idUser}).fetchAll();
         expect(collection).toBeInstanceOf(ImageInstanceCollection);
         expect(collection.length).toBeGreaterThan(nbImageInstances);
       });
@@ -316,19 +316,19 @@ describe('ImageInstance', () => {
       let nbPerPage = 1;
 
       it('Fetch arbitrary page', async () => {
-        let collection = new ImageInstanceCollection({ nbPerPage, filterKey: 'project', filterValue: project });
+        let collection = new ImageInstanceCollection({nbPerPage, filterKey: 'project', filterValue: project});
         await collection.fetchPage(2);
         expect(collection).toHaveLength(nbPerPage);
       });
 
       it('Fetch next page', async () => {
-        let collection = new ImageInstanceCollection({ nbPerPage, filterKey: 'project', filterValue: project });
+        let collection = new ImageInstanceCollection({nbPerPage, filterKey: 'project', filterValue: project});
         await collection.fetchNextPage();
         expect(collection).toHaveLength(nbPerPage);
       });
 
       it('Fetch previous page', async () => {
-        let collection = new ImageInstanceCollection({ nbPerPage, filterKey: 'project', filterValue: project });
+        let collection = new ImageInstanceCollection({nbPerPage, filterKey: 'project', filterValue: project});
         collection.curPage = 2;
         await collection.fetchPreviousPage();
         expect(collection).toHaveLength(nbPerPage);
@@ -337,23 +337,21 @@ describe('ImageInstance', () => {
 
     describe('Search', () => {
       it('Get bounds', async () => {
-        let result = await new ImageInstanceCollection.fetchBounds({ project: project });
+        let result = await new ImageInstanceCollection.fetchBounds({project: project});
         expect(result.width.max).toBeGreaterThanOrEqual(result.width.min);
       });
 
       it('Search by name', async () => {
         let searchString = imageInstances[0].instanceFilename;
-        let collection = new ImageInstanceCollection({ filterKey: 'project', filterValue: project, 'name': { 'ilike': searchString } });
+        let collection = new ImageInstanceCollection({filterKey: 'project', filterValue: project, 'name': {'ilike': searchString}});
         await collection.fetchAll();
         expect(collection).toHaveLength(1);
 
         searchString = '';
-        collection = new ImageInstanceCollection({ filterKey: 'project', filterValue: project, 'name': { 'ilike': searchString } });
+        collection = new ImageInstanceCollection({filterKey: 'project', filterValue: project, 'name': {'ilike': searchString}});
         await collection.fetchAll();
         expect(collection).toHaveLength(imageInstances.length);
       });
     });
-
   });
-
 });

@@ -1,5 +1,5 @@
 import * as utils from './utils.js';
-import { Term, TermCollection } from '@/index.js';
+import {Term, TermCollection} from '@/index.js';
 
 describe('Term', () => {
 
@@ -12,7 +12,7 @@ describe('Term', () => {
 
   beforeAll(async () => {
     await utils.connect(true);
-    ({ id: ontology } = await utils.getOntology());
+    ({id: ontology} = await utils.getOntology());
   });
 
   afterAll(async () => {
@@ -21,7 +21,7 @@ describe('Term', () => {
 
   describe('Create', () => {
     it('Create', async () => {
-      term = new Term({ name, ontology, color });
+      term = new Term({name, ontology, color});
       term = await term.save();
       id = term.id;
       expect(term).toBeInstanceOf(Term);
@@ -37,7 +37,7 @@ describe('Term', () => {
     });
 
     it('Fetch with instance method', async () => {
-      let fetchedTerm = await new Term({ id }).fetch();
+      let fetchedTerm = await new Term({id}).fetch();
       expect(fetchedTerm).toBeInstanceOf(Term);
       expect(fetchedTerm.name).toEqual(name);
     });
@@ -52,8 +52,8 @@ describe('Term', () => {
     let idParent2;
 
     beforeAll(async () => {
-      ({ id: idParent1 } = await utils.getTerm({ ontology }));
-      ({ id: idParent2 } = await utils.getTerm({ ontology }));
+      ({id: idParent1} = await utils.getTerm({ontology}));
+      ({id: idParent2} = await utils.getTerm({ontology}));
     });
 
     it('Set parent', async () => {
@@ -109,11 +109,11 @@ describe('Term', () => {
     let project;
 
     beforeAll(async () => {
-      ({ id: project } = await utils.getProject({ ontology }));
+      ({id: project} = await utils.getProject({ontology}));
 
       let termPromises = [];
       for (let i = 0; i < nbTerms; i++) {
-        termPromises.push(new Term({ name: utils.randomString(), ontology, color }).save());
+        termPromises.push(new Term({name: utils.randomString(), ontology, color}).save());
       }
       terms = await Promise.all(termPromises);
     });
@@ -138,7 +138,7 @@ describe('Term', () => {
       });
 
       it('Fetch with several requests', async () => {
-        let collection = await TermCollection.fetchAll({ nbPerPage: Math.ceil(totalNb / 3) });
+        let collection = await TermCollection.fetchAll({nbPerPage: Math.ceil(totalNb / 3)});
         expect(collection).toBeInstanceOf(TermCollection);
         expect(collection).toHaveLength(totalNb);
       });
@@ -174,7 +174,7 @@ describe('Term', () => {
       });
 
       it('Filter on ontology', async () => {
-        let collection = new TermCollection({ filterKey: 'ontology', filterValue: ontology });
+        let collection = new TermCollection({filterKey: 'ontology', filterValue: ontology});
         await collection.fetchAll();
         expect(collection.length).toBeGreaterThanOrEqual(nbTerms);
       });
@@ -184,19 +184,19 @@ describe('Term', () => {
       let nbPerPage = 1;
 
       it('Fetch arbitrary page', async () => {
-        let collection = new TermCollection({ nbPerPage });
+        let collection = new TermCollection({nbPerPage});
         await collection.fetchPage(2);
         expect(collection).toHaveLength(nbPerPage);
       });
 
       it('Fetch next page', async () => {
-        let collection = new TermCollection({ nbPerPage });
+        let collection = new TermCollection({nbPerPage});
         await collection.fetchNextPage();
         expect(collection).toHaveLength(nbPerPage);
       });
 
       it('Fetch previous page', async () => {
-        let collection = new TermCollection({ nbPerPage });
+        let collection = new TermCollection({nbPerPage});
         collection.curPage = 2;
         await collection.fetchPreviousPage();
         expect(collection).toHaveLength(nbPerPage);

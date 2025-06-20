@@ -23,11 +23,11 @@ export default class Cytomine {
    * @returns {this} The singleton instance
    */
   constructor(host, basePath = '/api/', iamPath = '/iam/realms/cytomine/', authorizationHeaderInterceptor = null) {
-    if(!Cytomine._instance) {
-      if(!host.startsWith('http://') && !host.startsWith('https://')) {
+    if (!Cytomine._instance) {
+      if (!host.startsWith('http://') && !host.startsWith('https://')) {
         host = 'http://' + host;
       }
-      if(host.endsWith('/')) {
+      if (host.endsWith('/')) {
         host = host.slice(0, -1);
       }
 
@@ -56,7 +56,7 @@ export default class Cytomine {
       if (authorizationHeaderInterceptor !== null) {
         this.api.interceptors.request.use(authorizationHeaderInterceptor);
       }
-      this.api.interceptors.response.use(response => response,  onRejectedResponseInterceptor);
+      this.api.interceptors.response.use(response => response, onRejectedResponseInterceptor);
       this.lastCommand = null;
 
       Cytomine._instance = this;
@@ -69,7 +69,7 @@ export default class Cytomine {
    * @returns {this} The singleton instance
    */
   static get instance() {
-    if(!Cytomine._instance) {
+    if (!Cytomine._instance) {
       throw new Error('No Cytomine instance was created.');
     }
     return Cytomine._instance;
@@ -145,7 +145,7 @@ export default class Cytomine {
    * @param {string} [contentType] The request content type
    * @returns {string} The generated signature
    */
-  async fetchSignature({method, uri, queryString, date, contentMD5, contentType}={}) {
+  async fetchSignature({method, uri, queryString, date, contentMD5, contentType} = {}) {
     let params = {method, forwardURI: uri, queryString, date, 'content-MD5': contentMD5, 'content-type': contentType};
 
     let {data} = await this.api.get('signature.json', {params});

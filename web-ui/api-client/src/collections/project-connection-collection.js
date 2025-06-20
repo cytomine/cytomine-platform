@@ -22,7 +22,7 @@ export default class ProjectConnectionCollection extends Collection {
   /** @override */
   setFilter(key, value) {
     super.setFilter(key, value);
-    if(key === 'project') {
+    if (key === 'project') {
       this._project = value;
     }
   }
@@ -41,7 +41,7 @@ export default class ProjectConnectionCollection extends Collection {
    * @returns {String} The URL allowing to download the list of project connections
    */
   get downloadURL() {
-    if(!this.user || !this.project) {
+    if (!this.user || !this.project) {
       return null;
     }
 
@@ -59,7 +59,7 @@ export default class ProjectConnectionCollection extends Collection {
    * @returns {Array<{time, frequency}>} The timestamps defining the period (depends on the period parameter) and the
    *                                     associated relative frequency
    */
-  static async fetchAverageConnections({project, user, afterThan, beforeThan, period='hour'}={}) {
+  static async fetchAverageConnections({project, user, afterThan, beforeThan, period = 'hour'} = {}) {
     let params = {project, user, afterThan, beforeThan, period};
     let {data} = await Cytomine.instance.api.get('averageConnections.json', {params});
     return data.collection;
@@ -75,13 +75,12 @@ export default class ProjectConnectionCollection extends Collection {
    * @param {string}  [period=hour]   The periods to consider
    * @returns {Array<{time, frequency}>} The timestamps defining the period and the associated numbers of connections
    */
-  static async fetchConnectionsFrequency({project, user, afterThan, beforeThan, period='hour'}={}) {
+  static async fetchConnectionsFrequency({project, user, afterThan, beforeThan, period = 'hour'} = {}) {
     let uri = 'connectionFrequency.json';
-    if(project) {
-      if(user) {
+    if (project) {
+      if (user) {
         uri = `project/${project}/connectionFrequency/${user}.json`;
-      }
-      else {
+      } else {
         uri = `project/${project}/connectionFrequency.json`;
       }
     }
@@ -93,7 +92,7 @@ export default class ProjectConnectionCollection extends Collection {
   // HACK: remove (temporary hack due to lack of consistency in API endpoint)
   /** @inheritdoc */
   get uri() {
-    if(!this.user || !this.project) {
+    if (!this.user || !this.project) {
       throw new Error('The URI cannot be constructed if the user and/or the project is not set.');
     }
 

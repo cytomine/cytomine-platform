@@ -29,7 +29,7 @@ export default class ImageConsultationCollection extends Collection {
     let strParam = 'export=csv';
     let paramFields = ['user', 'project'];
     paramFields.forEach(param => {
-      if(this[param] != null) {
+      if (this[param] !== null) {
         strParam += `&${param}=${this[param]}`;
       }
     });
@@ -39,15 +39,15 @@ export default class ImageConsultationCollection extends Collection {
   // HACK: remove (temporary hack due to lack of consistency in API endpoint)
   /** @inheritdoc */
   get uri() {
-    if(this.resume) {
+    if (this.resume) {
       return 'imageconsultation/resume.json';
     }
 
-    if(this.projectConnection) {
+    if (this.projectConnection) {
       return `projectConnection/${this.projectConnection}.json`;
     }
 
-    if(this.user || this.project) {
+    if (this.user || this.project) {
       return `project/${this.project}/user/${this.user}/imageconsultation.json`;
     }
 

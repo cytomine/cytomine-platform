@@ -1,5 +1,5 @@
 import * as utils from './utils.js';
-import { Description } from '@/index.js';
+import {Description} from '@/index.js';
 
 describe('Description', () => {
 
@@ -19,7 +19,7 @@ describe('Description', () => {
 
   describe('Create', () => {
     it('Create', async () => {
-      description = new Description({ data }, annotation);
+      description = new Description({data}, annotation);
       await description.save();
       expect(description).toBeInstanceOf(Description);
       expect(description.id).toBeGreaterThan(0);
@@ -27,7 +27,7 @@ describe('Description', () => {
     });
 
     it('Create without providing associated object', async () => {
-      let descriptionWithoutObject = new Description({ data });
+      let descriptionWithoutObject = new Description({data});
       await expect(descriptionWithoutObject.save()).rejects.toThrow();
     });
   });

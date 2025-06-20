@@ -44,7 +44,7 @@ export default class AbstractAnnotationTerm extends Model {
    * @param {number} term       The identifier of the term
    * @param {number} [user]       The identifier of the user
    */
-  static async delete(annotation, term, user=null) {
+  static async delete(annotation, term, user = null) {
     return new this({id: 0, annotation, term, user}).delete(); // ID set to 0 to bypass the isNew() verification
   }
 
@@ -53,8 +53,8 @@ export default class AbstractAnnotationTerm extends Model {
    *
    * @param {boolean} [clearForAllUsers=false] Whether the terms added by all users should be removed or only the current one
    */
-  async saveAndClearPrevious(clearForAllUsers=false) {
-    if(!this.annotation || !this.term) {
+  async saveAndClearPrevious(clearForAllUsers = false) {
+    if (!this.annotation || !this.term) {
       throw new Error('Cannot add annotation term with no annotation ID or term ID.');
     }
     let {data} = await Cytomine.instance.api.post(`annotation/${this.annotation}/term/${this.term}/clearBefore.json`,
@@ -67,7 +67,7 @@ export default class AbstractAnnotationTerm extends Model {
 
   /** @inheritdoc */
   get uri() {
-    if(!this.annotation || !this.term) {
+    if (!this.annotation || !this.term) {
       throw new Error('Impossible to construct Annotation Term URI with no annotation ID or term ID.');
     }
     let userStr = this.user ? `/user/${this.user}` : '';

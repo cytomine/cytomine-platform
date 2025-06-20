@@ -31,7 +31,7 @@ export default class AnnotationCommentCollection extends DomainCollection {
 
   /** @override */
   get uri() {
-    if(!this.domainClassName || !this.domainIdent) {
+    if (!this.domainClassName || !this.domainIdent) {
       throw new Error('The reference object must be defined to construct the URI.');
     }
 

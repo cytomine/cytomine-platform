@@ -1,5 +1,5 @@
 import * as utils from './utils.js';
-import { Property, PropertyCollection, ImageInstance, User } from '@/index.js';
+import {Property, PropertyCollection, ImageInstance, User} from '@/index.js';
 
 describe('Property', () => {
 
@@ -21,7 +21,7 @@ describe('Property', () => {
 
   describe('Create', () => {
     it('Create', async () => {
-      property = new Property({ key, value }, annotation);
+      property = new Property({key, value}, annotation);
       await property.save();
       expect(property).toBeInstanceOf(Property);
       id = property.id;
@@ -30,7 +30,7 @@ describe('Property', () => {
     });
 
     it('Create without providing associated object', async () => {
-      let propertyWithoutObject = new Property({ key, value });
+      let propertyWithoutObject = new Property({key, value});
       await expect(propertyWithoutObject.save()).rejects.toThrow();
     });
   });
@@ -44,14 +44,14 @@ describe('Property', () => {
     });
 
     it('Fetch with instance method', async () => {
-      let fetchedProperty = await new Property({ id }, annotation).fetch();
+      let fetchedProperty = await new Property({id}, annotation).fetch();
       expect(fetchedProperty).toBeInstanceOf(Property);
       expect(fetchedProperty.domainIdent).toEqual(annotation.id);
       expect(fetchedProperty.value).toEqual(value);
     });
 
     it('Fetch without providing associated object', async () => {
-      await expect(Property.fetch({ id })).rejects.toThrow();
+      await expect(Property.fetch({id})).rejects.toThrow();
     });
   });
 
@@ -89,10 +89,10 @@ describe('Property', () => {
 
       let propertiesPromises = [];
       for (let i = 0; i < nbPropertiesAnnot; i++) {
-        propertiesPromises.push(new Property({ key, value: utils.randomString() }, annotation).save());
+        propertiesPromises.push(new Property({key, value: utils.randomString()}, annotation).save());
       }
       for (let i = 0; i < nbPropertiesImage; i++) {
-        propertiesPromises.push(new Property({ key, value: utils.randomString() }, image).save());
+        propertiesPromises.push(new Property({key, value: utils.randomString()}, image).save());
       }
       properties = await Promise.all(propertiesPromises);
     });
@@ -104,19 +104,19 @@ describe('Property', () => {
 
     describe('Fetch', () => {
       it('Fetch (instance method)', async () => {
-        let collection = await new PropertyCollection({ object: annotation }).fetchAll();
+        let collection = await new PropertyCollection({object: annotation}).fetchAll();
         expect(collection).toBeInstanceOf(PropertyCollection);
         expect(collection).toHaveLength(nbPropertiesAnnot);
       });
 
       it('Fetch (static method)', async () => {
-        let collection = await PropertyCollection.fetchAll({ object: image });
+        let collection = await PropertyCollection.fetchAll({object: image});
         expect(collection).toBeInstanceOf(PropertyCollection);
         expect(collection).toHaveLength(nbPropertiesImage);
       });
 
       it('Fetch with several requests', async () => {
-        let collection = await PropertyCollection.fetchAll({ nbPerPage: 1, object: annotation });
+        let collection = await PropertyCollection.fetchAll({nbPerPage: 1, object: annotation});
         expect(collection).toBeInstanceOf(PropertyCollection);
         expect(collection).toHaveLength(nbPropertiesAnnot);
       });
@@ -128,14 +128,14 @@ describe('Property', () => {
 
     describe('Working with the collection', () => {
       it('Iterate through', async () => {
-        let collection = await PropertyCollection.fetchAll({ object: annotation });
+        let collection = await PropertyCollection.fetchAll({object: annotation});
         for (let property of collection) {
           expect(property).toBeInstanceOf(Property);
         }
       });
 
       it('Add item to the collection', () => {
-        let collection = new PropertyCollection({ object: annotation });
+        let collection = new PropertyCollection({object: annotation});
         expect(collection).toHaveLength(0);
         collection.push(new Property({}, annotation));
         expect(collection).toHaveLength(1);
@@ -182,19 +182,19 @@ describe('Property', () => {
       let nbPerPage = 1;
 
       it('Fetch arbitrary page', async () => {
-        let collection = new PropertyCollection({ nbPerPage, object: annotation });
+        let collection = new PropertyCollection({nbPerPage, object: annotation});
         await collection.fetchPage(2);
         expect(collection).toHaveLength(nbPerPage);
       });
 
       it('Fetch next page', async () => {
-        let collection = new PropertyCollection({ nbPerPage, object: annotation });
+        let collection = new PropertyCollection({nbPerPage, object: annotation});
         await collection.fetchNextPage();
         expect(collection).toHaveLength(nbPerPage);
       });
 
       it('Fetch previous page', async () => {
-        let collection = new PropertyCollection({ nbPerPage, object: annotation });
+        let collection = new PropertyCollection({nbPerPage, object: annotation});
         collection.curPage = 2;
         await collection.fetchPreviousPage();
         expect(collection).toHaveLength(nbPerPage);

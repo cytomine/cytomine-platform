@@ -63,14 +63,14 @@ export default class AnnotationCollection extends Collection {
    * @param   {String} [format="pdf"] The format of the file to download ("csv", "xls" or "pdf")
    * @returns {String} The download URL
    */
-  getDownloadURL(format='pdf') {
-    if(!this.project) {
+  getDownloadURL(format = 'pdf') {
+    if (!this.project) {
       throw new Error('Cannot construct download URL if no project ID is provided.');
     }
     let strParam = `format=${format}`;
     let paramFields = ['reviewed', 'terms', 'users', 'reviewUsers', 'images', 'noTerm', 'multipleTerms', 'afterThan', 'beforeThan'];
     paramFields.forEach(param => {
-      if(this[param] != null) {
+      if (this[param] !== null) {
         strParam += `&${param}=${this[param]}`;
       }
     });
@@ -86,12 +86,11 @@ export default class AnnotationCollection extends Collection {
    * @param {Array<Number>} users The identifiers of the users whose annotation layers must be accepted or rejected
    * @param {Number} task         The identifier of the Cytomine task to use
    */
-  static async reviewAll({accept, image, users, task}={}) {
+  static async reviewAll({accept, image, users, task} = {}) {
     let uri = `imageinstance/${image}/annotation/review.json?users=${users.join(',')}&task=${task}`;
-    if(accept) {
+    if (accept) {
       await Cytomine.instance.api.post(uri);
-    }
-    else {
+    } else {
       await Cytomine.instance.api.delete(uri);
     }
   }

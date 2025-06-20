@@ -42,7 +42,7 @@ export default class UserPosition extends Model {
    * @param {boolean} broadcast       if true, the last position broadcasted by the user will be returned
    * @returns the last position of the user
    */
-  static async fetchLastPosition(imageInstance, user, broadcast=false) {
+  static async fetchLastPosition(imageInstance, user, broadcast = false) {
     let uri = `imageinstance/${imageInstance}/position/${user}.json${broadcast ? '?broadcast=true' : ''}`;
     let {data} = await Cytomine.instance.api.get(uri);
     return new this(data);
@@ -61,7 +61,7 @@ export default class UserPosition extends Model {
    * @returns {this} The created position
    */
   static async create(position) {
-    if(!position || (!position.image && !position.slice)) {
+    if (!position || (!position.image && !position.slice)) {
       throw new Error('The position parameter should have an image or a slice property.');
     }
 
@@ -69,8 +69,7 @@ export default class UserPosition extends Model {
       let slice = position.slice;
       let {data} = await Cytomine.instance.api.post(`sliceinstance/${slice}/position.json`, position);
       return new this(data);
-    }
-    else {
+    } else {
       let image = position.image;
       let {data} = await Cytomine.instance.api.post(`imageinstance/${image}/position.json`, position);
       return new this(data);

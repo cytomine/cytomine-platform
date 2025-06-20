@@ -1,5 +1,5 @@
 import * as utils from './utils.js';
-import { Role, RoleCollection } from '@/index.js';
+import {Role, RoleCollection} from '@/index.js';
 
 describe('Role', () => {
   let totalNb = 0;
@@ -25,7 +25,7 @@ describe('Role', () => {
     });
 
     it('Fetch with several requests', async () => {
-      let collection = await RoleCollection.fetchAll({ nbPerPage: Math.ceil(totalNb / 3) });
+      let collection = await RoleCollection.fetchAll({nbPerPage: Math.ceil(totalNb / 3)});
       expect(collection).toBeInstanceOf(RoleCollection);
       expect(collection).toHaveLength(totalNb);
     });
@@ -56,19 +56,19 @@ describe('Role', () => {
     let nbPerPage = 1;
 
     it('Fetch arbitrary page', async () => {
-      let collection = new RoleCollection({ nbPerPage });
+      let collection = new RoleCollection({nbPerPage});
       await collection.fetchPage(2);
       expect(collection).toHaveLength(nbPerPage);
     });
 
     it('Fetch next page', async () => {
-      let collection = new RoleCollection({ nbPerPage });
+      let collection = new RoleCollection({nbPerPage});
       await collection.fetchNextPage();
       expect(collection).toHaveLength(nbPerPage);
     });
 
     it('Fetch previous page', async () => {
-      let collection = new RoleCollection({ nbPerPage });
+      let collection = new RoleCollection({nbPerPage});
       collection.curPage = 2;
       await collection.fetchPreviousPage();
       expect(collection).toHaveLength(nbPerPage);
@@ -83,7 +83,7 @@ describe('Role', () => {
     });
 
     it('Fetch with instance method', async () => {
-      let fetchedRole = await new Role({ id: role.id }).fetch();
+      let fetchedRole = await new Role({id: role.id}).fetch();
       expect(fetchedRole).toBeInstanceOf(Role);
       expect(fetchedRole).toEqual(role);
     });

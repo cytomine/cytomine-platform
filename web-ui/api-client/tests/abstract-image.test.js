@@ -1,6 +1,6 @@
 import * as utils from './utils.js';
-import { User } from '@/index';
-import { AbstractImage } from '@/index.js';
+import {User} from '@/index';
+import {AbstractImage} from '@/index.js';
 
 describe('AbstractImage', () => {
   let originalFilename = utils.randomString();
@@ -14,9 +14,9 @@ describe('AbstractImage', () => {
   beforeAll(async () => {
     await utils.connect();
 
-    ({ id: user } = await User.fetchCurrent());
-    ({ id: storage } = await utils.getStorage({ user }));
-    ({ id: uploadedFile } = await utils.getUploadedFile({ storage, originalFilename }));
+    ({id: user} = await User.fetchCurrent());
+    ({id: storage} = await utils.getStorage({user}));
+    ({id: uploadedFile} = await utils.getUploadedFile({storage, originalFilename}));
   });
 
   afterAll(async () => {
@@ -25,7 +25,7 @@ describe('AbstractImage', () => {
 
   describe('Create', () => {
     it('Create', async () => {
-      abstractImage = new AbstractImage({ originalFilename, uploadedFile, width: 1000, height: 1000 });
+      abstractImage = new AbstractImage({originalFilename, uploadedFile, width: 1000, height: 1000});
       abstractImage = await abstractImage.save();
       id = abstractImage.id;
       expect(abstractImage).toBeInstanceOf(AbstractImage);
@@ -41,7 +41,7 @@ describe('AbstractImage', () => {
     });
 
     it('Fetch with instance method', async () => {
-      let fetchedImage = await new AbstractImage({ id }).fetch();
+      let fetchedImage = await new AbstractImage({id}).fetch();
       expect(fetchedImage).toBeInstanceOf(AbstractImage);
       expect(fetchedImage.originalFilename).toEqual(originalFilename);
     });

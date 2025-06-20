@@ -17,7 +17,7 @@ export default class AnnotationGroup extends Model {
   }
 
   async merge(toMerge) {
-    if(this.isNew()) {
+    if (this.isNew()) {
       throw new Error('Cannot merge to an annotation group with no ID.');
     }
 

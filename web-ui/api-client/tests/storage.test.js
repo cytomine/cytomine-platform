@@ -1,5 +1,5 @@
 import * as utils from './utils.js';
-import { Storage, StorageCollection } from '@/index.js';
+import {Storage, StorageCollection} from '@/index.js';
 
 describe('Storage', () => {
 
@@ -12,7 +12,7 @@ describe('Storage', () => {
 
   beforeAll(async () => {
     await utils.connect(true);
-    ({ id: user } = await utils.getUser());
+    ({id: user} = await utils.getUser());
   });
 
   afterAll(async () => {
@@ -28,7 +28,7 @@ describe('Storage', () => {
     });
 
     it('Create', async () => {
-      storage = new Storage({ name, user });
+      storage = new Storage({name, user});
       storage = await storage.save();
       id = storage.id;
       expect(storage).toBeInstanceOf(Storage);
@@ -45,7 +45,7 @@ describe('Storage', () => {
     });
 
     it('Fetch with instance method', async () => {
-      let fetchedStorage = await new Storage({ id }).fetch();
+      let fetchedStorage = await new Storage({id}).fetch();
       expect(fetchedStorage).toBeInstanceOf(Storage);
       expect(fetchedStorage).toEqual(storage);
     });
@@ -86,7 +86,7 @@ describe('Storage', () => {
       let storagePromises = [];
       for (let i = 0; i < nbStorages - 1; i++) {
         let str = utils.randomString();
-        storagePromises.push(new Storage({ name: str, user }).save());
+        storagePromises.push(new Storage({name: str, user}).save());
       }
       await Promise.all(storagePromises);
     });
@@ -95,20 +95,20 @@ describe('Storage', () => {
 
     describe('Fetch', () => {
       it('Fetch (instance method)', async () => {
-        let collection = await new StorageCollection({ all: true }).fetchAll();
+        let collection = await new StorageCollection({all: true}).fetchAll();
         expect(collection).toBeInstanceOf(StorageCollection);
         expect(collection.length).toBeGreaterThanOrEqual(nbStorages);
         totalNb = collection.length;
       });
 
       it('Fetch (static method)', async () => {
-        let collection = await StorageCollection.fetchAll({ all: true });
+        let collection = await StorageCollection.fetchAll({all: true});
         expect(collection).toBeInstanceOf(StorageCollection);
         expect(collection).toHaveLength(totalNb);
       });
 
       it('Fetch with several requests', async () => {
-        let collection = await StorageCollection.fetchAll({ nbPerPage: Math.ceil(totalNb / 3), all: true });
+        let collection = await StorageCollection.fetchAll({nbPerPage: Math.ceil(totalNb / 3), all: true});
         expect(collection).toBeInstanceOf(StorageCollection);
         expect(collection).toHaveLength(totalNb);
       });
@@ -140,19 +140,19 @@ describe('Storage', () => {
       let all = true;
 
       it('Fetch arbitrary page', async () => {
-        let collection = new StorageCollection({ nbPerPage, all });
+        let collection = new StorageCollection({nbPerPage, all});
         await collection.fetchPage(2);
         expect(collection).toHaveLength(nbPerPage);
       });
 
       it('Fetch next page', async () => {
-        let collection = new StorageCollection({ nbPerPage, all });
+        let collection = new StorageCollection({nbPerPage, all});
         await collection.fetchNextPage();
         expect(collection).toHaveLength(nbPerPage);
       });
 
       it('Fetch previous page', async () => {
-        let collection = new StorageCollection({ nbPerPage, all });
+        let collection = new StorageCollection({nbPerPage, all});
         collection.curPage = 2;
         await collection.fetchPreviousPage();
         expect(collection).toHaveLength(nbPerPage);

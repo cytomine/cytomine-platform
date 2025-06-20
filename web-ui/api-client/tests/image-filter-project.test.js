@@ -1,5 +1,5 @@
 import * as utils from './utils.js';
-import { ImageFilterProject, ImageFilterProjectCollection } from '@/index.js';
+import {ImageFilterProject, ImageFilterProjectCollection} from '@/index.js';
 
 // Skipped tests
 describe.skip('ImageFilterProject', function () {
@@ -11,8 +11,8 @@ describe.skip('ImageFilterProject', function () {
 
   beforeAll(async function () {
     await utils.connect(true);
-    ({ id: project } = await utils.getProject());
-    ({ id: imageFilter, name: imageFilterName } = await utils.getImageFilter());
+    ({id: project} = await utils.getProject());
+    ({id: imageFilter, name: imageFilterName} = await utils.getImageFilter());
   });
 
   afterAll(async function () {
@@ -21,7 +21,7 @@ describe.skip('ImageFilterProject', function () {
 
   describe('Create', function () {
     it('Create', async function () {
-      imageFilterProject = new ImageFilterProject({ imageFilter, project });
+      imageFilterProject = new ImageFilterProject({imageFilter, project});
       imageFilterProject = await imageFilterProject.save();
       id = imageFilterProject.id;
       expect(imageFilterProject).toBeInstanceOf(ImageFilterProject);
@@ -50,7 +50,7 @@ describe.skip('ImageFilterProject', function () {
     beforeAll(async function () {
       async function createImageFilterAndImageFilterProject() {
         let tempFilter = await utils.getImageFilter();
-        let imageFilterProject = new ImageFilterProject({ project, imageFilter: tempFilter.id });
+        let imageFilterProject = new ImageFilterProject({project, imageFilter: tempFilter.id});
         await imageFilterProject.save();
         return imageFilterProject;
       }
@@ -82,13 +82,13 @@ describe.skip('ImageFilterProject', function () {
       });
 
       it('Fetch with several requests', async function () {
-        let collection = await ImageFilterProjectCollection.fetchAll({ nbPerPage: Math.ceil(totalNb / 3) });
+        let collection = await ImageFilterProjectCollection.fetchAll({nbPerPage: Math.ceil(totalNb / 3)});
         expect(collection).toBeInstanceOf(ImageFilterProjectCollection);
         expect(collection).toHaveLength(totalNb);
       });
 
       it('Fetch with project filter', async function () {
-        let collection = await new ImageFilterProjectCollection({ filterKey: 'project', filterValue: project }).fetchAll();
+        let collection = await new ImageFilterProjectCollection({filterKey: 'project', filterValue: project}).fetchAll();
         expect(collection).toBeInstanceOf(ImageFilterProjectCollection);
         expect(collection).toHaveLength(nbImageFilterProjects);
       });
@@ -119,19 +119,19 @@ describe.skip('ImageFilterProject', function () {
       let nbPerPage = 1;
 
       it('Fetch arbitrary page', async function () {
-        let collection = new ImageFilterProjectCollection({ nbPerPage });
+        let collection = new ImageFilterProjectCollection({nbPerPage});
         await collection.fetchPage(2);
         expect(collection).toHaveLength(nbPerPage);
       });
 
       it('Fetch next page', async function () {
-        let collection = new ImageFilterProjectCollection({ nbPerPage });
+        let collection = new ImageFilterProjectCollection({nbPerPage});
         await collection.fetchNextPage();
         expect(collection).toHaveLength(nbPerPage);
       });
 
       it('Fetch previous page', async function () {
-        let collection = new ImageFilterProjectCollection({ nbPerPage });
+        let collection = new ImageFilterProjectCollection({nbPerPage});
         collection.curPage = 2;
         await collection.fetchPreviousPage();
         expect(collection).toHaveLength(nbPerPage);

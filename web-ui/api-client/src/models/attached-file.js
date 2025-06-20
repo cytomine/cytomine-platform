@@ -18,14 +18,14 @@ export default class AttachedFile extends DomainModel {
 
   /** @inheritdoc */
   async save() {
-    if(this.isNew()) {
-      if(!this._file) {
+    if (this.isNew()) {
+      if (!this._file) {
         throw new Error('A file should be provided.');
       }
 
       let formData = new FormData();
       let props = this.getPublicProperties();
-      for(let key in props) {
+      for (let key in props) {
         formData.append(key, props[key]);
       }
       formData.append('files[]', this._file);
@@ -33,8 +33,7 @@ export default class AttachedFile extends DomainModel {
       this.populate(data);
       // TODO: store command ID (currently not returned by backend)
       return this;
-    }
-    else {
+    } else {
       return this.update();
     }
 
@@ -47,10 +46,9 @@ export default class AttachedFile extends DomainModel {
 
   /** @inheritdoc */
   get uri() {
-    if(this.isNew()) {
+    if (this.isNew()) {
       return `${this.callbackIdentifier}.json`;
-    }
-    else {
+    } else {
       return `${this.callbackIdentifier}/${this.id}.json`;
     }
   }
@@ -61,7 +59,7 @@ export default class AttachedFile extends DomainModel {
   }
 
   set file(f) {
-    if(!(f instanceof Blob)) {
+    if (!(f instanceof Blob)) {
       throw new Error('The provided object should be a Blob instance');
     }
     this._file = f;

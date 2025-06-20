@@ -13,13 +13,13 @@ export default class DomainCollection extends Collection {
    * @param {Object}  [props]         Properties of the collection to set (the allowed props are model-dependent and
    *                                  defined in _initProperties())
    */
-  constructor({object, nbPerPage=0, filterKey, filterValue, ...props}={}) {
+  constructor({object, nbPerPage = 0, filterKey, filterValue, ...props} = {}) {
     if (new.target === DomainCollection) {
       throw new Error('DomainCollection is an abstract class and cannot be constructed directly.');
     }
 
     super({nbPerPage, filterKey, filterValue, ...props});
-    if(object) {
+    if (object) {
       this.object = object;
     }
   }
@@ -35,11 +35,11 @@ export default class DomainCollection extends Collection {
    * @param {Model} obj The reference object
    */
   set object(obj) {
-    if(!(obj instanceof Model)) {
+    if (!(obj instanceof Model)) {
       throw new Error('The object must be a model instance.');
     }
 
-    if(obj.isNew() || !obj.class) {
+    if (obj.isNew() || !obj.class) {
       throw new Error('The object must be fetched or saved.');
     }
 
@@ -64,7 +64,7 @@ export default class DomainCollection extends Collection {
 
   /** @inheritdoc */
   get uri() {
-    if(!this.domainClassName || !this.domainIdent) {
+    if (!this.domainClassName || !this.domainIdent) {
       throw new Error('The reference object must be defined to construct the URI.');
     }
 

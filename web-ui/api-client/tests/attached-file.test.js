@@ -1,9 +1,9 @@
 import * as utils from './utils.js';
-import { AttachedFile, AttachedFileCollection } from '@/index.js';
+import {AttachedFile, AttachedFileCollection} from '@/index.js';
 
 describe('AttachedFile', () => {
 
-  let file = new Blob(['<a id="a"><b id="b">hey!</b></a>'], { type: 'text/xml' });
+  let file = new Blob(['<a id="a"><b id="b">hey!</b></a>'], {type: 'text/xml'});
   let filename = 'test_file.xml';
   let project;
 
@@ -21,7 +21,7 @@ describe('AttachedFile', () => {
 
   describe('Create', () => {
     it('Create', async () => {
-      attachedFile = new AttachedFile({ file, filename }, project);
+      attachedFile = new AttachedFile({file, filename}, project);
       await attachedFile.save();
       id = attachedFile.id;
 
@@ -30,7 +30,7 @@ describe('AttachedFile', () => {
     });
 
     it('Create without providing associated object', async () => {
-      let attachedFileWithoutObject = new AttachedFile({ file });
+      let attachedFileWithoutObject = new AttachedFile({file});
 
       await expect(attachedFileWithoutObject.save()).rejects.toThrow();
     });
@@ -52,7 +52,7 @@ describe('AttachedFile', () => {
     });
 
     it('Fetch with instance method', async () => {
-      let fetchedFile = await new AttachedFile({ id }).fetch();
+      let fetchedFile = await new AttachedFile({id}).fetch();
 
       expect(fetchedFile).toBeInstanceOf(AttachedFile);
       expect(fetchedFile.domainIdent).toEqual(project.id);
@@ -60,7 +60,7 @@ describe('AttachedFile', () => {
     });
 
     it('Fetch without providing associated object', async () => {
-      await expect(AttachedFile.fetch({ id })).rejects.toThrow();
+      await expect(AttachedFile.fetch({id})).rejects.toThrow();
     });
   });
 
@@ -92,7 +92,7 @@ describe('AttachedFile', () => {
     beforeAll(async () => {
       let attachedFilePromises = [];
       for (let i = 0; i < nbAttachedFiles; i++) {
-        attachedFilePromises.push(new AttachedFile({ file }, project).save());
+        attachedFilePromises.push(new AttachedFile({file}, project).save());
       }
       attachedFiles = await Promise.all(attachedFilePromises);
     });
@@ -104,7 +104,7 @@ describe('AttachedFile', () => {
 
     describe('Fetch', () => {
       it('Fetch (instance method)', async () => {
-        let collection = await new AttachedFileCollection({ object: project }).fetchAll();
+        let collection = await new AttachedFileCollection({object: project}).fetchAll();
 
         expect(collection).toBeInstanceOf(AttachedFileCollection);
         expect(collection.length).toBeGreaterThanOrEqual(nbAttachedFiles);
@@ -112,14 +112,14 @@ describe('AttachedFile', () => {
       });
 
       it('Fetch (static method)', async () => {
-        let collection = await AttachedFileCollection.fetchAll({ object: project });
+        let collection = await AttachedFileCollection.fetchAll({object: project});
 
         expect(collection).toBeInstanceOf(AttachedFileCollection);
         expect(collection).toHaveLength(totalNb);
       });
 
       it('Fetch with several requests', async () => {
-        let collection = await AttachedFileCollection.fetchAll({ object: project, nbPerPage: Math.ceil(totalNb / 3) });
+        let collection = await AttachedFileCollection.fetchAll({object: project, nbPerPage: Math.ceil(totalNb / 3)});
         expect(collection).toBeInstanceOf(AttachedFileCollection);
         expect(collection).toHaveLength(totalNb);
       });
@@ -131,21 +131,21 @@ describe('AttachedFile', () => {
 
     describe('Working with the collection', () => {
       it('Iterate through', async () => {
-        let collection = await AttachedFileCollection.fetchAll({ object: project });
+        let collection = await AttachedFileCollection.fetchAll({object: project});
         for (let attachedFile of collection) {
           expect(attachedFile).toBeInstanceOf(AttachedFile);
         }
       });
 
       it('Add item to the collection', () => {
-        let collection = new AttachedFileCollection({ object: project });
+        let collection = new AttachedFileCollection({object: project});
         expect(collection).toHaveLength(0);
-        collection.push(new AttachedFile({ file }, project));
+        collection.push(new AttachedFile({file}, project));
         expect(collection).toHaveLength(1);
       });
 
       it('Add arbitrary object to the collection', () => {
-        let collection = new AttachedFileCollection({ object: project });
+        let collection = new AttachedFileCollection({object: project});
         expect(collection.push.bind(collection, {})).toThrow();
       });
     });
@@ -154,19 +154,19 @@ describe('AttachedFile', () => {
       let nbPerPage = 1;
 
       it('Fetch arbitrary page', async () => {
-        let collection = new AttachedFileCollection({ object: project, nbPerPage });
+        let collection = new AttachedFileCollection({object: project, nbPerPage});
         await collection.fetchPage(2);
         expect(collection).toHaveLength(nbPerPage);
       });
 
       it('Fetch next page', async () => {
-        let collection = new AttachedFileCollection({ object: project, nbPerPage });
+        let collection = new AttachedFileCollection({object: project, nbPerPage});
         await collection.fetchNextPage();
         expect(collection).toHaveLength(nbPerPage);
       });
 
       it('Fetch previous page', async () => {
-        let collection = new AttachedFileCollection({ object: project, nbPerPage });
+        let collection = new AttachedFileCollection({object: project, nbPerPage});
         collection.curPage = 2;
         await collection.fetchPreviousPage();
         expect(collection).toHaveLength(nbPerPage);

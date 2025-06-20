@@ -46,16 +46,18 @@ export default class ProjectRepresentative extends Model {
   // HACK: remove (temporary hack due to lack of consistency in API endpoint)
   /** @inheritdoc */
   get uri() {
-    if(!this.project) {
+    if (!this.project) {
       throw new Error('The URI cannot be constructed if the project is not set.');
     }
 
-    if(this.isNew()) {
+    if (this.isNew()) {
       return `project/${this.project}/representative.json`;
-    }
-    else {
-      if(this.id) return `project/${this.project}/representative/${this.id}.json`;
-      else return `project/${this.project}/representative.json?user=${this.user}`;
+    } else {
+      if (this.id) {
+        return `project/${this.project}/representative/${this.id}.json`;
+      } else {
+        return `project/${this.project}/representative.json?user=${this.user}`;
+      }
     }
   }
 }

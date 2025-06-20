@@ -1,5 +1,5 @@
 import * as utils from './utils.js';
-import { User, UserCollection, RoleCollection } from '@/index.js';
+import {User, UserCollection, RoleCollection} from '@/index.js';
 import config from './config.js';
 
 describe('User', () => {
@@ -23,7 +23,7 @@ describe('User', () => {
 
   describe('Create', () => {
     it('Create', async () => {
-      user = new User({ username: name, password: name, firstname: name, lastname: name, email });
+      user = new User({username: name, password: name, firstname: name, lastname: name, email});
       user = await user.save();
       id = user.id;
       expect(id).toBeDefined();
@@ -39,7 +39,7 @@ describe('User', () => {
     });
 
     it('Fetch with instance method', async () => {
-      let fetchedUser = await new User({ id }).fetch();
+      let fetchedUser = await new User({id}).fetch();
       expect(fetchedUser).toBeInstanceOf(User);
       expect(fetchedUser.username).toEqual(user.username);
     });
@@ -53,7 +53,7 @@ describe('User', () => {
     let role;
 
     beforeAll(async () => {
-      ({ id: role } = await utils.getRole());
+      ({id: role} = await utils.getRole());
     });
 
     it('Fetch current user', async () => {
@@ -153,7 +153,7 @@ describe('User', () => {
       for (let i = 0; i < nbUsers; i++) {
         let name = utils.randomString();
         let email = name + '@cytomine.coop';
-        userPromises.push(new User({ username: name, password: name, firstname: name, lastname: name, email }).save());
+        userPromises.push(new User({username: name, password: name, firstname: name, lastname: name, email}).save());
       }
       users = await Promise.all(userPromises);
     });
@@ -178,7 +178,7 @@ describe('User', () => {
       });
 
       it('Fetch with several requests', async () => {
-        let collection = await UserCollection.fetchAll({ nbPerPage: Math.ceil(totalNb / 3) });
+        let collection = await UserCollection.fetchAll({nbPerPage: Math.ceil(totalNb / 3)});
         expect(collection).toBeInstanceOf(UserCollection);
         expect(collection).toHaveLength(totalNb);
       });
@@ -207,11 +207,11 @@ describe('User', () => {
 
     describe('Filtering', () => {
       it('Filter on project', async () => {
-        await UserCollection.fetchAll({ filterKey: 'project', filterValue: project.id });
+        await UserCollection.fetchAll({filterKey: 'project', filterValue: project.id});
       });
 
       it('Filter on ontology', async () => {
-        await new UserCollection({ nbPerPage: 10, filterKey: 'ontology', filterValue: project.ontology }).fetchAll();
+        await new UserCollection({nbPerPage: 10, filterKey: 'ontology', filterValue: project.ontology}).fetchAll();
       });
     });
 
@@ -219,19 +219,19 @@ describe('User', () => {
       let nbPerPage = 1;
 
       it('Fetch arbitrary page', async () => {
-        let collection = new UserCollection({ nbPerPage });
+        let collection = new UserCollection({nbPerPage});
         await collection.fetchPage(2);
         expect(collection).toHaveLength(nbPerPage);
       });
 
       it('Fetch next page', async () => {
-        let collection = new UserCollection({ nbPerPage });
+        let collection = new UserCollection({nbPerPage});
         await collection.fetchNextPage();
         expect(collection).toHaveLength(nbPerPage);
       });
 
       it('Fetch previous page', async () => {
-        let collection = new UserCollection({ nbPerPage });
+        let collection = new UserCollection({nbPerPage});
         collection.curPage = 2;
         await collection.fetchPreviousPage();
         expect(collection).toHaveLength(nbPerPage);

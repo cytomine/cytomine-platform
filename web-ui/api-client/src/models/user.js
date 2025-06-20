@@ -40,15 +40,15 @@ export default class User extends Model {
    * @returns {type} Description
    */
   async fetchFriends(project, offline) {
-    if(this.isNew()) {
+    if (this.isNew()) {
       throw new Error('Cannot fetch the friends of a user with no ID.');
     }
 
     let params = {};
-    if(project) {
+    if (project) {
       params.project = project;
     }
-    if(offline != null) {
+    if (offline !== null) {
       params.offline = offline;
     }
 
@@ -67,7 +67,7 @@ export default class User extends Model {
    *          The résumé of the user activity
    */
   async fetchResumeActivity(idProject) {
-    if(this.isNew()) {
+    if (this.isNew()) {
       throw new Error('Cannot fetch a resume of activity for a user with no ID.');
     }
 
@@ -84,18 +84,18 @@ export default class User extends Model {
    *
    * @returns {number} The retrieved count
    */
-  async fetchNbAnnotations(reviewed=false, idProject) {
-    if(this.isNew()) {
+  async fetchNbAnnotations(reviewed = false, idProject) {
+    if (this.isNew()) {
       throw new Error('Cannot fetch the number of annotations for a user with no ID.');
     }
 
     let params = {};
-    if(idProject) {
+    if (idProject) {
       params.project = idProject;
     }
 
     let annotationPath = 'userannotation';
-    if(reviewed) {
+    if (reviewed) {
       annotationPath = 'reviewedannotation';
     }
 
@@ -124,7 +124,7 @@ export default class User extends Model {
    * @returns {this} The updated user
    */
   async lock() {
-    if(this.isNew()) {
+    if (this.isNew()) {
       throw new Error('Cannot lock a user with no ID.');
     }
 
@@ -139,7 +139,7 @@ export default class User extends Model {
    * @returns {this} The updated user
    */
   async unlock() {
-    if(this.isNew()) {
+    if (this.isNew()) {
       throw new Error('Cannot unlock a user with no ID.');
     }
 
@@ -155,7 +155,7 @@ export default class User extends Model {
    * @returns {RoleCollection}    The list of roles associated to the user
    */
   async defineRole(idRole) {
-    if(this.isNew()) {
+    if (this.isNew()) {
       throw new Error('Cannot define the role of a user with no ID.');
     }
     let {data} = await Cytomine.instance.api.put(`user/${this.id}/role/${idRole}/define.json`);

@@ -1,5 +1,5 @@
 import * as utils from './utils.js';
-import { TagDomainAssociation, TagDomainAssociationCollection } from '@/index.js';
+import {TagDomainAssociation, TagDomainAssociationCollection} from '@/index.js';
 
 describe('TagDomainAssociation', () => {
 
@@ -12,7 +12,7 @@ describe('TagDomainAssociation', () => {
     await utils.connect();
     utils.randomString();
     await utils.getUser();
-    ({ id: tag } = await utils.getTag());
+    ({id: tag} = await utils.getTag());
     project = await utils.getProject();
   });
 
@@ -22,7 +22,7 @@ describe('TagDomainAssociation', () => {
 
   describe('Create', () => {
     it('Create', async () => {
-      association = new TagDomainAssociation({ tag }, project);
+      association = new TagDomainAssociation({tag}, project);
       association = await association.save();
       id = association.id;
       expect(id).toBeDefined();
@@ -38,7 +38,7 @@ describe('TagDomainAssociation', () => {
     });
 
     it('Fetch with instance method', async () => {
-      let fetchedAssociation = await new TagDomainAssociation({ id }).fetch();
+      let fetchedAssociation = await new TagDomainAssociation({id}).fetch();
       expect(fetchedAssociation).toBeInstanceOf(TagDomainAssociation);
       expect(fetchedAssociation.tag).toEqual(tag);
     });
@@ -70,8 +70,8 @@ describe('TagDomainAssociation', () => {
       let associationPromises = [];
       for (let i = 0; i < nbAssociations; i++) {
         let tag;
-        ({ id: tag } = await utils.getTag({ forceCreation: true }));
-        associationPromises.push(new TagDomainAssociation({ tag }, project).save());
+        ({id: tag} = await utils.getTag({forceCreation: true}));
+        associationPromises.push(new TagDomainAssociation({tag}, project).save());
       }
       associations = await Promise.all(associationPromises);
     });
@@ -97,7 +97,7 @@ describe('TagDomainAssociation', () => {
       });
 
       it('Fetch with several requests', async () => {
-        let collection = await TagDomainAssociationCollection.fetchAll({ nbPerPage: 1 });
+        let collection = await TagDomainAssociationCollection.fetchAll({nbPerPage: 1});
         expect(collection).toBeInstanceOf(TagDomainAssociationCollection);
         expect(collection).toHaveLength(totalNb);
       });
@@ -127,9 +127,9 @@ describe('TagDomainAssociation', () => {
     describe('Filtering', () => {
       it('Filter on project', async () => {
         let project2 = await utils.getProject();
-        await new TagDomainAssociation({ tag }, project2).save();
+        await new TagDomainAssociation({tag}, project2).save();
 
-        let collection = await new TagDomainAssociationCollection({ object: project2 }).fetchAll();
+        let collection = await new TagDomainAssociationCollection({object: project2}).fetchAll();
         expect(collection).toHaveLength(1);
       });
     });
@@ -138,7 +138,7 @@ describe('TagDomainAssociation', () => {
       let nbPerPage = 1;
 
       it('Fetch arbitrary page', async () => {
-        let collection = new TagDomainAssociationCollection({ nbPerPage });
+        let collection = new TagDomainAssociationCollection({nbPerPage});
         await collection.fetchPage(2);
         expect(collection).toHaveLength(nbPerPage);
       });

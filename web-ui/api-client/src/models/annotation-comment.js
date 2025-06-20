@@ -46,15 +46,15 @@ export default class AnnotationComment extends DomainModel {
 
   /** @override */
   set object(obj) {
-    if(!(obj instanceof Annotation)) {
+    if (!(obj instanceof Annotation)) {
       throw new Error('The object must be an annotation instance.');
     }
 
-    if(obj.isNew() || !obj.class) {
+    if (obj.isNew() || !obj.class) {
       throw new Error('The object must be fetched or saved.');
     }
 
-    if(obj.type !== AnnotationType.USER && obj.type !== AnnotationType.ALGO) {
+    if (obj.type !== AnnotationType.USER && obj.type !== AnnotationType.ALGO) {
       throw new Error('Comment functionality not available for this type of annotation.');
     }
 
@@ -75,16 +75,15 @@ export default class AnnotationComment extends DomainModel {
 
   /** @override */
   get uri() {
-    if(!this.domainClassName || !this.domainIdent) {
+    if (!this.domainClassName || !this.domainIdent) {
       throw new Error('The reference object must be defined to construct the URI.');
     }
 
     let annotationUri = `${this.annotation.type.toLowerCase()}/${this.annotation.id}`;
 
-    if(this.isNew()) {
+    if (this.isNew()) {
       return annotationUri + '/comment.json';
-    }
-    else {
+    } else {
       return `${annotationUri}/comment/${this.id}.json`;
     }
   }

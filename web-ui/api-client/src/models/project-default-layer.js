@@ -42,14 +42,13 @@ export default class ProjectDefaultLayer extends Model {
   // HACK: remove (temporary hack due to lack of consistency in API endpoint)
   /** @inheritdoc */
   get uri() {
-    if(!this.project) {
+    if (!this.project) {
       throw new Error('The URI cannot be constructed if the project is not set.');
     }
 
-    if(this.isNew()) {
+    if (this.isNew()) {
       return `project/${this.project}/defaultlayer.json`;
-    }
-    else {
+    } else {
       return `project/${this.project}/defaultlayer/${this.id}.json`;
     }
   }

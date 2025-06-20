@@ -68,7 +68,7 @@ export default class ImageInstance extends Model {
     if (this.preview === null) {
       return null;
     }
-    let url = this.preview.split('?')[0].split('.').slice(0,-1).join('.');
+    let url = this.preview.split('?')[0].split('.').slice(0, -1).join('.');
     let parameters = {maxSize, ...otherParameters};
     let query = new URLSearchParams(parameters).toString();
     return `${url}.${format}?${query}`;
@@ -86,7 +86,7 @@ export default class ImageInstance extends Model {
     if (this.thumb === null) {
       return null;
     }
-    let url = this.thumb.split('?')[0].split('.').slice(0,-1).join('.');
+    let url = this.thumb.split('?')[0].split('.').slice(0, -1).join('.');
     let parameters = {maxSize, ...otherParameters};
     let query = new URLSearchParams(parameters).toString();
     return `${url}.${format}?${query}`;
@@ -105,7 +105,7 @@ export default class ImageInstance extends Model {
     if (this.macroURL === null) {
       return null;
     }
-    let url = this.macroURL.split('?')[0].split('.').slice(0,-1).join('.');
+    let url = this.macroURL.split('?')[0].split('.').slice(0, -1).join('.');
     url = url.substring(0, url.lastIndexOf('/'));
     let parameters = {maxSize, ...otherParameters};
     let query = new URLSearchParams(parameters).toString();
@@ -125,7 +125,7 @@ export default class ImageInstance extends Model {
   * @returns {ImageInstance}
   */
   async fetchNext() {
-    if(this.isNew()) {
+    if (this.isNew()) {
       throw new Error('Cannot fext next image of an image instance with no ID.');
     }
 
@@ -139,7 +139,7 @@ export default class ImageInstance extends Model {
   * @returns {ImageInstance}
   */
   async fetchPrevious() {
-    if(this.isNew()) {
+    if (this.isNew()) {
       throw new Error('Cannot fext next image of an image instance with no ID.');
     }
 
@@ -154,8 +154,8 @@ export default class ImageInstance extends Model {
    *
    * @returns {Array<number>} The list of IDs of the connected users
    */
-  async fetchConnectedUsers(broadcast=false) {
-    if(this.isNew()) {
+  async fetchConnectedUsers(broadcast = false) {
+    if (this.isNew()) {
       throw new Error('Cannot fetch connected users of an image with no ID.');
     }
 
@@ -172,12 +172,12 @@ export default class ImageInstance extends Model {
    * @returns {Array<{image, project, projectName, user, username, firstname, lastname, admin}>} the layers
    */
   async fetchLayersInOtherProjects(project) {
-    if(this.isNew()) {
+    if (this.isNew()) {
       throw new Error('Cannot fetch layers in other projects of image with no ID.');
     }
 
     let params = {};
-    if(project) {
+    if (project) {
       params.project = project;
     }
 
@@ -191,7 +191,7 @@ export default class ImageInstance extends Model {
    * @returns {Array<user, image, countAnnotation, countReviewedAnnotation>} The list of annotation layers with counts
    */
   async fetchAnnotationsIndex() {
-    if(this.isNew()) {
+    if (this.isNew()) {
       throw new Error('Cannot fetch annotations index of image with no ID.');
     }
 
@@ -205,11 +205,11 @@ export default class ImageInstance extends Model {
    * @param {number} idSource Identifier of the source image instance
    */
   async copyMetadata(idSource) {
-    if(this.isNew()) {
+    if (this.isNew()) {
       throw new Error('Cannot copy metadata to an image instance with no ID.');
     }
 
-    if(!idSource) {
+    if (!idSource) {
       throw new Error('The ID of the source image was not provided.');
     }
 
@@ -222,12 +222,12 @@ export default class ImageInstance extends Model {
    * @param {Array<{image: Number, user: Number}>} layers  Layers to copy
    * @param {boolean} [giveMe=false]   If true, all copied annotations will be added to the current user layer
    */
-  async copyData(layers, giveMe=false) {
-    if(this.isNew()) {
+  async copyData(layers, giveMe = false) {
+    if (this.isNew()) {
       throw new Error('Cannot copy data to an image instance with no ID.');
     }
 
-    if(!layers || !layers.length) {
+    if (!layers || !layers.length) {
       throw new Error('At least one layer (characterized by image/user object) must be provided.');
     }
 
@@ -243,7 +243,7 @@ export default class ImageInstance extends Model {
    * @returns {this} The image instance as returned by backend
    */
   async review() {
-    if(this.isNew()) {
+    if (this.isNew()) {
       throw new Error('Cannot review animage with no ID.');
     }
 
@@ -262,8 +262,8 @@ export default class ImageInstance extends Model {
    *
    * @returns {this} The image instance as returned by backend
    */
-  async stopReview(cancel=false) {
-    if(this.isNew()) {
+  async stopReview(cancel = false) {
+    if (this.isNew()) {
       throw new Error('Cannot stop the review on an image with no ID.');
     }
 
@@ -278,7 +278,7 @@ export default class ImageInstance extends Model {
    * @returns {Array<user: Number, all: Number, reviewed: Number>} The review statistics
    */
   async fetchReviewStatistics() {
-    if(this.isNew()) {
+    if (this.isNew()) {
       throw new Error('Cannot fetch review statistics on an image with no ID.');
     }
 
@@ -292,11 +292,11 @@ export default class ImageInstance extends Model {
    * @returns {SliceInstance}
    */
   async fetchReferenceSlice() {
-    if(this.isNew()) {
+    if (this.isNew()) {
       throw new Error('Cannot get reference slice of an image with no ID.');
     }
 
-    if(!this._referenceSlice) {
+    if (!this._referenceSlice) {
       let {data} = await Cytomine.instance.api.get(`${this.callbackIdentifier}/${this.id}/sliceinstance/reference.json`);
       this._referenceSlice = new SliceInstance(data);
     }

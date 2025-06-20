@@ -20,16 +20,16 @@ export default class Term extends Model {
   }
 
   async changeParent(idNewParent) {
-    if(this.isNew()) {
+    if (this.isNew()) {
       throw new Error('Cannot change the parent of a term with no ID.');
     }
 
-    if(this.parent) {
+    if (this.parent) {
       await Cytomine.instance.api.delete(`relation/parent/term1/${this.parent}/term2/${this.id}.json`);
       this.parent = null;
     }
 
-    if(idNewParent) {
+    if (idNewParent) {
       await Cytomine.instance.api.post('relation/parent/term.json', {term1: idNewParent, term2: this.id});
       this.parent = idNewParent;
     }

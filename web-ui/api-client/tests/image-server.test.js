@@ -1,5 +1,5 @@
 import * as utils from './utils.js';
-import { ImageServer, ImageServerCollection } from '@/index.js';
+import {ImageServer, ImageServerCollection} from '@/index.js';
 
 describe('ImageServer', function () {
   beforeAll(async function () {

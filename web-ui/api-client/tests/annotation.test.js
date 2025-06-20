@@ -1,5 +1,5 @@
 import * as utils from './utils.js';
-import { Cytomine, Annotation, AnnotationType, AnnotationCollection, User } from '@/index.js';
+import {Cytomine, Annotation, AnnotationType, AnnotationCollection, User} from '@/index.js';
 
 describe('Annotation', () => {
 
@@ -12,8 +12,8 @@ describe('Annotation', () => {
 
   beforeAll(async () => {
     await utils.connect();
-    ({ id: project } = await utils.getProject()); // HACK required for "Save collection" test case
-    let imageInstance = await utils.getImageInstance({ project, review: true });
+    ({id: project} = await utils.getProject()); // HACK required for "Save collection" test case
+    let imageInstance = await utils.getImageInstance({project, review: true});
     await imageInstance.review();
     image = imageInstance.id;
   });
@@ -24,7 +24,7 @@ describe('Annotation', () => {
 
   describe('Create', () => {
     it('Create', async () => {
-      annotation = new Annotation({ location, image });
+      annotation = new Annotation({location, image});
       annotation = await annotation.save();
       id = annotation.id;
       expect(annotation).toBeInstanceOf(Annotation);
@@ -49,7 +49,7 @@ describe('Annotation', () => {
     });
 
     it('Fetch with instance method', async () => {
-      let fetchedAnnotation = await new Annotation({ id }).fetch();
+      let fetchedAnnotation = await new Annotation({id}).fetch();
       expect(fetchedAnnotation).toBeInstanceOf(Annotation);
       expect(fetchedAnnotation).toEqual(annotation);
     });
@@ -121,7 +121,7 @@ describe('Annotation', () => {
     let command;
 
     it('Create', async () => {
-      urAnnot = await new Annotation({ location, image }).save();
+      urAnnot = await new Annotation({location, image}).save();
       command = Cytomine.instance.lastCommand;
       expect(urAnnot.id).toBeDefined();
       expect(command).toBeDefined();
@@ -158,7 +158,7 @@ describe('Annotation', () => {
       annotation.location = newLocation;
       await annotation.update();
       expect(annotation).toBeInstanceOf(Annotation);
-      expect(annotation.centroid).toEqual({ x: 15, y: 15 });
+      expect(annotation.centroid).toEqual({x: 15, y: 15});
     });
   });
 
@@ -180,13 +180,13 @@ describe('Annotation', () => {
     beforeAll(async () => {
       let annotationPromises = [];
       for (let i = 0; i < nb; i++) {
-        annotationPromises.push(new Annotation({ image, location }).save());
+        annotationPromises.push(new Annotation({image, location}).save());
       }
       await Promise.all(annotationPromises);
     });
 
     afterAll(async () => {
-      let collection = await new AnnotationCollection({ image }).fetchAll();
+      let collection = await new AnnotationCollection({image}).fetchAll();
       let deletionPromises = [];
       for (let annot of collection) {
         deletionPromises.push(Annotation.delete(annot.id));
@@ -196,19 +196,19 @@ describe('Annotation', () => {
 
     describe('Fetch', () => {
       it('Fetch (instance method)', async () => {
-        let collection = await new AnnotationCollection({ image }).fetchAll();
+        let collection = await new AnnotationCollection({image}).fetchAll();
         expect(collection).toBeInstanceOf(AnnotationCollection);
         expect(collection).toHaveLength(nb);
       });
 
       it('Fetch (static method)', async () => {
-        let collection = await AnnotationCollection.fetchAll({ image });
+        let collection = await AnnotationCollection.fetchAll({image});
         expect(collection).toBeInstanceOf(AnnotationCollection);
         expect(collection).toHaveLength(nb);
       });
 
       it('Fetch with several requests', async () => {
-        let collection = await AnnotationCollection.fetchAll({ image }, 1);
+        let collection = await AnnotationCollection.fetchAll({image}, 1);
         expect(collection).toBeInstanceOf(AnnotationCollection);
         expect(collection).toHaveLength(nb);
       });
@@ -216,26 +216,26 @@ describe('Annotation', () => {
 
     describe('Working with the collection', () => {
       it('Iterate through the collection', async () => {
-        let collection = await AnnotationCollection.fetchAll({ image });
+        let collection = await AnnotationCollection.fetchAll({image});
         for (let annot of collection) {
           expect(annot).toBeInstanceOf(Annotation);
         }
       });
 
       it('Add an item to the collection', () => {
-        let collection = new AnnotationCollection({ image });
+        let collection = new AnnotationCollection({image});
         expect(collection).toHaveLength(0);
         collection.push(new Annotation());
         expect(collection).toHaveLength(1);
       });
 
       it('Add arbitrary object to the collection', () => {
-        let collection = new AnnotationCollection({ image });
+        let collection = new AnnotationCollection({image});
         expect(collection.push.bind(collection, {})).toThrow();
       });
 
       it('Download URL', () => {
-        let collection = new AnnotationCollection({ project });
+        let collection = new AnnotationCollection({project});
         expect(typeof collection.getDownloadURL()).toBe('string');
       });
     });
@@ -243,8 +243,8 @@ describe('Annotation', () => {
     describe('Save collection', () => {
       it('Save', async () => {
         let collection = new AnnotationCollection();
-        collection.push(new Annotation({ location, image, project }));
-        collection.push(new Annotation({ location, image, project }));
+        collection.push(new Annotation({location, image, project}));
+        collection.push(new Annotation({location, image, project}));
         await collection.save();
         expect(collection).toHaveLength(2);
       });
@@ -252,7 +252,7 @@ describe('Annotation', () => {
 
     describe('Search service', () => {
       it('Search', async () => {
-        let collection = new AnnotationCollection({ project });
+        let collection = new AnnotationCollection({project});
         collection.project = project;
         collection.terms = [1, 2];
         collection.showTerm = true;
@@ -265,19 +265,19 @@ describe('Annotation', () => {
       let nbPerPage = 1;
 
       it('Fetch arbitrary page', async () => {
-        let collection = new AnnotationCollection({ project, nbPerPage });
+        let collection = new AnnotationCollection({project, nbPerPage});
         await collection.fetchPage(2);
         expect(collection).toHaveLength(nbPerPage);
       });
 
       it('Fetch next page', async () => {
-        let collection = new AnnotationCollection({ project, nbPerPage });
+        let collection = new AnnotationCollection({project, nbPerPage});
         await collection.fetchNextPage();
         expect(collection).toHaveLength(nbPerPage);
       });
 
       it('Fetch previous page', async () => {
-        let collection = new AnnotationCollection({ project, nbPerPage });
+        let collection = new AnnotationCollection({project, nbPerPage});
         collection.curPage = 2;
         await collection.fetchPreviousPage();
         expect(collection).toHaveLength(nbPerPage);

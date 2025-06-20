@@ -33,11 +33,11 @@ export default class AbstractSlice extends Model {
    * @returns {User}
    */
   async fetchUploader() {
-    if(this.isNew()) {
+    if (this.isNew()) {
       throw new Error('Cannot get uploader for an abstract slice with no ID.');
     }
 
-    if(!this._uploader) {
+    if (!this._uploader) {
       let {data} = await Cytomine.instance.api.get(`${this.callbackIdentifier}/${this.id}/user.json`);
       this._uploader = new User(data);
     }
