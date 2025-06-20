@@ -1,5 +1,9 @@
 # Cytomine Javascript Client
 
+![version](https://img.shields.io/github/v/tag/cytomine/Cytomine-js-client)
+[![Apache-2.0 license][license-badge]][license-url]
+[![Website][website-badge]][website-url]
+
 When using our software, we kindly ask you to cite our website URL and related publications in all your work (publications, studies, oral presentations,...). In particular, we recommend to cite (Marée et al., Bioinformatics 2016) paper, and to use our logo when appropriate. See our license files for additional details.
 
 - URL: http://www.cytomine.org/
@@ -8,8 +12,9 @@ When using our software, we kindly ask you to cite our website URL and related p
 
 ## Presentation
 
-Cytomine-js-client is an opensource javascript client allowing to communicate with the REST API of a Cytomine instance. For more information about Cytomine, go to https://www.cytomine.org.
-See installation instructions here : https://doc.cytomine.org/dev-guide/clients/javascript/installation
+Cytomine-js-client is an opensource javascript client allowing to communicate with the REST API of a Cytomine instance. You will find more information about the Cytomine project on the [website][website-url].
+
+See installation instructions here: https://doc.uliege.cytomine.org/dev-guide/clients/javascript/installation
 
 ## How to use the client
 
@@ -20,6 +25,7 @@ The javascript client can be used in one of the following ways:
 In any case, the client should be used in a browser environment, since it relies on cookies for authentication.
 
 #### Sample code
+
 ```javascript
 import {Cytomine, User, ProjectCollection} from "cytomine-client"; // required only if used as an NPM module
 
@@ -44,26 +50,48 @@ for(let project of projects) {
 ## Development
 
 #### Installation
+
 First checkout the repository, then install the dependencies with
 
-    npm install
+```bash
+npm install
+```
 
- #### Test execution
+#### Test execution
 
 Prior to the first test execution, update the [tests configuration file](tests/config.js) with appropriate values (**beware that the tests will create data on the configured Cytomine instance!**). To avoid committing the configuration values, it is advised to run `git update-index --skip-worktree tests/config.js`.
 
 Then, to execute the tests, run
 
-    npm run test
-
-Note that the execution of the tests requires Mozilla Firefox browser. Moreover, the Cytomine instance used for the tests must allow CORS.
+```bash
+npm run test
+```
 
 #### Build for production with minification
-    npm run build
+
+```bash
+npm run build
+```
+
 Generates a minified file located in dist folder, which can be included with `<script>`
 
 #### Create a tarball
-    npm pack
+
+```bash
+npm pack
+```
+
 The tarball can then be installed in another npm project with
 
-    npm install PATH_TO_TARBALL
+```bash
+npm install PATH_TO_TARBALL
+```
+
+## License
+
+[Apache 2.0][license-url].
+
+[license-badge]: https://img.shields.io/badge/License-Apache%202.0-blue.svg
+[license-url]: https://github.com/cytomine/Cytomine-js-client/blob/main/LICENSE
+[website-badge]: https://img.shields.io/badge/Website-blue
+[website-url]: https://uliege.cytomine.org/
