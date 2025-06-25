@@ -1,0 +1,33 @@
+name: Integers addition
+name_short: add_int
+version: 0.1.0
+namespace: com.cytomine.dummy.arithmetic.integer.addition
+$schema: https://cytomine.com/schema-store/tasks/task.v0.json
+authors:
+  - first_name: Romain
+    last_name: Mormont
+    organization: Cytomine Corporation
+    email: romain.mormont@cytomine.com
+    is_contact: true
+
+configuration:
+  input_folder: /inputs
+  output_folder: /outputs
+  image:
+        file: /image.tar
+
+inputs:
+  a:
+    display_name: A
+    type: integer
+    description: First operand
+  b:
+    display_name: B
+    type: integer
+    description: Second operand
+
+outputs:
+  out:
+    display_name: Sum
+    type: integer
+    description: Sum of A and B

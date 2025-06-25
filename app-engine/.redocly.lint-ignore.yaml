@@ -1,0 +1,37 @@
+# This file instructs Redocly's linter to ignore the rules contained for specific parts of your API.
+# See https://redoc.ly/docs/cli/ for more information.
+./src/test/resources/spec/api/openapi_spec.v0.1.0.yml:
+  no-server-example.com:
+    - '#/servers/0/url'
+https://geojson.org/schema/Point.json:
+  spec:
+    - '#/$schema'
+    - '#/$id'
+https://geojson.org/schema/MultiPoint.json:
+  spec:
+    - '#/$schema'
+    - '#/$id'
+https://geojson.org/schema/LineString.json:
+  spec:
+    - '#/$schema'
+    - '#/$id'
+https://geojson.org/schema/MultiLineString.json:
+  spec:
+    - '#/$schema'
+    - '#/$id'
+https://geojson.org/schema/Polygon.json:
+  spec:
+    - '#/$schema'
+    - '#/$id'
+https://geojson.org/schema/MultiPolygon.json:
+  spec:
+    - '#/$schema'
+    - '#/$id'
+https://geojson.org/schema/Feature.json:
+  spec:
+    - '#/$schema'
+    - '#/$id'
+https://geojson.org/schema/Geometry.json:
+  spec:
+    - '#/$schema'
+    - '#/$id'
