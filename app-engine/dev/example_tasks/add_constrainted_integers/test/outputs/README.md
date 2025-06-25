@@ -1,0 +1,1 @@
+where the output should be written when running test_task.sh from the "dev/example_tasks/add_integers/test" dir
