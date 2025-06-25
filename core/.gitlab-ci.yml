@@ -1,0 +1,62 @@
+stages:
+  - lint
+  - test
+
+workflow:
+  rules:
+    - if: '$CI_MERGE_REQUEST_ID'
+      when: always
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: always
+    - if: '$CI_COMMIT_BRANCH == "production"'
+      when: always
+    - when: never
+
+lint-dockerfile:
+  stage: lint
+  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/hadolint/hadolint:latest-alpine
+  script:
+    - hadolint Dockerfile
+  rules:
+    - changes:
+        - Dockerfile
+      when: always
+
+    # If the Dockerfile has not been changed, this job can be skipped
+    - when: never
+      allow_failure: true
+
+test:
+  stage: test
+  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/gradle:${GRADLE_VERSION}
+  services:
+    - alias: postgis
+      name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/cytomineuliege/postgis:${CYTOMINE_POSTGIS_VERSION}
+    - alias: mongodb
+      name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/cytomineuliege/mongo:${CYTOMINE_MONGO_VERSION}
+  variables:
+    MONGO_INIT_DATABASE: cytomine
+    MONGO_INITDB_ROOT_USERNAME: mongoadmin
+    MONGO_INITDB_ROOT_PASSWORD: password
+    MONGO_HOST: mongodb
+    MONGO_PORT: 27017
+    MONGO_DB_NAME: ${MONGO_INIT_DATABASE}
+    MONGO_USER: ${MONGO_INITDB_ROOT_USERNAME}
+    MONGO_PASS: ${MONGO_INITDB_ROOT_PASSWORD}
+    POSTGRES_DB: docker
+    POSTGRES_USER: docker
+    POSTGRES_PASSWORD: password
+    POSTGIS_HOST: postgis
+    POSTGIS_PORT: 5432
+    POSTGIS_DB_NAME: ${POSTGRES_DB}
+    POSTGIS_USER: ${POSTGRES_USER}
+    POSTGIS_PASS: ${POSTGRES_PASSWORD}
+
+  script:
+    - export GRADLE_USER_HOME=$GRADLE_USER_HOME
+    # test log too large for gitlab if executed at 'debug' log level
+    - sed -i -- "s/name=\"be.cytomine\" level=\"debug\"/name=\"be.cytomine\" level=\"info\"/g" src/test/resources/logback-test.xml
+    - gradle :test --no-daemon
+  artifacts:
+    reports:
+      junit: build/test-results/test/**/TEST-*.xml

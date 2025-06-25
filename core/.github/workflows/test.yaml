@@ -1,0 +1,82 @@
+name: Test
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "src/main/resources/**"
+      - "src/test/resources/**"
+      - "src/**/*.java"
+
+jobs:
+  test-core:
+    runs-on: ubuntu-latest
+
+    services:
+      mongodb:
+        image: mongo:${{ vars.MONGO_VERSION }}
+        env:
+          MONGO_INITDB_DATABASE: ${{ secrets.MONGO_DB }}
+          MONGO_INITDB_ROOT_USERNAME: ${{ secrets.MONGO_USER }}
+          MONGO_INITDB_ROOT_PASSWORD: ${{ secrets.MONGO_PASSWORD }}
+        ports:
+          - 27017:27017
+
+      postgres:
+        image: cytomineuliege/postgis:${{ vars.POSTGRES_DB_VERSION }}
+        env:
+          POSTGRES_NAME: ${{ secrets.POSTGRES_DB }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Set up the repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ vars.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: ${{ vars.JAVA_DIST }}
+          java-version: ${{ vars.JAVA_VERSION }}
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: ${{ vars.GRADLE_VERSION }}
+
+      - name: Test core
+        run: |
+          sed -i -- "s/name=\"be.cytomine\" level=\"debug\"/name=\"be.cytomine\" level=\"info\"/g" src/test/resources/logback-test.xml
+          ./gradlew :test --no-daemon
+
+      - name: Upload test reports
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: reports
+          path: build/reports/
+          retention-days: 30
+
+      - name: Upload test results
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: build/test-results/
+          retention-days: 30
+
+      - name: Upload Java Code Coverage (JaCoCo)
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco
+          path: build/jacoco/
+          retention-days: 30

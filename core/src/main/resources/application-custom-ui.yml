@@ -1,0 +1,259 @@
+application:
+  customUI:
+    global:
+      dashboard: ["ALL"]
+      search: ["ROLE_ADMIN"]
+      project: ["ALL"]
+      ontology: ["ROLE_ADMIN"]
+      storage: ["ROLE_USER","ROLE_ADMIN"]
+      software: ["ROLE_ADMIN"]
+      activity: ["ALL"]
+      admin: ["ROLE_ADMIN"]
+      help: ["ALL"]
+      feedback: ["ROLE_USER","ROLE_ADMIN"]
+      explore: ["ROLE_USER","ROLE_ADMIN"]
+
+    project:
+      project-images-tab:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-image-groups-tab:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-annotations-tab:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-jobs-tab:
+        ADMIN_PROJECT: false
+        CONTRIBUTOR_PROJECT: false
+      project-activities-tab:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: false
+      project-information-tab:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-configuration-tab:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: false
+      project-report-tab:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-image-overview:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-image-description:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-image-tags:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-image-tracks:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-image-properties:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-image-attached-files:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-image-slide-preview:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-image-original-filename:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-hide-tools:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-overview:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-info:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-digital-zoom:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-link:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-color-manipulation:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-image-layers:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-ontology:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-review:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-job:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-property:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-follow:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-guided-tour:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-slide-label:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-annotation-main:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-annotation-geometry-info:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-annotation-info:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-annotation-comments:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-annotation-preview:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-annotation-properties:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-annotation-description:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-annotation-panel:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-annotation-terms:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-annotation-tags:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-annotation-attached-files:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-annotation-creation-info:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-annotation-tracks:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-annotation-linked-annotations:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-image-metadata:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-annotations-list:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-tools-main:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-tools-select:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-tools-point:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-tools-line:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-tools-freehand-line:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-tools-arrow:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-tools-rectangle:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-tools-diamond:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-tools-circle:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-tools-polygon:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-tools-freehand-polygon:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-tools-magic:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-tools-freehand:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-tools-union:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-tools-diff:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-tools-fill:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-tools-rule:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-tools-edit:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-tools-resize:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-tools-rotate:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-tools-move:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-tools-delete:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-tools-screenshot:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-tools-copy-paste:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-tools-undo-redo:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-tools-link":
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-tools-unlink:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-annotations-term-piegraph:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-annotations-term-bargraph:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-annotations-users-graph:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-annotated-slides-term-graph:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-annotated-slides-users-graph:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-annotation-graph:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-users-global-activities-graph:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-users-heatmap-graph:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true

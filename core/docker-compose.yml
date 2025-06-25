@@ -1,0 +1,49 @@
+services:
+  postgis:
+    container_name: postgis
+    image: cytomineuliege/postgis:15-3.3-alpine-1.0.0
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_NAME=docker
+      - POSTGRES_USER=docker
+      - POSTGRES_PASSWORD=docker
+
+  mongo:
+    container_name: mongo
+    image: cytomineuliege/mongo:1.0.0
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=mongoadmin
+      - MONGO_INITDB_ROOT_PASSWORD=secret
+      - MONGO_INITDB_DATABASE=cytomine
+
+  core:
+    container_name: dev-core
+    image: core:dev-latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: dev-server
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./:/app
+    depends_on:
+      - postgis
+      - mongo
+    environment:
+      - MONGO_DB_NAME=cytomine
+      - MONGO_HOST=mongo
+      - MONGO_PASS=secret
+      - MONGO_PORT=27017
+      - MONGO_USER=mongoadmin
+      - POSTGIS_DB_NAME=docker
+      - POSTGIS_HOST=postgis
+      - POSTGIS_PASS=docker
+      - POSTGIS_PORT=5432
+      - POSTGIS_USER=docker
+    command: ["/bin/sh"]
+    stdin_open: true
+    tty: true

@@ -1,0 +1,2414 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-4.1.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
+    <changeSet author="lrollus (generated)" id="0">
+        <preConditions onFail="MARK_RAN">
+            <!--
+                if the changelog has to be run BUT the database already contains a 'project' table, mark the changelog has 'ran'
+                without running changes.
+                This happens when running on a GRAILS cytomine-core database.
+             -->
+            <not>
+                <tableExists tableName="project"/>
+            </not>
+        </preConditions>
+        <createTable tableName="amqp_queue_config">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="amqp_queue_config_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="default_value" type="VARCHAR(255)"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="index" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column defaultValueBoolean="false" name="is_in_map" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="type" type="VARCHAR(7)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+        </createTable>
+        <createTable tableName="keyword">
+            <column autoIncrement="true" name="nid" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="keyword_pkey"/>
+            </column>
+            <column name="key" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createTable tableName="processing_server">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="processing_server_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="amqp_queue_id" type="BIGINT"/>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column defaultValue="localhost" name="host" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="index" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="persistent_directory" type="VARCHAR(255)"/>
+            <column defaultValueNumeric="22" name="port" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="processing_method_name" type="VARCHAR(255)"/>
+            <column name="type" type="VARCHAR(255)"/>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="username" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="working_directory" type="VARCHAR(255)"/>
+        </createTable>
+        <createTable tableName="version">
+            <column autoIncrement="true" name="nid" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="version_pkey"/>
+            </column>
+            <column name="deployed" type="TIMESTAMP WITHOUT TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="major" type="INTEGER"/>
+            <column name="minor" type="INTEGER"/>
+            <column name="patch" type="INTEGER"/>
+        </createTable>
+        <createTable tableName="undo_stack_item">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="undo_stack_item_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="command_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="is_from_redo" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="transaction_id" type="BIGINT"/>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createTable tableName="image_instance">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="image_instance_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="base_image_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="count_image_annotations" type="BIGINT"/>
+            <column name="count_image_job_annotations" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="count_image_reviewed_annotations" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="fps" type="FLOAT8"/>
+            <column name="instance_filename" type="VARCHAR(255)"/>
+            <column name="magnification" type="INTEGER"/>
+            <column name="physical_size_x" type="FLOAT8"/>
+            <column name="physical_size_y" type="FLOAT8"/>
+            <column name="physical_size_z" type="FLOAT8"/>
+            <column name="project_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="review_start" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="review_stop" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="review_user_id" type="BIGINT"/>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="class" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="parent_id" type="BIGINT"/>
+            <column name="x" type="INTEGER"/>
+            <column name="y" type="INTEGER"/>
+        </createTable>
+        <createTable tableName="shared_annotation">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="shared_annotation_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="annotation_class_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="annotation_ident" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="comment" type="character varying"/>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="sender_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+        </createTable>
+        <createTable tableName="command">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="command_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="action_message" type="VARCHAR(255)"/>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="data" type="character varying"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="print_message" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="project_id" type="BIGINT"/>
+            <column name="refuse_undo" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="save_on_undo_redo_stack" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="service_name" type="VARCHAR(255)"/>
+            <column name="transaction_id" type="BIGINT"/>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="class" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="link_project" type="BOOLEAN"/>
+        </createTable>
+        <createTable tableName="command_history">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="command_history_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="command_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="message" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="prefix_action" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="project_id" type="BIGINT"/>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createTable tableName="redo_stack_item">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="redo_stack_item_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="command_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="transaction_id" type="BIGINT"/>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createTable tableName="acl_object_identity">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="acl_object_identity_pkey"/>
+            </column>
+            <column name="object_id_class" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="entries_inheriting" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="object_id_identity" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="owner_sid" type="BIGINT"/>
+            <column name="parent_object" type="BIGINT"/>
+        </createTable>
+        <createTable tableName="acl_entry">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="acl_entry_pkey"/>
+            </column>
+            <column name="ace_order" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="acl_object_identity" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="audit_failure" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="audit_success" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="granting" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="mask" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sid" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createTable tableName="acl_sid">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="acl_sid_pkey"/>
+            </column>
+            <column name="principal" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sid" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createTable tableName="storage">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="storage_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createTable tableName="sample">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="sample_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+        </createTable>
+        <createTable tableName="abstract_image">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="abstract_image_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="bit_depth" type="INTEGER"/>
+            <column name="channels" type="INTEGER"/>
+            <column name="colorspace" type="VARCHAR(255)"/>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="depth" type="INTEGER"/>
+            <column name="duration" type="INTEGER"/>
+            <column name="fps" type="FLOAT8"/>
+            <column name="height" type="INTEGER"/>
+            <column name="magnification" type="INTEGER"/>
+            <column name="original_filename" type="VARCHAR(255)"/>
+            <column name="physical_size_x" type="FLOAT8"/>
+            <column name="physical_size_y" type="FLOAT8"/>
+            <column name="physical_size_z" type="FLOAT8"/>
+            <column name="sample_id" type="BIGINT"/>
+            <column name="scanner_id" type="BIGINT"/>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="uploaded_file_id" type="BIGINT"/>
+            <column name="user_id" type="BIGINT"/>
+            <column name="width" type="INTEGER"/>
+        </createTable>
+        <createTable tableName="abstract_slice">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="abstract_slice_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="channel" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="image_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="mime_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="time" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="uploaded_file_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="z_stack" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createTable tableName="slice_instance">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="slice_instance_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="base_slice_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="image_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="project_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+        </createTable>
+        <createTable tableName="property">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="property_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="domain_class_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="domain_ident" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="key" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="value" type="character varying">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createTable tableName="attached_file">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="attached_file_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="data" type="BYTEA">
+                <constraints nullable="false"/>
+            </column>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="domain_class_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="domain_ident" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="filename" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="key" type="VARCHAR">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+        <createTable tableName="description">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="description_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="data" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="domain_class_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="domain_ident" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+        </createTable>
+        <createTable tableName="annotation_index">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="annotation_index_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="count_annotation" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="count_reviewed_annotation" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="slice_id" type="BIGINT"/>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createTable tableName="annotation_term">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="annotation_term_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="term_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_annotation_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createTable tableName="algo_annotation_term">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="algo_annotation_term_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="annotation_class_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="annotation_ident" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="expected_term_id" type="BIGINT"/>
+            <column name="project_id" type="BIGINT"/>
+            <column name="rate" type="FLOAT8">
+                <constraints nullable="false"/>
+            </column>
+            <column name="term_id" type="BIGINT"/>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="user_job_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createTable tableName="relation_term">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="relation_term_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="relation_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="term1_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="term2_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+        </createTable>
+        <createTable tableName="term">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="term_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="color" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="comment" type="VARCHAR(255)"/>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ontology_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+        </createTable>
+        <createTable tableName="track">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="track_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="color" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="image_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="project_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+        </createTable>
+        <createTable tableName="annotation_track">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="annotation_track_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="annotation_class_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="annotation_ident" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="slice_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="track_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+        </createTable>
+        <createTable tableName="sec_user">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="sec_user_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="account_expired" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="account_locked" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="enabled" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="origin" type="VARCHAR(255)"/>
+            <column name="password" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="password_expired" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="private_key" type="VARCHAR(255)"/>
+            <column name="public_key" type="VARCHAR(255)"/>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="username" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="class" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="job_id" type="BIGINT"/>
+            <column name="rate" type="FLOAT8"/>
+            <column name="user_id" type="BIGINT"/>
+            <column name="color" type="VARCHAR(255)"/>
+            <column name="email" type="VARCHAR(255)"/>
+            <column name="firstname" type="VARCHAR(255)"/>
+            <column defaultValueBoolean="false" name="is_developer" type="BOOLEAN"/>
+            <column defaultValue="ENGLISH" name="language" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="lastname" type="VARCHAR(255)"/>
+        </createTable>
+        <createTable tableName="job">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="job_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="data_deleted" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="favorite" type="BOOLEAN"/>
+            <column name="number" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="processing_server_id" type="BIGINT"/>
+            <column name="progress" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="project_id" type="BIGINT"/>
+            <column name="rate" type="FLOAT8"/>
+            <column name="software_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status_comment" type="VARCHAR(255)"/>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="class" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)"/>
+        </createTable>
+        <createTable tableName="job_parameter">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="job_parameter_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="job_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="software_parameter_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="value" type="VARCHAR(5000)"/>
+        </createTable>
+        <createTable tableName="software_parameter">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="software_parameter_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="command_line_flag" type="VARCHAR(255)"/>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="default_value" type="VARCHAR(255)"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="human_name" type="VARCHAR(255)"/>
+            <column name="index" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="required" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="server_parameter" type="BOOLEAN"/>
+            <column name="set_by_server" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="software_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="type" type="VARCHAR(10)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="uri" type="VARCHAR(255)"/>
+            <column name="uri_print_attribut" type="VARCHAR(255)"/>
+            <column name="uri_sort_attribut" type="VARCHAR(255)"/>
+            <column name="value_key" type="VARCHAR(255)"/>
+        </createTable>
+        <createTable tableName="software_project">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="software_project_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="project_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="software_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+        </createTable>
+        <createTable tableName="user_group">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="user_group_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="group_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createTable tableName="auth_with_token">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="auth_with_token_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="expiry_date" type="TIMESTAMP WITHOUT TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="token_key" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createTable tableName="project">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="project_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="are_images_downloadable" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="blind_mode" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="count_annotations" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="count_images" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="count_job_annotations" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="count_reviewed_annotations" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="discipline_id" type="BIGINT"/>
+            <column name="hide_admins_layers" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="hide_users_layers" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_closed" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="mode" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(150)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ontology_id" type="BIGINT"/>
+            <column name="retrieval_all_ontology" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="retrieval_disable" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+        </createTable>
+        <createTable tableName="tag">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="tag_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createTable tableName="amqp_queue_config_instance">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="amqp_queue_config_instance_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="config_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="queue_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="value" type="VARCHAR(255)"/>
+        </createTable>
+        <createTable tableName="mime">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="mime_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="extension" type="VARCHAR(5)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="mime_type" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+        </createTable>
+        <createTable tableName="job_data">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="job_data_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="dir" type="VARCHAR(255)"/>
+            <column name="filename" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="job_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="key" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="size" type="BIGINT"/>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="value_id" type="BIGINT"/>
+        </createTable>
+        <createTable tableName="job_data_binary_value">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="job_data_binary_value_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="data" type="BYTEA"/>
+        </createTable>
+        <createTable tableName="parameter_constraint">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="parameter_constraint_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="data_type" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="expression" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+        </createTable>
+        <createTable tableName="software_parameter_constraint">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="software_parameter_constraint_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="parameter_constraint_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="software_parameter_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="value" type="VARCHAR(255)"/>
+        </createTable>
+        <createTable tableName="image_filter">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="image_filter_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="base_url" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="imaging_server_id" type="BIGINT"/>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+        </createTable>
+        <createTable tableName="image_filter_project">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="image_filter_project_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="image_filter_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="project_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+        </createTable>
+        <createTable tableName="search_engine_filter">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="search_engine_filter_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="filters" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createTable tableName="source">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="source_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sample_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+        </createTable>
+        <createTable tableName="project_default_layer">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="project_default_layer_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="hide_by_default" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="project_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createTable tableName="software">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="software_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="default_processing_server_id" type="BIGINT"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="deprecated" type="BOOLEAN"/>
+            <column name="execute_command" type="VARCHAR(5000)"/>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="pulling_command" type="VARCHAR(255)"/>
+            <column name="result_name" type="VARCHAR(255)"/>
+            <column name="software_user_repository_id" type="BIGINT"/>
+            <column name="software_version" type="VARCHAR(255)"/>
+            <column name="source_path" type="VARCHAR(255)"/>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+        </createTable>
+        <createTable tableName="project_project">
+            <column name="project_retrieval_projects_id" type="BIGINT"/>
+            <column name="project_id" type="BIGINT"/>
+        </createTable>
+        <createTable tableName="image_group">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="image_group_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="project_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+        </createTable>
+        <createTable tableName="image_group_image_instance">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="image_group_image_instance_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="group_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="image_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createTable tableName="image_sequence">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="image_sequence_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="channel" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="image_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="image_group_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="slice" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="time" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="z_stack" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createTable tableName="transaction">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="transaction_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+        </createTable>
+        <createTable tableName="acl_class">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="acl_class_pkey"/>
+            </column>
+            <column name="class" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createTable tableName="group">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="group_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="gid" type="VARCHAR(255)"/>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+        </createTable>
+        <createTable tableName="project_representative_user">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="project_representative_user_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="project_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createTable tableName="ontology">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="ontology_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createTable tableName="annotation_filter">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="annotation_filter_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="project_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createTable tableName="shared_annotation_user">
+            <column name="shared_annotation_receivers_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_id" type="BIGINT"/>
+        </createTable>
+        <createTable tableName="tag_domain_association">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="tag_domain_association_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="domain_class_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="domain_ident" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tag_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+        </createTable>
+        <createTable tableName="imaging_server">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="imaging_server_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="url" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createTable tableName="annotation_filter_term">
+            <column name="annotation_filter_terms_id" type="BIGINT"/>
+            <column name="term_id" type="BIGINT"/>
+        </createTable>
+        <createTable tableName="reviewed_annotation_term">
+            <column name="reviewed_annotation_terms_id" type="BIGINT"/>
+            <column name="term_id" type="BIGINT"/>
+        </createTable>
+        <createTable tableName="discipline">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="discipline_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+        </createTable>
+        <createTable tableName="forgot_password_token">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="forgot_password_token_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="expiry_date" type="TIMESTAMP WITHOUT TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="token_key" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createTable tableName="sec_role">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="sec_role_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="authority" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+        </createTable>
+        <createTable tableName="sec_user_sec_role">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="sec_user_sec_role_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="sec_role_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sec_user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+        </createTable>
+        <createTable tableName="storage_abstract_image">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="storage_abstract_image_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="abstract_image_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="storage_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+        </createTable>
+        <createTable tableName="relation">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="relation_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+        </createTable>
+        <createTable tableName="amqp_queue">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="amqp_queue_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="exchange" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="host" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+        </createTable>
+        <createTable tableName="image_server">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="image_server_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="available" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="base_path" type="VARCHAR(255)"/>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="url" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createTable tableName="image_server_storage">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="image_server_storage_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="image_server_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="storage_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createTable tableName="software_user_repository">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="software_user_repository_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="docker_username" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="prefix" type="VARCHAR(255)"/>
+            <column name="provider" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="username" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createTable tableName="annotation_filter_sec_user">
+            <column name="annotation_filter_users_id" type="BIGINT"/>
+            <column name="sec_user_id" type="BIGINT"/>
+        </createTable>
+        <createTable tableName="mime_image_server">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="mime_image_server_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="image_server_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="mime_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+        </createTable>
+        <createTable tableName="news">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="news_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="added" type="TIMESTAMP WITHOUT TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="text" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createTable tableName="instrument">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="instrument_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="brand" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="model" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+        </createTable>
+        <createTable tableName="companion_file">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="companion_file_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="filename" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="image_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="original_filename" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="progress" type="INTEGER"/>
+            <column name="type" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="uploaded_file_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createTable tableName="image_grouphdf5">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="image_grouphdf5_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="filename" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="group_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="progress" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+        </createTable>
+        <createTable tableName="job_template_annotation">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="job_template_annotation_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="annotation_class_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="annotation_ident" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="job_template_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+        </createTable>
+        <createTable tableName="configuration">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="configuration_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="key" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="reading_role" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="value" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createTable tableName="message_broker_server">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="message_broker_server_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="host" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="port" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+        </createTable>
+        <addForeignKeyConstraint baseColumnNames="config_id" baseTableName="amqp_queue_config_instance" constraintName="fk_1fanxk0y2ei162u635t7xei1q" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="amqp_queue_config" validate="true"/>
+        <addUniqueConstraint columnNames="name" constraintName="uk_mrfl7ovhfydr8i27vjw8aoy5m" tableName="amqp_queue_config"/>
+        <addUniqueConstraint columnNames="key" constraintName="uk_13bwk73aypkhryokrboje4i2g" tableName="keyword"/>
+        <addForeignKeyConstraint baseColumnNames="processing_server_id" baseTableName="job" constraintName="fk_7o2q73awvcf3128k3fdrbv1it" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="processing_server" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="amqp_queue_id" baseTableName="processing_server" constraintName="fk_e0bfykpq1hcokbha6kpds0jhh" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="amqp_queue" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="default_processing_server_id" baseTableName="software" constraintName="fk_h1h797soh6wjy7fvjpv79hs2y" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="processing_server" validate="true"/>
+        <addUniqueConstraint columnNames="name" constraintName="uk_3rqggmm8it0ldmh26ku7jgert" tableName="processing_server"/>
+        <createIndex indexName="undostackitem_user_index" tableName="undo_stack_item">
+            <column name="user_id"/>
+        </createIndex>
+        <createIndex indexName="undo_stack_item_command_id_index" tableName="undo_stack_item">
+            <column name="command_id"/>
+        </createIndex>
+        <addForeignKeyConstraint baseColumnNames="transaction_id" baseTableName="undo_stack_item" constraintName="fk_60f4l0y7u8uoxsv5cchj3riec" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="transaction" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="undo_stack_item" constraintName="fk_jr534eqd2uu2on33bk33srbp0" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="sec_user" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="command_id" baseTableName="undo_stack_item" constraintName="fk_sg0k3d3hy3aou7lcmhlx51w08" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="command" validate="true"/>
+        <createIndex indexName="image_instance_created_index" tableName="image_instance">
+            <column name="created"/>
+        </createIndex>
+        <createIndex indexName="image_instance_base_image_id_index" tableName="image_instance">
+            <column name="base_image_id"/>
+        </createIndex>
+        <createIndex indexName="image_instance_project_id_index" tableName="image_instance">
+            <column name="project_id"/>
+        </createIndex>
+        <createIndex indexName="image_instance_user_id_index" tableName="image_instance">
+            <column name="user_id"/>
+        </createIndex>
+        <createView fullDefinition="false" viewName="user_image">SELECT image_instance.id,
+            image_instance.version,
+            image_instance.base_image_id,
+            image_instance.count_image_annotations,
+            image_instance.count_image_job_annotations,
+            image_instance.count_image_reviewed_annotations,
+            image_instance.created,
+            image_instance.deleted,
+            image_instance.fps,
+            image_instance.instance_filename,
+            image_instance.magnification,
+            image_instance.physical_size_x,
+            image_instance.physical_size_y,
+            image_instance.physical_size_z,
+            image_instance.project_id,
+            image_instance.review_start,
+            image_instance.review_stop,
+            image_instance.review_user_id,
+            image_instance.updated,
+            image_instance.user_id,
+            image_instance.class,
+            image_instance.parent_id,
+            image_instance.x,
+            image_instance.y,
+            abstract_image.original_filename,
+            project.name AS project_name,
+            project.blind_mode AS project_blind,
+            sec_user.id AS user_image_id,
+            CASE
+            WHEN (max(acl_entry.mask) = 16) THEN true
+            ELSE false
+            END AS user_project_manager
+            FROM ((((((image_instance
+            JOIN sec_user ON ((sec_user.user_id IS NULL)))
+            JOIN project ON (((project.id = image_instance.project_id) AND (project.deleted IS NULL))))
+            JOIN abstract_image ON ((abstract_image.id = image_instance.base_image_id)))
+            JOIN acl_object_identity ON ((project.id = acl_object_identity.object_id_identity)))
+            JOIN acl_sid ON (((acl_sid.sid)::text = (sec_user.username)::text)))
+            JOIN acl_entry ON (((acl_entry.sid = acl_sid.id) AND (acl_entry.acl_object_identity = acl_object_identity.id) AND (acl_entry.mask &gt;= 1))))
+            WHERE ((image_instance.deleted IS NULL) AND (image_instance.parent_id IS NULL))
+            GROUP BY image_instance.id, project.id, sec_user.id, abstract_image.id;</createView>
+        <addForeignKeyConstraint baseColumnNames="project_id" baseTableName="image_instance" constraintName="fk_6fgy0dijeaoewaksl7rlf3ijo" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="project" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="review_user_id" baseTableName="image_instance" constraintName="fk_6wk4ly5mawowa6ch7xic325ba" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="sec_user" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="image_id" baseTableName="image_sequence" constraintName="fk_8o73teg65qjkmhbgw99i95v3u" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="image_instance" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="parent_id" baseTableName="image_instance" constraintName="fk_af23mb7legfv8w5bm2ayah96o" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="image_instance" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="image_id" baseTableName="slice_instance" constraintName="fk_hwgns4jo7dc2l89p6xiyimfcv" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="image_instance" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="base_image_id" baseTableName="image_instance" constraintName="fk_lrrjj2y0tf8xispggbjevkksi" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="abstract_image" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="image_id" baseTableName="track" constraintName="fk_o34jw8ofqrx19528fpwtvwq7w" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="image_instance" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="image_instance" constraintName="fk_tc70uewrdpmbnryjl2ev12b9s" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="sec_user" validate="true"/>
+        <addUniqueConstraint columnNames="project_id, base_image_id" constraintName="unique_base_image_id" tableName="image_instance"/>
+        <addForeignKeyConstraint baseColumnNames="sender_id" baseTableName="shared_annotation" constraintName="fk_qwi8kxyv6j1aod3teoxapwuu0" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="sec_user" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="shared_annotation_receivers_id" baseTableName="shared_annotation_user" constraintName="fk_sqen5jpdhl9utcwm7ob7u4puh" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="shared_annotation" validate="true"/>
+        <createIndex indexName="command_user_id_index" tableName="command">
+            <column name="user_id"/>
+        </createIndex>
+        <createIndex indexName="command_project_id_index" tableName="command">
+            <column name="project_id"/>
+        </createIndex>
+        <createIndex indexName="command_created_index" tableName="command">
+            <column name="created"/>
+        </createIndex>
+        <addForeignKeyConstraint baseColumnNames="transaction_id" baseTableName="command" constraintName="fk_71sexwlgqwurbshptap75oyd8" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="transaction" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="command" constraintName="fk_dno1qx2pstqia5ihw5e2b0602" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="sec_user" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="command_id" baseTableName="redo_stack_item" constraintName="fk_mjskbsj8dd60bknr4wutd4e0b" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="command" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="command_id" baseTableName="command_history" constraintName="fk_roscror71ixgs06th1kk9l61g" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="command" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="project_id" baseTableName="command" constraintName="fk_rt3b167jqhxuwq675fx6y2iyi" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="project" validate="true"/>
+        <createIndex indexName="command_history_project_id_index" tableName="command_history">
+            <column name="project_id"/>
+        </createIndex>
+        <createIndex indexName="command_history_user_id_index" tableName="command_history">
+            <column name="user_id"/>
+        </createIndex>
+        <createIndex indexName="command_history_created_index" tableName="command_history">
+            <column name="created"/>
+        </createIndex>
+        <createIndex indexName="command_history_command_id_index" tableName="command_history">
+            <column name="command_id"/>
+        </createIndex>
+        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="command_history" constraintName="fk_94paw4mm2k7y0r70b0d461r3l" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="sec_user" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="project_id" baseTableName="command_history" constraintName="fk_oua15nsfqgbr0v8hvg5o604lh" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="project" validate="true"/>
+        <createIndex indexName="redo_stack_item_command_id_index" tableName="redo_stack_item">
+            <column name="command_id"/>
+        </createIndex>
+        <addForeignKeyConstraint baseColumnNames="transaction_id" baseTableName="redo_stack_item" constraintName="fk_7pmi3w78wfvbbnv0jhvktnpw7" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="transaction" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="redo_stack_item" constraintName="fk_g6suxxfck342d2ofkb4dwvtay" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="sec_user" validate="true"/>
+        <createIndex indexName="acl_object_identity_object_id_identity_index" tableName="acl_object_identity">
+            <column name="object_id_identity"/>
+        </createIndex>
+        <createView fullDefinition="false" viewName="user_project">SELECT DISTINCT project.id,
+            project.version,
+            project.are_images_downloadable,
+            project.blind_mode,
+            project.count_annotations,
+            project.count_images,
+            project.count_job_annotations,
+            project.count_reviewed_annotations,
+            project.created,
+            project.deleted,
+            project.discipline_id,
+            project.hide_admins_layers,
+            project.hide_users_layers,
+            project.is_closed,
+            project.mode,
+            project.name,
+            project.ontology_id,
+            project.retrieval_all_ontology,
+            project.retrieval_disable,
+            project.updated,
+            sec_user.id AS user_id
+            FROM project,
+            acl_object_identity,
+            sec_user,
+            acl_sid,
+            acl_entry
+            WHERE ((project.id = acl_object_identity.object_id_identity) AND ((acl_sid.sid)::text = (sec_user.username)::text) AND (acl_entry.sid = acl_sid.id) AND (acl_entry.acl_object_identity = acl_object_identity.id) AND (sec_user.user_id IS NULL) AND (acl_entry.mask &gt;= 1) AND (project.deleted IS NULL));</createView>
+        <createView fullDefinition="false" viewName="admin_project">SELECT DISTINCT project.id,
+            project.version,
+            project.are_images_downloadable,
+            project.blind_mode,
+            project.count_annotations,
+            project.count_images,
+            project.count_job_annotations,
+            project.count_reviewed_annotations,
+            project.created,
+            project.deleted,
+            project.discipline_id,
+            project.hide_admins_layers,
+            project.hide_users_layers,
+            project.is_closed,
+            project.mode,
+            project.name,
+            project.ontology_id,
+            project.retrieval_all_ontology,
+            project.retrieval_disable,
+            project.updated,
+            sec_user.id AS user_id
+            FROM project,
+            acl_object_identity,
+            sec_user,
+            acl_sid,
+            acl_entry
+            WHERE ((project.id = acl_object_identity.object_id_identity) AND ((acl_sid.sid)::text = (sec_user.username)::text) AND (acl_entry.sid = acl_sid.id) AND (acl_entry.acl_object_identity = acl_object_identity.id) AND (sec_user.user_id IS NULL) AND (acl_entry.mask &gt;= 16) AND (project.deleted IS NULL));</createView>
+        <createView fullDefinition="false" viewName="creator_project">SELECT DISTINCT project.id,
+            project.version,
+            project.are_images_downloadable,
+            project.blind_mode,
+            project.count_annotations,
+            project.count_images,
+            project.count_job_annotations,
+            project.count_reviewed_annotations,
+            project.created,
+            project.deleted,
+            project.discipline_id,
+            project.hide_admins_layers,
+            project.hide_users_layers,
+            project.is_closed,
+            project.mode,
+            project.name,
+            project.ontology_id,
+            project.retrieval_all_ontology,
+            project.retrieval_disable,
+            project.updated,
+            sec_user.id AS user_id
+            FROM project,
+            acl_object_identity,
+            sec_user,
+            acl_sid
+            WHERE ((project.id = acl_object_identity.object_id_identity) AND ((acl_sid.sid)::text = (sec_user.username)::text) AND (acl_object_identity.owner_sid = acl_sid.id) AND (sec_user.user_id IS NULL) AND (project.deleted IS NULL));</createView>
+        <addForeignKeyConstraint baseColumnNames="object_id_class" baseTableName="acl_object_identity" constraintName="fk_6c3ugmk053uy27bk2sred31lf" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="acl_class" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="parent_object" baseTableName="acl_object_identity" constraintName="fk_6oap2k8q5bl33yq3yffrwedhf" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="acl_object_identity" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="acl_object_identity" baseTableName="acl_entry" constraintName="fk_fhuoesmjef3mrv0gpja4shvcr" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="acl_object_identity" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="owner_sid" baseTableName="acl_object_identity" constraintName="fk_nxv5we2ion9fwedbkge7syoc3" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="acl_sid" validate="true"/>
+        <addUniqueConstraint columnNames="object_id_class, object_id_identity" constraintName="unique_object_id_identity" tableName="acl_object_identity"/>
+        <createIndex indexName="acl_entry_acl_object_identity_index" tableName="acl_entry">
+            <column name="acl_object_identity"/>
+        </createIndex>
+        <createIndex indexName="acl_entry_sid_index" tableName="acl_entry">
+            <column name="sid"/>
+        </createIndex>
+        <addForeignKeyConstraint baseColumnNames="sid" baseTableName="acl_entry" constraintName="fk_i6xyfccd4y3wlwhgwpo4a9rm1" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="acl_sid" validate="true"/>
+        <addUniqueConstraint columnNames="acl_object_identity, ace_order" constraintName="unique_ace_order" tableName="acl_entry"/>
+        <createIndex indexName="acl_sid_sid_index" tableName="acl_sid">
+            <column name="sid"/>
+        </createIndex>
+        <addUniqueConstraint columnNames="sid, principal" constraintName="unique_principal" tableName="acl_sid"/>
+        <createIndex indexName="storage_user_id_index" tableName="storage">
+            <column name="user_id"/>
+        </createIndex>
+        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="storage" constraintName="fk_1i4jiuo3n7io1cc4ilu2s38mc" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="sec_user" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="storage_id" baseTableName="storage_abstract_image" constraintName="fk_c8tmdpqj8hq1yxh09tlc5wkth" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="storage" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="storage_id" baseTableName="image_server_storage" constraintName="fk_nlstfudl6nhhlf5fr2qnvki7r" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="storage" validate="true"/>
+        <createIndex indexName="sample_created_index" tableName="sample">
+            <column name="created"/>
+        </createIndex>
+        <addForeignKeyConstraint baseColumnNames="sample_id" baseTableName="source" constraintName="fk_48nw8m8i0x2m71897wi7cwwta" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="sample" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="sample_id" baseTableName="abstract_image" constraintName="fk_fg6xbsax3enl5wx0w2jg69aj6" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="sample" validate="true"/>
+        <addUniqueConstraint columnNames="name" constraintName="uk_a5hea3xlyin6etsaelmekjrbe" tableName="sample"/>
+        <createIndex indexName="abstract_image_created_index" tableName="abstract_image">
+            <column name="created"/>
+        </createIndex>
+        <createIndex indexName="abstract_image_sample_id_index" tableName="abstract_image">
+            <column name="sample_id"/>
+        </createIndex>
+        <createIndex indexName="abstract_image_uploaded_file_id_index" tableName="abstract_image">
+            <column name="uploaded_file_id"/>
+        </createIndex>
+        <createIndex indexName="abstract_image_user_id_index" tableName="abstract_image">
+            <column name="user_id"/>
+        </createIndex>
+        <addForeignKeyConstraint baseColumnNames="image_id" baseTableName="abstract_slice" constraintName="fk_eixfhdky51jgjel5qwsg7mhqj" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="abstract_image" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="scanner_id" baseTableName="abstract_image" constraintName="fk_md4br11eaxdfd5qtj6uistld1" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="instrument" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="abstract_image_id" baseTableName="storage_abstract_image" constraintName="fk_nx135s1gql4c3f97c9h29iunr" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="abstract_image" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="abstract_image" constraintName="fk_rp6913vdgv2itjspso27dsd4p" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="sec_user" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="image_id" baseTableName="companion_file" constraintName="fk_sj3yu7f4i18htv5yhwkwhg9d3" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="abstract_image" validate="true"/>
+        <createIndex indexName="abstract_slice_uploaded_file_id_index" tableName="abstract_slice">
+            <column name="uploaded_file_id"/>
+        </createIndex>
+        <createIndex indexName="abstract_slice_image_id_index" tableName="abstract_slice">
+            <column name="image_id"/>
+        </createIndex>
+        <addForeignKeyConstraint baseColumnNames="mime_id" baseTableName="abstract_slice" constraintName="fk_1v05hrtjnvce5jyomlmtit7sk" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="mime" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="base_slice_id" baseTableName="slice_instance" constraintName="fk_kotwdsgccim3q30f5yigbcr38" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="abstract_slice" validate="true"/>
+        <createIndex indexName="slice_instance_base_slice_id_index" tableName="slice_instance">
+            <column name="base_slice_id"/>
+        </createIndex>
+        <addForeignKeyConstraint baseColumnNames="slice_id" baseTableName="annotation_track" constraintName="fk_af2j9gu3x7bwisrjaa3my3efw" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="slice_instance" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="project_id" baseTableName="slice_instance" constraintName="fk_ajcae7y95op8hhilef528q16o" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="project" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="slice_id" baseTableName="annotation_index" constraintName="fk_q00ycisk5ula612n81sfx3ud2" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="slice_instance" validate="true"/>
+        <createIndex indexName="property_domain_ident_index" tableName="property">
+            <column name="domain_ident"/>
+        </createIndex>
+        <createIndex indexName="property_key_index" tableName="property">
+            <column name="key"/>
+        </createIndex>
+        <createIndex indexName="attached_file_domain_ident_index" tableName="attached_file">
+            <column name="domain_ident"/>
+        </createIndex>
+        <createIndex indexName="description_domain_ident_index" tableName="description">
+            <column name="domain_ident"/>
+        </createIndex>
+        <createIndex indexName="annotation_index_slice_id_index" tableName="annotation_index">
+            <column name="slice_id"/>
+        </createIndex>
+        <createIndex indexName="annotation_index_user_id_index" tableName="annotation_index">
+            <column name="user_id"/>
+        </createIndex>
+        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="annotation_index" constraintName="fk_kba5x5ktp61txg1wpagqibsok" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="sec_user" validate="true"/>
+        <createIndex indexName="annotation_term_user_annotation_id_index" tableName="annotation_term">
+            <column name="user_annotation_id"/>
+        </createIndex>
+        <createIndex indexName="annotation_term_term_id_index" tableName="annotation_term">
+            <column name="term_id"/>
+        </createIndex>
+        <createIndex indexName="annotation_term_user_id_index" tableName="annotation_term">
+            <column name="user_id"/>
+        </createIndex>
+        <addForeignKeyConstraint baseColumnNames="term_id" baseTableName="annotation_term" constraintName="fk_bi28rym47sc6lgrkq6j1jxfsy" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="term" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="annotation_term" constraintName="fk_fr6po0ubgm4steust2cck5raa" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="sec_user" validate="true"/>
+        <createIndex indexName="algo_annotation_term_annotation_ident_index" tableName="algo_annotation_term">
+            <column name="annotation_ident"/>
+        </createIndex>
+        <createIndex indexName="algo_annotation_term_project_id_index" tableName="algo_annotation_term">
+            <column name="project_id"/>
+        </createIndex>
+        <createIndex indexName="algo_annotation_term_rate_index" tableName="algo_annotation_term">
+            <column name="rate"/>
+        </createIndex>
+        <createIndex indexName="algo_annotation_term_term_id_index" tableName="algo_annotation_term">
+            <column name="term_id"/>
+        </createIndex>
+        <createIndex indexName="algo_annotation_term_user_job_id_index" tableName="algo_annotation_term">
+            <column name="user_job_id"/>
+        </createIndex>
+        <addForeignKeyConstraint baseColumnNames="user_job_id" baseTableName="algo_annotation_term" constraintName="fk_947bqk8gupy5a4waijcu8tttm" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="sec_user" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="term_id" baseTableName="algo_annotation_term" constraintName="fk_n2t11iv92sah6ps4vc54bu8yv" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="term" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="expected_term_id" baseTableName="algo_annotation_term" constraintName="fk_pkgsjc6gcojxrkp7k6jj2bqjg" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="term" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="project_id" baseTableName="algo_annotation_term" constraintName="fk_suqs8shw69cacl2n8m99t0hwh" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="project" validate="true"/>
+        <createIndex indexName="relation_term_relation_id_index" tableName="relation_term">
+            <column name="relation_id"/>
+        </createIndex>
+        <createIndex indexName="relation_term_term1_id_index" tableName="relation_term">
+            <column name="term1_id"/>
+        </createIndex>
+        <createIndex indexName="relation_term_term2_id_index" tableName="relation_term">
+            <column name="term2_id"/>
+        </createIndex>
+        <addForeignKeyConstraint baseColumnNames="term1_id" baseTableName="relation_term" constraintName="fk_9d0uksavo6y85hpv9ikfg6v65" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="term" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="relation_id" baseTableName="relation_term" constraintName="fk_dmkntgxxdj62k5da59k5bi4gk" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="relation" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="term2_id" baseTableName="relation_term" constraintName="fk_r6384f0rfuqensgxjx2207jl7" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="term" validate="true"/>
+        <createIndex indexName="term_ontology_id_index" tableName="term">
+            <column name="ontology_id"/>
+        </createIndex>
+        <addForeignKeyConstraint baseColumnNames="term_id" baseTableName="annotation_filter_term" constraintName="fk_9bvjpw5mgysdncgqxtg3emce2" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="term" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="term_id" baseTableName="reviewed_annotation_term" constraintName="fk_9ihc892kdbdl59mfps7g538ok" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="term" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="ontology_id" baseTableName="term" constraintName="fk_9yffaq04vokeans3ey8sir31w" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="ontology" validate="true"/>
+        <createIndex indexName="track_image_id_index" tableName="track">
+            <column name="image_id"/>
+        </createIndex>
+        <createIndex indexName="track_project_id_index" tableName="track">
+            <column name="project_id"/>
+        </createIndex>
+        <addForeignKeyConstraint baseColumnNames="project_id" baseTableName="track" constraintName="fk_a57b9oiv8h43nn21xl8pwu86e" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="project" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="track_id" baseTableName="annotation_track" constraintName="fk_qjjkidc52v6pallcu0p343ppe" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="track" validate="true"/>
+        <createIndex indexName="annotation_track_track_id_index" tableName="annotation_track">
+            <column name="track_id"/>
+        </createIndex>
+        <createIndex indexName="annotation_track_slice_id_index" tableName="annotation_track">
+            <column name="slice_id"/>
+        </createIndex>
+        <createIndex indexName="annotation_track_annotation_ident_index" tableName="annotation_track">
+            <column name="annotation_ident"/>
+        </createIndex>
+        <createIndex indexName="sec_user_job_id_index" tableName="sec_user">
+            <column name="job_id"/>
+        </createIndex>
+        <createIndex indexName="sec_user_user_id_index" tableName="sec_user">
+            <column name="user_id"/>
+        </createIndex>
+        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="tag" constraintName="fk_151ooxskkpn49blwsh7mjwysx" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="sec_user" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="search_engine_filter" constraintName="fk_4668esumub0lfceei21d3mokn" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="sec_user" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="ontology" constraintName="fk_7o34a7pexlcdiabh6avwb8gds" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="sec_user" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="shared_annotation_user" constraintName="fk_8465xk0vtu2eo78jhwk2evp6g" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="sec_user" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="auth_with_token" constraintName="fk_8fipmhm3xcpkeotckesl7pii" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="sec_user" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="forgot_password_token" constraintName="fk_9s1okjmlql64mh55l9ehjlkmh" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="sec_user" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="annotation_filter" constraintName="fk_a6fivveivhj68xn0bp4vm7sfl" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="sec_user" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="job_id" baseTableName="sec_user" constraintName="fk_brnml18s8o4tjt2qu4yn3tycb" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="job" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="sec_user_id" baseTableName="sec_user_sec_role" constraintName="fk_f1eew3u65ajs3e50xvacwgron" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="sec_user" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="sec_user" constraintName="fk_g5inaeadj5iqiwddmky1pcir2" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="sec_user" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="sec_user_id" baseTableName="annotation_filter_sec_user" constraintName="fk_geipe23f9a46kkpur8sk88383" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="sec_user" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="news" constraintName="fk_l4y0pyrfrk6c7egnf41thnfph" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="sec_user" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="user_group" constraintName="fk_mps81qti05d9he0y66y5jt845" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="sec_user" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="project_representative_user" constraintName="fk_pbag6k4n4xyema08sw2yleut9" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="sec_user" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="project_default_layer" constraintName="fk_tmom8yydh4f43qvfl4i485gb2" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="sec_user" validate="true"/>
+        <addUniqueConstraint columnNames="public_key" constraintName="uk_orqbsamoket434rnhtt6ic46r" tableName="sec_user"/>
+        <createIndex indexName="job_project_id_index" tableName="job">
+            <column name="project_id"/>
+        </createIndex>
+        <createIndex indexName="job_software_id_index" tableName="job">
+            <column name="software_id"/>
+        </createIndex>
+        <createIndex indexName="job_processing_server_id_index" tableName="job">
+            <column name="processing_server_id"/>
+        </createIndex>
+        <addForeignKeyConstraint baseColumnNames="software_id" baseTableName="job" constraintName="fk_55s2532t84kfjb46dm49e18lh" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="software" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="job_id" baseTableName="job_data" constraintName="fk_d829oem8lngvemljcmfuktqqm" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="job" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="project_id" baseTableName="job" constraintName="fk_q8j917t7g0bw0jqspxsqksd8d" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="project" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="job_id" baseTableName="job_parameter" constraintName="fk_quais1rfnay2kdb76nqipvcor" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="job" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="job_template_id" baseTableName="job_template_annotation" constraintName="fk_suxjddbxh6niehsgkej1byd1i" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="job" validate="true"/>
+        <createIndex indexName="job_parameter_job_id_index" tableName="job_parameter">
+            <column name="job_id"/>
+        </createIndex>
+        <createIndex indexName="job_parameter_software_parameter_id_index" tableName="job_parameter">
+            <column name="software_parameter_id"/>
+        </createIndex>
+        <addForeignKeyConstraint baseColumnNames="software_parameter_id" baseTableName="job_parameter" constraintName="fk_jeqigdnlw5f7ylk4cvudnr73" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="software_parameter" validate="true"/>
+        <createIndex indexName="software_parameter_software_id_index" tableName="software_parameter">
+            <column name="software_id"/>
+        </createIndex>
+        <addForeignKeyConstraint baseColumnNames="software_id" baseTableName="software_parameter" constraintName="fk_6tyh4gkgfg7hdq4eba51fkgu7" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="software" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="software_parameter_id" baseTableName="software_parameter_constraint" constraintName="fk_bmw9mo6802ugois8mmb56322f" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="software_parameter" validate="true"/>
+        <createIndex indexName="software_project_software_id_index" tableName="software_project">
+            <column name="software_id"/>
+        </createIndex>
+        <createIndex indexName="software_project_project_id_index" tableName="software_project">
+            <column name="project_id"/>
+        </createIndex>
+        <addForeignKeyConstraint baseColumnNames="project_id" baseTableName="software_project" constraintName="fk_cspa983xvkp2sel4lmlgoo4dr" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="project" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="software_id" baseTableName="software_project" constraintName="fk_sy20a2uj4raaj32avpx3c8nsv" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="software" validate="true"/>
+        <createIndex indexName="user_group_user_id_index" tableName="user_group">
+            <column name="user_id"/>
+        </createIndex>
+        <createIndex indexName="user_group_group_id_index" tableName="user_group">
+            <column name="group_id"/>
+        </createIndex>
+        <addForeignKeyConstraint baseColumnNames="group_id" baseTableName="user_group" constraintName="fk_789v3ejjs9uj5vu1ufexj2tbv" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="group" validate="true"/>
+        <createIndex indexName="auth_with_token_user_id_index" tableName="auth_with_token">
+            <column name="user_id"/>
+        </createIndex>
+        <createIndex indexName="auth_with_token_token_key_index" tableName="auth_with_token">
+            <column name="token_key"/>
+        </createIndex>
+        <addForeignKeyConstraint baseColumnNames="project_id" baseTableName="project_default_layer" constraintName="fk_4uaxr9mro5kcb0apuyjmsmc4p" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="project" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="project_retrieval_projects_id" baseTableName="project_project" constraintName="fk_5aryiqcm0tpxdtbn220rmdio6" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="project" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="project_id" baseTableName="project_representative_user" constraintName="fk_7hmjj6g0xxyw1trmlwf2x4ogc" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="project" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="project_id" baseTableName="annotation_filter" constraintName="fk_7xxsjya2swvuwfbe8kxshvxdw" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="project" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="discipline_id" baseTableName="project" constraintName="fk_9pgiq5w5hfpqi65owpewc3wkp" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="discipline" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="ontology_id" baseTableName="project" constraintName="fk_c3xcld4mvmddp7q2je6d437tc" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="ontology" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="project_id" baseTableName="project_project" constraintName="fk_ehckrfvasgu5bn8p292f87iyx" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="project" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="project_id" baseTableName="image_group" constraintName="fk_pii947c8taadk9csgm9bfggt3" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="project" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="project_id" baseTableName="image_filter_project" constraintName="fk_q2eaays0nr0a00cdkahiekobh" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="project" validate="true"/>
+        <addUniqueConstraint columnNames="name" constraintName="uk_3k75vvu7mevyvvb5may5lj8k7" tableName="project"/>
+        <addForeignKeyConstraint baseColumnNames="tag_id" baseTableName="tag_domain_association" constraintName="fk_85ph9yvqxucw6x8ngk198s05s" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="tag" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="queue_id" baseTableName="amqp_queue_config_instance" constraintName="fk_kd7etbkq6r32b1w8vnt8ywgwr" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="amqp_queue" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="mime_id" baseTableName="mime_image_server" constraintName="fk_iqf8h0fh14kbmyge41fgaas8b" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="mime" validate="true"/>
+        <addUniqueConstraint columnNames="mime_type" constraintName="uk_8xpof8ejct6l0j7xg71co30wl" tableName="mime"/>
+        <addForeignKeyConstraint baseColumnNames="value_id" baseTableName="job_data" constraintName="fk_220nw7q94pw1vn4jcwn4ib57h" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="job_data_binary_value" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="parameter_constraint_id" baseTableName="software_parameter_constraint" constraintName="fk_2kr7g52ehhuavyh6fcvuh5io9" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="parameter_constraint" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="image_filter_id" baseTableName="image_filter_project" constraintName="fk_3o01hjbh1h2pi57p3m87yt60m" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="image_filter" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="imaging_server_id" baseTableName="image_filter" constraintName="fk_8vxvssocyopn3ekmc1n4c5jnn" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="imaging_server" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="software_user_repository_id" baseTableName="software" constraintName="fk_elvfdq78s67rejx0phjfurp69" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="software_user_repository" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="image_group_id" baseTableName="image_sequence" constraintName="fk_5pcxdt1xkyaax3ewupaepkufa" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="image_group" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="group_id" baseTableName="image_grouphdf5" constraintName="fk_s1wtmpm1kg90q32h39jsk9li0" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="image_group" validate="true"/>
+        <addUniqueConstraint columnNames="class" constraintName="uk_iy7ua5fso3il3u3ymoc4uf35w" tableName="acl_class"/>
+        <addUniqueConstraint columnNames="name" constraintName="uk_oy92ak6u4rmbq75jgb14npht7" tableName="group"/>
+        <addUniqueConstraint columnNames="name" constraintName="uk_pber6ij6n37dx73gt6pnpu1yc" tableName="ontology"/>
+        <addForeignKeyConstraint baseColumnNames="annotation_filter_terms_id" baseTableName="annotation_filter_term" constraintName="fk_rpt4hj53gph9lvaapoygjf38n" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="annotation_filter" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="annotation_filter_users_id" baseTableName="annotation_filter_sec_user" constraintName="fk_s612xe9fe2awtoyu3i9cf4mkd" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="annotation_filter" validate="true"/>
+        <addUniqueConstraint columnNames="url" constraintName="uk_34fu6c264ka5wtn9m1mc9qv8l" tableName="imaging_server"/>
+        <addUniqueConstraint columnNames="name" constraintName="uk_rnn0tdmuxc8yr34ric2yhjbid" tableName="discipline"/>
+        <addForeignKeyConstraint baseColumnNames="sec_role_id" baseTableName="sec_user_sec_role" constraintName="fk_bshvqhdx8h9mb4rrbo1ahnp7q" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="sec_role" validate="true"/>
+        <addUniqueConstraint columnNames="authority" constraintName="uk_oah023x2ltqw09mdue7w0mcxb" tableName="sec_role"/>
+        <addUniqueConstraint columnNames="name" constraintName="uk_t3kmot8kxmuws6vj2etsp4ih5" tableName="relation"/>
+        <addUniqueConstraint columnNames="name" constraintName="uk_4xh6udtlhrdr373f8ad060kxn" tableName="amqp_queue"/>
+        <addUniqueConstraint columnNames="exchange" constraintName="uk_70b340wewu6ygx5gaowcfeoot" tableName="amqp_queue"/>
+        <addForeignKeyConstraint baseColumnNames="image_server_id" baseTableName="image_server_storage" constraintName="fk_eeljdeqkardecnhmluhc0omnj" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="image_server" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="image_server_id" baseTableName="mime_image_server" constraintName="fk_rq7n6544wcycp6bn6btas7nqd" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="image_server" validate="true"/>
+        <addUniqueConstraint columnNames="key" constraintName="uk_5wejhym1uspe4klluscbwo9r" tableName="configuration"/>
+        <addUniqueConstraint columnNames="name" constraintName="uk_qd8nvmlgro9wc7yvvkfr9iump" tableName="message_broker_server"/>
+        <createSequence cacheSize="1" cycle="false" dataType="bigint" incrementBy="1" maxValue="9223372036854775807" minValue="1" sequenceName="hibernate_sequence" startValue="1"/>
+        <createTable tableName="algo_annotation">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="algo_annotation_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="area" type="FLOAT8"/>
+            <column name="area_unit" type="INTEGER"/>
+            <column name="count_comments" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="count_reviewed_annotations" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="geometry_compression" type="FLOAT8"/>
+            <column name="image_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="location" type="GEOMETRY">
+                <constraints nullable="false"/>
+            </column>
+            <column name="perimeter" type="FLOAT8"/>
+            <column name="perimeter_unit" type="INTEGER"/>
+            <column name="project_id" type="BIGINT"/>
+            <column name="slice_id" type="BIGINT"/>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="wkt_location" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createTable tableName="retrieval_server">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="retrieval_server_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="description" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="password" type="VARCHAR(255)"/>
+            <column name="path" type="VARCHAR(255)"/>
+            <column name="port" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="url" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="username" type="VARCHAR(255)"/>
+        </createTable>
+        <createTable tableName="reviewed_annotation">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="reviewed_annotation_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="area" type="FLOAT8"/>
+            <column name="area_unit" type="INTEGER"/>
+            <column name="count_comments" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="geometry_compression" type="FLOAT8"/>
+            <column name="image_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="location" type="GEOMETRY">
+                <constraints nullable="false"/>
+            </column>
+            <column name="parent_class_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="parent_ident" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="perimeter" type="FLOAT8"/>
+            <column name="perimeter_unit" type="INTEGER"/>
+            <column name="project_id" type="BIGINT"/>
+            <column name="review_user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="slice_id" type="BIGINT"/>
+            <column name="status" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="wkt_location" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createTable tableName="roi_annotation">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="roi_annotation_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="area" type="FLOAT8"/>
+            <column name="area_unit" type="INTEGER"/>
+            <column name="count_comments" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="geometry_compression" type="FLOAT8"/>
+            <column name="image_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="location" type="GEOMETRY">
+                <constraints nullable="false"/>
+            </column>
+            <column name="perimeter" type="FLOAT8"/>
+            <column name="perimeter_unit" type="INTEGER"/>
+            <column name="project_id" type="BIGINT"/>
+            <column name="slice_id" type="BIGINT"/>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="wkt_location" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createTable tableName="task">
+            <column name="id" type="BIGINT"/>
+            <column name="progress" type="BIGINT"/>
+            <column name="project_id" type="BIGINT"/>
+            <column name="user_id" type="BIGINT"/>
+            <column name="print_in_activity" type="BOOLEAN"/>
+        </createTable>
+        <createTable tableName="task_comment">
+            <column name="task_id" type="BIGINT"/>
+            <column name="comment" type="VARCHAR(255)"/>
+            <column name="timestamp" type="BIGINT"/>
+        </createTable>
+        <createTable tableName="uploaded_file">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="uploaded_file_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="content_type" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="ext" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="filename" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="image_server_id" type="BIGINT"/>
+            <column name="l_tree" type="LTREE"/>
+            <column name="original_filename" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="parent_id" type="BIGINT"/>
+            <column name="projects" type="BYTEA"/>
+            <column name="size" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="storage_id" type="BIGINT"/>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createTable tableName="user_annotation">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="user_annotation_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="area" type="FLOAT8"/>
+            <column name="area_unit" type="INTEGER"/>
+            <column name="count_comments" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="count_reviewed_annotations" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="deleted" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="geometry_compression" type="FLOAT8"/>
+            <column name="image_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="location" type="GEOMETRY">
+                <constraints nullable="false"/>
+            </column>
+            <column name="perimeter" type="FLOAT8"/>
+            <column name="perimeter_unit" type="INTEGER"/>
+            <column name="project_id" type="BIGINT"/>
+            <column name="slice_id" type="BIGINT"/>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="wkt_location" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createIndex indexName="algo_annotation_created_index" tableName="algo_annotation">
+            <column name="created"/>
+        </createIndex>
+        <createIndex indexName="algo_annotation_image_id_index" tableName="algo_annotation">
+            <column name="image_id"/>
+        </createIndex>
+        <!-- Not possible to specify the index type using liquibase, so we write a custom sql command-->
+        <sql>
+            CREATE INDEX algo_annotation_location_index
+                ON algo_annotation USING GIST (location);
+        </sql>
+
+        <createIndex indexName="algo_annotation_project_id_index" tableName="algo_annotation">
+            <column name="project_id"/>
+        </createIndex>
+        <createIndex indexName="algo_annotation_slice_id_index" tableName="algo_annotation">
+            <column name="slice_id"/>
+        </createIndex>
+        <createIndex indexName="algo_annotation_user_id_index" tableName="algo_annotation">
+            <column name="user_id"/>
+        </createIndex>
+        <createIndex indexName="reviewed_annotation_image_id_index" tableName="reviewed_annotation">
+            <column name="image_id"/>
+        </createIndex>
+        <sql>
+            CREATE INDEX reviewed_annotation_location_index
+                ON reviewed_annotation USING GIST (location);
+        </sql>
+        <createIndex indexName="reviewed_annotation_project_id_index" tableName="reviewed_annotation">
+            <column name="project_id"/>
+        </createIndex>
+        <createIndex indexName="reviewed_annotation_slice_id_index" tableName="reviewed_annotation">
+            <column name="slice_id"/>
+        </createIndex>
+        <createIndex indexName="reviewed_annotation_user_id_index" tableName="reviewed_annotation">
+            <column name="user_id"/>
+        </createIndex>
+        <createIndex indexName="uploaded_file_l_tree_index" tableName="uploaded_file">
+            <column name="l_tree"/>
+        </createIndex>
+        <createIndex indexName="uploaded_file_parent_id_index" tableName="uploaded_file">
+            <column name="parent_id"/>
+        </createIndex>
+        <createIndex indexName="uploaded_file_storage_id_index" tableName="uploaded_file">
+            <column name="storage_id"/>
+        </createIndex>
+        <createIndex indexName="uploaded_file_user_id_index" tableName="uploaded_file">
+            <column name="user_id"/>
+        </createIndex>
+        <createIndex indexName="user_annotation_created_index" tableName="user_annotation">
+            <column name="created"/>
+        </createIndex>
+        <createIndex indexName="user_annotation_image_id_index" tableName="user_annotation">
+            <column name="image_id"/>
+        </createIndex>
+
+        <!-- Not possible to specify the index type using liquibase, so we write a custom sql command-->
+        <sql>
+            CREATE INDEX user_annotation_location_index
+                ON user_annotation USING GIST (location);
+        </sql>
+
+
+        <!-- Unfortunatley Liquibase doesn't allow you to specify index type yet -->
+        <!-- http://forum.liquibase.org/topic/create-index-and-order -->
+
+
+        <createIndex indexName="user_annotation_project_id_index" tableName="user_annotation">
+            <column name="project_id"/>
+        </createIndex>
+        <createIndex indexName="user_annotation_slice_id_index" tableName="user_annotation">
+            <column name="slice_id"/>
+        </createIndex>
+        <createIndex indexName="user_annotation_user_id_index" tableName="user_annotation">
+            <column name="user_id"/>
+        </createIndex>
+        <addForeignKeyConstraint baseColumnNames="slice_id" baseTableName="algo_annotation" constraintName="fk_1qdju4knrk7toobg7n0ivltt4" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="slice_instance" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="algo_annotation" constraintName="fk_27qlqf6575ldhghmfapwbfy1b" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="sec_user" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="uploaded_file" constraintName="fk_2i0u11nairnbqcxiihykjfrd6" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="sec_user" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="reviewed_annotation" constraintName="fk_30svf5sownvmphoaycl110lsv" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="sec_user" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="review_user_id" baseTableName="reviewed_annotation" constraintName="fk_5f7mc0q3prv1iw7m8y189puu9" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="sec_user" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="slice_id" baseTableName="roi_annotation" constraintName="fk_71fxrf96p4gdjapic407c4ln9" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="slice_instance" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="project_id" baseTableName="roi_annotation" constraintName="fk_7jcom8790cdmsiidhphwdr53c" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="project" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="uploaded_file_id" baseTableName="abstract_image" constraintName="fk_9dirkh1o5a34eyqyko0b8fet9" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="uploaded_file" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="image_id" baseTableName="algo_annotation" constraintName="fk_9eqqx7n2f3kbh4a4ogxy8rbk8" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="image_instance" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="project_id" baseTableName="reviewed_annotation" constraintName="fk_cvaa1jfp32huoau3ldn1so0pk" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="project" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="storage_id" baseTableName="uploaded_file" constraintName="fk_ednveec54vgvlnjew6in5b5oa" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="storage" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="image_id" baseTableName="roi_annotation" constraintName="fk_eeaivtb750v2bmkk3f1gvyh52" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="image_instance" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="slice_id" baseTableName="user_annotation" constraintName="fk_g0e6mvitmag5jghdq5t3arg0u" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="slice_instance" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="reviewed_annotation_terms_id" baseTableName="reviewed_annotation_term" constraintName="fk_g1rqdsqh8o7uam53gbw88639o" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="reviewed_annotation" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="user_annotation" constraintName="fk_hey8qie1qqqmijq65n3er7udm" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="sec_user" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="user_annotation_id" baseTableName="annotation_term" constraintName="fk_itea7ffu4d5f61o3r9bejj79a" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="user_annotation" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="image_id" baseTableName="user_annotation" constraintName="fk_j2b8vqjqbpqmw5g3rb3emupw9" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="image_instance" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="image_server_id" baseTableName="uploaded_file" constraintName="fk_jy7rfc162x2am5l8llgvcgv89" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="image_server" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="image_id" baseTableName="reviewed_annotation" constraintName="fk_n6p8xu8qcpsqk3ix8x8qb673q" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="image_instance" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="project_id" baseTableName="user_annotation" constraintName="fk_nxgwfb0fg47xtctst2lefat2y" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="project" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="uploaded_file_id" baseTableName="abstract_slice" constraintName="fk_ofu9h6te8gghbjdmqh24so6cl" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="uploaded_file" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="uploaded_file_id" baseTableName="companion_file" constraintName="fk_pa1j55xx7lx1q5dkegsu2kvii" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="uploaded_file" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="parent_id" baseTableName="uploaded_file" constraintName="fk_r7h853sqa7vwt5rm9nk1gw67q" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="uploaded_file" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="project_id" baseTableName="algo_annotation" constraintName="fk_s3yhotmnvw0mu2a01yyeved8o" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="project" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="roi_annotation" constraintName="fk_skvm9rulcag79vbil8mpgo8en" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="sec_user" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="slice_id" baseTableName="reviewed_annotation" constraintName="fk_t57p1fkwwbsl8mspqas7scl7l" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="slice_instance" validate="true"/>
+    </changeSet>
+</databaseChangeLog>
