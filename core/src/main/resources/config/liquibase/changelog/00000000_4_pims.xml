@@ -1,0 +1,27 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-4.1.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
+    <changeSet author="lrollus (generated)" id="4A">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="abstract_image" columnName="extrinsic_channels" /> <!-- may already have been created by v3-v4 migration script -->
+            </not>
+        </preConditions>
+        <addColumn tableName="abstract_image" >
+            <column name="extrinsic_channels" type="INTEGER"/>
+        </addColumn>
+        <addColumn tableName="abstract_slice" >
+            <column name="channel_color" type="VARCHAR(255)"/>
+            <column name="channel_name" type="VARCHAR(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="lrollus (generated)" id="4B">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="abstract_image" columnName="extracted_metadata" /> <!-- may already have been created by v3-v4 migration script -->
+            </not>
+        </preConditions>
+        <addColumn tableName="abstract_image" >
+            <column name="extracted_metadata" type="TIMESTAMP WITHOUT TIME ZONE"/>
+        </addColumn>
+    </changeSet>
+</databaseChangeLog>

@@ -1,0 +1,154 @@
+plugins {
+	id 'org.springframework.boot' version '3.2.3'
+	id 'io.spring.dependency-management' version '1.1.0'
+	id 'java'
+	id 'jacoco'
+}
+
+
+bootJar {
+	archiveFileName = 'cytomine.jar'
+}
+
+
+group = 'be.cytomine'
+version = '0.0.0'
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+springBoot {
+	mainClass = "be.cytomine.CytomineCoreApplication"
+}
+
+
+dependencies {
+	// Thanks to Spring dependency-management plugin, all following dependencies automatically get the right version
+	// See https://docs.spring.io/spring-boot/docs/3.0.13/reference/html/dependency-versions.html
+	implementation 'org.springframework.boot:spring-boot-starter-logging'
+	implementation 'org.springframework.boot:spring-boot-starter-data-jdbc'
+	implementation ('org.springframework.boot:spring-boot-starter-data-jpa')
+	implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
+	implementation 'org.springframework.boot:spring-boot-starter-websocket'
+
+	// Hibernate
+	annotationProcessor 'org.hibernate.orm:hibernate-jpamodelgen'
+	implementation 'org.hibernate.orm:hibernate-core'
+	implementation 'org.hibernate.orm:hibernate-spatial'
+	implementation 'org.hibernate.validator:hibernate-validator'
+
+	// Postgresql
+	implementation 'org.postgresql:postgresql'
+	implementation 'com.zaxxer:HikariCP'
+	implementation 'org.liquibase:liquibase-core'
+
+	// Spring security
+	implementation 'org.springframework.security:spring-security-acl'
+
+	// Utils
+	implementation 'org.apache.commons:commons-lang3'
+	implementation 'commons-codec:commons-codec'
+	implementation 'org.apache.httpcomponents.client5:httpclient5'
+	implementation 'com.auth0:java-jwt:4.5.0'
+
+	// Jackson
+	implementation 'com.fasterxml.jackson.core:jackson-annotations'
+	implementation 'com.fasterxml.jackson.core:jackson-databind'
+	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-hppc'
+	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+	implementation 'com.fasterxml.jackson.module:jackson-module-jaxb-annotations'
+	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-hibernate5'
+
+	// Lombok
+	compileOnly 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok'
+
+	// Tests
+	testImplementation 'org.junit.jupiter:junit-jupiter'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.springframework.security:spring-security-test'
+	testImplementation 'org.assertj:assertj-core:3.4.1' // TODO: upgrade to 3.23.1
+
+	// -----------------------------------------------------------------------------------------------------------------
+	// Dependencies not managed by Spring dependency-management
+
+    // Jakarta
+    compileOnly 'jakarta.platform:jakarta.jakartaee-api:10.0.0'
+
+	// Gateway
+	// See https://spring.io/projects/spring-cloud for compatibility matrix with Spring Boot
+	implementation 'org.springframework.cloud:spring-cloud-gateway-mvc:4.0.9'
+
+	// JSON tokens
+	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+	implementation 'io.jsonwebtoken:jjwt-impl:0.11.5'
+	implementation 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+
+	// Hibernate
+	// See https://github.com/vladmihalcea/hypersistence-utils for related Hibernate version package
+	implementation 'io.hypersistence:hypersistence-utils-hibernate-62:3.7.3'
+	implementation 'org.locationtech.jts:jts-core:1.19.0'
+	implementation 'org.locationtech.jts.io:jts-io-common:1.19.0'
+
+	// Reports (PDF, CSV, Excel, ...)
+	implementation 'org.apache.pdfbox:pdfbox:2.0.25'
+	implementation 'com.github.dhorions:boxable'
+	constraints {
+		implementation('com.github.dhorions:boxable:1.7.0')
+		implementation('org.jsoup:jsoup:1.15.3') {
+			because 'https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-36033'
+		}
+	}
+	implementation 'org.apache.commons:commons-csv:1.5'
+	implementation 'org.apache.poi:poi:5.2.3'
+
+	// Keycloak admin SDK
+	implementation group: 'org.keycloak', name: 'keycloak-admin-client', version: '24.0.2'
+
+	// OAuth2 Server resource & client
+	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+	implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
+
+	// Utils
+	implementation 'org.apache.commons:commons-text:1.11.0'
+	implementation 'net.bull.javamelody:javamelody-spring-boot-starter:2.1.0'
+	testImplementation 'com.github.tomakehurst:wiremock:1.58'
+}
+
+test {
+	useJUnitPlatform()
+	testLogging.showStandardStreams = true
+}
+
+
+test {
+	finalizedBy jacocoTestReport // report is always generated after tests run
+}
+jacocoTestReport {
+	dependsOn test // tests are required to run before generating the report
+}
+
+jacoco {
+	toolVersion = "0.8.7"
+	reportsDirectory = file("$buildDir/jacoco")
+}
+
+jacocoTestCoverageVerification {
+	violationRules {
+		rule {
+			limit {
+				minimum = 1
+			}
+		}
+	}
+}

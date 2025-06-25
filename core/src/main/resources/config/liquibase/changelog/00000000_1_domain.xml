@@ -1,0 +1,29 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-4.1.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
+    <changeSet author="lrollus (generated)" id="1A">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="job_template_annotation"/>
+            </not>
+        </preConditions>
+        <sql>
+            UPDATE job_template_annotation SET annotation_class_name = REPLACE (annotation_class_name, 'be.cytomine.', 'be.cytomine.domain.') where annotation_class_name not LIKE 'be.cytomine.domain%';
+        </sql>
+    </changeSet>
+    <changeSet author="lrollus (generated)" id="1B">
+        <sql>
+            UPDATE acl_class SET class = REPLACE (class, 'be.cytomine.', 'be.cytomine.domain.') where class not LIKE 'be.cytomine.domain%';
+            UPDATE algo_annotation_term SET annotation_class_name = REPLACE (annotation_class_name, 'be.cytomine.', 'be.cytomine.domain.') where annotation_class_name not LIKE 'be.cytomine.domain%';
+            UPDATE annotation_track SET annotation_class_name = REPLACE (annotation_class_name, 'be.cytomine.', 'be.cytomine.domain.') where annotation_class_name not LIKE 'be.cytomine.domain%';
+            UPDATE attached_file SET domain_class_name = REPLACE (domain_class_name, 'be.cytomine.', 'be.cytomine.domain.') where domain_class_name not LIKE 'be.cytomine.domain%';
+            UPDATE command SET class = REPLACE (class, 'be.cytomine.', 'be.cytomine.domain.') where class not LIKE 'be.cytomine.domain%';
+            UPDATE image_instance SET class = REPLACE (class, 'be.cytomine.', 'be.cytomine.domain.') where class not LIKE 'be.cytomine.domain%';
+            UPDATE description SET domain_class_name = REPLACE (domain_class_name, 'be.cytomine.', 'be.cytomine.domain.') where domain_class_name not LIKE 'be.cytomine.domain%';
+            UPDATE property SET domain_class_name = REPLACE (domain_class_name, 'be.cytomine.', 'be.cytomine.domain.') where domain_class_name not LIKE 'be.cytomine.domain%';
+            UPDATE property SET domain_class_name = REPLACE (domain_class_name, 'be.cytomine.', 'be.cytomine.domain.') where domain_class_name not LIKE 'be.cytomine.domain%';
+            UPDATE sec_user SET class = REPLACE (class, 'be.cytomine.', 'be.cytomine.domain.') where class not LIKE 'be.cytomine.domain%';
+            UPDATE shared_annotation SET annotation_class_name = REPLACE (annotation_class_name, 'be.cytomine.', 'be.cytomine.domain.') where annotation_class_name not LIKE 'be.cytomine.domain%';
+            UPDATE tag_domain_association SET domain_class_name = REPLACE (domain_class_name, 'be.cytomine.', 'be.cytomine.domain.') where domain_class_name not LIKE 'be.cytomine.domain%';
+        </sql>
+    </changeSet>
+</databaseChangeLog>

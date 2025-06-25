@@ -1,0 +1,15 @@
+mongock:
+  migration-scan-package:
+    be.cytomine.config.nosqlmigration
+
+logging:
+  level:
+    org.springframework.data.mongodb.core.MongoTemplate: DEBUG
+
+application:
+  serverURL: http://cytomine.local
+  adminPassword: password
+
+  authentication:
+    jwt:
+      secret: +MbQeThWmZq4t6w9z$C&F)J@NcRfUjXn2r5u8x!A%D*G-KaPdSgVkYp3s6v9y$B?

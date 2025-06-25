@@ -1,0 +1,140 @@
+spring:
+  profiles:
+    active: default
+    include: custom-ui
+
+  main:
+    allow-circular-references: true
+
+  thymeleaf:
+    prefix: "classpath:/templates/"
+
+  servlet:
+    multipart:
+      max-file-size: 15GB
+      max-request-size: 15GB
+      location: /tmp/multipart
+
+  security:
+    oauth2:
+      client:
+        registration:
+          keycloak:
+            client-id: core
+            authorization-grant-type: authorization_code
+            redirect-uri: ${INTERNAL_PROXY_URL:http://nginx}/iam/realms/cytomine
+            scope:
+              - openid
+        provider:
+          keycloak:
+            user-name-attribute: preferred_username
+            authorization-uri: ${INTERNAL_PROXY_URL:http://nginx}/iam/realms/cytomine/protocol/openid-connect/auth
+            token-uri: ${INTERNAL_PROXY_URL:http://nginx}/iam/realms/cytomine/protocol/openid-connect/token
+            jwk-set-uri: ${INTERNAL_PROXY_URL:http://nginx}/iam/realms/cytomine/.well-known/openid-configuration
+      resourceserver:
+        jwt:
+          issuer-uri: ${SERVER_URL:http://127.0.0.1}/iam/realms/cytomine
+          jws-algorithms: RS256
+          jwk-set-uri: ${INTERNAL_PROXY_URL:http://nginx}/iam/realms/cytomine/protocol/openid-connect/certs
+
+
+  datasource:
+    type: com.zaxxer.hikari.HikariDataSource
+    url: jdbc:postgresql://${POSTGIS_HOST:localhost}:${POSTGIS_PORT:5432}/${POSTGIS_DB_NAME:docker}
+    username: ${POSTGIS_USER:docker}
+    password: ${POSTGIS_PASS:password}
+    hikari:
+      poolName: Hikari
+      auto-commit: false
+
+  jpa:
+#    database-platform: be.cytomine.config.CustomPostgreSQLDialect
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+        jdbc:
+          batch_size: 50
+
+  # Replace by 'prod, faker' to add the faker context and have sample data loaded in production
+  #liquibase:
+  #  contexts: prod
+  liquibase:
+    change-log: classpath:config/liquibase/master.xml
+
+  data:
+    mongodb:
+      authentication-database: admin
+      username: ${MONGO_USER:mongoadmin}
+      password: ${MONGO_PASS:password}
+      database: ${MONGO_DB_NAME:cytomine}
+      port: ${MONGO_PORT:27017}
+      host: ${MONGO_HOST:localhost}
+
+  mail:
+    host: ${SMTP_HOST:}
+    port: ${SMTP_PORT:587}
+    username: ${SMTP_USER:}
+    password: ${SMTP_PASS:}
+    properties:
+      mail:
+        smtp:
+          auth: ${SMTP_AUTH:true}
+          starttls:
+            enable: ${SMTP_STARTTLS:true}
+
+server:
+  port: ${PORT:8080}
+
+javamelody:
+  enabled: ${JAVAMELODY_ENABLED:false}
+  init-parameters:
+    authorized-users: ${JAVAMELODY_USER:admin}:${JAVAMELODY_PASS:password}
+    storage-directory: ${JAVAMELODY_PATH:/tmp/javamelody-core}
+
+application:
+  version: 0.0.0 # do not modify this, it will be replace during build (ci)
+
+  serverId: ${SERVER_ID:default}
+  serverURL: ${SERVER_URL:http://127.0.0.1}
+  storagePath: ${STORAGE_PATH:/data/images}
+
+  adminPassword: ${ADMIN_PASSWORD:adminPassword}
+  adminEmail: ${ADMIN_EMAIL:dev@cytomine.com}
+  adminPublicKey: ${ADMIN_PUBLIC_KEY:adminPublicKey}
+  adminPrivateKey: ${ADMIN_PRIVATE_KEY:adminPrivateKey}
+  superAdminPublicKey: ${SUPER_ADMIN_PUBLIC_KEY:superAdminPublicKey}
+  superAdminPrivateKey: ${SUPER_ADMIN_PRIVATE_KEY:superAdminPrivateKey}
+  ImageServerPublicKey: ${IMAGE_SERVER_PUBLIC_KEY:imageServerPublicKey}
+  ImageServerPrivateKey: ${IMAGE_SERVER_PRIVATE_KEY:imageServerPrivateKey}
+  instanceHostWebsite: ${INSTANCE_HOST_WEBSITE_URL:#{'https://www.cytomine.com'}}
+  instanceHostSupportMail: ${INSTANCE_HOST_SUPPORT_MAIL:support@cytomine.com}
+  instanceHostPhoneNumber: ${INSTANCE_HOST_PHONE_NUMBER:+320/000.00.00}
+  defaultLanguage: ${DEFAULT_LANGUAGE:ENGLISH}
+
+  notification:
+    email: ${DEFAULT_FROM_EMAIL:no-reply@cytomine.com}
+
+  authentication:
+    jwt:
+      # This token must be encoded using Base64 and be at least 256 bits long (you can type `openssl rand -base64 64` on your command line to generate a 512 bits one)
+      secret: ${JWT_SECRET}
+      # Token is valid 24 hours
+      token-validity-in-seconds: ${TOKEN_VALIDITY_IN_SECONDS:86400}
+      token-validity-in-seconds-for-remember-me: ${TOKEN_VALIDITY_IN_SECONDS_REMEMBER_ME:2592000}
+      token-validity-in-seconds-for-short-term: ${TOKEN_VALIDITY_IN_SECONDS_SHORT_TERM:300}
+
+  internalProxyURL: ${INTERNAL_PROXY_URL:http://localhost}
+
+  annotation:
+    maxNumberOfPoint: ${ANNOTATION_MAX_POINTS:200}
+
+  appEngine:
+    enabled: ${APPENGINE_ENABLED:true}
+    apiBasePath: ${APPENGINE_API_BASE_PATH:/app-engine/v1/}
+
+jwt:
+  auth:
+    converter:
+      resource-id: core
+      principle-attribute: preferred_username

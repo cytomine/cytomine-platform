@@ -1,0 +1,39 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-4.1.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
+    <changeSet author="urubens" id="4a2542a8-7d23-4494-8be9-c87725b00e64">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="task_run"/>
+            </not>
+        </preConditions>
+        <createTable tableName="task_run">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="task_run_pkey"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="project_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="task_run_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="image_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        
+        <createIndex indexName="task_run_project_id_index" tableName="task_run">
+            <column name="project_id"/>
+        </createIndex>
+        <addForeignKeyConstraint baseColumnNames="project_id" baseTableName="task_run" constraintName="fk_6fgy0dijeaodgnjaksl7rlf3ijo" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="project" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="task_run" constraintName="fk_tc70uewrdpmbdsgiryjl2ev12b9s" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="sec_user" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="image_id" baseTableName="task_run" constraintName="fk_td81uexseqqncedihzxm3fv13d8t" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="image_instance" validate="true"/>
+    </changeSet>
+</databaseChangeLog>

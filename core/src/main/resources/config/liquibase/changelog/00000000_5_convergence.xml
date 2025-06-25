@@ -1,0 +1,15 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-4.1.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
+    <changeSet author="lrollus (generated)" id="5">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="abstract_image" columnName="sample_per_pixel" /> <!-- may already have been created by v3-v4 migration script -->
+            </not>
+        </preConditions>
+        <addColumn tableName="abstract_image" >
+            <column name="sample_per_pixel" type="INTEGER" defaultValueNumeric="8"/>
+            <column name="bit_per_sample" type="INTEGER" defaultValueNumeric="8"/>
+            <column name="tile_size" type="INTEGER" defaultValueNumeric="256"/>
+        </addColumn>
+    </changeSet>
+</databaseChangeLog>

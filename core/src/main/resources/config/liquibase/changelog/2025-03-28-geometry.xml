@@ -1,0 +1,130 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:pro="http://www.liquibase.org/xml/ns/pro"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd
+                        http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-4.1.xsd
+                        http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd"
+>
+    <changeSet author="bale" id="4dbcd51f-0493-4921-9a47-a3f423b2320d">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="annotation" />
+                <tableExists tableName="annotation_layer" />
+                <tableExists tableName="task_run_layer" />
+            </not>
+        </preConditions>
+
+        <createTable tableName="annotation">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="annotation_pkey" />
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false" />
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE" />
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE" />
+
+            <column name="layer_id" type="BIGINT">
+                <constraints nullable="false" />
+            </column>
+            <column name="location" type="BYTEA">
+                <constraints nullable="false" />
+            </column>
+        </createTable>
+
+        <createTable tableName="annotation_layer">
+            <column name="id" type="BIGINT">
+                <constraints
+                    nullable="false"
+                    primaryKey="true"
+                    primaryKeyName="annotation_layer_pkey"
+                />
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false" />
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE" />
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE" />
+
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false" />
+            </column>
+        </createTable>
+
+        <createTable tableName="task_run_layer">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="task_run_layer_pkey" />
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false" />
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE" />
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE" />
+
+            <column name="layer_id" type="BIGINT">
+                <constraints nullable="false" />
+            </column>
+            <column name="task_run_id" type="BIGINT">
+                <constraints nullable="false" />
+            </column>
+            <column name="image_instance_id" type="BIGINT">
+                <constraints nullable="false" />
+            </column>
+
+            <column name="x_offset" type="INTEGER" />
+            <column name="y_offset" type="INTEGER" />
+        </createTable>
+
+        <addForeignKeyConstraint
+            baseColumnNames="layer_id"
+            baseTableName="annotation"
+            constraintName="fk_ee69296e02520054c41a04defd09"
+            deferrable="false"
+            initiallyDeferred="false"
+            onDelete="NO ACTION"
+            onUpdate="NO ACTION"
+            referencedColumnNames="id"
+            referencedTableName="annotation_layer"
+            validate="true"
+        />
+        <addForeignKeyConstraint
+            baseColumnNames="layer_id"
+            baseTableName="task_run_layer"
+            constraintName="fk_100eced085dd04c078f2cedf10a5"
+            deferrable="false"
+            initiallyDeferred="false"
+            onDelete="NO ACTION"
+            onUpdate="NO ACTION"
+            referencedColumnNames="id"
+            referencedTableName="annotation_layer"
+            validate="true"
+        />
+        <addForeignKeyConstraint
+            baseColumnNames="task_run_id"
+            baseTableName="task_run_layer"
+            constraintName="fk_7ef5a1a1475e0859883960d73425"
+            deferrable="false"
+            initiallyDeferred="false"
+            onDelete="NO ACTION"
+            onUpdate="NO ACTION"
+            referencedColumnNames="id"
+            referencedTableName="task_run"
+            validate="true"
+        />
+        <addForeignKeyConstraint
+            baseColumnNames="image_instance_id"
+            baseTableName="task_run_layer"
+            constraintName="fk_3a126d242f6e7e71023b9ba9496b"
+            deferrable="false"
+            initiallyDeferred="false"
+            onDelete="NO ACTION"
+            onUpdate="NO ACTION"
+            referencedColumnNames="id"
+            referencedTableName="image_instance"
+            validate="true"
+        />
+    </changeSet>
+</databaseChangeLog>

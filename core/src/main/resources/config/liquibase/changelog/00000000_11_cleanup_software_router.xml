@@ -1,0 +1,94 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-4.1.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
+    <changeSet author="urubens" id="11_A">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="message_broker_server"/>
+        </preConditions>
+        <dropTable cascadeConstraints="true" tableName="message_broker_server"/>
+    </changeSet>
+
+    <changeSet author="urubens" id="11_B">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="amqp_queue"/>
+        </preConditions>
+        <dropTable cascadeConstraints="true" tableName="amqp_queue"/>
+    </changeSet>
+    <changeSet author="urubens" id="11_C">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="amqp_queue_config"/>
+        </preConditions>
+        <dropTable cascadeConstraints="true" tableName="amqp_queue_config"/>
+    </changeSet>
+    <changeSet author="urubens" id="11_D">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="amqp_queue_config_instance"/>
+        </preConditions>
+        <dropTable cascadeConstraints="true" tableName="amqp_queue_config_instance"/>
+    </changeSet>
+    <changeSet author="urubens" id="11_E">
+         <preConditions onFail="MARK_RAN">
+            <tableExists tableName="processing_server"/>
+        </preConditions>
+        <dropTable cascadeConstraints="true" tableName="processing_server"/>
+    </changeSet>
+    <changeSet author="urubens" id="11_F">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="software_user_repository"/></preConditions>
+        <dropTable cascadeConstraints="true" tableName="software_user_repository"/>
+    </changeSet>
+
+    <changeSet author="urubens" id="11_H">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="parameter_constraint"/></preConditions>
+        <dropTable cascadeConstraints="true" tableName="parameter_constraint"/>
+    </changeSet>
+    <changeSet author="urubens" id="11_I">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="software_parameter_constraint"/></preConditions>
+        <dropTable cascadeConstraints="true" tableName="software_parameter_constraint"/>
+    </changeSet>
+
+    <changeSet author="urubens" id="11_K">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="job_data_binary_value"/></preConditions>
+        <dropTable cascadeConstraints="true" tableName="job_data_binary_value"/>
+    </changeSet>
+    <changeSet author="urubens" id="11_L">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="job_data"/></preConditions>
+        <dropTable cascadeConstraints="true" tableName="job_data"/>
+    </changeSet>
+    <changeSet author="urubens" id="11_M">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="job_template_annotation"/></preConditions>
+        <dropTable cascadeConstraints="true" tableName="job_template_annotation"/>
+    </changeSet>
+    <changeSet author="urubens" id="11_N">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="job_parameter"/></preConditions>
+        <dropTable cascadeConstraints="true" tableName="job_parameter"/>
+    </changeSet>
+    <changeSet author="urubens" id="11_O">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="job"/></preConditions>
+        <dropTable cascadeConstraints="true" tableName="job"/>
+    </changeSet>
+
+    <changeSet author="urubens" id="11_G">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="software_project"/></preConditions>
+        <dropTable cascadeConstraints="true" tableName="software_project"/>
+    </changeSet>
+
+    <changeSet author="urubens" id="11_J">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="software_parameter"/></preConditions>
+        <dropTable cascadeConstraints="true" tableName="software_parameter"/>
+    </changeSet>
+
+    <changeSet author="urubens" id="11_P">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="software"/></preConditions>
+        <dropTable cascadeConstraints="true" tableName="software"/>
+    </changeSet>
+</databaseChangeLog>

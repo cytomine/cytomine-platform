@@ -1,0 +1,352 @@
+spring:
+  profiles:
+    active: test
+    include: custom-ui
+
+  security:
+    oauth2:
+      client:
+        registration:
+          keycloak:
+            client-id: core
+            authorization-grant-type: authorization_code
+            redirect-uri: http://nginx/iam/realms/cytomine
+            scope:
+              - openid
+        provider:
+          keycloak:
+            user-name-attribute: preferred_username
+            authorization-uri: http://nginx/iam/realms/cytomine/protocol/openid-connect/auth
+            token-uri: http://nginx/iam/realms/cytomine/protocol/openid-connect/token
+            jwk-set-uri: http://localhost:8888/
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8888/
+          jws-algorithms: RS256
+          jwk-set-uri: http://localhost:8888/
+  main:
+    allow-circular-references: true
+
+  datasource:
+    type: com.zaxxer.hikari.HikariDataSource
+    url: jdbc:postgresql://${POSTGIS_HOST:localhost}:${POSTGIS_PORT:5432}/${POSTGIS_DB_NAME:docker}
+    username: ${POSTGIS_USER:docker}
+    password: ${POSTGIS_PASS:password}
+    hikari:
+      poolName: Hikari
+      auto-commit: false
+
+  jpa:
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          batch_size: 500
+
+  liquibase:
+    change-log: classpath:config/liquibase/master.xml
+
+  data:
+    mongodb:
+      authentication-database: admin
+      username: ${MONGO_USER:mongoadmin}
+      password: ${MONGO_PASS:password}
+      database: ${MONGO_DB_NAME:cytomine}
+      port: ${MONGO_PORT:27017}
+      host: ${MONGO_HOST:localhost}
+
+  mail:
+    host: disabled
+    port: 587
+    username: CONFIGURE_YOUR_MAILGUN_CREDENTIALS # example: postmaster@sandboxdcb41...5909.mailgun.org
+    password: CONFIGURE_YOUR_MAILGUN_CREDENTIALS # example: 0da253cf5...24-4662f38e
+
+mongock:
+  migration-scan-package:
+    be.cytomine.config.nosqlmigration
+
+  port: 8080
+
+javamelody:
+  enabled: false
+
+logging:
+  level:
+    org.springframework.data.mongodb.core.MongoTemplate: DEBUG
+
+application:
+  serverId: default
+  serverURL: http://localhost:8080
+  adminPassword: password
+  adminEmail: adminEmail@adminEmail.com
+  adminPrivateKey: adminPrivateKey
+  adminPublicKey: adminPublicKey
+  superAdminPrivateKey: superAdminPrivateKey
+  superAdminPublicKey: superAdminPublicKey
+  ImageServerPrivateKey: imageServerPrivateKey
+  ImageServerPublicKey: imageServerPublicKey
+  instanceHostWebsite: instanceHostWebsite.com
+  instanceHostSupportMail: instanceHostSupportMail@email.com
+  instanceHostPhoneNumber: 0999999999
+  defaultLanguage: ENGLISH
+
+  appEngine:
+    enabled: ${APPENGINE_ENABLED:true}
+    apiBasePath: ${APPENGINE_API_BASE_PATH:/appengine/v1/}
+
+  authentication:
+    jwt:
+      # This token must be encoded using Base64 and be at least 256 bits long (you can type `openssl rand -base64 64` on your command line to generate a 512 bits one)
+      secret: +MbQeThWmZq4t6w9z$C&F)J@NcRfUjXn2r5u8x!A%D*G-KaPdSgVkYp3s6v9y$B?
+      # Token is valid 24 hours
+      token-validity-in-seconds: ${TOKEN_VALIDITY_IN_SECONDS:86400}
+      token-validity-in-seconds-for-remember-me: ${TOKEN_VALIDITY_IN_SECONDS_REMEMBER_ME:2592000}
+      token-validity-in-seconds-for-short-term: ${TOKEN_VALIDITY_IN_SECONDS_SHORT_TERM:300}
+
+  internalProxyURL: http://localhost:8888
+  annotation:
+    maxNumberOfPoint: 200
+
+  customUI:
+    global:
+      dashboard: ["ALL"]
+      search: [ "ROLE_ADMIN" ]
+      project: [ "ALL" ]
+      ontology: [ "ROLE_ADMIN" ]
+      storage: [ "ROLE_USER","ROLE_ADMIN" ]
+      activity: [ "ALL" ]
+      admin: [ "ROLE_ADMIN" ]
+      help: [ "ALL" ]
+      feedback: ["ROLE_USER","ROLE_ADMIN"]
+      explore: ["ROLE_USER","ROLE_ADMIN"]
+
+    project:
+      project-images-tab:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-annotations-tab:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-jobs-tab:
+        ADMIN_PROJECT: false
+        CONTRIBUTOR_PROJECT: false
+      project-activities-tab:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: false
+      project-information-tab:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-configuration-tab:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: false
+      project-report-tab:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-image-overview:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-image-description:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-image-tags:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-image-properties:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-image-attached-files:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-image-slide-preview:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-image-original-filename:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-hide-tools:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-overview:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-info:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-digital-zoom:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-link:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-color-manipulation:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-image-layers:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-ontology:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-review:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-job:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-property:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-follow:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-guided-tour:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-slide-label:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-annotation-main:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-annotation-geometry-info:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-annotation-info:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-annotation-comments:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-annotation-preview:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-annotation-properties:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-annotation-description:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-annotation-panel:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-annotation-terms:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-annotation-tags:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-annotation-attached-files:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-annotation-creation-info:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-explore-annotation-tracks:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-tools-main:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-tools-select:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-tools-point:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-tools-line:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-tools-freehand-line:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-tools-arrow:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-tools-rectangle:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-tools-diamond:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-tools-circle:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-tools-polygon:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-tools-freehand-polygon:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-tools-magic:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-tools-freehand:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-tools-union:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-tools-diff:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-tools-fill:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-tools-rule:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-tools-edit:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-tools-resize:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-tools-rotate:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-tools-move:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-tools-delete:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-tools-screenshot:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-tools-copy-paste:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-tools-undo-redo:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-annotations-term-piegraph:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-annotations-term-bargraph:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-annotations-users-graph:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-annotated-slides-term-graph:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-annotated-slides-users-graph:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-annotation-graph:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-users-global-activities-graph:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+      project-users-heatmap-graph:
+        ADMIN_PROJECT: true
+        CONTRIBUTOR_PROJECT: true
+
+jwt:
+  auth:
+    converter:
+      resource-id: core
+      principle-attribute: preferred_username
