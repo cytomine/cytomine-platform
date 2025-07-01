@@ -1,0 +1,177 @@
+#
+# Copyright (c) 2009-2020. Authors: see NOTICE file.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+worker_processes  1;
+daemon off;
+
+events {
+    worker_connections  1024;
+}
+
+http {
+    include       mime.types;
+    default_type  application/octet-stream;
+    server_names_hash_bucket_size  128;
+    server_tokens off;
+
+    # Use Docker's resolver (127.0.0.11, the default) to resolve container names when used with set and proxy_pass
+    resolver $RESOLVER valid=30s;
+
+    log_format  main  '$scheme - h=$host - hh=$http_host - sn=$server_name - ra=$remote_addr - ru=$remote_user [$time_local] req="$request" '
+                          's=$status bbs=$body_bytes_sent hr="$http_referer" '
+                          'hua="$http_user_agent" hxff="$http_x_forwarded_for" hxfh="$http_x_forwarded_host"';
+
+    sendfile        on;
+    keepalive_timeout  120;
+    proxy_connect_timeout 75;
+
+    large_client_header_buffers 4 16k;
+    error_log /var/log/nginx/error.log debug;
+    access_log /var/log/nginx/access.log main;
+
+    map $http_host $port {
+      default 80;
+      "~^[^\:]+:(?<p>\d+)$" $p;
+    }
+
+    # Pooled PIMS servers, load balanced.
+    # See http://nginx.org/en/docs/http/ngx_http_upstream_module.html
+    upstream internal-ims-pooled {
+        server $INTERNAL_URLS_IMS;
+        server $INTERNAL_URLS_IMS2;
+        server $INTERNAL_URLS_IMS3;
+    }
+
+    upstream internal-ims-upload {
+        server $INTERNAL_URLS_IMS;
+    }
+
+    # Used when micro-services try to reach each others.
+    # ! This block server must never be reachable from a public URL.
+    server {
+        client_max_body_size 0;
+        listen 80;
+        server_name $URLS_INTERNAL_PROXY;
+
+        include /etc/nginx/cors_params;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $URLS_SCHEME;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Forwarded-Port $port;
+
+        # Internal communication to PIMS from other internal micro-services.
+        # Base path convention: "/ims"
+        location /ims/upload {
+            proxy_read_timeout 600;
+            proxy_request_buffering off;
+
+            set $tmpimsuploadhost internal-ims-upload;
+            proxy_pass http://$tmpimsuploadhost;
+        }
+
+        location /ims {
+            set $tmpimspooledhost internal-ims-pooled;
+            proxy_pass http://$tmpimspooledhost;
+        }
+
+        # Internal communication to App Engine from other internal micro-services
+        location /app-engine {
+            set $tmpappenginehost "$INTERNAL_URLS_APPENGINE";
+            proxy_pass http://$tmpappenginehost;
+        }
+
+        location /iam {
+            set $tmpiamhost "$INTERNAL_URLS_IAM";
+            proxy_pass http://$tmpiamhost;
+        }
+
+        # Internal communication to CORE from other internal micro-services.
+        # Base path convention: "/api" + special endpoints that should be moved under "/api" base path in the future.
+        location ~ /(api|ws|server/ping|session/admin|custom-ui) {
+            set $tmpcorehost "$INTERNAL_URLS_CORE";
+            proxy_pass http://$tmpcorehost;
+        }
+    }
+
+
+    # Default server. This block will handle requests for all URLs execpt those used in above server blocks.
+    server {
+        client_max_body_size 0;
+        # Retrocompatible with previous configs 'server_name $URLS_CORE $URLS_UPLOAD $URLS_IMAGE_SERVER $URLS_IMAGE_SERVER2 $URLS_IMAGE_SERVER3'
+        listen       80 default_server;
+
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $URLS_SCHEME;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Forwarded-Port $port;
+
+        location / {
+            include /etc/nginx/cors_params;
+
+            # Allow nginx to start without web_ui. Else it may crash on start saying "[emerg] host not found in upstream "web_ui""
+            set $tmpwebuivar "$INTERNAL_URLS_WEB_UI";
+            proxy_pass http://$tmpwebuivar;
+        }
+        location /iam {
+            set $tmpiamhost "$INTERNAL_URLS_IAM";
+            proxy_pass http://$tmpiamhost;
+        }
+        location ~ /(api|ws|server/ping|session/admin|custom-ui) {
+            proxy_intercept_errors off;
+
+            set $tmpcorehost "$INTERNAL_URLS_CORE";
+            proxy_pass http://$tmpcorehost;
+        }
+        location /upload {
+            if ($request_method = OPTIONS ) {
+              include /etc/nginx/cors_params;
+              add_header 'Access-Control-Allow-Credentials' 'false' always;
+              add_header Content-Length 0;
+              add_header Content-Type text/plain;
+              return 200;
+            }
+
+            proxy_read_timeout 600;
+            proxy_request_buffering off;
+            proxy_intercept_errors off;
+
+            add_header 'Access-Control-Allow-Credentials' 'false';
+            add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
+            add_header 'Access-Control-Allow-Headers' 'Content-Type, Content-Range, Content-Disposition, Content-Description, date, dateFull, authorization,content-type-full';
+            add_header 'Access-Control-Max-Age' '1728000';
+            add_header 'Access-Control-Allow-Origin' '*';
+
+            set $tmpimsuploadhost internal-ims-upload;
+            proxy_pass http://$tmpimsuploadhost/ims$request_uri;
+        }
+        location /www/ {
+          alias /www/;
+        }
+
+        proxy_intercept_errors on;
+        error_page 404 = /cytomine-page-not-found;
+        location /cytomine-page-not-found {
+            default_type "text/html";
+            alias /opt/nginx/nginx-1.10.1/html/404.html;
+        }
+    }
+}
