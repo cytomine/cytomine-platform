@@ -1,0 +1,46 @@
+# This file defines all the jobs needed to deploy a Cytomine CE.
+# It relies on .cytomine.template.ci.yml that defines all the jobs needed to deploy a Cytomine product.
+# Only specific variables and jobs related to the Cytomine CE product are defined here.
+#
+# This file is intended to be included by any current-deployment/cicd/deployments/ce
+
+include:
+  # Grab common jobs declaration from the 'current-deployment' external project
+  - project: 'cm/rnd/deployments/current-deployment'
+    file: '/cicd/.cytomine.template.ci.yml'
+
+# Define here all variables related to Cytomine CE
+variables:
+  CYTOMINE_PRODUCT_NAME: "Cytomine CE"
+  CYTOMINE_PRODUCT_REPO: "cm/rnd/cytomine/products/community-edition-ce.git"
+  CYTOMINE_PRODUCT_REPO_BRANCH_OR_TAG_NAME: "main"
+  # Needed from caller:
+  # CYTOMINE_PRODUCT_RELEASE_TAG, INSTALLATION_ENV_NAME, INSTALLATION_ENV_URL, REMOTE_HOST, REMOTE_INSTALLATION_PATH, REMOTE_SSH_PORT, REMOTE_SSH_USER
+
+
+workflow:
+  rules:
+    # Avoid merge request triggers
+    - if: '$CI_PIPELINE_SOURCE != "push"'
+      when: never
+
+    - when: always
+
+# Actual jobs should be defined in an instance ci-cd file (see current-deployment project)
+check_cytomine_installation_ce:
+  extends: .check_cytomine_installation
+
+
+install_cytomine_ce:
+  extends: .install_cytomine
+
+provision_cytomine_ce:
+  extends: .provision_cytomine
+
+update_cytomine_ce:
+  extends: .update_cytomine
+
+restart_cytomine_ce:
+  extends: .restart_cytomine
+  needs:
+    - job: update_cytomine_ce

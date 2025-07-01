@@ -1,0 +1,11 @@
+envs
+.env
+*.override.yml
+cytomine.yml
+
+.idea
+**.iml
+.vscode
+
+data
+!data/README.md
