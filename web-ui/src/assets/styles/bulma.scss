@@ -1,0 +1,188 @@
+@import './colors.scss';
+@import '~bulma';
+@import '~buefy/src/scss/buefy';
+@import '~bulma-slider/dist/css/bulma-slider.min.css';
+
+$loadingColor: #bbb;
+
+/* Font size */
+
+html {
+  font-size: 12px;
+  @include widescreen {
+    font-size: 13px;
+  }
+  @include fullhd {
+    font-size: 14px;
+  }
+}
+
+/* Table */
+
+.table tbody tr:last-child td {
+  border-bottom-width: 1px !important;
+}
+
+.table tbody tr:last-child th {
+  border-bottom-width: 2px !important;
+}
+
+.table tbody > tr:last-child > td, .table tbody > tr:last-child > th {
+  border-bottom-width: 0 !important;
+}
+
+.b-table .table th.is-sortable:not(.is-current-sort) .th-wrap::after {
+  font-family: "Font Awesome 5 Free";
+  content: "\f0dc";
+  position: relative;
+  color: rgba(0, 0, 0, 0.2);
+  left: 8px;
+  top: 1px;
+}
+
+.b-table .table th.is-current-sort {
+  font-weight: 600 !important;
+}
+
+.b-table .table th .button {
+  font-weight: 400;
+}
+
+.detail-container {
+  padding: 0.45rem !important;
+  font-size: 0.9rem !important;
+}
+
+/* Panel */
+
+.panel-heading {
+  border-radius: 8px 8px 0 0;
+  font-weight: 400 !important;
+}
+
+.panel-block {
+  background: #fff;
+  display: block;
+
+  &:last-of-type {
+    border-radius: 0 0 8px 8px;
+  }
+}
+
+.panel-tabs {
+  background: white;
+}
+
+/* Modal */
+
+.modal {
+  z-index: 3000 !important;
+}
+
+.modal .animation-content {
+  max-width: none !important;
+  z-index: 2000 !important;
+}
+
+.modal-background {
+  background-color: rgba(10, 10, 10, 0.7);
+}
+
+.modal-card {
+  max-height: 80vh;
+}
+
+.modal .modal-card-head {
+  padding: 1rem !important;
+}
+
+.modal .modal-card-title {
+  font-size: 1.2rem !important;
+  font-weight: normal !important;
+}
+
+.modal .modal-card-body {
+  line-height: 1.5;
+}
+
+.modal .modal-card-foot {
+  padding: 1rem !important;
+  justify-content: flex-end;
+}
+
+.modal .modal-card-foot button {
+  font-size: 1rem;
+  font-weight: normal !important;
+}
+
+.autocomplete.control .dropdown-menu {
+  z-index: 3000 !important;
+}
+
+/* Loading */
+
+.loading-overlay .loading-icon::after {
+  width: 5em;
+  height: 5em;
+  border-left-color: $loadingColor;
+  border-bottom-color: $loadingColor;
+}
+
+.loading-overlay.small .loading-icon::after {
+  width: 2em;
+  height: 2em;
+  border-left-color: $loadingColor;
+  border-bottom-color: $loadingColor;
+}
+
+/* Radio button */
+
+.radio-buttons-fullwidth .control {
+  flex: 1;
+
+  .b-radio {
+    width: 100%;
+    border-color: #b5b5b5;
+
+    &:hover:not(.is-link) {
+      background: #f5f5f5;
+    }
+  }
+}
+
+/* Message */
+
+.message.is-warning {
+  background: rgba(255, 69, 0, 0.05) !important;
+
+  .message-body {
+    border-color: rgb(255, 120, 0);
+  }
+
+  .icon {
+    color: rgb(255, 120, 0);
+  }
+}
+
+.message.is-success .icon {
+  color: $success;
+}
+
+.message {
+  font-size: 1em;
+}
+
+/* Change for IE compatibility */
+@media screen and (-ms-high-contrast: active), (-ms-high-contrast: none) {
+
+  /* Upload button (incorrect handling of z-index: -1 */
+  .upload.control input[type=file] {
+    z-index: auto;
+    height: 100%;
+    cursor: pointer;
+  }
+
+  .tile {
+    flex-basis: auto !important;
+  }
+}

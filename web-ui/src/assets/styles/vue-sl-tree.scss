@@ -1,0 +1,77 @@
+.sl-vue-tree {
+  position: relative;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+.sl-vue-tree-root > .sl-vue-tree-nodes-list {
+  position: relative;
+}
+
+.sl-vue-tree-node-list {
+  position: relative;
+}
+
+.sl-vue-tree-node-item {
+  position: relative;
+  padding-left: 1.5em;
+  width: 100%;
+  line-height: 2.2;
+  font-size: 0.9rem;
+  display: flex;
+  flex-direction: row;
+}
+
+.sl-vue-tree-title {
+  flex-grow: 1;
+  display: flex;
+  align-items: top;
+  overflow-wrap: break-word;
+  min-width: 0; /* to allow correct handling of overflow-wrap */
+}
+
+.sl-vue-tree .tree-toggle.fas {
+  width: 1.5em;
+  padding-left: 0.25em;
+  cursor: pointer;
+}
+
+.sl-vue-tree-node-is-folder > .sl-vue-tree-title {
+  position: relative;
+  right: 1.5em;
+}
+
+.sl-vue-tree-node-item {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+}
+
+.sl-vue-tree-gap {
+  width: 1.5em;
+  min-height: 1px;
+  flex-shrink: 0;
+}
+
+.sl-vue-tree-cursor {
+  position: absolute;
+  border: 1px dashed #61b2e8;
+  height: 1px;
+  width: 100%;
+}
+
+.sl-vue-tree-node-item.sl-vue-tree-cursor-inside {
+  outline: 1px dashed #61b2e8;
+}
+
+.sl-vue-tree-drag-info {
+  display: none;
+}
+
+.draggable .sl-vue-tree-selected > .sl-vue-tree-node-item {
+  background-color: rgba(100, 100, 100, 0.1);
+}
