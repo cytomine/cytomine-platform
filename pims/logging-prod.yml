@@ -1,0 +1,39 @@
+version: 1
+
+formatters:
+  basic:
+    format: "[%(process)s][%(threadName)s] %(message)s"
+  complete:
+    format: "[%(asctime)s][%(levelname)s][%(process)s][%(threadName)s] %(message)s"
+
+handlers:
+  console:
+    class: logging.StreamHandler
+    level: INFO
+    formatter: complete
+
+loggers:
+  pims:
+    level: INFO
+  pims.app:
+    level: INFO
+  pims.cytomine:
+    level: INFO
+    handlers: [console]
+    propagate: false
+  pyvips:
+    level: ERROR
+  pyvips.vobject:
+    level: ERROR
+  uvicorn:
+    level: INFO
+  uvicorn.access:
+    level: CRITICAL
+  #  gunicorn.error:
+  #    propagate: true
+  cytomine.client:
+    level: INFO
+
+root:
+  handlers: [console]
+  level: INFO

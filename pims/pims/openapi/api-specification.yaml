@@ -1,0 +1,4522 @@
+openapi: 3.0.3
+info:
+  title: Cytomine Python Image Managament Server PIMS
+  description: |
+    Cytomine Python Image Managament Server (PIMS) HTTP API. While this API is intended to be internal, a lot of the
+    following specification can be ported to the external Cytomine API.
+
+    # Additional API formats
+    In addition to OpenAPI types and formats, the following table contains some additional formats used in this
+    specification.
+
+    | Type | Format | Examples | Specification |
+    |------|--------|----------|---------------|
+    | `string` | `range` | **"1:3"**, **"2:"**, **":"**| Inspired from Python slicing |
+    | `string` | `wkt` | **"POINT (10 20)"** | [Open Geospacial Consortium](https://www.ogc.org/standards/sfa)|
+    | `string` | `color` | **"#FF00AA"**, **"rgb(100,0,0)"**, **"red"** | [CSS Color Module Level 3](https://drafts.csswg.org/css-color-3/#colorunits)|
+    | `string` | `colormap-id` | **"jet"**, **"!jet"**||
+    | `string` | `filter-id` | **"yen"** ||
+  version: 0.1.0
+#servers:
+#  - url: 'https'
+tags:
+  - name: Tiles
+    description: |
+      Tiles are non-overlaping rectangular regions covering an image at given resolution (a tier in a pyramidal image).
+
+      Tile size is fixed except right-most or bottom-most tiles which might be smaller. **It depends on
+      internal image parameters.** Common tile sizes are `256*256` and `512*512`. Non tiled file formats only have
+      a single tile par tier.
+
+      ### Input region
+      * Tile index and tier (zoom or level)
+      * Tile coordinates and tier (zoom or level)
+
+      ### Target size
+      Always defined by underlying image tile size.
+  - name: Normalized tiles
+    description: |
+      Normalized tiles are non-overlaping rectangular regions covering an image at given resolution (a tier in a pyramidal image).
+
+      Normalized tiles have a width and height of 256 pixels, except right-most and bottom-most tiles which might be smaller.
+
+      The pyramid of normalized tiles is also normalized. Each tier has half the size of the previous tier, rounded up.
+
+      ### Input region
+      * Tile index and tier (zoom or level)
+      * Tile coordinates and tier (zoom or level)
+
+      ### Target size
+      * Width: 256 pixels, except for right-most tiles that might have size lower than 256.
+      * Height: 256 pixels, except for bottom-most tiles that moghe have size lower than 256.
+
+  - name: Windows
+    description: |
+      Windows are rectangular portions extracted from the underlying image content (input region) and optionnaly
+      rescaled (target size).
+
+      ### Input region
+      * Region (top, left, width, height) and reference tier (zoom or level)
+      * Tile index and tier (zoom or level)
+      * Tile coordinates and tier (zoom or level)
+
+      ### Target size
+      * Length (largest side)
+      * Zoom
+      * Level
+  - name: Thumbnails
+    description: |
+      Thumbnails are reduced-size versions of the full underlying image content. While resized are general purpose,
+      thumbnails are optimized for human visualisation.
+
+      ### Input region
+      Always full underlying image.
+
+      ### Target size
+      * Length (largest side)
+      * Width
+      * Height
+  - name: Resized
+    description: |
+      Resized are reduced-size versions of the full underlying image content. While thumbnails are optimized for
+      human visualisation, resized are general purpose.
+
+      ### Input region
+      Always full underlying image.
+
+      ### Target size
+      * Length (largest side)
+      * Width
+      * Height
+      * Zoom
+      * Level
+  - name: Annotations
+    description: |
+      Annotations are geometries that can be reprsented on an image crop in various ways.
+
+      ### Input region
+      Always rectangular envelope of all geometries multiplied by an optional context factor.
+
+      ### Target size
+      * Length (largest side)
+      * Width
+      * Height
+      * Zoom
+      * Level
+#  - name: Hyperspectral
+#    description: Hyperspectral specific extraction methods.
+  - name: Metadata
+    description: Metadata are data that provides information about other data, especially about files and images
+      managed by PIMS.
+  - name: Associated
+    description: Associated images are related images stored in an image file.
+  - name: Histograms
+    description: Histograms are a representation of the tonal distribution in an image. It plots the number of pixels
+      for each intensity value.
+  - name: 'Export'
+    description: ''
+  - name: 'Import'
+    description: ''
+  - name: Formats
+    description: PIMS formats are image-related file formats and their methods to identify them, read and extract
+      information from the underlying files.
+#  - name: Colormaps
+#    description: Colormaps are functions that maps colors of an input image to the colors of a target image.
+  - name: Filters
+    description: Image filters are used to change the appareance of an image and helps at understanding the
+      source image.
+  - name: Server
+  - name: Housekeeping
+paths:
+  /image/{filepath}/normalized-tile/zoom/{zoom}/ti/{ti}:
+    parameters:
+      - $ref: '#/components/parameters/path-filepath'
+      - $ref: '#/components/parameters/path-zoom'
+      - $ref: '#/components/parameters/path-tile-index'
+      - $ref: '#/components/parameters/header-etag'
+    get:
+      operationId: pims.api.tile.show_normalized_tile_by_zoom
+      summary: Get a normalized tile at zoom
+      description: |
+        Get a 8-bit normalized tile at a given zoom level and tile index, optimized for visualisation, with given channels, focal
+        planes and timepoints. If multiple channels are given (slice or selection), they are merged. If multiple focal
+        planes or timepoints are given (slice or selection), a reduction function must be provided.
+
+        **By default**, all image channels are used and when the image is multidimensional, the
+        tile is extracted from the median focal plane at first timepoint.
+      tags:
+        - Normalized tiles
+      parameters:
+        - $ref: '#/components/parameters/query-channel-selection'
+        - $ref: '#/components/parameters/query-z-slice-selection'
+        - $ref: '#/components/parameters/query-timepoint-selection'
+#        - $ref: '#/components/parameters/query-c-reduction'
+#        - $ref: '#/components/parameters/query-z-reduction'
+#        - $ref: '#/components/parameters/query-t-reduction'
+        - $ref: '#/components/parameters/query-min-intensities-visualisation'
+        - $ref: '#/components/parameters/query-max-intensities-visualisation'
+#        - $ref: '#/components/parameters/query-colormaps'
+        - $ref: '#/components/parameters/query-filters'
+        - $ref: '#/components/parameters/query-gammas'
+        - $ref: '#/components/parameters/query-log'
+      responses:
+        200:
+          $ref: '#/components/responses/tile'
+        304:
+          $ref: '#/components/responses/not-modified'
+        400:
+          $ref: '#/components/responses/problem-bad-request'
+        404:
+          $ref: '#/components/responses/problem-not-found'
+    post:
+      operationId: pims.api.tile.show_normalized_tile_with_body_by_zoom
+      summary: Get a normalized tile at zoom
+      description: |
+        **`GET with body` - when a GET with URL encoded query parameters is not possible due to URL size limits, a POST
+        with body content must be used.**
+
+        Get a 8-bit normalized tile at a given zoom level and tile index, optimized for visualisation, with given channels, focal
+        planes and timepoints. If multiple channels are given (slice or selection), they are merged. If multiple focal
+        planes or timepoints are given (slice or selection), a reduction function must be provided.
+
+        **By default**, all image channels are used and when the image is multidimensional, the
+         tile is extracted from the median focal plane at first timepoint.
+      tags:
+        - Normalized tiles
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/window-plane-selection'
+                - $ref: '#/components/schemas/image-manipulation-visualisation'
+      responses:
+        200:
+          $ref: '#/components/responses/tile'
+        304:
+          $ref: '#/components/responses/not-modified'
+        400:
+          $ref: '#/components/responses/problem-bad-request'
+        404:
+          $ref: '#/components/responses/problem-not-found'
+  /image/{filepath}/normalized-tile/level/{level}/ti/{ti}:
+    parameters:
+      - $ref: '#/components/parameters/path-filepath'
+      - $ref: '#/components/parameters/path-level'
+      - $ref: '#/components/parameters/path-tile-index'
+      - $ref: '#/components/parameters/header-etag'
+    get:
+      operationId: pims.api.tile.show_normalized_tile_by_level
+      summary: Get a normalized tile at level
+      description: |
+        Get a 8-bit normalized tile at a given zoom level and tile index, optimized for visualisation, with given channels, focal
+        planes and timepoints. If multiple channels are given (slice or selection), they are merged. If multiple focal
+        planes or timepoints are given (slice or selection), a reduction function must be provided.
+
+        **By default**, all image channels are used and when the image is multidimensional, the
+         tile is extracted from the median focal plane at first timepoint.
+      tags:
+        - Normalized tiles
+      parameters:
+        - $ref: '#/components/parameters/query-channel-selection'
+        - $ref: '#/components/parameters/query-z-slice-selection'
+        - $ref: '#/components/parameters/query-timepoint-selection'
+#        - $ref: '#/components/parameters/query-c-reduction'
+#        - $ref: '#/components/parameters/query-z-reduction'
+#        - $ref: '#/components/parameters/query-t-reduction'
+        - $ref: '#/components/parameters/query-min-intensities-visualisation'
+        - $ref: '#/components/parameters/query-max-intensities-visualisation'
+#        - $ref: '#/components/parameters/query-colormaps'
+        - $ref: '#/components/parameters/query-filters'
+        - $ref: '#/components/parameters/query-gammas'
+        - $ref: '#/components/parameters/query-log'
+      responses:
+        200:
+          $ref: '#/components/responses/tile'
+        304:
+          $ref: '#/components/responses/not-modified'
+        400:
+          $ref: '#/components/responses/problem-bad-request'
+        404:
+          $ref: '#/components/responses/problem-not-found'
+    post:
+      operationId: pims.api.tile.show_normalized_tile_with_body_by_level
+      summary: Get a normalized tile at level
+      description: |
+        **`GET with body` - when a GET with URL encoded query parameters is not possible due to URL size limits, a POST
+        with body content must be used.**
+
+        Get a 8-bit normalized tile at a given zoom level and tile index, optimized for visualisation, with given channels, focal
+        planes and timepoints. If multiple channels are given (slice or selection), they are merged. If multiple focal
+        planes or timepoints are given (slice or selection), a reduction function must be provided.
+
+        **By default**, all image channels are used and when the image is multidimensional, the
+         tile is extracted from the median focal plane at first timepoint.
+      tags:
+        - Normalized tiles
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/window-plane-selection'
+                - $ref: '#/components/schemas/image-manipulation-visualisation'
+      responses:
+        200:
+          $ref: '#/components/responses/tile'
+        304:
+          $ref: '#/components/responses/not-modified'
+        400:
+          $ref: '#/components/responses/problem-bad-request'
+        404:
+          $ref: '#/components/responses/problem-not-found'
+  /image/{filepath}/normalized-tile:
+    post:
+      operationId: pims.api.tile.show_normalized_tile_with_body
+      summary: Get a normalized tile (generic)
+      description: |
+        **`GET with body` - when a GET with URL encoded query parameters is not possible due to URL size limits, a POST
+        with body content must be used.**
+
+        Get a 8-bit normalized tile optimized for visualisation, with given channels, focal
+        planes and timepoints. If multiple channels are given (slice or selection), they are merged. If multiple focal
+        planes or timepoints are given (slice or selection), a reduction function must be provided.
+
+        **By default**, all image channels are used and when the image is multidimensional, the
+         tile is extracted from the median focal plane at first timepoint.
+      tags:
+        - Normalized tiles
+      parameters:
+        - $ref: '#/components/parameters/path-filepath'
+        - $ref: '#/components/parameters/header-etag'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - title: tile-by-zoom-and-index
+                  allOf:
+                    - $ref: '#/components/schemas/target-zoom-tile-index'
+                    - $ref: '#/components/schemas/window-plane-selection'
+                    - $ref: '#/components/schemas/image-manipulation-visualisation'
+                - title: tile-by-level-and-index
+                  allOf:
+                    - $ref: '#/components/schemas/target-level-tile-index'
+                    - $ref: '#/components/schemas/window-plane-selection'
+                    - $ref: '#/components/schemas/image-manipulation-visualisation'
+                - title: tile-by-zoom-and-coordinates
+                  allOf:
+                    - $ref: '#/components/schemas/target-zoom-tile-coordinates'
+                    - $ref: '#/components/schemas/window-plane-selection'
+                    - $ref: '#/components/schemas/image-manipulation-visualisation'
+                - title: tile-by-level-and-coordinates
+                  allOf:
+                    - $ref: '#/components/schemas/target-level-tile-coordinates'
+                    - $ref: '#/components/schemas/window-plane-selection'
+                    - $ref: '#/components/schemas/image-manipulation-visualisation'
+      responses:
+        200:
+          $ref: '#/components/responses/tile'
+        304:
+          $ref: '#/components/responses/not-modified'
+        400:
+          $ref: '#/components/responses/problem-bad-request'
+        404:
+          $ref: '#/components/responses/problem-not-found'
+  /image/{filepath}/tile/zoom/{zoom}/ti/{ti}:
+    parameters:
+      - $ref: '#/components/parameters/path-filepath'
+      - $ref: '#/components/parameters/path-zoom'
+      - $ref: '#/components/parameters/path-tile-index'
+      - $ref: '#/components/parameters/header-etag'
+    get:
+      operationId: pims.api.tile.show_tile_by_zoom
+      summary: Get a tile at zoom
+      description: |
+        Get a 8-bit tile at a given zoom level and tile index, optimized for visualisation, with given channels, focal
+        planes and timepoints. If multiple channels are given (slice or selection), they are merged. If multiple focal
+        planes or timepoints are given (slice or selection), a reduction function must be provided.
+
+        **By default**, all image channels are used and when the image is multidimensional, the
+        tile is extracted from the median focal plane at first timepoint.
+      tags:
+        - Tiles
+      parameters:
+        - $ref: '#/components/parameters/query-channel-selection'
+        - $ref: '#/components/parameters/query-z-slice-selection'
+        - $ref: '#/components/parameters/query-timepoint-selection'
+#        - $ref: '#/components/parameters/query-c-reduction'
+#        - $ref: '#/components/parameters/query-z-reduction'
+#        - $ref: '#/components/parameters/query-t-reduction'
+        - $ref: '#/components/parameters/query-min-intensities-visualisation'
+        - $ref: '#/components/parameters/query-max-intensities-visualisation'
+#        - $ref: '#/components/parameters/query-colormaps'
+        - $ref: '#/components/parameters/query-filters'
+        - $ref: '#/components/parameters/query-gammas'
+        - $ref: '#/components/parameters/query-log'
+      responses:
+        200:
+          $ref: '#/components/responses/tile'
+        304:
+          $ref: '#/components/responses/not-modified'
+        400:
+          $ref: '#/components/responses/problem-bad-request'
+        404:
+          $ref: '#/components/responses/problem-not-found'
+    post:
+      operationId: pims.api.tile.show_tile_with_body_by_zoom
+      summary: Get a tile at zoom
+      description: |
+        **`GET with body` - when a GET with URL encoded query parameters is not possible due to URL size limits, a POST
+        with body content must be used.**
+
+        Get a 8-bit tile at a given zoom level and tile index, optimized for visualisation, with given channels, focal
+        planes and timepoints. If multiple channels are given (slice or selection), they are merged. If multiple focal
+        planes or timepoints are given (slice or selection), a reduction function must be provided.
+
+        **By default**, all image channels are used and when the image is multidimensional, the
+         tile is extracted from the median focal plane at first timepoint.
+      tags:
+        - Tiles
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/window-plane-selection'
+                - $ref: '#/components/schemas/image-manipulation-visualisation'
+      responses:
+        200:
+          $ref: '#/components/responses/tile'
+        304:
+          $ref: '#/components/responses/not-modified'
+        400:
+          $ref: '#/components/responses/problem-bad-request'
+        404:
+          $ref: '#/components/responses/problem-not-found'
+  /image/{filepath}/tile/level/{level}/ti/{ti}:
+    parameters:
+      - $ref: '#/components/parameters/path-filepath'
+      - $ref: '#/components/parameters/path-level'
+      - $ref: '#/components/parameters/path-tile-index'
+      - $ref: '#/components/parameters/header-etag'
+    get:
+      operationId: pims.api.tile.show_tile_by_level
+      summary: Get a tile at level
+      description: |
+        Get a 8-bit tile at a given zoom level and tile index, optimized for visualisation, with given channels, focal
+        planes and timepoints. If multiple channels are given (slice or selection), they are merged. If multiple focal
+        planes or timepoints are given (slice or selection), a reduction function must be provided.
+
+        **By default**, all image channels are used and when the image is multidimensional, the
+         tile is extracted from the median focal plane at first timepoint.
+      tags:
+        - Tiles
+      parameters:
+        - $ref: '#/components/parameters/query-channel-selection'
+        - $ref: '#/components/parameters/query-z-slice-selection'
+        - $ref: '#/components/parameters/query-timepoint-selection'
+#        - $ref: '#/components/parameters/query-c-reduction'
+#        - $ref: '#/components/parameters/query-z-reduction'
+#        - $ref: '#/components/parameters/query-t-reduction'
+        - $ref: '#/components/parameters/query-min-intensities-visualisation'
+        - $ref: '#/components/parameters/query-max-intensities-visualisation'
+#        - $ref: '#/components/parameters/query-colormaps'
+        - $ref: '#/components/parameters/query-filters'
+        - $ref: '#/components/parameters/query-gammas'
+        - $ref: '#/components/parameters/query-log'
+      responses:
+        200:
+          $ref: '#/components/responses/tile'
+        304:
+          $ref: '#/components/responses/not-modified'
+        400:
+          $ref: '#/components/responses/problem-bad-request'
+        404:
+          $ref: '#/components/responses/problem-not-found'
+    post:
+      operationId: pims.api.tile.show_tile_with_body_by_level
+      summary: Get a tile at level
+      description: |
+        **`GET with body` - when a GET with URL encoded query parameters is not possible due to URL size limits, a POST
+        with body content must be used.**
+
+        Get a 8-bit tile at a given zoom level and tile index, optimized for visualisation, with given channels, focal
+        planes and timepoints. If multiple channels are given (slice or selection), they are merged. If multiple focal
+        planes or timepoints are given (slice or selection), a reduction function must be provided.
+
+        **By default**, all image channels are used and when the image is multidimensional, the
+         tile is extracted from the median focal plane at first timepoint.
+      tags:
+        - Tiles
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/window-plane-selection'
+                - $ref: '#/components/schemas/image-manipulation-visualisation'
+      responses:
+        200:
+          $ref: '#/components/responses/tile'
+        304:
+          $ref: '#/components/responses/not-modified'
+        400:
+          $ref: '#/components/responses/problem-bad-request'
+        404:
+          $ref: '#/components/responses/problem-not-found'
+  /image/{filepath}/tile:
+    post:
+      operationId: pims.api.tile.show_tile_with_body
+      summary: Get a tile (generic)
+      description: |
+        **`GET with body` - when a GET with URL encoded query parameters is not possible due to URL size limits, a POST
+        with body content must be used.**
+
+        Get a 8-bit tile optimized for visualisation, with given channels, focal
+        planes and timepoints. If multiple channels are given (slice or selection), they are merged. If multiple focal
+        planes or timepoints are given (slice or selection), a reduction function must be provided.
+
+        **By default**, all image channels are used and when the image is multidimensional, the
+         tile is extracted from the median focal plane at first timepoint.
+      tags:
+        - Tiles
+      parameters:
+        - $ref: '#/components/parameters/path-filepath'
+        - $ref: '#/components/parameters/header-etag'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - title: tile-by-zoom-and-index
+                  allOf:
+                    - $ref: '#/components/schemas/target-zoom-tile-index'
+                    - $ref: '#/components/schemas/window-plane-selection'
+                    - $ref: '#/components/schemas/image-manipulation-visualisation'
+                - title: tile-by-level-and-index
+                  allOf:
+                    - $ref: '#/components/schemas/target-level-tile-index'
+                    - $ref: '#/components/schemas/window-plane-selection'
+                    - $ref: '#/components/schemas/image-manipulation-visualisation'
+                - title: tile-by-zoom-and-coordinates
+                  allOf:
+                    - $ref: '#/components/schemas/target-zoom-tile-coordinates'
+                    - $ref: '#/components/schemas/window-plane-selection'
+                    - $ref: '#/components/schemas/image-manipulation-visualisation'
+                - title: tile-by-level-and-coordinates
+                  allOf:
+                    - $ref: '#/components/schemas/target-level-tile-coordinates'
+                    - $ref: '#/components/schemas/window-plane-selection'
+                    - $ref: '#/components/schemas/image-manipulation-visualisation'
+      responses:
+        200:
+          $ref: '#/components/responses/tile'
+        304:
+          $ref: '#/components/responses/not-modified'
+        400:
+          $ref: '#/components/responses/problem-bad-request'
+        404:
+          $ref: '#/components/responses/problem-not-found'
+  /image/{filepath}/window:
+    post:
+      operationId: pims.api.window.show_window_with_body
+      summary: Get a window
+      description: |
+        **`GET with body` - when a GET with URL encoded query parameters is not possible due to URL size limits, a POST
+        with body content must be used.**
+
+        Get a window (rectangular crop) extract from an image, with given channels, focal
+        planes and timepoints. If multiple channels are given (slice or selection), they are merged. If multiple focal
+        planes or timepoints are given (slice or selection), a reduction function must be provided.
+
+        **By default**, all image channels are used and when the image is multidimensional, the
+         tile is extracted from the median focal plane at first timepoint.
+      tags:
+        - Windows
+      parameters:
+        - $ref: '#/components/parameters/path-filepath'
+        - $ref: '#/components/parameters/header-etag'
+        - $ref: '#/components/parameters/header-x-image-size-safety'
+        - $ref: '#/components/parameters/header-x-annotation-origin'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - title: input-region-target-length
+                  allOf:
+                    - $ref: '#/components/schemas/region-object'
+                    - $ref: '#/components/schemas/tier-index'
+                    - $ref: '#/components/schemas/target-length-object-required'
+                    - $ref: '#/components/schemas/window-basis'
+                - title: input-region-target-width
+                  allOf:
+                    - $ref: '#/components/schemas/region-object'
+                    - $ref: '#/components/schemas/tier-index'
+                    - $ref: '#/components/schemas/target-width-object-required'
+                    - $ref: '#/components/schemas/window-basis'
+                - title: input-region-target-height
+                  allOf:
+                    - $ref: '#/components/schemas/region-object'
+                    - $ref: '#/components/schemas/tier-index'
+                    - $ref: '#/components/schemas/target-height-object-required'
+                    - $ref: '#/components/schemas/window-basis'
+                - title: input-region-target-zoom
+                  allOf:
+                    - $ref: '#/components/schemas/region-object'
+                    - $ref: '#/components/schemas/tier-index'
+                    - $ref: '#/components/schemas/target-zoom-object-required'
+                    - $ref: '#/components/schemas/window-basis'
+                - title: input-region-target-level
+                  allOf:
+                    - $ref: '#/components/schemas/region-object'
+                    - $ref: '#/components/schemas/tier-index'
+                    - $ref: '#/components/schemas/target-level-object-required'
+                    - $ref: '#/components/schemas/window-basis'
+
+
+                - title: input-tile-index-target-length
+                  allOf:
+                    - $ref: '#/components/schemas/tile-index-object'
+                    - $ref: '#/components/schemas/tier-index'
+                    - $ref: '#/components/schemas/target-length-object-required'
+                    - $ref: '#/components/schemas/window-basis'
+                - title: input-tile-index-target-width
+                  allOf:
+                    - $ref: '#/components/schemas/tile-index-object'
+                    - $ref: '#/components/schemas/tier-index'
+                    - $ref: '#/components/schemas/target-width-object-required'
+                    - $ref: '#/components/schemas/window-basis'
+                - title: input-tile-index-target-height
+                  allOf:
+                    - $ref: '#/components/schemas/tile-index-object'
+                    - $ref: '#/components/schemas/tier-index'
+                    - $ref: '#/components/schemas/target-height-object-required'
+                    - $ref: '#/components/schemas/window-basis'
+                - title: input-tile-index-target-zoom
+                  allOf:
+                    - $ref: '#/components/schemas/tile-index-object'
+                    - $ref: '#/components/schemas/tier-index'
+                    - $ref: '#/components/schemas/target-zoom-object-required'
+                    - $ref: '#/components/schemas/window-basis'
+                - title: input-tile-index-target-level
+                  allOf:
+                    - $ref: '#/components/schemas/tile-index-object'
+                    - $ref: '#/components/schemas/tier-index'
+                    - $ref: '#/components/schemas/target-level-object-required'
+                    - $ref: '#/components/schemas/window-basis'
+
+                - title: input-tile-coord-target-length
+                  allOf:
+                    - $ref: '#/components/schemas/tile-coord'
+                    - $ref: '#/components/schemas/tier-index'
+                    - $ref: '#/components/schemas/target-length-object-required'
+                    - $ref: '#/components/schemas/window-basis'
+                - title: input-tile-coord-target-width
+                  allOf:
+                    - $ref: '#/components/schemas/tile-coord'
+                    - $ref: '#/components/schemas/tier-index'
+                    - $ref: '#/components/schemas/target-width-object-required'
+                    - $ref: '#/components/schemas/window-basis'
+                - title: input-tile-coord-target-height
+                  allOf:
+                    - $ref: '#/components/schemas/tile-coord'
+                    - $ref: '#/components/schemas/tier-index'
+                    - $ref: '#/components/schemas/target-height-object-required'
+                    - $ref: '#/components/schemas/window-basis'
+                - title: input-tile-coord-target-zoom
+                  allOf:
+                    - $ref: '#/components/schemas/tile-coord'
+                    - $ref: '#/components/schemas/tier-index'
+                    - $ref: '#/components/schemas/target-zoom-object-required'
+                    - $ref: '#/components/schemas/window-basis'
+                - title: input-tile-coord-target-level
+                  allOf:
+                    - $ref: '#/components/schemas/tile-coord'
+                    - $ref: '#/components/schemas/tier-index'
+                    - $ref: '#/components/schemas/target-level-object-required'
+                    - $ref: '#/components/schemas/window-basis'
+      responses:
+        200:
+          $ref: '#/components/responses/window'
+        304:
+          $ref: '#/components/responses/not-modified'
+        400:
+          $ref: '#/components/responses/problem-bad-request'
+        404:
+          $ref: '#/components/responses/problem-not-found'
+        406:
+          $ref: '#/components/responses/problem-not-acceptable'
+  /image/{filepath}/thumb:
+    parameters:
+      - $ref: '#/components/parameters/path-filepath'
+      - $ref: '#/components/parameters/header-etag'
+      - $ref: '#/components/parameters/header-x-image-size-safety'
+    get:
+      operationId: pims.api.thumb.show_thumb
+      summary: Get a thumbnail
+      description: |
+        Get a 8-bit thumbnail optimized for visualisation, with given channels, focal planes and timepoints. If
+        multiple channels are given (slice or selection), they are merged. If multiple focal planes or timepoints are
+        given (slice or selection), a reduction function must be provided.
+
+        **By default**, all image channels are used and when the image is multidimensional, the
+        thumbnail is extracted from the median focal plane at first timepoint.
+      tags:
+        - Thumbnails
+      parameters:
+        - $ref: '#/components/parameters/query-channel-selection'
+        - $ref: '#/components/parameters/query-z-slice-selection'
+        - $ref: '#/components/parameters/query-timepoint-selection'
+#        - $ref: '#/components/parameters/query-c-reduction'
+#        - $ref: '#/components/parameters/query-z-reduction'
+#        - $ref: '#/components/parameters/query-t-reduction'
+        - $ref: '#/components/parameters/query-thumb-length'
+        - $ref: '#/components/parameters/query-thumb-width'
+        - $ref: '#/components/parameters/query-thumb-height'
+        - $ref: '#/components/parameters/query-min-intensities-visualisation'
+        - $ref: '#/components/parameters/query-max-intensities-visualisation'
+#        - $ref: '#/components/parameters/query-colormaps'
+        - $ref: '#/components/parameters/query-filters'
+        - $ref: '#/components/parameters/query-gammas'
+        - $ref: '#/components/parameters/query-log'
+        - $ref: '#/components/parameters/query-thumb-use-precomputed'
+      responses:
+        200:
+          $ref: '#/components/responses/thumbnail'
+        304:
+          $ref: '#/components/responses/not-modified'
+        400:
+          $ref: '#/components/responses/problem-bad-request'
+        404:
+          $ref: '#/components/responses/problem-not-found'
+    post:
+      operationId: pims.api.thumb.show_thumb_with_body
+      summary: Get a thumbnail
+      description: |
+        **`GET with body` - when a GET with URL encoded query parameters is not possible due to URL size limits, a POST
+        with body content must be used.**
+        
+        Get a 8-bit thumbnail optimized for visualisation, with given channels, focal planes and timepoints. If
+        multiple channels are given (slice or selection), they are merged. If multiple focal planes or timepoints are
+        given (slice or selection), a reduction function must be provided.
+
+        **By default**, all image channels are used and when the image is multidimensional, the
+        thumbnail is extracted from the median focal plane at first timepoint.
+      tags:
+        - Thumbnails
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - title: thumb-by-length
+                  allOf:
+                    - $ref: '#/components/schemas/target-length-object-required'
+                    - $ref: '#/components/schemas/thumb-basis'
+                - title: thumb-by-width
+                  allOf:
+                    - $ref: '#/components/schemas/target-width-object-required'
+                    - $ref: '#/components/schemas/thumb-basis'
+                - title: thumb-by-height
+                  allOf:
+                    - $ref: '#/components/schemas/target-height-object-required'
+                    - $ref: '#/components/schemas/thumb-basis'
+      responses:
+        200:
+          $ref: '#/components/responses/thumbnail'
+        304:
+          $ref: '#/components/responses/not-modified'
+        400:
+          $ref: '#/components/responses/problem-bad-request'
+        404:
+          $ref: '#/components/responses/problem-not-found'
+  /image/{filepath}/resized:
+    parameters:
+      - $ref: '#/components/parameters/path-filepath'
+      - $ref: '#/components/parameters/header-etag'
+      - $ref: '#/components/parameters/header-x-image-size-safety'
+    get:
+      operationId: pims.api.resized.show_resized
+      summary: Get a resized full image
+      description: |
+        Get a resized full image (thumbnail), with given channels, focal planes and timepoints. If
+        multiple channels are given (slice or selection), they are merged. If multiple focal planes or timepoints are
+        given (slice or selection), a reduction function must be provided.
+
+        **By default**, all image channels are used and when the image is multidimensional, the
+        thumbnail is extracted from the median focal plane at first timepoint.
+
+        **While `/image/{filepath}/thumb` provides optimization for visualisation, this endpoint has a general purpose,
+        such as computer vision, image processing or machine learning.**
+      tags:
+        - Resized
+      parameters:
+        - $ref: '#/components/parameters/query-channel-selection'
+        - $ref: '#/components/parameters/query-z-slice-selection'
+        - $ref: '#/components/parameters/query-timepoint-selection'
+#        - $ref: '#/components/parameters/query-c-reduction'
+#        - $ref: '#/components/parameters/query-z-reduction'
+#        - $ref: '#/components/parameters/query-t-reduction'
+        - $ref: '#/components/parameters/query-thumb-length'
+        - $ref: '#/components/parameters/query-thumb-width'
+        - $ref: '#/components/parameters/query-thumb-height'
+        - $ref: '#/components/parameters/query-thumb-zoom'
+        - $ref: '#/components/parameters/query-thumb-level'
+        - $ref: '#/components/parameters/query-min-intensities'
+        - $ref: '#/components/parameters/query-max-intensities'
+#        - $ref: '#/components/parameters/query-colormaps'
+        - $ref: '#/components/parameters/query-filters'
+        - $ref: '#/components/parameters/query-gammas'
+        - $ref: '#/components/parameters/query-log'
+        - $ref: '#/components/parameters/query-bits'
+        - $ref: '#/components/parameters/query-colorspace'
+      responses:
+        200:
+          $ref: '#/components/responses/thumbnail'
+        304:
+          $ref: '#/components/responses/not-modified'
+        400:
+          $ref: '#/components/responses/problem-bad-request'
+        404:
+          $ref: '#/components/responses/problem-not-found'
+        406:
+          $ref: '#/components/responses/problem-not-acceptable'
+    post:
+      operationId: pims.api.resized.show_resized_with_body
+      summary: Get a resized full image
+      description: |
+        **`GET with body` - when a GET with URL encoded query parameters is not possible due to URL size limits, a POST
+        with body content must be used.**
+
+        Get a resized full image (thumbnail), with given channels, focal planes and timepoints. If
+        multiple channels are given (slice or selection), they are merged. If multiple focal planes or timepoints are
+        given (slice or selection), a reduction function must be provided.
+
+        **By default**, all image channels are used and when the image is multidimensional, the
+        thumbnail is extracted from the median focal plane at first timepoint.
+
+        **While `/image/{filepath}/thumb` provides optimization for visualisation, this endpoint has a general purpose,
+        such as computer vision, image processing or machine learning.**
+      tags:
+        - Resized
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - title: resized-by-length
+                  allOf:
+                    - $ref: '#/components/schemas/target-length-object-required'
+                    - $ref: '#/components/schemas/resized-basis'
+                - title: resized-by-width
+                  allOf:
+                    - $ref: '#/components/schemas/target-width-object-required'
+                    - $ref: '#/components/schemas/resized-basis'
+                - title: resized-by-height
+                  allOf:
+                    - $ref: '#/components/schemas/target-height-object-required'
+                    - $ref: '#/components/schemas/resized-basis'
+                - title: resized-by-zoom
+                  allOf:
+                    - $ref: '#/components/schemas/target-zoom-object-required'
+                    - $ref: '#/components/schemas/resized-basis'
+                - title: resized-by-level
+                  allOf:
+                    - $ref: '#/components/schemas/target-level-object-required'
+                    - $ref: '#/components/schemas/resized-basis'
+      responses:
+        200:
+          $ref: '#/components/responses/thumbnail'
+        304:
+          $ref: '#/components/responses/not-modified'
+        400:
+          $ref: '#/components/responses/problem-bad-request'
+        404:
+          $ref: '#/components/responses/problem-not-found'
+        406:
+          $ref: '#/components/responses/problem-not-acceptable'
+  /image/{filepath}/annotation/mask:
+    post:
+      operationId: pims.api.annotation.show_mask
+      tags:
+        - Annotations
+      summary: Get an annotation mask
+      description: |
+        **`GET with body` - when a GET with URL encoded query parameters is not possible due to URL size limits, a POST
+        with body content must be used.**
+
+        The mask is a generated image where geometries are filled by their respective `fill_color`. The background is
+        black.
+
+        The input spatial region is given by the rectangular envelope of all geometries multiplied by an optional
+        context factor. The target size is given by one of the scaling factors (`size`, `width`, `height`, `zoom` or
+        `level`).
+
+        By default, a binary mask with white foreground is returned as the default fill color is white for every
+        annotation.
+
+        Annotation `stroke_width` and `stroke_color` are ignored.
+      parameters:
+        - $ref: '#/components/parameters/path-filepath'
+        - $ref: '#/components/parameters/header-etag'
+        - $ref: '#/components/parameters/header-x-image-size-safety'
+        - $ref: '#/components/parameters/header-x-annotation-origin'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/mask-by-length'
+                - $ref: '#/components/schemas/mask-by-width'
+                - $ref: '#/components/schemas/mask-by-height'
+                - $ref: '#/components/schemas/mask-by-zoom'
+                - $ref: '#/components/schemas/mask-by-level'
+      responses:
+        200:
+          $ref: '#/components/responses/annotation-crop'
+        304:
+          $ref: '#/components/responses/not-modified'
+        400:
+          $ref: '#/components/responses/problem-bad-request'
+        404:
+          $ref: '#/components/responses/problem-not-found'
+  /image/{filepath}/annotation/crop:
+    post:
+      operationId: pims.api.annotation.show_crop
+      tags:
+        - Annotations
+      summary: Get an annotation crop
+      description: |
+        **`GET with body` - when a GET with URL encoded query parameters is not possible due to URL size limits, a POST
+        with body content must be used.**
+
+        The crop is similar to an image window but where the transparency of the background can be adjusted.
+
+        The input spatial region is given by the rectangular envelope of all geometries multiplied by an optional
+        context factor. The target size is given by one of the scaling factors (`size`, `width`, `height`, `zoom` or
+        `level`).
+
+        By default, the background transparency is set to 100 which is also known as *alpha mask*. When the
+        background transparency is set to 0, foreground and background cannot be distinguished.
+
+        Annotation `fill_color`, `stroke_width` and `stroke_color` are ignored.
+      parameters:
+        - $ref: '#/components/parameters/path-filepath'
+        - $ref: '#/components/parameters/header-etag'
+        - $ref: '#/components/parameters/header-x-image-size-safety'
+        - $ref: '#/components/parameters/header-x-annotation-origin'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/crop-by-length'
+                - $ref: '#/components/schemas/crop-by-width'
+                - $ref: '#/components/schemas/crop-by-height'
+                - $ref: '#/components/schemas/crop-by-zoom'
+                - $ref: '#/components/schemas/crop-by-level'
+      responses:
+        200:
+          $ref: '#/components/responses/annotation-crop'
+        304:
+          $ref: '#/components/responses/not-modified'
+        400:
+          $ref: '#/components/responses/problem-bad-request'
+        404:
+          $ref: '#/components/responses/problem-not-found'
+        406:
+          $ref: '#/components/responses/problem-not-acceptable'
+  /image/{filepath}/annotation/drawing:
+    post:
+      operationId: pims.api.annotation.show_drawing
+      tags:
+        - Annotations
+      summary: Get an annotation drawing
+      description: |
+        **`GET with body` - when a GET with URL encoded query parameters is not possible due to URL size limits, a POST
+        with body content must be used.**
+
+        Get an annotation crop (with apparent background) where annotations are drawn according to their respective
+        `fill_color`, `stroke_width` and `stroke_color`.
+
+        The input spatial region is given by the rectangular envelope of all geometries multiplied by an optional
+        context factor. The target size is given by one of the scaling factors (`size`, `width`, `height`, `zoom` or
+        `level`).
+      parameters:
+        - $ref: '#/components/parameters/path-filepath'
+        - $ref: '#/components/parameters/header-etag'
+        - $ref: '#/components/parameters/header-x-image-size-safety'
+        - $ref: '#/components/parameters/header-x-annotation-origin'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/drawing-by-length'
+                - $ref: '#/components/schemas/drawing-by-width'
+                - $ref: '#/components/schemas/drawing-by-height'
+                - $ref: '#/components/schemas/drawing-by-zoom'
+                - $ref: '#/components/schemas/drawing-by-level'
+      responses:
+        200:
+          $ref: '#/components/responses/annotation-crop'
+        304:
+          $ref: '#/components/responses/not-modified'
+        400:
+          $ref: '#/components/responses/problem-bad-request'
+        404:
+          $ref: '#/components/responses/problem-not-found'
+#  /image/{filepath}/annotation/spectra:
+#    post:
+#      operationId: pims.api.annotation.show_spectra
+#      summary: Get annotation spectra
+#      description: |
+#        **`GET with body` - when a GET with URL encoded query parameters is not possible due to URL size limits, a POST
+#        with body content must be used.**
+#
+#        Get spectrum of every pixels belonging to the annotation(s).
+#      tags:
+#        - Annotations
+#      parameters:
+#        - $ref: '#/components/parameters/path-filepath'
+#        - $ref: '#/components/parameters/header-etag'
+#      requestBody:
+#        required: true
+#        content:
+#          application/json:
+#            schema:
+#              oneOf:
+#                - title: spectra-by-length
+#                  allOf:
+#                    - $ref: '#/components/schemas/annotations-object-basis'
+#                    - $ref: '#/components/schemas/target-length-object-required'
+#                    - $ref: '#/components/schemas/spectral-window-plane-selection'
+#                - title: spectra-by-width
+#                  allOf:
+#                    - $ref: '#/components/schemas/annotations-object-basis'
+#                    - $ref: '#/components/schemas/target-width-object-required'
+#                    - $ref: '#/components/schemas/spectral-window-plane-selection'
+#                - title: spectra-by-height
+#                  allOf:
+#                    - $ref: '#/components/schemas/annotations-object-basis'
+#                    - $ref: '#/components/schemas/target-height-object-required'
+#                    - $ref: '#/components/schemas/spectral-window-plane-selection'
+#                - title: spectra-by-zoom
+#                  allOf:
+#                    - $ref: '#/components/schemas/annotations-object-basis'
+#                    - $ref: '#/components/schemas/target-zoom-object-required'
+#                    - $ref: '#/components/schemas/spectral-window-plane-selection'
+#                - title: spectra-by-level
+#                  allOf:
+#                    - $ref: '#/components/schemas/annotations-object-basis'
+#                    - $ref: '#/components/schemas/target-level-object-required'
+#                    - $ref: '#/components/schemas/spectral-window-plane-selection'
+#      responses:
+#        200:
+#          $ref: '#/components/responses/hyperspectral-window'
+#        304:
+#          $ref: '#/components/responses/not-modified'
+#        400:
+#          $ref: '#/components/responses/problem-bad-request'
+#        404:
+#          $ref: '#/components/responses/problem-not-found'
+#  /image/{filepath}/annotation/footprint:
+#    post:
+#      operationId: pims.api.annotation.show_footprint
+#      summary: Get annotation spectral footprint
+#      description: |
+#        **`GET with body` - when a GET with URL encoded query parameters is not possible due to URL size limits, a POST
+#        with body content must be used.**
+#
+#        Get annotation spectral footprint. **At least one dimension must have a reduction
+#        operation.**
+#
+#        The input spatial region is given by the rectangular envelope of all geometries.
+#      tags:
+#        - Annotations
+#      parameters:
+#        - $ref: '#/components/parameters/path-filepath'
+#        - $ref: '#/components/parameters/header-etag'
+#      requestBody:
+#        required: true
+#        content:
+#          application/json:
+#            schema:
+#              oneOf:
+#                - title: footprint-by-length
+#                  allOf:
+#                    - $ref: '#/components/schemas/annotations-object-basis'
+#                    - $ref: '#/components/schemas/target-length-object-required'
+#                    - $ref: '#/components/schemas/footprint-plane-selection'
+#                - title: footprint-by-width
+#                  allOf:
+#                    - $ref: '#/components/schemas/annotations-object-basis'
+#                    - $ref: '#/components/schemas/target-width-object-required'
+#                    - $ref: '#/components/schemas/footprint-plane-selection'
+#                - title: footprint-by-height
+#                  allOf:
+#                    - $ref: '#/components/schemas/annotations-object-basis'
+#                    - $ref: '#/components/schemas/target-height-object-required'
+#                    - $ref: '#/components/schemas/footprint-plane-selection'
+#                - title: footprint-by-zoom
+#                  allOf:
+#                    - $ref: '#/components/schemas/annotations-object-basis'
+#                    - $ref: '#/components/schemas/target-zoom-object-required'
+#                    - $ref: '#/components/schemas/footprint-plane-selection'
+#                - title: footprint-by-level
+#                  allOf:
+#                    - $ref: '#/components/schemas/annotations-object-basis'
+#                    - $ref: '#/components/schemas/target-level-object-required'
+#                    - $ref: '#/components/schemas/footprint-plane-selection'
+#      responses:
+#        200:
+#          $ref: '#/components/responses/hyperspectral-footprint'
+#        304:
+#          $ref: '#/components/responses/not-modified'
+#        400:
+#          $ref: '#/components/responses/problem-bad-request'
+#        404:
+#          $ref: '#/components/responses/problem-not-found'
+#  /image/{filepath}/spectral/footprint:
+#    post:
+#      operationId: pims.api.spectral.show_spectral_footprint
+#      summary: Get spectral footprint
+#      description: |
+#        **`GET with body` - when a GET with URL encoded query parameters is not possible due to URL size limits, a POST
+#        with body content must be used.**
+#
+#        Get spectral footprint. **At least one dimension must have a reduction
+#        operation.**
+#
+#        ***Example 1:***
+#        * X, Y: range of pixel coordinates with `AVG` reduction
+#        * C: range of channels
+#        * Z: single focal plane
+#        * T: single timepoint
+#
+#        Result: Average intensity of given pixels for each channel in the range, at given focal plane and timepoint.
+#
+#
+#        ***Example 2:***
+#        * X, Y: range of pixel coordinates
+#        * C: range of channels with `MAX` reduction
+#        * Z: range of focal planes
+#        * T: range of timepoints
+#
+#        Result: Maximum intensity across all given channels for each (Z,T) plane combination.
+#      tags:
+#        - Hyperspectral
+#      parameters:
+#        - $ref: '#/components/parameters/path-filepath'
+#        - $ref: '#/components/parameters/header-etag'
+#      requestBody:
+#        required: true
+#        content:
+#          application/json:
+#            schema:
+#              oneOf:
+#                - title: region-by-zoom-and-region
+#                  allOf:
+#                    - $ref: '#/components/schemas/input-region'
+#                    - $ref: '#/components/schemas/footprint-plane-selection'
+#                - title: region-by-level-and-region
+#                  allOf:
+#                    - $ref: '#/components/schemas/input-level-region'
+#                    - $ref: '#/components/schemas/footprint-plane-selection'
+#                - title: region-by-zoom-and-tile-index
+#                  allOf:
+#                    - $ref: '#/components/schemas/target-zoom-tile-index'
+#                    - $ref: '#/components/schemas/footprint-plane-selection'
+#                - title: region-by-level-and-tile-index
+#                  allOf:
+#                    - $ref: '#/components/schemas/target-level-tile-index'
+#                    - $ref: '#/components/schemas/footprint-plane-selection'
+#                - title: region-by-zoom-and-tile-coordinates
+#                  allOf:
+#                    - $ref: '#/components/schemas/target-zoom-tile-coordinates'
+#                    - $ref: '#/components/schemas/footprint-plane-selection'
+#                - title: region-by-level-and-tile-coordinates
+#                  allOf:
+#                    - $ref: '#/components/schemas/target-level-tile-coordinates'
+#                    - $ref: '#/components/schemas/footprint-plane-selection'
+#      responses:
+#        200:
+#          $ref: '#/components/responses/hyperspectral-footprint'
+#        304:
+#          $ref: '#/components/responses/not-modified'
+#        400:
+#          $ref: '#/components/responses/problem-bad-request'
+#        404:
+#          $ref: '#/components/responses/problem-not-found'
+#  /image/{filepath}/spectral/window:
+#    post:
+#      operationId: pims.api.spectral.show_spectral_window
+#      summary: Get spectral window
+#      description: |
+#        **`GET with body` - when a GET with URL encoded query parameters is not possible due to URL size limits, a POST
+#        with body content must be used.**
+#
+#        Get spectral window. The input spatial region is given in the same way as regular windows. In output, it is
+#        returned the spectrum of each pixel belonging to the given spatial region.
+#      tags:
+#        - Hyperspectral
+#      parameters:
+#        - $ref: '#/components/parameters/path-filepath'
+#        - $ref: '#/components/parameters/header-etag'
+#      requestBody:
+#        required: true
+#        content:
+#          application/json:
+#            schema:
+#              oneOf:
+#                - title: region-by-zoom-and-region
+#                  allOf:
+#                    - $ref: '#/components/schemas/input-region'
+#                    - $ref: '#/components/schemas/spectral-window-plane-selection'
+#                - title: region-by-level-and-region
+#                  allOf:
+#                    - $ref: '#/components/schemas/input-level-region'
+#                    - $ref: '#/components/schemas/spectral-window-plane-selection'
+#                - title: region-by-zoom-and-tile-index
+#                  allOf:
+#                    - $ref: '#/components/schemas/target-zoom-tile-index'
+#                    - $ref: '#/components/schemas/spectral-window-plane-selection'
+#                - title: region-by-level-and-tile-index
+#                  allOf:
+#                    - $ref: '#/components/schemas/target-level-tile-index'
+#                    - $ref: '#/components/schemas/spectral-window-plane-selection'
+#                - title: region-by-zoom-and-tile-coordinates
+#                  allOf:
+#                    - $ref: '#/components/schemas/target-zoom-tile-coordinates'
+#                    - $ref: '#/components/schemas/spectral-window-plane-selection'
+#                - title: region-by-level-and-tile-coordinates
+#                  allOf:
+#                    - $ref: '#/components/schemas/target-level-tile-coordinates'
+#                    - $ref: '#/components/schemas/spectral-window-plane-selection'
+#      responses:
+#        200:
+#          $ref: '#/components/responses/hyperspectral-window'
+#        304:
+#          $ref: '#/components/responses/not-modified'
+#        400:
+#          $ref: '#/components/responses/problem-bad-request'
+#        404:
+#          $ref: '#/components/responses/problem-not-found'
+  /file/{filepath}/info:
+    get:
+      operationId: pims.api.metadata.show_file
+      description: Get information about a file
+      summary: Get file info
+      tags:
+        - Metadata
+      parameters:
+        - $ref: '#/components/parameters/path-filepath'
+        - $ref: '#/components/parameters/header-etag'
+      responses:
+        200:
+          description: OK
+          headers:
+            If-None-Match:
+              $ref: '#/components/headers/If-None-Match'
+            Cache-Control:
+              $ref: '#/components/headers/Cache-Control'
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/file-info'
+                  - $ref: '#/components/schemas/collection-file-type-info'
+                discriminator:
+                  propertyName: file_type
+                  mapping:
+                    SINGLE: '#/components/schemas/file-info'
+                    COLLECTION: '#/components/schemas/collection-file-type-info'
+        304:
+          $ref: '#/components/responses/not-modified'
+        404:
+          $ref: '#/components/responses/problem-not-found'
+  /image/{filepath}/info:
+    get:
+      operationId: pims.api.metadata.show_info
+      description: Get all information about an image
+      summary: Get all image info
+      tags:
+        - Metadata
+      parameters:
+        - $ref: '#/components/parameters/path-filepath'
+        - $ref: '#/components/parameters/header-etag'
+      responses:
+        200:
+          description: OK
+          headers:
+            If-None-Match:
+              $ref: '#/components/headers/If-None-Match'
+            Cache-Control:
+              $ref: '#/components/headers/Cache-Control'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/image-full-info'
+        304:
+          $ref: '#/components/responses/not-modified'
+        400:
+          $ref: '#/components/responses/problem-bad-request'
+        404:
+          $ref: '#/components/responses/problem-not-found'
+  /image/{filepath}/info/image:
+    get:
+      operationId: pims.api.metadata.show_image
+      description: Get information about an image.
+      summary: Get standard image info
+      tags:
+        - Metadata
+      parameters:
+        - $ref: '#/components/parameters/path-filepath'
+        - $ref: '#/components/parameters/header-etag'
+      responses:
+        200:
+          description: OK
+          headers:
+            If-None-Match:
+              $ref: '#/components/headers/If-None-Match'
+            Cache-Control:
+              $ref: '#/components/headers/Cache-Control'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/image-info'
+        304:
+          $ref: '#/components/responses/not-modified'
+        400:
+          $ref: '#/components/responses/problem-bad-request'
+        404:
+          $ref: '#/components/responses/problem-not-found'
+  /image/{filepath}/info/representations:
+    get:
+      operationId: pims.api.metadata.list_representations
+      description: Get information about all image representations
+      summary: Get all image representation info
+      tags:
+        - Metadata
+      parameters:
+        - $ref: '#/components/parameters/path-filepath'
+        - $ref: '#/components/parameters/header-etag'
+      responses:
+        200:
+          description: OK
+          headers:
+            If-None-Match:
+              $ref: '#/components/headers/If-None-Match'
+            Cache-Control:
+              $ref: '#/components/headers/Cache-Control'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  size:
+                    $ref: '#/components/schemas/collection-size'
+                  items:
+                    $ref: '#/components/schemas/representation-info'
+        304:
+          $ref: '#/components/responses/not-modified'
+        400:
+          $ref: '#/components/responses/problem-bad-request'
+        404:
+          $ref: '#/components/responses/problem-not-found'
+  /image/{filepath}/info/representations/{representation}:
+    get:
+      operationId: pims.api.metadata.show_representation
+      description: Get information about an image representation.
+      summary: Get image representation info
+      tags:
+        - Metadata
+      parameters:
+        - $ref: '#/components/parameters/path-filepath'
+        - $ref: '#/components/parameters/header-etag'
+        - name: representation
+          in: path
+          description: The image representation
+          required: true
+          schema:
+            $ref: '#/components/schemas/file-role'
+      responses:
+        200:
+          description: OK
+          headers:
+            If-None-Match:
+              $ref: '#/components/headers/If-None-Match'
+            Cache-Control:
+              $ref: '#/components/headers/Cache-Control'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/representation-info'
+        304:
+          $ref: '#/components/responses/not-modified'
+        400:
+          $ref: '#/components/responses/problem-bad-request'
+        404:
+          $ref: '#/components/responses/problem-not-found'
+  /image/{filepath}/info/normalized-pyramid:
+    get:
+      operationId: pims.api.metadata.show_normalized_pyramid
+      description: Get the normalized pyramid for an image
+      summary: Get image normalized pyramid
+      tags:
+        - Metadata
+      parameters:
+        - $ref: '#/components/parameters/path-filepath'
+        - $ref: '#/components/parameters/header-etag'
+      responses:
+        200:
+          description: OK
+          headers:
+            If-None-Match:
+              $ref: '#/components/headers/If-None-Match'
+            Cache-Control:
+              $ref: '#/components/headers/Cache-Control'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  size:
+                    $ref: '#/components/schemas/collection-size'
+                  items:
+                    $ref: '#/components/schemas/pyramid-info'
+        304:
+          $ref: '#/components/responses/not-modified'
+        400:
+          $ref: '#/components/responses/problem-bad-request'
+        404:
+          $ref: '#/components/responses/problem-not-found'
+  /image/{filepath}/info/channels:
+    get:
+      operationId: pims.api.metadata.show_channels
+      description: Get information about channels in an image
+      summary: Get image channel info
+      tags:
+        - Metadata
+      parameters:
+        - $ref: '#/components/parameters/path-filepath'
+        - $ref: '#/components/parameters/header-etag'
+      responses:
+        200:
+          description: OK
+          headers:
+            If-None-Match:
+              $ref: '#/components/headers/If-None-Match'
+            Cache-Control:
+              $ref: '#/components/headers/Cache-Control'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  size:
+                    $ref: '#/components/schemas/collection-size'
+                  items:
+                    $ref: '#/components/schemas/channels-info'
+        304:
+          $ref: '#/components/responses/not-modified'
+        400:
+          $ref: '#/components/responses/problem-bad-request'
+        404:
+          $ref: '#/components/responses/problem-not-found'
+  /image/{filepath}/info/instrument:
+    get:
+      operationId: pims.api.metadata.show_instrument
+      description: Get information about instrument in an image
+      summary: Get image instrument info
+      tags:
+        - Metadata
+      parameters:
+        - $ref: '#/components/parameters/path-filepath'
+        - $ref: '#/components/parameters/header-etag'
+      responses:
+        200:
+          description: OK
+          headers:
+            If-None-Match:
+              $ref: '#/components/headers/If-None-Match'
+            Cache-Control:
+              $ref: '#/components/headers/Cache-Control'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/instrument-info'
+        304:
+          $ref: '#/components/responses/not-modified'
+        400:
+          $ref: '#/components/responses/problem-bad-request'
+        404:
+          $ref: '#/components/responses/problem-not-found'
+  /image/{filepath}/info/associated:
+    get:
+      operationId: pims.api.metadata.show_associated
+      description: Get information about associated files in an image
+      summary: Get associated file info
+      tags:
+        - Metadata
+        - Associated
+      parameters:
+        - $ref: '#/components/parameters/path-filepath'
+        - $ref: '#/components/parameters/header-etag'
+      responses:
+        200:
+          description: OK
+          headers:
+            If-None-Match:
+              $ref: '#/components/headers/If-None-Match'
+            Cache-Control:
+              $ref: '#/components/headers/Cache-Control'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  size:
+                    $ref: '#/components/schemas/collection-size'
+                  items:
+                    $ref: '#/components/schemas/associated-info'
+        304:
+          $ref: '#/components/responses/not-modified'
+        400:
+          $ref: '#/components/responses/problem-bad-request'
+        404:
+          $ref: '#/components/responses/problem-not-found'
+  /image/{filepath}/metadata:
+    get:
+      operationId: pims.api.metadata.show_metadata
+      description: Get readable raw metadata from an image file
+      summary: Get image metadata
+      tags:
+        - Metadata
+      parameters:
+        - $ref: '#/components/parameters/path-filepath'
+        - $ref: '#/components/parameters/header-etag'
+      responses:
+        200:
+          description: OK
+          headers:
+            If-None-Match:
+              $ref: '#/components/headers/If-None-Match'
+            Cache-Control:
+              $ref: '#/components/headers/Cache-Control'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  size:
+                    $ref: '#/components/schemas/collection-size'
+                  items:
+                    description: Array of metadata
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/metadata'
+        304:
+          $ref: '#/components/responses/not-modified'
+        400:
+          $ref: '#/components/responses/problem-bad-request'
+        404:
+          $ref: '#/components/responses/problem-not-found'
+  /image/{filepath}/associated/{associated_key}:
+    get:
+      operationId: pims.api.metadata.show_associated_image
+      summary: Get an associated image
+      description: Get the associated image specified by the key, if it exists.
+      tags:
+        - Associated
+      parameters:
+        - $ref: '#/components/parameters/path-filepath'
+        - name: associated_key
+          in: path
+          required: true
+          schema:
+            type: string
+            description: |
+              The type of associated file.
+              * `thumb` - The pre-computed thumbnail stored in image file.
+              * `label` - The image label stored in image file.
+              * `macro` - The image macro stored in image file.
+            enum:
+              - thumb
+              - label
+              - macro
+        - $ref: '#/components/parameters/query-thumb-length'
+        - $ref: '#/components/parameters/header-etag'
+        - $ref: '#/components/parameters/header-x-image-size-safety'
+      responses:
+        200:
+          $ref: '#/components/responses/generic-image'
+        304:
+          $ref: '#/components/responses/not-modified'
+        400:
+          $ref: '#/components/responses/problem-bad-request'
+        404:
+          $ref: '#/components/responses/problem-not-found'
+  /image/{filepath}/histograms:
+    get:
+      operationId: pims.api.histograms.list_histograms
+      summary: Get possible histograms
+      tags:
+        - Histograms
+      description: Get possible histograms
+      parameters:
+        - $ref: '#/components/parameters/path-filepath'
+        - $ref: '#/components/parameters/header-etag'
+      responses:
+        200:
+          description: OK
+          headers:
+            If-None-Match:
+              $ref: '#/components/headers/If-None-Match'
+            Cache-Control:
+              $ref: '#/components/headers/Cache-Control'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  size:
+                    $ref: '#/components/schemas/collection-size'
+                  items:
+                    type: array
+                    description: Array of possible histograms
+                    items:
+                      $ref: '#/components/schemas/simple-histogram'
+        304:
+          $ref: '#/components/responses/not-modified'
+        400:
+          $ref: '#/components/responses/problem-bad-request'
+        404:
+          $ref: '#/components/responses/problem-not-found'
+  /image/{filepath}/histograms/full:
+    get:
+      operationId: pims.api.histograms.show_full_histogram
+      tags:
+        - Histograms
+      summary: Get full image histogram
+      description: Get histogram for full image where all planes (C,Z,T) are merged
+      parameters:
+        - $ref: '#/components/parameters/path-filepath'
+        - $ref: '#/components/parameters/header-etag'
+        - $ref: '#/components/parameters/query-histogram-type'
+        - $ref: '#/components/parameters/query-histogram-bins'
+      responses:
+        200:
+          description: OK
+          headers:
+            If-None-Match:
+              $ref: '#/components/headers/If-None-Match'
+            Cache-Control:
+              $ref: '#/components/headers/Cache-Control'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/detailed-histogram'
+                  - type: object
+                    properties:
+                      hist:
+                        $ref: '#/components/schemas/histogram-values'
+        304:
+          $ref: '#/components/responses/not-modified'
+        400:
+          $ref: '#/components/responses/problem-bad-request'
+        404:
+          $ref: '#/components/responses/problem-not-found'
+  /image/{filepath}/histograms/c/{channels}:
+    get:
+      operationId: pims.api.histograms.show_histogram_per_channel
+      tags:
+        - Histograms
+      summary: Get per-channel image histogram
+      description: Get histograms per channel where all planes (Z,T) are merged
+      parameters:
+        - $ref: '#/components/parameters/path-filepath'
+        - $ref: '#/components/parameters/header-etag'
+        - $ref: '#/components/parameters/query-histogram-type'
+        - $ref: '#/components/parameters/query-histogram-bins'
+        - $ref: '#/components/parameters/path-channel-selection'
+      responses:
+        200:
+          description: OK
+          headers:
+            If-None-Match:
+              $ref: '#/components/headers/If-None-Match'
+            Cache-Control:
+              $ref: '#/components/headers/Cache-Control'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/detailed-histogram'
+                  - type: object
+                    properties:
+                      values:
+                        type: object
+                        properties:
+                          c:
+                            $ref: '#/components/schemas/single-channel-index'
+                          hist:
+                            $ref: '#/components/schemas/histogram-values'
+        304:
+          $ref: '#/components/responses/not-modified'
+        400:
+          $ref: '#/components/responses/problem-bad-request'
+        404:
+          $ref: '#/components/responses/problem-not-found'
+  /image/{filepath}/histograms/c/{channels}/z/{z_slices}/t/{timepoints}:
+    get:
+      operationId: pims.api.histograms.show_histogram_per_plane
+      tags:
+        - Histograms
+      summary: Get per-plane image histogram
+      description: Get histograms per plane
+      parameters:
+        - $ref: '#/components/parameters/path-filepath'
+        - $ref: '#/components/parameters/header-etag'
+        - $ref: '#/components/parameters/query-histogram-type'
+        - $ref: '#/components/parameters/query-histogram-bins'
+        - $ref: '#/components/parameters/path-channel-selection'
+        - $ref: '#/components/parameters/path-z-slice-selection'
+        - $ref: '#/components/parameters/path-timepoint-selection'
+      responses:
+        200:
+          description: OK
+          headers:
+            If-None-Match:
+              $ref: '#/components/headers/If-None-Match'
+            Cache-Control:
+              $ref: '#/components/headers/Cache-Control'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/detailed-histogram'
+                  - type: object
+                    properties:
+                      values:
+                        type: object
+                        properties:
+                          c:
+                            $ref: '#/components/schemas/single-channel-index'
+                          z:
+                            $ref: '#/components/schemas/single-z-slice-index'
+                          t:
+                            $ref: '#/components/schemas/single-timepoint-index'
+                          hist:
+                            $ref: '#/components/schemas/histogram-values'
+        304:
+          $ref: '#/components/responses/not-modified'
+        400:
+          $ref: '#/components/responses/problem-bad-request'
+        404:
+          $ref: '#/components/responses/problem-not-found'
+  /image/{filepath}/export/{format_id}:
+    get:
+      operationId: pims.api.operations.export
+      description: Export a file in another format
+      summary: Export file
+      tags:
+        - Export
+      parameters:
+        - $ref: '#/components/parameters/path-filepath'
+        - $ref: '#/components/parameters/query-export-format'
+      responses:
+        200:
+          description: OK
+          headers:
+            Content-Disposition:
+              $ref: '#/components/headers/Content-Disposition'
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        400:
+          $ref: '#/components/responses/problem-bad-request'
+        404:
+          $ref: '#/components/responses/problem-not-found'
+        406:
+          $ref: '#/components/responses/problem-not-acceptable'
+  /upload:
+    post:
+      operationId: pims.api.operations.legacy_import
+      description: Import a file (legacy)
+      summary: Import a file (legacy)
+      tags:
+        - Import
+      parameters:
+        - name: core
+          required: false
+          in: query
+          schema:
+            type: string
+        - name: cytomine
+          required: false
+          in: query
+          schema:
+            type: string
+        - name: storage
+          required: false
+          in: query
+          schema:
+            type: integer
+        - name: idStorage
+          required: false
+          in: query
+          schema:
+            type: integer
+        - name: projects
+          required: false
+          in: query
+          schema:
+            type: array
+            items:
+              type: integer
+        - name: idProject
+          required: false
+          in: query
+          schema:
+            type: string
+        - name: sync
+          required: false
+          in: query
+          schema:
+            type: boolean
+            default: false
+        - name: keys
+          required: false
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+        - name: values
+          required: false
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                filesname:
+                  type: string
+                filescontent_type:
+                  type: string
+                filespath:
+                  type: string
+                filessize:
+                  type: string
+                filesmd5:
+                  type: string
+      responses:
+        202:
+          description: |
+            Accepted - The file will be imported.
+        404:
+          $ref: '#/components/responses/problem-not-found'
+        400:
+          $ref: '#/components/responses/problem-conflict'
+  /file/{filepath}:
+    post:
+      operationId: pims.api.operations.import_
+      description: Import a file
+      summary: Import a file
+      tags:
+        - Import
+      parameters:
+        - $ref: '#/components/parameters/path-filepath'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                uploaded_file_id:
+                  type: integer
+                  format: int64
+                root_id:
+                  type: integer
+                  format: int64
+                user_id:
+                  type: integer
+                  format: int64
+                username:
+                  type: string
+      responses:
+        202:
+          description: |
+            Accepted - The file will be imported.
+        404:
+          $ref: '#/components/responses/problem-not-found'
+        409:
+          $ref: '#/components/responses/problem-conflict'
+    delete:
+      operationId: pims.api.operations.delete
+      description: Delete a file and its children
+      summary: Delete a file
+      tags:
+        - Housekeeping
+      parameters:
+        - $ref: '#/components/parameters/path-filepath'
+      responses:
+        204:
+          description: OK - No content
+        404:
+          $ref: '#/components/responses/problem-not-found'
+  /info:
+    get:
+      operationId: pims.api.server.show_status
+      description: Status of PIMS
+      summary: Status of PIMS
+      tags:
+        - Server
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  version:
+                    type: string
+                    description: PIMS version
+                  api_version:
+                    type: string
+                    description: PIMS API specification version
+  /directory/{directorypath}/disk-usage:
+    get:
+      operationId: pims.api.housekeeping.show_path_usage
+      description: Disk usage of a filepath.
+      summary: Directory disk usage
+      tags:
+        - Housekeeping
+      parameters:
+        - name: directorypath
+          required: true
+          in: path
+          schema:
+            type: string
+            format: path
+          description: The path of the directory
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/disk-usage'
+        404:
+          $ref: '#/components/responses/problem-not-found'
+  /disk-usage:
+    get:
+      operationId: pims.api.housekeeping.show_disk_usage
+      description: Disk usage of PIMS.
+      summary: PIMS disk usage
+      tags:
+        - Housekeeping
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/disk-usage'
+        404:
+          $ref: '#/components/responses/problem-not-found'
+  /formats:
+    get:
+      operationId: pims.api.formats.list_formats
+      description: List of supported formats by PIMS
+      summary: List all formats
+      tags:
+        - Formats
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  size:
+                    $ref: '#/components/schemas/collection-size'
+                  items:
+                    description: Array of formats
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/format'
+  /formats/{format_id}:
+    get:
+      operationId: pims.api.formats.show_format
+      description: Get a supported format by PIMS
+      summary: Get a format
+      tags:
+        - Formats
+      parameters:
+        - name: format_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/format-id'
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/format'
+        404:
+          $ref: '#/components/responses/problem-not-found'
+#  /colormaps:
+#    get:
+#      operationId: pims.api.colormaps.list_colormaps
+#      description: List of pre-defined colormaps in PIMS
+#      summary: List all colormaps
+#      tags:
+#        - Colormaps
+#      responses:
+#        200:
+#          description: OK
+#          content:
+#            application/json:
+#              schema:
+#                type: object
+#                properties:
+#                  size:
+#                    $ref: '#/components/schemas/collection-size'
+#                  items:
+#                    description: Array of colormaps
+#                    type: array
+#                    items:
+#                      $ref: '#/components/schemas/colormap'
+#  /colormaps/{colormap_id}:
+#    get:
+#      operationId: pims.api.colormaps.show_colormap
+#      description: Get a pre-defined colormap in PIMS
+#      summary: Get a colormap
+#      tags:
+#        - Colormaps
+#      parameters:
+#        - name: colormap_id
+#          in: path
+#          required: true
+#          description: Colormap unique identifier
+#          schema:
+#            $ref: '#/components/schemas/colormap-id'
+#      responses:
+#        200:
+#          description: OK
+#          content:
+#            application/json:
+#              schema:
+#                $ref: '#/components/schemas/colormap'
+#        404:
+#          $ref: '#/components/responses/problem-not-found'
+#  /colormaps/{colormap_id}/representation:
+#    get:
+#      operationId: pims.api.colormaps.show_colormap_representation
+#      description: Get a graphic representation of a colormap
+#      summary: Get a colormap representation
+#      tags:
+#        - Colormaps
+#      parameters:
+#        - name: colormap_id
+#          in: path
+#          required: true
+#          description: Colormap unique identifier
+#          schema:
+#            $ref: '#/components/schemas/colormap-id'
+#        - name: width
+#          in: query
+#          required: false
+#          description: Width of the graphic representation, in pixels.
+#          schema:
+#            type: integer
+#            format: int32
+#            default: 100
+#            maximum: 512
+#            minimum: 10
+#        - name: height
+#          in: query
+#          required: false
+#          description: Height of the graphic representation, in pixels.
+#          schema:
+#            type: integer
+#            format: int32
+#            default: 32
+#            maximum: 512
+#            minimum: 1
+#        - $ref: '#/components/parameters/header-etag'
+#      responses:
+#        200:
+#          $ref: '#/components/responses/colormap-representation'
+#        304:
+#          $ref: '#/components/responses/not-modified'
+#        404:
+#          $ref: '#/components/responses/problem-not-found'
+  /filters:
+    get:
+      operationId: pims.api.filters.list_filters
+      description: List of available image filters in PIMS
+      summary: List all image filters
+      tags:
+        - Filters
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  size:
+                    $ref: '#/components/schemas/collection-size'
+                  items:
+                    description: Array of filters
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/filter'
+  /filters/{filter_id}:
+    get:
+      operationId: pims.api.filters.show_filter
+      description: Get an image filter in PIMS
+      summary: Get an image filter
+      tags:
+        - Filters
+      parameters:
+        - name: filter_id
+          in: path
+          required: true
+          description: Filter unique identifier
+          schema:
+            $ref: '#/components/schemas/filter-id'
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/filter'
+        404:
+          $ref: '#/components/responses/problem-not-found'
+  /slice/tile:
+    get:
+      operationId: pims.api.tile.show_tile_v2
+      description: Get a tile using IMS V2.x specification.
+      summary: Get a tile (V2.x)
+      deprecated: true
+      tags:
+        - Normalized tiles
+      parameters:
+        - name: 'mimeType'
+          in: query
+          description: 'Image mime type'
+          required: true
+          schema:
+            type: string
+        - name: 'fif'
+          in: query
+          description: |
+            Full file path.
+            Must be used together with `z` and `tileIndex`.
+          schema:
+            type: string
+        - name: 'z'
+          in: query
+          description: Zoom level.
+          schema:
+            type: integer
+            format: int64
+          required: true
+        - name: 'tileIndex'
+          in: query
+          description: |
+            Tile index.
+            Must be used together with `z` and `fif`.
+          schema:
+            type: integer
+            format: int64
+        - name: 'zoomify'
+          in: query
+          description: |
+            Full file path if Zoomify protocol is used.
+            Must be used together with `z`, `x`, `y` and `tileGroup`.
+          schema:
+            type: string
+        - name: tileGroup
+          in: query
+          description: |
+            Tile Group used in Zoomify protocol.
+            Must be used together with `z`, `x`, `y` and `zoomify`.
+          schema:
+            type: string
+        - name: x
+          in: query
+          description: |
+            X parameter in Zoomify protocol.
+            Must be used together with `z`, `y`, `tileGroup` and `zoomify`.
+          schema:
+            type: integer
+            format: int64
+        - name: y
+          in: query
+          description: |
+            Y parameter in Zoomify protocol.
+            Must be used together with `z`, `x`, `tileGroup` and `zoomify`.
+          schema:
+            type: integer
+            format: int64
+        - name: gamma
+          in: query
+          description: |
+            Gamma value for all channels
+          schema:
+            type: number
+      responses:
+        200:
+          description: The tile
+          content:
+            image/jpeg:
+              schema:
+                $ref: '#/components/schemas/generic-image'
+        400:
+          description: Bad request
+  /image/tile.jpg:
+    get:
+      operationId: pims.api.tile.show_tile_v1
+      description: Get a tile using IMS V1.x specification.
+      summary: Get a tile (V1.x)
+      deprecated: true
+      tags:
+        - Normalized tiles
+      parameters:
+        - name: 'mimeType'
+          in: query
+          description: 'Image mime type'
+          required: true
+          schema:
+            type: string
+        - name: 'z'
+          in: query
+          description: Zoom level.
+          schema:
+            type: integer
+            format: int64
+          required: true
+        - name: 'zoomify'
+          in: query
+          description: |
+            Full file path if Zoomify protocol is used.
+          required: true
+          schema:
+            type: string
+        - name: tileGroup
+          in: query
+          description: |
+            Tile Group used in Zoomify protocol.
+          schema:
+            type: string
+          required: true
+        - name: x
+          in: query
+          description: |
+            X parameter in Zoomify protocol.
+          schema:
+            type: integer
+            format: int64
+          required: true
+        - name: y
+          in: query
+          description: |
+            Y parameter in Zoomify protocol.
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        200:
+          description: The tile
+          content:
+            image/jpeg:
+              schema:
+                $ref: '#/components/schemas/generic-image'
+        400:
+          description: Bad request
+  /storage/size.json:
+    get:
+      operationId: pims.api.housekeeping.show_disk_usage_v1
+      tags:
+        - Housekeeping
+      deprecated: true
+      description: Get used and free space of the image storage in IMS v1.x and v2.x
+      summary: Get storage space (v1.x)
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  used:
+                    type: integer
+                    format: int64
+                  available:
+                    type: integer
+                    format: int64
+                  usedP:
+                    type: number
+                    format: double
+                  hostname:
+                    type: string
+                  mount:
+                    type: string
+                  ip:
+                    type: string
+components:
+  parameters:
+    header-etag:
+      name: ETag
+      in: header
+      description: |
+        The RFC 7232 ETag header field in a response provides the entity-tag of
+        a selected resource. The entity-tag is an opaque identifier for versions
+        and representations of the same resource over time, regardless whether
+        multiple versions are valid at the same time. An entity-tag consists of
+        an opaque quoted string, possibly prefixed by a weakness indicator (see
+        [RFC 7232 Section 2.3](https://tools.ietf.org/html/rfc7232#section-2.3)).
+      required: false
+      schema:
+        type: string
+    header-x-image-size-safety:
+      name: X-Image-Size-Safety
+      in: header
+      description: |
+        This header provides hints about the way the server has to deal with too large image responses.
+        * `SAFE_REJECT` - Reject too large image response and throw a `400 Bad Request`.
+        * `SAFE_RESIZE` - Resize the image response to an acceptable image size. Information about the resize are
+        returned in `X-Image-Size-Limit` header.
+        * `UNSAFE` - **At your own risk!** Try to fulfill the request but can cause unintended side effects
+        (unreadable response, server slown down, server failure, ...). It should only be used in rare controlled
+        situations.
+      required: false
+      schema:
+        default: SAFE_RESIZE
+        type: string
+        enum:
+          - SAFE_REJECT
+          - SAFE_RESIZE
+          - UNSAFE
+    header-x-annotation-origin:
+      name: X-Annotation-Origin
+      in: header
+      description: |
+        This header give the origin coordinate system in which are described provided annotations.
+      required: false
+      schema:
+        default: LEFT_TOP
+        type: string
+        enum:
+          - LEFT_TOP
+          - LEFT_BOTTOM
+    path-filepath:
+      name: filepath
+      in: path
+      description: The file path, relative to server base path.
+      required: true
+      schema:
+        type: string
+        format: path
+      example: '123/my-file.ext'
+    path-zoom:
+      name: zoom
+      in: path
+      description: |
+        The zoom level.
+        Zoom 0 denotes the tier with the worst resolution (smallest image, top of the image pyramid).
+        Maximum admissible zoom level depends on image.
+      required: true
+      schema:
+        $ref: '#/components/schemas/zoom-or-level'
+    path-level:
+      name: level
+      in: path
+      description: |
+        The tier level.
+        Level 0 denotes the tier with the best resolution (largest image, basis of the image pyramid).
+        Maximum admissible tier level depends on image.
+      required: true
+      schema:
+        $ref: '#/components/schemas/zoom-or-level'
+    path-tile-index:
+      name: ti
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/tile-index'
+    path-tile-x:
+      name: tile_x
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/tile-x'
+    path-tile-y:
+      name: tile_y
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/tile-y'
+    query-channel-selection:
+      name: channels
+      in: query
+      required: false
+      style: form
+      explode: false
+      schema:
+        $ref: '#/components/schemas/single-channel-index'
+    path-channel-selection:
+      name: channels
+      in: path
+      required: true
+      style: form
+      explode: false
+      schema:
+        $ref: '#/components/schemas/single-channel-index'
+    query-z-slice-selection:
+      name: z_slices
+      in: query
+      required: false
+      style: form
+      explode: false
+      schema:
+        $ref: '#/components/schemas/single-z-slice-index'
+    path-z-slice-selection:
+      name: z_slices
+      in: path
+      required: true
+      style: form
+      explode: false
+      schema:
+        $ref: '#/components/schemas/single-z-slice-index'
+    query-timepoint-selection:
+      name: timepoints
+      in: query
+      required: false
+      style: form
+      explode: false
+      schema:
+        $ref: '#/components/schemas/single-timepoint-index'
+    path-timepoint-selection:
+      name: timepoints
+      in: path
+      required: true
+      style: form
+      explode: false
+      schema:
+        $ref: '#/components/schemas/single-timepoint-index'
+    query-c-reduction:
+      name: c_reduction
+      in: query
+      required: false
+      schema:
+        $ref: '#/components/schemas/channel-reduction'
+    query-z-reduction:
+      name: z_reduction
+      in: query
+      required: false
+      schema:
+        $ref: '#/components/schemas/z-slice-reduction'
+    query-t-reduction:
+      name: t_reduction
+      in: query
+      required: false
+      schema:
+        $ref: '#/components/schemas/timepoint-reduction'
+    query-min-intensities-visualisation:
+      name: min_intensities
+      in: query
+      required: false
+      style: form
+      explode: false
+      schema:
+        $ref: '#/components/schemas/min-intensity-selection-list-default-auto-image'
+    query-max-intensities-visualisation:
+      name: max_intensities
+      in: query
+      required: false
+      style: form
+      explode: false
+      schema:
+        $ref: '#/components/schemas/max-intensity-selection-list-default-auto-image'
+    query-min-intensities:
+      name: min_intensities
+      in: query
+      required: false
+      style: form
+      explode: false
+      schema:
+        $ref: '#/components/schemas/min-intensity-selection-list'
+    query-max-intensities:
+      name: max_intensities
+      in: query
+      required: false
+      style: form
+      explode: false
+      schema:
+        $ref: '#/components/schemas/max-intensity-selection-list'
+    query-colormaps:
+      name: colormaps
+      in: query
+      required: false
+      style: form
+      explode: false
+      schema:
+        $ref: '#/components/schemas/colormap-id-list'
+    query-filters:
+      name: filters
+      in: query
+      required: false
+      style: form
+      explode: false
+      schema:
+        $ref: '#/components/schemas/filter-id-list'
+    query-gammas:
+      name: gammas
+      in: query
+      required: false
+      style: form
+      explode: false
+      schema:
+        $ref: '#/components/schemas/gamma-list'
+    query-log:
+      name: log
+      in: query
+      required: false
+      schema:
+        $ref: '#/components/schemas/log'
+    query-bits:
+      name: bits
+      in: query
+      required: false
+      schema:
+        $ref: '#/components/schemas/bits'
+    query-colorspace:
+      name: colorspace
+      in: query
+      required: false
+      schema:
+        $ref: '#/components/schemas/colorspace'
+    query-thumb-length:
+      name: length
+      in: query
+      description: |
+        Length of the largest side of the thumbnail. The other dimension is adjusted to preserve the aspect ratio.
+
+        **Ignored if other size-related parameter such as `width` or `height` is present.**
+      required: false
+      schema:
+        $ref: '#/components/schemas/target-length-default-256'
+    query-thumb-width:
+      name: width
+      in: query
+      description: |
+        Width of the thumbnail. Height is adjusted to preserve the aspect ratio.
+
+        **Takes precedence over `length`.**
+      required: false
+      schema:
+        $ref: '#/components/schemas/target-length'
+    query-thumb-height:
+      name: height
+      in: query
+      description: |
+        Height of the thumbnail. Width is adjusted to preserve the aspect ratio.
+
+        **Takes precedence over `width` and `length`.**
+      required: false
+      schema:
+        $ref: '#/components/schemas/target-length'
+    query-thumb-zoom:
+      name: zoom
+      in: query
+      description: |
+        The zoom level to consider as thumbnail.
+        Zoom 0 has the worst resolution (smallest image, top of the image pyramid).
+        Maximum admissible zoom level depends on image.
+
+        **Takes precedence over `height`, `width` and `length`.**
+      required: false
+      schema:
+        $ref: '#/components/schemas/zoom-or-level'
+    query-thumb-level:
+      name: level
+      in: query
+      description: |
+        The tier level.
+        Level 0 has the best resolution (largest image, basis of the image pyramid).
+        Maximum admissible tier level depends on image.
+
+        **Takes precedence over `zoom`, `height`, `width` and `length`.**
+      required: false
+      schema:
+        $ref: '#/components/schemas/zoom-or-level'
+    query-thumb-use-precomputed:
+      name: use_precomputed
+      in: query
+      schema:
+        $ref: '#/components/schemas/thumb-use-precomputed'
+    query-histogram-type:
+      name: type
+      in: query
+      schema:
+        $ref: '#/components/schemas/histogram-type'
+    query-histogram-bins:
+      name: n_bins
+      in: query
+      schema:
+        $ref: '#/components/schemas/histogram-bins'
+    query-export-format:
+      name: format_id
+      in: path
+      description: |
+        The format identifier in which the image is exported. Only a subset of formats are accepted.
+      required: true
+      schema:
+        $ref: '#/components/schemas/format-id'
+  schemas:
+    # Indexes
+    single-channel-index:
+      type: integer
+      format: int32
+      description: A single channel index. **By default**, all channels are considered.
+      minimum: 0
+    range-channel-indexes:
+      type: string
+      format: range
+      description: A range of channel indexes. Start index is inclusive, last one exclusive and must be separated by `:`.
+      example: '2:6'
+    multiple-channel-indexes:
+      x-single-or-array: true
+      description: |
+        Image channels used to render the response.
+        This parameter is interpreted as a set such that duplicates are ignored.
+        **By default**, all channels are considered.
+
+        The reduction operation to merge the channels can be set in `c_reduction` parameter.
+      oneOf:
+        - $ref: '#/components/schemas/single-channel-index'
+#        - $ref: '#/components/schemas/range-channel-indexes'
+#        - type: array
+#          items:
+#            oneOf:
+#              - $ref: '#/components/schemas/single-channel-index'
+#              - $ref: '#/components/schemas/range-channel-indexes'
+    single-z-slice-index:
+      type: integer
+      format: int32
+      description: A single focal plane index. **By default**, the median focal plane is considered.
+      minimum: 0
+    range-z-slice-indexes:
+      type: string
+      format: range
+      description: A range of focal plane indexes. Start index is inclusive, last one exclusive and must be separated by `:`.
+      example: '2:6'
+    multiple-z-slice-indexes:
+      x-single-or-array: true
+      description: |
+        Image focal planes used to render the response.
+        This parameter is interpreted as a set such that duplicates are ignored.
+        **By default**, the median focal plane is considered.
+
+        The reduction operation to merge the focal planes can be set in `z_reduction` parameter.
+      oneOf:
+        - $ref: '#/components/schemas/single-z-slice-index'
+#        - $ref: '#/components/schemas/range-z-slice-indexes'
+#        - type: array
+#          items:
+#            oneOf:
+#              - $ref: '#/components/schemas/single-z-slice-index'
+#              - $ref: '#/components/schemas/range-z-slice-indexes'
+    single-timepoint-index:
+      type: integer
+      format: int32
+      description: A single timepoint index. **By default**, the first timepoint considered.
+      minimum: 0
+    range-timepoint-indexes:
+      type: string
+      format: range
+      description: A range of timepoint indexes. Start index is inclusive, last one exclusive and must be separated by `:`.
+      example: '2:6'
+    multiple-timepoint-indexes:
+      x-single-or-array: true
+      description: |
+        Image timepoints used to render the response.
+        This parameter is interpreted as a set such that duplicates are ignored.
+        **By default**, the first timepoint considered.
+
+        The reduction operation to merge the timepoints can be set in `t_reduction` parameter.
+      oneOf:
+        - $ref: '#/components/schemas/single-timepoint-index'
+#        - $ref: '#/components/schemas/range-timepoint-indexes'
+#        - type: array
+#          items:
+#            oneOf:
+#              - $ref: '#/components/schemas/single-timepoint-index'
+#              - $ref: '#/components/schemas/range-timepoint-indexes'
+
+    # Dimensionality reduction
+    channel-reduction:
+      description: |
+        Reduction function used to merge selected channels.
+      type: string
+      enum:
+        - ADD
+        - MIN
+        - AVG
+        - MAX
+      default: ADD
+    generic-reduction:
+      type: string
+      enum:
+        - MIN
+        - AVG
+        - MAX
+    z-slice-reduction:
+      description: |
+        Reduction function used to combinate selected focal planes.
+
+        **This parameter is required if `z_slices` is not a single focal plane index.**
+      allOf:
+        - $ref: '#/components/schemas/generic-reduction'
+    timepoint-reduction:
+      description: |
+        Reduction function used to combinate selected timepoints.
+
+        **This parameter is required if `timepoints` is not a single timepoint index.**
+      allOf:
+        - $ref: '#/components/schemas/generic-reduction'
+    footprint-reduction:
+      description: |
+        Reduction function used to combinate selected items in the dimension.
+      allOf:
+        - $ref: '#/components/schemas/generic-reduction'
+    footprint-reduction-nullable:
+      nullable: true
+      allOf:
+        - $ref: '#/components/schemas/footprint-reduction'
+    window-plane-selection:
+      type: object
+      properties:
+        channels:
+          $ref: '#/components/schemas/single-channel-index'
+        z_slices:
+          $ref: '#/components/schemas/single-z-slice-index'
+        timepoints:
+          $ref: '#/components/schemas/single-timepoint-index'
+#        c_reduction:
+#          $ref: '#/components/schemas/channel-reduction'
+#        z_reduction:
+#          $ref: '#/components/schemas/z-slice-reduction'
+#        t_reduction:
+#          $ref: '#/components/schemas/timepoint-reduction'
+    spectral-window-plane-selection:
+      type: object
+      properties:
+        channels:
+          description: |
+            Image channels used to render the response. This parameter is interpreted as a set such that duplicates
+            are ignored.
+
+            **If this parameter represents a set of size > 1, `z_slices` and `timepoints` have to be single indexes.**
+
+            **By default,** all channels are considered.
+          allOf:
+            - $ref: '#/components/schemas/multiple-channel-indexes'
+        z_slices:
+          description: |
+            Image focal planes used to render the response. This parameter is interpreted as a set such that duplicates
+            are ignored.
+
+            **If this parameter represents a set of size > 1, `channels` and `timepoints` have to be single indexes.**
+
+            **By default,** the median focal plane considered.
+          allOf:
+            - $ref: '#/components/schemas/multiple-z-slice-indexes'
+        timepoints:
+          description: |
+            Image timepoints used to render the response. This parameter is interpreted as a set such that duplicates
+            are ignored.
+
+            **If this parameter represents a set of size > 1, `z_slices` and `channels` have to be single indexes.**
+
+            **By default,** the first timepoint considered.
+          allOf:
+            - $ref: '#/components/schemas/multiple-timepoint-indexes'
+    footprint-plane-selection:
+      type: object
+      properties:
+        channels:
+          $ref: '#/components/schemas/multiple-channel-indexes'
+        z_slices:
+          $ref: '#/components/schemas/multiple-z-slice-indexes'
+        timepoints:
+          $ref: '#/components/schemas/multiple-timepoint-indexes'
+        x_reduction:
+          $ref: '#/components/schemas/footprint-reduction'
+        y_reduction:
+          $ref: '#/components/schemas/footprint-reduction'
+        c_reduction:
+          $ref: '#/components/schemas/footprint-reduction'
+        z_reduction:
+          $ref: '#/components/schemas/footprint-reduction'
+        t_reduction:
+          $ref: '#/components/schemas/footprint-reduction'
+
+    # Intensities
+    intensity-selection-enum:
+      type: string
+      enum:
+        - AUTO_IMAGE
+        - AUTO_PLANE
+        - STRETCH_IMAGE
+        - STRETCH_PLANE
+    intensity-selection-value:
+      type: integer
+      format: int64
+      minimum: 0
+    min-intensity-selection-list:
+      x-single-or-array: true
+      description: |
+        Intensity in the original image used as minimum intensity (black) to create the response.
+        As a consequence, original image intensities lower than this value will be black in the response.
+
+        Maximum allowed value depends on image pixel type and is equal to `2 * pow(pixel type)`.
+
+        Minimum intensity is closely related to the concepts of brightness and contrast.
+        Brightness is the visual perception of reflected light while contrast is the separation
+        of the lightest and darkest parts of an image. A minimum intensity increase leads to:
+        * a brightness decrease, which refers to an image's decreased luminance.
+        * a contrast increase, which darken shadows and lighten highlights.
+
+        Enumeration supported values:
+        * `AUTO_IMAGE` - If image pixel type uses 8 bits, `min_intensity=0`. Otherwise, the behavior is `STRETCH_IMAGE`.
+        * `AUTO_PLANE` - If image pixel type uses 8 bits, `min_intensity=0`. Otherwise, the behavior is `STRETCH_PLANE`.
+        * `STRETCH_IMAGE` - Set `min_intensity` to lowest intensity in the original image, for each channel.
+        * `STRETCH_PLANE` - Set `min_intensity` to lowest intensity in the set of planes, for each channel.
+      oneOf:
+        - $ref: '#/components/schemas/intensity-selection-enum'
+        - $ref: '#/components/schemas/intensity-selection-value'
+        - type: array
+          description: |
+            Expected format is an array of size:
+            * 1 to apply the minimum intensity to all channels
+            * equals to the number of channels used to render the response in order to apply a minimum intensity per channel
+          minItems: 1
+          items:
+            oneOf:
+              - $ref: '#/components/schemas/intensity-selection-enum'
+              - $ref: '#/components/schemas/intensity-selection-value'
+    min-intensity-selection-list-default-auto-image:
+      x-single-or-array: true
+      x-default: AUTO_IMAGE
+      allOf:
+        - default: AUTO_IMAGE
+        - $ref: '#/components/schemas/min-intensity-selection-list'
+    max-intensity-selection-list:
+      x-single-or-array: true
+      description: |
+        Intensity in the original image used as maximum intensity (white) to create the response.
+        As a consequence, original image intensities greater than this value will be white in the response.
+
+        Maximum allowed value depends on image pixel type and is equal to `2 * pow(pixel type)`.
+
+        Maximum intensity is closely related to the concepts of brightness and contrast.
+        Brightness is the visual perception of reflected light while contrast is the separation
+        of the lightest and darkest parts of an image. A maximum intensity increase leads to:
+        * a brightness decrease, which refers to an image's decreased luminance.
+        * a contrast decrease, which darken highlights and lighten shadows.
+
+        Enumeration supported values:
+        * `AUTO_IMAGE` - If image pixel type uses 8 bits, `max_intensity=255`. Otherwise, the behavior is
+        `STRETCH_IMAGE`.
+        * `AUTO_PLANE` - If image pixel type uses 8 bits, `max_intensity=255`. Otherwise, the behavior is
+        `STRETCH_PLANE`.
+        * `STRETCH_IMAGE` - Set `max_intensity` to greatest intensity in the original image, for each channel.
+        * `STRETCH_PLANE` - Set `max_intensity` to greatest intensity in the set of planes, for each channel.
+      oneOf:
+        - $ref: '#/components/schemas/intensity-selection-enum'
+        - $ref: '#/components/schemas/intensity-selection-value'
+        - type: array
+          description: |
+            Expected format is an array of size:
+            * 1 to apply the maximum intensity to all channels
+            * equals to the number of channels used to render the response in order to apply a maximum intensity per channel
+          minItems: 1
+          items:
+            oneOf:
+              - $ref: '#/components/schemas/intensity-selection-enum'
+              - $ref: '#/components/schemas/intensity-selection-value'
+    max-intensity-selection-list-default-auto-image:
+      x-single-or-array: true
+      x-default: AUTO_IMAGE
+      allOf:
+        - default: AUTO_IMAGE
+        - $ref: '#/components/schemas/max-intensity-selection-list'
+
+    # Colormap
+    colormap-id:
+      type: string
+      format: colormap-id
+      description: A unique identifier for a colormap
+      example: JET
+    colormap-id-list:
+      x-single-or-array: true
+      description: |
+        A colormap is a function that maps the colors of the original image (source) to the colors of the response
+        image. The usage of colormap produces a false-color representation of the original image and helps at
+        understanding the image.
+
+        Valid colormap names can be found with the endpoint `/colormaps`. The colormap can be reversed by prepending the
+        colormap name with `!`.
+      oneOf:
+        - $ref: '#/components/schemas/colormap-id'
+        - type: array
+          description: |
+            Expected format is an array of size:
+            * 1 to apply the same colormap to all channels
+            * equals to the number of channels used to render the response, in order to apply a colormap per channel.
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/colormap-id'
+    colormap:
+      type: object
+      description: |
+        A colormap is a function that maps colors of an input image to the colors of a target image.
+      properties:
+        id:
+          $ref: '#/components/schemas/colormap-id'
+        name:
+          type: string
+          description: |
+            A human readable name for the colormap.
+        type:
+          type: string
+          description: |
+            * `SEQUENTIAL` - change in lightness and often saturation of color incrementally, often using a single hue;
+            should be used for representing information that has ordering.
+            * `DIVERGING` - change in lightness and possibly saturation of two different colors that meet in the middle
+            at an unsaturated color; should be used when the image has a critical middle value.
+            * `QUALITATIVE` - often are miscellaneous colors; should be used to represent information which does
+            not have ordering or relationships
+          enum:
+            - SEQUENTIAL
+            - DIVERGING
+            - QUALITATIVE
+        n_colors:
+          type: integer
+          format: int32
+          description: The number of defined colors in the colormap.
+
+    # Filters
+    filter-id:
+      type: string
+      format: filter-id
+      description: A unique identifier for an image filter
+      example: 'OTSU'
+    filter-id-list:
+#      x-single-or-array: true
+      description: |
+        An image filter is used to change the appareance of an image and helps at understanding the
+        source image.
+
+        Valid filter names can be found with the endpoint `/filters`.
+      allOf:
+        - $ref: '#/components/schemas/filter-id'
+#        - type: array
+#          description: |
+#            Expected format is an array of size:
+#            * 1 to apply the same filter to all channels
+#            * equals to the number of channels used to render the response, in order to apply a filter per channel.
+#          minItems: 1
+#          items:
+#            $ref: '#/components/schemas/filter-id'
+    filter:
+      type: object
+      description: |
+        An image filter is used to change the appareance of an image and helps at understanding the
+        source image.
+      properties:
+        id:
+          $ref: '#/components/schemas/filter-id'
+        name:
+          type: string
+          description: |
+            A human readable name for the image filter.
+        type:
+          type: string
+          description: |
+            * `LOCAL` - The image filter uses the neighborhood of every pixels.
+            * `GLOBAL` - The image filter uses histogram-derived techniques.
+          enum:
+            - LOCAL
+            - GLOBAL
+        description:
+          type: string
+          description: Filter description, explaining how it works, in Markdown.
+
+    # Gamma
+    gamma:
+      type: number
+      format: double
+      minimum: 0
+      maximum: 10
+    gamma-list:
+      description: |
+        Gamma performs a non-linear histogram adjustment. Pixel intensities in the original image are raised
+        to the power of the gamma value.
+
+        If `gamma < 1`, faint objects become more intense while bright objects do not.
+
+        If `gamma > 1`, medium-intensity objects become fainter while bright objects do not.
+      x-default: 1
+#      x-single-or-array: true
+      allOf:
+        - allOf:
+          - default: 1
+          - $ref: '#/components/schemas/gamma'
+#        - type: array
+#          description: |
+#            Expected format is an array of size:
+#            * 1 to apply the gamma correction to all channels
+#            * equals to the number of channels used to render the response in order to apply the gamma correction
+#            per channel.
+#          minItems: 1
+#          items:
+#            $ref: '#/components/schemas/gamma'
+    log:
+      type: boolean
+      default: false
+      description: |
+        Apply a logarithmic scale on image data to ease observation of high dynamic range images such as 16-bit images.
+
+    bits:
+      description: |
+        The target bit depth. It is a best-effort parameter as supported bit depths depend on target content type.
+        * `AUTO` - Try to set target bit depth equal to the source bit depth.
+      default: AUTO
+      x-default: AUTO
+      oneOf:
+        - type: string
+          enum:
+            - AUTO
+        - type: integer
+          format: int32
+          example: 8
+    colorspace:
+      description: |
+        The target colorspace. It is a best-effort parameter as supported colorspaces depend on target content type.
+
+        * `GRAY` - Return the target in grayscale, using luminance if it was initially a color image.
+        * `COLOR` - Return the target in RGB colors.
+        * `AUTO` - Automatically returns the target in the best colorspace. If the source is grayscale and image
+        manipulation do not use colors, it returns the target in grayscale. Otherwise, target is in RGB colors.
+      default: AUTO
+      type: string
+      enum:
+        - GRAY
+        - COLOR
+        - AUTO
+
+    # Image manipulation object
+    image-manipulation:
+      type: object
+      properties:
+        min_intensities:
+          $ref: '#/components/schemas/min-intensity-selection-list'
+        max_intensities:
+          $ref: '#/components/schemas/max-intensity-selection-list'
+#        colormaps:
+#          $ref: '#/components/schemas/colormap-id-list'
+        filters:
+          $ref: '#/components/schemas/filter-id-list'
+        gammas:
+          $ref: '#/components/schemas/gamma-list'
+        log:
+          $ref: '#/components/schemas/log'
+    image-manipulation-visualisation:
+      type: object
+      properties:
+        min_intensities:
+          $ref: '#/components/schemas/min-intensity-selection-list-default-auto-image'
+        max_intensities:
+          $ref: '#/components/schemas/max-intensity-selection-list-default-auto-image'
+#        colormaps:
+#          $ref: '#/components/schemas/colormap-id-list'
+        filters:
+          $ref: '#/components/schemas/filter-id-list'
+        gammas:
+          $ref: '#/components/schemas/gamma-list'
+        log:
+          $ref: '#/components/schemas/log'
+
+    # Formats
+    format-id:
+      type: string
+      format: format-id
+      example: VMS
+      description: Unique format identifier
+    format:
+      type: object
+      title: Format
+      properties:
+        id:
+          $ref: '#/components/schemas/format-id'
+        name:
+          type: string
+          description: Readable format name
+          example: 'Hamamatsu VMS'
+        remarks:
+          type: string
+          description: Readable end-user remarks about the format
+          example: This format is composed of multiple files. Before upload, they have to be grouped in
+            an archive.
+        convertible:
+          type: boolean
+          description: Whether the format can be converted into another one or not.
+        readable:
+          type: boolean
+          description: Whether the format is natively readable by PIMS or not. Non readable formats
+            should be convertible.
+        writable:
+          type: boolean
+          description: Whether PIMS can write a file in this format or not.
+          default: false
+        plugin:
+          type: string
+          description: PIMS plugin providing this format, returned as a Python module.
+          example: pims.formats.vms
+
+    zoom-or-level:
+      type: integer
+      format: int64
+      minimum: 0
+      example: 0
+    tile-index:
+      description: |
+        The tile index is the position of the tile in the given image pyramid tier.
+        It is computed as `n * n_x_tiles + m` where
+        * `n_x_tiles` is the number of tiles along the horizontal axis at given tier.
+        * `m` is the tile position along the horizontal axis at given tier (0 is left).
+        * `n` is the tile position along the vertical axis at given tier (0 is top).
+      type: integer
+      format: int64
+      minimum: 0
+    tile-x:
+      description: |
+         The tile position along the horizontal axis at given tier (0 is left).
+      type: integer
+      format: int64
+      minimum: 0
+    tile-y:
+      description: |
+        The tile position along the vertical axis at given tier (0 is top).
+      type: integer
+      format: int64
+      minimum: 0
+    region:
+      type: object
+      description: The input region in the reference tier.
+      required:
+        - top
+        - left
+        - width
+        - height
+      properties:
+        top:
+          allOf:
+            - description: |
+                The input region top coordinate in the reference tier. The position `0` denotes the
+                top-most pixels in the image.
+            - $ref: '#/components/schemas/region-coordinate'
+        left:
+          allOf:
+            - description: |
+                The input region left coordinate in the reference tier. The position `0` denotes the left-most pixels
+                in the image.
+            - $ref: '#/components/schemas/region-coordinate'
+        width:
+          allOf:
+            - description: |
+                The input region width in the reference tier.
+            - $ref: '#/components/schemas/region-length'
+        height:
+          allOf:
+            - description: |
+                The input region height in the reference tier.
+            - $ref: '#/components/schemas/region-length'
+    region-coordinate:
+      type: integer
+      format: int64
+      description: A coordinate in pixels in the reference tier.
+      minimum: 0
+      example: 256
+#        - type: number
+#          format: double
+#          description: A coordinate expressed in percentage relatively to the reference tier.
+#          minimum: 0.0
+#          maximum: 1.0
+#          example: 0.5
+    region-length:
+      type: integer
+      format: int64
+      description: A length in pixels in the reference tier.
+      minimum: 1
+      example: 256
+#        - type: number
+#          format: double
+#          description: A length expressed in percentage relatively to the reference tier.
+#          minimum: 0.0
+#          maximum: 1.0
+#          example: 0.5
+
+    # Output sizes
+    target-length:
+      description: |
+        Length of the largest side of the target. The other dimension is adjusted to preserve the aspect
+        ratio.
+      example: 256
+      oneOf:
+        - type: integer
+          format: int64
+          description: A length in pixels.
+          minimum: 1
+          example: 256
+        - type: number
+          format: double
+          description: A length expressed in percentage relatively to the real image length.
+          minimum: 0.0
+          maximum: 1.0
+          example: 0.5
+    target-length-default-256:
+      x-default: 256
+      allOf:
+        - default: 256
+        - $ref: '#/components/schemas/target-length'
+    target-length-object-required:
+      type: object
+      required:
+        - length
+      properties:
+        length:
+          $ref: '#/components/schemas/target-length'
+    target-length-object:
+      type: object
+      properties:
+        length:
+          $ref: '#/components/schemas/target-length'
+    target-width:
+      description: Width of the target. Height is adjusted to preserve the aspect ratio.
+      allOf:
+        - $ref: '#/components/schemas/target-length'
+    target-width-object-required:
+      type: object
+      required:
+        - width
+      properties:
+        width:
+          $ref: '#/components/schemas/target-width'
+    target-width-object:
+      type: object
+      properties:
+        width:
+          $ref: '#/components/schemas/target-width'
+    target-height:
+      description: Height of the target. Width is adjusted to preserve the aspect ratio.
+      allOf:
+        - $ref: '#/components/schemas/target-length'
+    target-height-object-required:
+      type: object
+      required:
+        - height
+      properties:
+        height:
+          $ref: '#/components/schemas/target-height'
+    target-height-object:
+      type: object
+      properties:
+        height:
+          $ref: '#/components/schemas/target-height'
+    target-zoom:
+      description: |
+        The zoom level to consider for the target.
+        Zoom 0 has the worst resolution (smallest image, top of the image pyramid).
+        Maximum admissible zoom level depends on image.
+      allOf:
+        - $ref: '#/components/schemas/zoom-or-level'
+    target-zoom-object-required:
+      type: object
+      required:
+        - zoom
+      properties:
+        zoom:
+          $ref: '#/components/schemas/target-zoom'
+    target-zoom-object:
+      type: object
+      properties:
+        zoom:
+          $ref: '#/components/schemas/target-zoom'
+    target-level:
+      description: |
+        The tier level to consider for the target.
+        Level 0 has the best resolution (largest image, basis of the image pyramid).
+        Maximum admissible tier level depends on image.     
+      allOf:
+        - $ref: '#/components/schemas/zoom-or-level'
+    target-level-object-required:
+      type: object
+      required:
+        - level
+      properties:
+        level:
+          $ref: '#/components/schemas/target-level'
+    target-level-object:
+      type: object
+      properties:
+        level:
+          $ref: '#/components/schemas/target-level'
+    target-zoom-tile-index:
+      type: object
+      required:
+        - zoom
+        - ti
+      properties:
+        zoom:
+          $ref: '#/components/schemas/target-zoom'
+        ti:
+          $ref: '#/components/schemas/tile-index'
+    target-level-tile-index:
+      type: object
+      required:
+        - level
+        - ti
+      properties:
+        level:
+          $ref: '#/components/schemas/target-level'
+        ti:
+          $ref: '#/components/schemas/tile-index'
+    target-zoom-tile-coordinates:
+      type: object
+      required:
+        - zoom
+        - tx
+        - ty
+      properties:
+        zoom:
+          $ref: '#/components/schemas/target-zoom'
+        tx:
+          $ref: '#/components/schemas/tile-x'
+        ty:
+          $ref: '#/components/schemas/tile-y'
+    target-level-tile-coordinates:
+      type: object
+      required:
+        - level
+        - tx
+        - ty
+      properties:
+        level:
+          $ref: '#/components/schemas/target-level'
+        tx:
+          $ref: '#/components/schemas/tile-x'
+        ty:
+          $ref: '#/components/schemas/tile-y'
+    tile-coord:
+      type: object
+      required:
+        - tx
+        - ty
+      properties:
+        tx:
+          $ref: '#/components/schemas/tile-x'
+        ty:
+          $ref: '#/components/schemas/tile-y'
+    tile-index-object:
+      type: object
+      required:
+        - ti
+      properties:
+        ti:
+          $ref: '#/components/schemas/tile-index'
+    tier-index:
+      type: object
+      properties:
+        reference_tier_index:
+          type: integer
+          description: |
+            The index (zoom or level) denoting the tier to use as reference coordinate system for the input region. By
+            default, best resolution tier (maximum zoom/lowest level) is used.
+        tier_index_type:
+          type: string
+          enum:
+            - LEVEL
+            - ZOOM
+          default: LEVEL
+          description: |
+            How to interprete `reference_tier_index`, either as a zoom index, either as a level index.
+    region-object:
+      type: object
+      required:
+        - region
+      properties:
+        region:
+          $ref: '#/components/schemas/region'
+    thumb-use-precomputed:
+      description: Whether the precomputed thumbnail (associated file) has to be used if it is available, or not.
+      type: boolean
+      default: true
+    thumb-basis:
+      allOf:
+        - $ref: '#/components/schemas/window-plane-selection'
+        - $ref: '#/components/schemas/image-manipulation-visualisation'
+        - type: object
+          properties:
+            use_precomputed:
+              $ref: '#/components/schemas/thumb-use-precomputed'
+    resized-basis:
+      allOf:
+        - $ref: '#/components/schemas/window-plane-selection'
+        - $ref: '#/components/schemas/image-manipulation'
+        - type: object
+          properties:
+            bits:
+              $ref: '#/components/schemas/bits'
+            colorspace:
+              $ref: '#/components/schemas/colorspace'
+    window-basis:
+      allOf:
+        - $ref: '#/components/schemas/resized-basis'
+        - type: object
+          properties:
+            annotations:
+              $ref: '#/components/schemas/annotations'
+            annotation_style:
+              oneOf:
+                - title: MASK
+                  type: object
+                  required:
+                    - mode
+                  properties:
+                    mode:
+                      description: The mode to use to render annotations
+                      type: string
+                      enum:
+                        - MASK
+                - title: CROP
+                  type: object
+                  required:
+                    - mode
+                  properties:
+                    mode:
+                      description: The mode to use to render annotations
+                      type: string
+                      enum:
+                        - CROP
+                    background_transparency:
+                      $ref: '#/components/schemas/annotation-bg-transparency'
+                - title: DRAWING
+                  allOf:
+                    - type: object
+                      required:
+                        - mode
+                      properties:
+                        mode:
+                          description: The mode to use to render annotations
+                          type: string
+                          enum:
+                            - DRAWING
+                    - $ref: '#/components/schemas/annotation-point-drawing-object'
+    # Annotation crops
+    annotation-context-factor:
+      type: number
+      format: double
+      default: 1
+      description: |
+        The context factor is the number by which the spatial region is given by the rectangular envelope of all
+        geometries is multiplied.
+    annotation-geometry:
+      type: string
+      format: wkt
+      description: A geometry described in Well-known text (WKT)
+      example: 'POINT(10 10)'
+    annotation-fill-color:
+      type: string
+      format: color
+      description: A color to fill the annotation
+      example: '#FF00FF'
+      default: '#FFFFFF'
+    annotation-stroke-color:
+      type: string
+      format: color
+      description: A color for the annotation stroke
+    annotation-stroke-width:
+      type: integer
+      format: int32
+      minimum: 0
+      maximum: 10
+      description: A width for the annotation stroke
+      default: 0
+    annotation:
+      type: object
+      required:
+        - geometry
+      properties:
+        geometry:
+          $ref: '#/components/schemas/annotation-geometry'
+        fill_color:
+          $ref: '#/components/schemas/annotation-fill-color'
+        stroke_color:
+          $ref: '#/components/schemas/annotation-stroke-color'
+        stroke_width:
+          $ref: '#/components/schemas/annotation-stroke-width'
+    annotations:
+      x-single-or-array: true
+      oneOf:
+        - $ref: '#/components/schemas/annotation'
+        - type: array
+          items:
+            $ref: '#/components/schemas/annotation'
+    annotations-object-basis:
+      type: object
+      required:
+        - annotations
+      properties:
+        annotations:
+          $ref: '#/components/schemas/annotations'
+    annotation-mask-basis:
+      type: object
+      required:
+        - annotations
+      properties:
+        annotations:
+          $ref: '#/components/schemas/annotations'
+        context_factor:
+          $ref: '#/components/schemas/annotation-context-factor'
+    mask-by-length:
+      allOf:
+        - $ref: '#/components/schemas/annotation-mask-basis'
+        - $ref: '#/components/schemas/target-length-object-required'
+    mask-by-width:
+      allOf:
+        - $ref: '#/components/schemas/annotation-mask-basis'
+        - $ref: '#/components/schemas/target-width-object-required'
+    mask-by-height:
+      allOf:
+        - $ref: '#/components/schemas/annotation-mask-basis'
+        - $ref: '#/components/schemas/target-height-object-required'
+    mask-by-zoom:
+      allOf:
+        - $ref: '#/components/schemas/annotation-mask-basis'
+        - $ref: '#/components/schemas/target-zoom-object-required'
+    mask-by-level:
+      allOf:
+        - $ref: '#/components/schemas/annotation-mask-basis'
+        - $ref: '#/components/schemas/target-level-object-required'
+    annotation-bg-transparency:
+      type: integer
+      format: int32
+      minimum: 0
+      maximum: 100
+      default: 100
+      description: |
+        The background transparency. 100 means transparent background. When transparency is used, the target
+        content type must be an image format supporting transparency.
+    annotation-crop-basis:
+      allOf:
+        - type: object
+          properties:
+            background_transparency:
+              $ref: '#/components/schemas/annotation-bg-transparency'
+        - $ref: '#/components/schemas/window-plane-selection'
+        - $ref: '#/components/schemas/image-manipulation'
+    crop-by-length:
+      allOf:
+        - $ref: '#/components/schemas/mask-by-length'
+        - $ref: '#/components/schemas/annotation-crop-basis'
+    crop-by-width:
+      allOf:
+        - $ref: '#/components/schemas/mask-by-width'
+        - $ref: '#/components/schemas/annotation-crop-basis'
+    crop-by-height:
+      allOf:
+        - $ref: '#/components/schemas/mask-by-height'
+        - $ref: '#/components/schemas/annotation-crop-basis'
+    crop-by-zoom:
+      allOf:
+        - $ref: '#/components/schemas/mask-by-zoom'
+        - $ref: '#/components/schemas/annotation-crop-basis'
+    crop-by-level:
+      allOf:
+        - $ref: '#/components/schemas/mask-by-level'
+        - $ref: '#/components/schemas/annotation-crop-basis'
+    annotation-point-drawing-object:
+      type: object
+      properties:
+        point_envelope_length:
+          type: integer
+          default: 100
+          description: |
+            Point geometries have no area. An envelope must be specified to extract some image data.
+            This envelope is a square of length given by this parameter, whose the center is the given point.
+            This parameter has no effect on non-point geometries.
+        point_cross:
+          type: string
+          enum:
+            - CROSS
+            - CROSSHAIR
+            - CIRCLE
+          default: CROSS
+          description: |
+            Point geometries have no area. Possible representation as a drawing are:
+            * `CROSS` - A regular cross, hiding point location
+            * `CROSSHAIR` - A cross but whose intersection is removed to show the point locatio
+            * `CIRCLE` - A circle around the point location
+            This parameter has no effect on non-point geometries.
+    annotation-drawing-basis:
+      allOf:
+        - type: object
+          properties:
+            try_square:
+              type: boolean
+              default: false
+              description: Try to adapt other parameters (such as input spatial region, context factor, target size)
+                to return a square image.
+        - $ref: '#/components/schemas/annotation-point-drawing-object'
+        - $ref: '#/components/schemas/window-plane-selection'
+        - $ref: '#/components/schemas/image-manipulation'
+    drawing-by-length:
+      allOf:
+        - $ref: '#/components/schemas/mask-by-length'
+        - $ref: '#/components/schemas/annotation-drawing-basis'
+    drawing-by-width:
+      allOf:
+        - $ref: '#/components/schemas/mask-by-width'
+        - $ref: '#/components/schemas/annotation-drawing-basis'
+    drawing-by-height:
+      allOf:
+        - $ref: '#/components/schemas/mask-by-height'
+        - $ref: '#/components/schemas/annotation-drawing-basis'
+    drawing-by-zoom:
+      allOf:
+        - $ref: '#/components/schemas/mask-by-zoom'
+        - $ref: '#/components/schemas/annotation-drawing-basis'
+    drawing-by-level:
+      allOf:
+        - $ref: '#/components/schemas/mask-by-level'
+        - $ref: '#/components/schemas/annotation-drawing-basis'
+          
+    # Files, metadata
+    file-role:
+      description: |
+        The role of a file. The same image data can be represented in different ways, in different files, each of them
+        serving differnt purposes.
+
+        * `UPLOAD` - This file is the one such as received by PIMS.
+        * `ORIGINAL` - This file is in its original format and contains (part of) metadata.
+        * `SPATIAL` - This file is used to retrieve regular 2D spatial regions from the image.
+        * `SPECTRAL` - This file is used to retrieve spectral data from the image.
+        * `NONE` - This file has no defined role for PIMS.
+      type: string
+      enum:
+        - UPLOAD
+        - ORIGINAL
+        - SPATIAL
+        - SPECTRAL
+        - NONE
+    file-type:
+      type: string
+      description: |
+        The type of the file.
+        * `SINGLE` - The file only has one image.
+        * `COLLECTION` - The file is a container and contains multiple images that need further processing.
+      enum:
+        - SINGLE
+        - COLLECTION
+    file-info:
+      description: |
+        Information about a file
+      type: object
+      properties:
+        file_type:
+          $ref: '#/components/schemas/file-type'
+        filepath:
+          type: string
+          format: path
+          description: The file path (filename with path, relative to the server root)
+          example: /a/b/c/thefile.png
+        stem:
+          type: string
+          description: The file stem (filename without extension)
+          example: thefile
+        extension:
+          type: string
+          description: The file extension
+          example: .png
+        created_at:
+          type: string
+          format: date-time
+          description: The file creation date
+        size:
+          type: integer
+          format: int64
+          description: The file size, in bytes.
+        is_symbolic:
+          type: boolean
+          description: Whether the file is a symbolic link or not
+          default: false
+        role:
+          $ref: '#/components/schemas/file-role'
+    image-info:
+      description: |
+        Information about an image
+      type: object
+      properties:
+        original_format:
+          description: The original image format identifier.
+          allOf:
+            - $ref: '#/components/schemas/format-id'
+        width:
+          type: integer
+          format: int64
+          description: The (multidimensional) image width. It is the number of pixels along X axis.
+          minimum: 1
+        height:
+          type: integer
+          format: int64
+          description: The (multidimensional) image height. It is the number of pixels along Y axis.
+          minimum: 1
+        depth:
+          type: integer
+          format: int64
+          description: The multidimensional image depth. It is the number of focal planes.
+          minimum: 1
+        duration:
+          type: integer
+          format: int64
+          description: The multidimensional image duration. It is the number of frames.
+          minimum: 1
+        physical_size_x:
+          type: number
+          format: double
+          description: |
+            The physical size of a pixel along the X axis, expressed in micrometers (µm).
+          nullable: true
+        physical_size_y:
+          type: number
+          format: double
+          description: |
+            The physical size of a pixel along the Y axis, expressed in micrometers (µm).
+          nullable: true
+        physical_size_z:
+          type: number
+          format: double
+          description: |
+            The physical size of a pixel (voxel) along the Z axis, expressed in micrometers (µm).
+          nullable: true
+        frame_rate:
+          type: number
+          format: double
+          description: |
+            The frequency at which consecutive timepoints are taken (T axis), expressed in Hz.
+          nullable: true
+        n_channels:
+          type: integer
+          format: int64
+          description: |
+            The number of channels in the image.
+            Grayscale images have 1 channel. RGB images have 3 channels.
+          minimum: 1
+        n_concrete_channels:
+          type: integer
+          format: int64
+          description: |
+            The number of intrinsic channel planes in the image.
+            A RGB image has 3 channels, but they are usually interleaved in a single plane. In such a case,
+            there is only 1 intrisic channel.
+        n_planes:
+          type: integer
+          format: int64
+          description: |
+            The number of intrinsic planes in the image.
+            It is computed as `n_concrete_channels * depth * duration`.
+        acquired_at:
+          type: string
+          format: date-time
+          description: |
+            The acquisition date of the image.
+          nullable: true
+        description:
+          type: string
+          description: The image description.
+          nullable: true
+        pixel_type:
+          description: The type used to store each pixel in the image.
+          type: string
+          enum:
+            - int8
+            - int16
+            - int32
+            - uint8
+            - uint16
+            - uint32
+        significant_bits:
+          description: The number of bits within the type storing each pixel that are significants.
+          type: integer
+          minimum: 1
+    representation-info:
+      oneOf:
+        - $ref: '#/components/schemas/simple-representation-info'
+        - $ref: '#/components/schemas/full-representation-info'
+      discriminator:
+        propertyName: "role"
+        mapping:
+          ORIGINAL: '#/components/schemas/simple-representation-info'
+          UPLOAD: '#/components/schemas/simple-representation-info'
+          SPATIAL: '#/components/schemas/full-representation-info'
+          SPECTRAL: '#/components/schemas/full-representation-info'
+          NONE: '#/components/schemas/simple-representation-info'
+    simple-representation-info:
+      type: object
+      description: |
+        Information about an image representation.
+      properties:
+        role:
+          $ref: '#/components/schemas/file-role'
+        file:
+          $ref: '#/components/schemas/file-info'
+    full-representation-info:
+      allOf:
+        - $ref: '#/components/schemas/simple-representation-info'
+        - type: object
+          properties:
+            pyramid:
+              $ref: '#/components/schemas/pyramid-info'
+    pyramid-info:
+      type: object
+      description: |
+        Information about an image pyramid.
+      properties:
+        n_tiers:
+          type: integer
+          format: int64
+          description: The number of tiers in the pyramid.
+          minimum: 1
+        tiers:
+          type: array
+          items:
+            type: object
+            properties:
+              zoom:
+                description: The zoom at this tier
+                allOf:
+                  - $ref: '#/components/schemas/zoom-or-level'
+              level:
+                description: The level at this tier
+                allOf:
+                  - $ref: '#/components/schemas/zoom-or-level'
+              width:
+                description: The tier width
+                type: integer
+                format: int64
+                minimum: 1
+              height:
+                description: The tier height
+                type: integer
+                format: int64
+                minimum: 1
+              tile_width:
+                type: integer
+                format: int32
+                description: The width of a tile
+                minimum: 1
+                example: 256
+              tile_height:
+                type: integer
+                format: int32
+                description: The height of a tile
+                minimum: 1
+                example: 256
+              downsampling_factor:
+                type: number
+                format: double
+                description: The factor by which the tier downsamples the basis of the pyramid.
+                example: 2.0
+              n_tiles:
+                type: integer
+                format: int64
+                description: The number of tiles at this tier
+              n_tx:
+                type: integer
+                format: int64
+                description: The number of tiles along horizontal axis
+              n_ty:
+                type: integer
+                format: int64
+                description: The number of tiles along vertical axis
+    instrument-info:
+      type: object
+      description: |
+        Information about an instrument in an image file.
+      properties:
+        microscope:
+          type: object
+          properties:
+            model:
+              type: string
+              description: The microscope model.
+              nullable: true
+        objective:
+          type: object
+          properties:
+            nominal_magnification:
+              type: number
+              format: double
+              description: Magnification of the lens specified by the manufacturer.
+              nullable: true
+            calibrated_magnification:
+              type: number
+              format: double
+              description: Magnification of the lens measured by a calibration process.
+              nullable: true
+    channels-info:
+      type: array
+      description: |
+        Information about channels in an image file.
+      items:
+        type: object
+        properties:
+          index:
+            type: integer
+            format: int64
+            description: Channel index.
+            minimum: 0
+          suggested_name:
+            type: string
+            description: Suggested name for the channel infered from other properties.
+          emission_wavelength:
+            type: number
+            format: double
+            description: Wavelength of emission for a particular channel.
+            nullable: true
+          excitation_wavelength:
+            type: number
+            format: double
+            description: Wavelength of excitation for a particular channel.
+            nullable: true
+    associated-info:
+      type: object
+      description: |
+        Associated images are metadata image stored in the original image file.
+      properties:
+        width:
+          type: integer
+          format: int64
+          description: The associated image width. It is the number of pixels along X axis.
+          minimum: 1
+        height:
+          type: integer
+          format: int64
+          description: The associated image height. It is the number of pixels along Y axis.
+          minimum: 1
+        n_channels:
+          type: integer
+          format: int64
+          description: |
+            The number of channels in the associated image.
+            Grayscale images have 1 channel. RGB images have 3 channels.
+          minimum: 1
+        name:
+          type: string
+          enum:
+            - macro
+            - label
+            - thumb
+          description: |
+            The type of associated image.
+
+            `macro` - A macro image (generally, in slide scanners, a low resolution picture of the entire slide)
+            `label` - A label image (generally a barcode)
+            `thumb` - A pre-computed thumbnail
+    image-full-info:
+      type: object
+      properties:
+        image:
+          $ref: '#/components/schemas/image-info'
+        channels:
+          $ref: '#/components/schemas/channels-info'
+        instrument:
+          $ref: '#/components/schemas/instrument-info'
+        associated:
+          type: array
+          items:
+            $ref: '#/components/schemas/associated-info'
+        representations:
+          $ref: '#/components/schemas/representation-info'
+    collection-file-type-info:
+      allOf:
+        - $ref: '#/components/schemas/file-info'
+        - type: object
+          properties:
+            children:
+              description: Information about children files
+              type: array
+              items:
+                $ref: '#/components/schemas/file-info'
+    metadata:
+      type: object
+      description: |
+        A metadata is a key-value pair stored in an image file.
+      properties:
+        key:
+          type: string
+          description: The metadata key
+        value:
+          type: string
+          description: The metadata value
+        type:
+          type: string
+          description: The metadata value type
+          default: STRING
+          enum:
+            - STRING
+            - INTEGER
+            - DECIMAL
+            - BOOLEAN
+            - JSON
+            - BASE64
+            - DATE
+            - DATE-TIME
+        namespace:
+          type: string
+          description: The metadata namespace to avoid key name conflicts
+
+    # Histograms
+    histogram-type:
+      description: |
+        The type of histogram.
+
+        * `FAST` - A fastly computed histogram on a resized image with a maximum size of 1024 pixels.
+        * `COMPLETE` - A complete and accurate histogram of the true size image.
+      type: string
+      default: FAST
+      enum:
+      - FAST
+      - COMPLETE
+    histogram-bins:
+      description: The number of bins used to compute histogram.
+      type: integer
+      format: int32
+      default: 256
+      minimum: 1
+    histogram-values:
+      type: array
+      description: The values of the histogram.
+      items:
+        type: integer
+        format: int64
+    simple-histogram:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/histogram-type'
+        pool:
+          description: |
+            The kind of pool (group) used by the histogram.
+
+            * `PER_PLANE` - 1 histogram per plane (C,Z,T)
+            * `PER_CHANNEL` - 1 histogram per channel C, all planes (Z,T) merged
+            * `PER_IMAGE` - 1 histogram per image, all planes (C,Z,T) merged
+          type: string
+          enum:
+            - PER_PLANE
+            - PER_CHANNEL
+            - PER_IMAGE
+        availability:
+          description: |
+            Whether the histogram is available or not.
+
+            * `AVAILABLE` - The histogram is directly available without any further computation.
+            * `ON_THE_FLY`- The histogram does not exist on disk but can be derived from an available one.
+            * `NO` - The histogram is not available and must be computed from scratch.
+          type: string
+          enum:
+            - AVAILABLE
+            - ON_THE_FLY
+            - NO
+    detailed-histogram:
+      allOf:
+        - $ref: '#/components/schemas/simple-histogram'
+        - type: object
+          properties:
+            n_bins:
+              $ref: '#/components/schemas/histogram-bins'
+            bin_centers:
+              type: array
+              description: The values at the center of the bins.
+              items:
+                type: number
+                format: double
+    collection-size:
+      type: integer
+      format: int64
+      description: The collection size
+    disk-usage:
+      type: object
+      properties:
+#        n_children:
+#          type: integer
+#          format: int32
+#          description: Number of file children in the directory (recursively)
+        mount:
+          type: string
+          format: path
+          description: The mounting point of the file system having the directory.
+        mount_available_size:
+          type: integer
+          format: int64
+          minimum: 0
+          description: Available space on the mounted file system having the directory, in bytes.
+        mount_total_size:
+          type: integer
+          format: int64
+          minimum: 0
+          description: Total space on the mounted file system having the directory, in bytes.
+        mount_used_size_percentage:
+          type: number
+          format: double
+          description: Percentage of used space regarding total space of the mounted file system
+          minimum: 0
+          maximum: 100
+        used_size:
+          type: integer
+          format: int64
+          minimum: 0
+          description: Used space by the directory, in bytes.
+        used_size_percentage:
+          type: number
+          format: double
+          description: Percentage of directory used space regarding total space of the mounted file system
+          minimum: 0
+          maximum: 100
+    # Outputs
+    generic-image:
+      type: string
+      format: binary
+      example: (binary)
+    problem:
+      type: object
+      properties:
+        type:
+          type: string
+          format: uri
+          description: |
+            An URI that identifies the problem type.  When dereferenced,
+            it SHOULD provide human-readable documentation for the problem type
+            (e.g., using HTML).
+          default: 'about:blank'
+          example: 'problem/constraint-violation'
+        title:
+          type: string
+          description: |
+            A short, summary of the problem type. Written in english and readable
+            for engineers (usually not suited for non technical stakeholders and
+            not localized).
+          example: Service Unavailable
+        status:
+          type: integer
+          format: int32
+          description: |
+            The HTTP status code generated by the origin server for this occurrence
+            of the problem.
+          minimum: 400
+          maximum: 600
+          exclusiveMaximum: true
+          example: 503
+        detail:
+          type: string
+          description: |
+            A human readable explanation specific to this occurrence of the
+            problem.
+          example: Connection to database timed out
+        instance:
+          type: string
+          format: uri
+          description: |
+            An absolute URI that identifies the specific occurrence of the problem.
+            It may or may not yield further information if dereferenced.
+    invalid-parameters-problem:
+      description: Problem details for invalid input parameter(s)
+      allOf:
+        - $ref: '#/components/schemas/problem'
+        - type: object
+          properties:
+            invalid-parameters:
+              type: array
+              description: An array of parameter violations
+              items:
+                $ref: '#/components/schemas/invalid-parameter'
+    invalid-parameter:
+      type: object
+      properties:
+        in:
+          description: The location of the invalid parameter
+          type: string
+          enum:
+            - body
+            - path
+            - query
+            - header
+        name:
+          description: The name of the invalid parameter
+          type: string
+        reason:
+          description: A message explaining the violation
+          type: string
+        value:
+          description: The value of the erroneous parameter
+  headers:
+    If-None-Match:
+      description: |
+        The RFC7232 If-None-Match header field in a request requires the server
+        to only operate on the resource if it does not match any of the provided
+        entity-tags. If the provided entity-tag is `*`, it is required that the
+        resource does not exist at all (see [RFC 7232 Section
+        3.2](https://tools.ietf.org/html/rfc7232#section-3.2)).
+      required: false
+      schema:
+        type: string
+    Cache-Control:
+      description: |
+        The RFC 7234 Cache-Control header field is providing directives to
+        control how proxies and clients are allowed to cache responses results
+        for performance. Clients and proxies are free to not support caching of
+        results, however if they do, they must obey all directives mentioned in
+        [RFC-7234 Section 5.2.2](https://tools.ietf.org/html/rfc7234) to the
+        word.
+
+        In case of caching, the directive provides the scope of the cache
+        entry, i.e. only for the original user (private) or shared between all
+        users (public), the lifetime of the cache entry in seconds (max-age),
+        and the strategy how to handle a stale cache entry (must-revalidate).
+        Please note, that the lifetime and validation directives for shared
+        caches are different (s-maxage, proxy-revalidate).
+      required: false
+      schema:
+        type: string
+        example: "private, must-revalidate, max-age=300"
+    Vary:
+      description: |
+        The RFC 7231 Vary header field in a response defines which parts of
+        a request message, aside the target URL and HTTP method, might have
+        influenced the response. A client or proxy cache must respect this
+        information, to ensure that it delivers the correct cache entry (see
+        [RFC-7231 Section
+        7.1.4](https://tools.ietf.org/html/rfc7231#section-7.1.4)).
+      required: false
+      schema:
+        type: string
+        example: "accept-encoding, accept-language"
+    Content-Disposition:
+      description: |
+        This header indicates that the representation is supposed to be saved as
+        a file, and the proposed file name.
+
+        The value must be `attachment; filename="{suggested_filename}"`
+      required: true
+      schema:
+        type: string
+    X-Image-Size-Limit:
+      description: |
+        This header indicates that the image representation has been resized due to reached image size limit. This
+        limit can be set by the server or by the format itself.
+      required: false
+      style: simple
+      explode: true
+      schema:
+        type: object
+        properties:
+          ratio:
+            type: number
+          request_width:
+            type: integer
+          request_height:
+            type: integer
+          safe_width:
+            type: integer
+          safe_height:
+            type: integer
+  responses:
+    problem-bad-request:
+      description: Bad request - Input payload fails business logic validation or generic error.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/invalid-parameters-problem'
+    problem-not-found:
+      description: Not Found - The resource is not found.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/problem'
+    problem-not-acceptable:
+      description: |
+        Not Acceptable - The resource can only generate content not acceptable according to the Accept
+        headers sent in the request.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/problem'
+    problem-conflict:
+      description: |
+        Conflict - Another request already tries to create or update the same resource.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/problem'
+    not-modified:
+      description: Not Modified
+    tile:
+      description: OK - The tile
+      headers:
+        If-None-Match:
+          $ref: '#/components/headers/If-None-Match'
+        Cache-Control:
+          $ref: '#/components/headers/Cache-Control'
+        Vary:
+          $ref: '#/components/headers/Vary'
+      content:
+        image/jpeg:
+          schema:
+            $ref: '#/components/schemas/generic-image'
+        image/png:
+          schema:
+            $ref: '#/components/schemas/generic-image'
+        image/webp:
+          schema:
+            $ref: '#/components/schemas/generic-image'
+    thumbnail:
+      description: OK - The thumbnail
+      headers:
+        If-None-Match:
+          $ref: '#/components/headers/If-None-Match'
+        Cache-Control:
+          $ref: '#/components/headers/Cache-Control'
+        Vary:
+          $ref: '#/components/headers/Vary'
+        X-Image-Size-Limit:
+          $ref: '#/components/headers/X-Image-Size-Limit'
+      content:
+        image/jpeg:
+          schema:
+            $ref: '#/components/schemas/generic-image'
+        image/png:
+          schema:
+            $ref: '#/components/schemas/generic-image'
+        image/webp:
+          schema:
+            $ref: '#/components/schemas/generic-image'
+    window:
+      description: OK - The window
+      headers:
+        If-None-Match:
+          $ref: '#/components/headers/If-None-Match'
+        Cache-Control:
+          $ref: '#/components/headers/Cache-Control'
+        Vary:
+          $ref: '#/components/headers/Vary'
+        X-Image-Size-Limit:
+          $ref: '#/components/headers/X-Image-Size-Limit'
+      content:
+        image/jpeg:
+          schema:
+            $ref: '#/components/schemas/generic-image'
+        image/png:
+          schema:
+            $ref: '#/components/schemas/generic-image'
+        image/webp:
+          schema:
+            $ref: '#/components/schemas/generic-image'
+    annotation-crop:
+      description: OK - The annotation crop
+      headers:
+        If-None-Match:
+          $ref: '#/components/headers/If-None-Match'
+        Cache-Control:
+          $ref: '#/components/headers/Cache-Control'
+        Vary:
+          $ref: '#/components/headers/Vary'
+        X-Image-Size-Limit:
+          $ref: '#/components/headers/X-Image-Size-Limit'
+      content:
+        image/jpeg:
+          schema:
+            $ref: '#/components/schemas/generic-image'
+        image/png:
+          schema:
+            $ref: '#/components/schemas/generic-image'
+        image/webp:
+          schema:
+            $ref: '#/components/schemas/generic-image'
+    generic-image:
+      description: OK - Image
+      headers:
+        If-None-Match:
+          $ref: '#/components/headers/If-None-Match'
+        Cache-Control:
+          $ref: '#/components/headers/Cache-Control'
+        Vary:
+          $ref: '#/components/headers/Vary'
+      content:
+        image/jpeg:
+          schema:
+            $ref: '#/components/schemas/generic-image'
+        image/png:
+          schema:
+            $ref: '#/components/schemas/generic-image'
+        image/webp:
+          schema:
+            $ref: '#/components/schemas/generic-image'
+    colormap-representation:
+      description: OK - Image
+      headers:
+        If-None-Match:
+          $ref: '#/components/headers/If-None-Match'
+        Cache-Control:
+          $ref: '#/components/headers/Cache-Control'
+        Vary:
+          $ref: '#/components/headers/Vary'
+      content:
+        image/jpeg:
+          schema:
+            $ref: '#/components/schemas/generic-image'
+        image/png:
+          schema:
+            $ref: '#/components/schemas/generic-image'
+    hyperspectral-footprint:
+      description: OK - Hyperspectral footprint
+      headers:
+        If-None-Match:
+          $ref: '#/components/headers/If-None-Match'
+        Cache-Control:
+          $ref: '#/components/headers/Cache-Control'
+        Vary:
+          $ref: '#/components/headers/Vary'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              reductions:
+                type: object
+                description: |
+                  Reduction operations applied to each dimension. **At least one dimension must have a reduction
+                  operation.**
+                properties:
+                  x:
+                    $ref: '#/components/schemas/footprint-reduction-nullable'
+                  y:
+                    $ref: '#/components/schemas/footprint-reduction-nullable'
+                  c:
+                    $ref: '#/components/schemas/footprint-reduction-nullable'
+                  z:
+                    $ref: '#/components/schemas/footprint-reduction-nullable'
+                  t:
+                    $ref: '#/components/schemas/footprint-reduction-nullable'
+              size:
+                $ref: '#/components/schemas/collection-size'
+              items:
+                description: |
+                  Hyperspectral footprints according given reduction operations for each non-reduced dimension
+                  combination.
+                type: array
+                items:
+                  type: object
+                  properties:
+                    coordinates:
+                      description: |
+                        The footprint coordinates in **XYCZT order**. Negative values denote a reduced
+                        dimension.
+                      type: array
+                      minItems: 5
+                      maxItems: 5
+                      items:
+                        type: integer
+                        format: int32
+                    footprint:
+                      description: The footprint value for the given coordinates.
+                      type: number
+                      format: double
+    hyperspectral-window:
+      description: OK - Hyperspectral window
+      headers:
+        If-None-Match:
+          $ref: '#/components/headers/If-None-Match'
+        Cache-Control:
+          $ref: '#/components/headers/Cache-Control'
+        Vary:
+          $ref: '#/components/headers/Vary'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              size:
+                $ref: '#/components/schemas/collection-size'
+              items:
+                description: |
+                  Spectrum of every pixel in the spatial region.
+                type: array
+                items:
+                  type: object
+                  properties:
+                    coordinates:
+                      description: |
+                        The spectrum location in **XYCZT order**. Negative values denote the spectral dimension.
+                      type: array
+                      minItems: 5
+                      maxItems: 5
+                      items:
+                        type: integer
+                        format: int32
+                    spectrum:
+                      description: The spectrum for the given coordinates.
+                      type: array
+                      items:
+                        type: integer
+                        format: int64

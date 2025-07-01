@@ -1,0 +1,35 @@
+version: 1
+
+formatters:
+  basic:
+    format: "[%(process)s][%(threadName)s] %(name)s - %(message)s"
+
+handlers:
+  console:
+    class: logging.StreamHandler
+    level: DEBUG
+    formatter: basic
+
+loggers:
+  pims:
+    level: DEBUG
+  pims.app:
+    level: DEBUG
+  pims.cytomine:
+    level: CRITICAL
+    handlers: [console]
+    propagate: false
+  pyvips:
+    level: INFO
+  pyvips.vobject:
+    level: ERROR
+  uvicorn:
+    level: DEBUG
+  uvicorn.access:
+    level: CRITICAL
+  cytomine.client:
+    level: INFO
+
+root:
+  handlers: [console]
+  level: DEBUG
