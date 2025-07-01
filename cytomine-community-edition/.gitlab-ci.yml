@@ -1,0 +1,13 @@
+# Secrets should never be versioned.
+include:
+  - template: Security/Secret-Detection.gitlab-ci.yml
+  - cicd/.release.ce.yml
+
+stages:
+  - prepare
+  - test
+  - release
+
+default:
+  tags:
+    - docker

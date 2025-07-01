@@ -1,0 +1,11 @@
+update:
+  allow_list:
+    - global.versions.*
+    - global.images.*
+    - global.container_paths.*
+    - global.javamelody.*
+    - global.postgres.*
+    - global.mongodb.*
+    - global.keys.*
+    - global.image_metadata.*
+    - services.*

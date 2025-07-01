@@ -1,0 +1,287 @@
+# -------------------------------------------------- #
+# Update these to configure your instance
+global:
+  aaa_config:
+    constant:
+      # This should be the <host> part in your final external URL: http://<host or IP:port>/. Example: localhost, or 127.0.0.1:8080
+      CYTOMINE_HOST: 127.0.0.1
+      # must consist only of lowercase alphanumeric characters, hyphens, and underscores as well as start with a letter or number
+      NAME: cytomine-ce
+      # Where are the data stored. Warning, images can be heavy.
+      PROJECT_DATA_PATH: ./data
+      # URL scheme can be either 'http' or 'https'.
+      SCHEME: http
+      # External port to listen to. Customize if for example port 80 is already taken by a reverse proxy on the server
+      NGINX_HTTP_LISTEN_PORT: 80
+      KC_ADMIN_EMAIL: mail@mail.com
+
+  urls_with_scheme:
+    constant:
+      CYTOMINE_URL: ${AAA_CONFIG_SCHEME}://${AAA_CONFIG_CYTOMINE_HOST}
+      INTERNAL_PROXY: http://${AAA_SERVICES_URI_NGINX}
+
+  smtp:
+    constant:
+      HOST: mail.smtp
+      PORT: 587
+      USER: user
+      PASS: password
+      FROM: mail@mail.com
+
+  # Those are the URI to connect to the services.
+  # If you are running locally or on the same (swarm) docker network, you can use services names declared in the compose file
+  # You can also use IP or extrnal FQDNs
+  aaa_services_uri:
+    constant:
+      WEB_UI: web_ui
+      CORE: core:8080
+      PIMS: pims:5000
+      MONGO: mongo
+      NGINX: nginx
+      PIMS_CACHE: pims-cache:6379
+      POSTGIS: postgis
+      APPENGINE: app-engine:8080
+      REGISTRY: registry
+      IAM: iam:8100
+
+  app-engine:
+    constant:
+      # The URL of the compute cluster
+      SCHEDULER_MASTER_URL: changeme
+      # The token provided by the compute cluster
+      SCHEDULER_OAUTH_TOKEN: changeme
+      # The username should be admin
+      SCHEDULER_USERNAME: admin
+
+# -------------------------------------------------- #
+# Only update variables below if you know what you are doing
+  versions:
+    constant:
+      CYTOMINE_COMMERCIAL: CE2025.1
+
+  images:
+    constant:
+      CORE: cytomine/core:5.1.0
+      MONGO: cytomine/mongo:1.0.0
+      NGINX: cytomine/nginx:3.0.2-dev
+      PIMS_CACHE: redis:7.2
+      PIMS: cytomine/pims-ce-package:ce-1.0.0
+      POSTGIS: cytomine/postgis:1.5.3-ci
+      WEB_UI: cytomine/web-ui:3.1.0
+      APPENGINE: cytomine/app-engine:0.1.0
+      REGISTRY: registry:2.8.3
+      IAM: cytomine/iam-ce:1.0.6.-ci
+
+  container_paths:
+    constant:
+      APPENGINE_FILE_STORAGE: /data
+      IMAGES: /data/images
+      UPLOADED: /tmp/uploaded
+
+  compose:
+    constant:
+      PROJECT_NAME: ${AAA_CONFIG_NAME}
+
+  javamelody:
+    constant:
+      DATA_PATH: /javamelody-core # inside container
+      USER: admin
+    auto:
+      PASS:
+        type: openssl
+        length: 32
+
+  postgres:
+    constant:
+      PORT: 5432
+      DB_NAME: docker
+      USER: docker
+    auto:
+      PASS:
+        type: openssl
+        length: 32
+
+  postgres-appengine:
+    constant:
+      DB_NAME: appengine
+      USER: appengine
+    auto:
+      PASS:
+        type: openssl
+        length: 32
+
+  postgres-iam:
+    constant:
+      DB_NAME: iam
+      USER: iam
+    auto:
+      PASS:
+        type: openssl
+        length: 32
+
+  mongodb:
+    constant:
+      USER: mongoadmin
+      DB_NAME: cytomine
+      PORT: 27017
+    auto:
+      PASS:
+        type: openssl
+        length: 32
+
+  keys:
+    auto:
+      IMAGE_SERVER_PRIVATE: random_uuid
+      IMAGE_SERVER_PUBLIC: random_uuid
+
+services:
+  default:
+    core:
+      auto:
+        SERVER_ID: random_uuid
+        JWT_SECRET:
+          type: secret
+          length: 256
+          whitelist: abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'+.;^_~
+        ADMIN_PASSWORD:
+          type: openssl
+          length: 32
+        ADMIN_PRIVATE_KEY: random_uuid
+        ADMIN_PUBLIC_KEY: random_uuid
+        SUPER_ADMIN_PRIVATE_KEY: random_uuid
+        SUPER_ADMIN_PUBLIC_KEY: random_uuid
+      global:
+        IMAGE_SERVER_PRIVATE_KEY: keys.IMAGE_SERVER_PRIVATE
+        IMAGE_SERVER_PUBLIC_KEY: keys.IMAGE_SERVER_PUBLIC
+        POSTGIS_HOST: aaa_services_uri.POSTGIS
+        POSTGIS_PORT: postgres.PORT
+        POSTGIS_DB_NAME: postgres.DB_NAME
+        POSTGIS_USER: postgres.USER
+        POSTGIS_PASS: postgres.PASS
+        SMTP_HOST: smtp.HOST
+        SMTP_PORT: smtp.PORT
+        SMTP_USER: smtp.USER
+        SMTP_PASS: smtp.PASS
+        MONGO_HOST: aaa_services_uri.MONGO
+        MONGO_PORT: mongodb.PORT
+        MONGO_USER: mongodb.USER
+        MONGO_PASS: mongodb.PASS
+        MONGO_DB_NAME: mongodb.DB_NAME
+        JAVAMELODY_PATH: javamelody.DATA_PATH
+        JAVAMELODY_USER: javamelody.USER
+        JAVAMELODY_PASS: javamelody.PASS
+        SERVER_URL: urls_with_scheme.CYTOMINE_URL
+        INSTANCE_HOST_WEBSITE_URL: urls_with_scheme.CYTOMINE_URL
+        STORAGE_PATH: container_paths.IMAGES
+        INTERNAL_PROXY_URL: urls_with_scheme.INTERNAL_PROXY
+
+    iam:
+      auto:
+        KEYCLOAK_ADMIN_PASSWORD:
+          type: openssl
+          length: 32
+      constant:
+        KEYCLOAK_ADMIN: admin
+        KC_PROXY_HEADERS: xforwarded
+        KC_HTTP_RELATIVE_PATH: /iam
+        KC_HOSTNAME_STRICT_HTTPS: false
+        KC_HOSTNAME_STRICT_BACKCHANNEL: true
+        KC_FEATURES: token-exchange
+
+      global:
+        KC_DB_PASSWORD: postgres-iam.PASS
+        KC_DB_USERNAME: postgres-iam.USER
+        KC_DB_URL_DATABASE: postgres-iam.DB_NAME
+        KC_DB_URL_HOST: aaa_services_uri.POSTGIS
+        KC_DB_URL_PORT: postgres.PORT
+        KC_HOSTNAME: aaa_config.CYTOMINE_HOST
+        KC_HOSTNAME_ADMIN: aaa_config.CYTOMINE_HOST
+        KC_ADMIN_EMAIL: aaa_config.KC_ADMIN_EMAIL
+        KC_SMTP_HOST: smtp.HOST
+        KC_SMTP_PORT: smtp.PORT
+        KC_SMTP_USER: smtp.USER
+        KC_SMTP_PASS: smtp.PASS
+        KC_SMTP_FROM: smtp.FROM
+
+    mongo:
+      global:
+        MONGO_INITDB_ROOT_USERNAME: mongodb.USER
+        MONGO_INITDB_ROOT_PASSWORD: mongodb.PASS
+        MONGO_INIT_DATABASE: mongodb.DB_NAME
+
+    pims:
+      constant:
+        API_BASE_PATH: /ims
+        WEB_CONCURRENCY: 8
+        MAX_REQUESTS: 100000
+        LOG_CONFIG_FILE: /app/logging.yml
+        DEFAULT_IMAGE_SIZE_SAFETY_MODE: SAFE_REJECT
+        DEFAULT_ANNOTATION_ORIGIN: LEFT_TOP
+        OUTPUT_SIZE_LIMIT: 10000
+        TASK_QUEUE_ENABLED: false
+        CACHE_ENABLED: true
+        CACHE_URL: redis://${AAA_SERVICES_URI_PIMS_CACHE}
+      global:
+        CYTOMINE_PUBLIC_KEY: keys.IMAGE_SERVER_PUBLIC
+        CYTOMINE_PRIVATE_KEY: keys.IMAGE_SERVER_PRIVATE
+        ROOT: container_paths.IMAGES
+        PENDING_PATH: container_paths.UPLOADED
+        INTERNAL_URL_CORE: urls_with_scheme.INTERNAL_PROXY
+
+    web_ui:
+      global:
+        CYTOMINE_COMMERCIAL_VERSION: versions.CYTOMINE_COMMERCIAL
+
+    postgis:
+      global:
+        # Those default credentials will be either provisioned at first run
+        # or checked at subsequent boot.
+        POSTGRES_USER: postgres.USER
+        POSTGRES_PASSWORD: postgres.PASS
+        POSTGRES_DB: postgres.DB_NAME
+        # Can also be passed to ensure credentials are created
+        APPENGINE_USER: postgres-appengine.USER
+        APPENGINE_PASSWORD: postgres-appengine.PASS
+        APPENGINE_DB: postgres-appengine.DB_NAME
+        IAM_USER: postgres-iam.USER
+        IAM_PASSWORD: postgres-iam.PASS
+        IAM_DB: postgres-iam.DB_NAME
+
+    nginx:
+      global:
+        INTERNAL_URLS_WEB_UI: aaa_services_uri.WEB_UI
+        INTERNAL_URLS_CORE: aaa_services_uri.CORE
+        INTERNAL_URLS_IMS: aaa_services_uri.PIMS
+        INTERNAL_URLS_IMS2: aaa_services_uri.PIMS
+        INTERNAL_URLS_IMS3: aaa_services_uri.PIMS
+        INTERNAL_URLS_APPENGINE: aaa_services_uri.APPENGINE
+        INTERNAL_URLS_IAM: aaa_services_uri.IAM
+        VERSIONS_CYTOMINE_COMMERCIAL: versions.CYTOMINE_COMMERCIAL
+        IMAGES_CORE: images.CORE
+        IMAGES_MONGO: images.MONGO
+        IMAGES_NGINX: images.NGINX
+        IMAGES_PIMS_CACHE: images.PIMS_CACHE
+        IMAGES_PIMS: images.PIMS
+        IMAGES_POSTGIS: images.POSTGIS
+        IMAGES_WEB_UI: images.WEB_UI
+        URLS_SCHEME: aaa_config.SCHEME
+        URLS_INTERNAL_PROXY: aaa_services_uri.NGINX
+
+    registry:
+      constant:
+        REGISTRY_STORAGE_DELETE_ENABLED: "true"
+
+    app-engine:
+      constant:
+        API_PREFIX: /app-engine/
+      global:
+        DB_HOST: aaa_services_uri.POSTGIS
+        DB_PORT: postgres.PORT
+        DB_NAME: postgres-appengine.DB_NAME
+        DB_USERNAME: postgres-appengine.USER
+        DB_PASSWORD: postgres-appengine.PASS
+        REGISTRY_HOST: aaa_services_uri.REGISTRY
+        STORAGE_BASE_PATH: container_paths.APPENGINE_FILE_STORAGE
+        SCHEDULER_MASTER_URL: app-engine.SCHEDULER_MASTER_URL
+        SCHEDULER_OAUTH_TOKEN: app-engine.SCHEDULER_OAUTH_TOKEN
+        SCHEDULER_USERNAME: app-engine.SCHEDULER_USERNAME

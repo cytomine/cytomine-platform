@@ -1,0 +1,90 @@
+# This file defines all the jobs needed to handle CE releases automation
+# Features:
+#   - A tag pushed matching the PATCH pattern should create a project release.
+#   - Automate the release name and description. The description should have the versions of each microservices.
+#
+# See cicd/HOW_TO_RELEASE.md
+#
+# Definition:
+# ```
+# ${PID}${YYYY}[.${RELEASE_NUMBER}[.${PATCH}]]
+# ```
+#
+# See naming convention in https://gitlab.cytom.in/groups/cm/rnd/docs/-/wikis/home#releases-naming-convention
+#
+#
+# If a tag "CE2023.1.99" has been created, create a new project release
+# The Gitlab project should have `CE*.*.*` defined as protected tag.
+#
+
+variables:
+  RELEASE_TYPE: "none"
+
+workflow:
+  rules:
+
+    # If the tag matches a PATCH version.
+    # Does match: 'CE2023.1.2', 'BP2024.99.88'
+    # Does NOT match: 'CE2023', 'CE2023.1', 'CE2023.1', 'CE2023.1.0-dev'
+    # https://regex101.com/r/0mX51P/1
+    - if: $CI_COMMIT_TAG =~ /^(CE|BP)[0-9]{4}\.[0-9]+\.[0-9]+$/
+      variables:
+        RELEASE_TYPE: "PATCH"
+      when: always
+
+    - if: $CI_PIPELINE_SOURCE == "trigger" && $ASSIGN_ENVIRONMENT_URL != "override me"
+      when: always
+
+    # Do not trigger for other use cases
+    # Only PATCH releases will trigger the creation of a new project release
+    - when: always
+
+
+prepare_release:
+  stage: prepare
+  # Using our internal deployer image to use yq. yq is handy to parse cytomine.template
+  # See https://gitlab.cytom.in/cm/rnd/deployments/current-deployment/-/blob/main/tools/deployer/Dockerfile
+  image: registry.cytom.in/cm/rnd/deployments/current-deployment/deployer
+  rules:
+    - if: $RELEASE_TYPE == "PATCH"  && $CI_PIPELINE_SOURCE == "push"
+      when: on_success
+    - when: never
+  script:
+    - cd cicd
+    - bash write-release-description.md.sh > cv.md
+  artifacts:
+    paths:
+      - cicd/cv.md
+
+create_release:
+  stage: release
+  image: registry.gitlab.com/gitlab-org/release-cli:latest
+  rules:
+    - if: $RELEASE_TYPE == "PATCH" && $CI_PIPELINE_SOURCE == "push"
+      when: on_success
+    - when: never
+  needs:
+    - job: prepare_release
+      artifacts: true
+  script:
+    - echo "running create_release job."
+  release:
+    name: "$CI_COMMIT_TAG"
+    tag_name: "$CI_COMMIT_TAG"
+    description: cicd/cv.md
+    ref: "$CI_COMMIT_SHA"
+
+# This job is triggered by the project cm/rnd/deployments/current-deployment by a trigger token
+# Its only purpose is to create the GitLab environment
+"Assign this release to an env":
+  stage: release
+  variables:
+    ASSIGN_ENVIRONMENT_URL: "override me"
+  environment:
+    name: $ASSIGN_ENVIRONMENT_NAME
+    url: $ASSIGN_ENVIRONMENT_URL
+  script:
+    - echo "Set environment $CI_ENVIRONMENT_URL for tag $CI_COMMIT_TAG"
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "trigger" && $ASSIGN_ENVIRONMENT_URL != "override me"
+      when: always

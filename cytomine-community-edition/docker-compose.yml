@@ -1,0 +1,111 @@
+version: "3.9"
+services:
+
+  mongo:
+    image: ${IMAGES_MONGO}
+    restart: unless-stopped
+    volumes:
+      - ${AAA_CONFIG_PROJECT_DATA_PATH}/mongo:/data/db
+    networks:
+      cytomine-network:
+        ipv4_address: 172.18.0.2
+
+  postgis:
+    image: ${IMAGES_POSTGIS}
+    restart: unless-stopped
+    volumes:
+      - ${AAA_CONFIG_PROJECT_DATA_PATH}/postgis/data:/var/lib/postgresql/data
+    networks:
+      cytomine-network:
+        ipv4_address: 172.18.0.3
+
+  pims-cache:
+    image: ${IMAGES_PIMS_CACHE}
+    restart: unless-stopped
+    networks:
+      cytomine-network:
+        ipv4_address: 172.18.0.4
+
+  pims:
+    image: ${IMAGES_PIMS}
+    restart: unless-stopped
+    depends_on:
+      - nginx
+      - pims-cache
+    volumes:
+      - ${AAA_CONFIG_PROJECT_DATA_PATH}/images:${CONTAINER_PATHS_IMAGES}
+    networks:
+      cytomine-network:
+        ipv4_address: 172.18.0.5
+
+  core:
+    image: ${IMAGES_CORE}
+    restart: unless-stopped
+    depends_on:
+      - nginx
+      - postgis
+      - mongo
+      - iam
+      - app-engine
+    volumes:
+      - /etc/localtime:/etc/localtime
+    networks:
+      cytomine-network:
+        ipv4_address: 172.18.0.6
+
+  web_ui:
+    image: ${IMAGES_WEB_UI}
+    restart: unless-stopped
+    volumes:
+      - /etc/localtime:/etc/localtime
+    networks:
+      cytomine-network:
+        ipv4_address: 172.18.0.7
+
+  nginx:
+    image: ${IMAGES_NGINX}
+    restart: unless-stopped
+    ports:
+      - 80:80
+    networks:
+      cytomine-network:
+        ipv4_address: 172.18.0.8
+
+  app-engine:
+    image: ${IMAGES_APPENGINE}
+    restart: unless-stopped
+    depends_on:
+      - registry
+    volumes:
+      - ${AAA_CONFIG_PROJECT_DATA_PATH}/app-engine:/data
+    networks:
+      cytomine-network:
+        ipv4_address: 172.18.0.9
+
+  registry:
+    image: ${IMAGES_REGISTRY}
+    restart: unless-stopped
+    volumes:
+      - ${AAA_CONFIG_PROJECT_DATA_PATH}/registry:/data
+    networks:
+      cytomine-network:
+        ipv4_address: 172.18.0.10
+
+
+  iam:
+    image: ${IMAGES_IAM}
+    restart: unless-stopped
+    depends_on:
+      - nginx
+      - postgis
+    networks:
+      cytomine-network:
+        ipv4_address: 172.18.0.11
+
+networks:
+  cytomine-network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.18.0.0/16
