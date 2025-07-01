@@ -1,0 +1,37 @@
+name: Test
+
+on:
+  pull_request:
+    branches:
+      - main-ce
+    paths:
+      - "src/**/*.js"
+      - "src/**/*.vue"
+      - "tests/**/*.js"
+
+jobs:
+  unit-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set up the repository
+        uses: actions/checkout@v4
+
+      - name: Set up NodeJS
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ vars.NODE_VERSION }}
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Run Unit Tests
+        run: npm run test
+
+      - name: Upload test coverage
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage
+          retention-days: 30

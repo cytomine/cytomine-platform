@@ -1,0 +1,114 @@
+name: Create release
+
+on:
+  push:
+    tags:
+      - "*.*.*"
+
+env:
+  DIR_NAME: cytomine-web-ui-${{ github.ref_name }}
+
+jobs:
+  build-app:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set up the repository
+        uses: actions/checkout@v4
+
+      - name: Set up NodeJS
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ vars.NODE_VERSION }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Create app
+        run: npm run build
+
+      - name: Archive the artifact
+        run: |
+          mv dist ${{ env.DIR_NAME }}
+          tar -czvf ${{ env.DIR_NAME }}.tar.gz ${{ env.DIR_NAME }}
+
+      - name: Store the artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.DIR_NAME }}.tar.gz
+          path: ${{ env.DIR_NAME }}.tar.gz
+          retention-days: 1
+
+  create-release:
+    runs-on: ubuntu-latest
+    outputs:
+      release_id: ${{ steps.export-release-id.outputs.release_id }}
+
+    steps:
+      - name: Prerelease check
+        run: |
+          if [[ ${{ github.ref_name }} =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
+            echo "prerelease=false" >> $GITHUB_ENV
+          else
+            echo "prerelease=true" >> $GITHUB_ENV
+          fi
+
+      - name: Create release
+        id: release-creation
+        uses: actions/github-script@v7
+        env:
+          name: ${{ github.ref_name }}
+          prerelease: ${{ env.prerelease }}
+        with:
+          script: |
+            try {
+              const response = await github.rest.repos.createRelease({
+                generate_release_notes: true,
+                name: process.env.name,
+                owner: context.repo.owner,
+                prerelease: process.env.prerelease === "true",
+                repo: context.repo.repo,
+                tag_name: process.env.name,
+              });
+
+              return response.data.id;
+            } catch (error) {
+              core.setFailed(error.message);
+            }
+
+      - name: Export release id
+        id: export-release-id
+        run: echo "release_id=${{ steps.release-creation.outputs.result }}" >> $GITHUB_OUTPUT
+
+  upload-release-asset:
+    needs:
+      - build-app
+      - create-release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Get the app archive
+        uses: actions/download-artifact@v4.1.7
+        with:
+          name: ${{ env.DIR_NAME }}.tar.gz
+
+      - name: Upload release asset
+        uses: actions/github-script@v7
+        env:
+          name: ${{ env.DIR_NAME }}.tar.gz
+          release_id: ${{ needs.create-release.outputs.release_id }}
+        with:
+          script: |
+            const fs = require('fs');
+
+            try {
+              github.rest.repos.uploadReleaseAsset({
+                data: fs.readFileSync(process.env.name),
+                name: process.env.name,
+                owner: context.repo.owner,
+                release_id: process.env.release_id,
+                repo: context.repo.repo,
+              });
+            } catch (error) {
+              core.setFailed(error.message);
+            }
