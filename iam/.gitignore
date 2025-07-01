@@ -1,0 +1,48 @@
+# Spring Boot / Maven
+target/
+mvnw
+mvnw.cmd
+.mvn/wrapper/
+!.mvn/wrapper/maven-wrapper.jar
+
+# VSCode
+.vscode/
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Eclipse
+.classpath
+.project
+.settings/
+
+# Gradle
+.gradle/
+build/
+bin/
+
+# Logs
+logs/
+
+# IDE-specific files
+*.log
+*.log.*
+*.tmproj
+*.tmp
+*.swp
+
+# Compiled binary files
+*.class
+*.jar
+
+# Dependency directories
+.lib/
+ivy/
+jars/
+.jpb/
+
+# Other
+_misc/
