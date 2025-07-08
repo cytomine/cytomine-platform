@@ -86,8 +86,8 @@ LABEL org.opencontainers.image.authors="dev@cytomine.com" \
       org.opencontainers.image.deps.gradle.version="${GRADLE_VERSION}" \
       org.opencontainers.image.deps.entrypoint.scripts.version="${ENTRYPOINT_SCRIPTS_VERSION}"
 
-ENV DEBIAN_FRONTEND noninteractive
-ENV LANG C.UTF-8
+ENV DEBIAN_FRONTEND=noninteractive
+ENV LANG=C.UTF-8
 
 # base librairies and configuration
 RUN apt-get update -y \

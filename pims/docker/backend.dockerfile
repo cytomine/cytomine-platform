@@ -20,8 +20,8 @@ FROM cytomine/entrypoint-scripts:${ENTRYPOINT_SCRIPTS_VERSION} AS entrypoint-scr
 ## Stage: Pims
 FROM ubuntu:${UBUNTU_VERSION} AS base-pims
 
-ENV LANG C.UTF-8
-ENV DEBIAN_FRONTEND noninteractive
+ENV LANG=C.UTF-8
+ENV DEBIAN_FRONTEND=noninteractive
 
 ARG PY_VERSION=3.10
 
@@ -88,7 +88,7 @@ COPY ./docker/plugins.py /app/plugins.py
 COPY ${PLUGIN_CSV} /app/plugins.csv
 
 # ="enabled,name,git_url,git_branch\n"
-ENV PLUGIN_INSTALL_PATH /app/plugins
+ENV PLUGIN_INSTALL_PATH=/app/plugins
 RUN python plugins.py \
    --plugin_csv /app/plugins.csv \
    --install_path ${PLUGIN_INSTALL_PATH} \

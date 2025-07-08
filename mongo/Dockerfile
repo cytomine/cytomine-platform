@@ -21,7 +21,7 @@ ARG IMAGE_REVISION
 
 #######################################################################################
 ## Stage 1: entrypoint script. Use a multi-stage because COPY --from cannot interpolate variables
-FROM cytomine/entrypoint-scripts:${ENTRYPOINT_SCRIPTS_VERSION} as entrypoint-scripts
+FROM cytomine/entrypoint-scripts:${ENTRYPOINT_SCRIPTS_VERSION} AS entrypoint-scripts
 
 ## Stage 2: mongo image
 FROM mongo:${MONGO_VERSION}

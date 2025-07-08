@@ -21,10 +21,10 @@ ARG NGINX_VERSION="1.24"
 
 #######################################################################################
 ## Stage: entrypoint script. Use a multi-stage because COPY --from cannot interpolate variables
-FROM cytomine/entrypoint-scripts:${ENTRYPOINT_SCRIPTS_VERSION} as entrypoint-scripts
+FROM cytomine/entrypoint-scripts:${ENTRYPOINT_SCRIPTS_VERSION} AS entrypoint-scripts
 
 ## Stage: nginx
-FROM nginx:${NGINX_VERSION}-alpine as nginx-server
+FROM nginx:${NGINX_VERSION}-alpine AS nginx-server
 
 ENV IMAGES_CORE="not provided"
 ENV IMAGES_MONGO="not provided"
