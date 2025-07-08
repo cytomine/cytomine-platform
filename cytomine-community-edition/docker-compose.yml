@@ -2,7 +2,7 @@ version: "3.9"
 services:
 
   mongo:
-    image: ${IMAGES_MONGO}
+    image: cytomine/mongo:latest
     restart: unless-stopped
     volumes:
       - ${AAA_CONFIG_PROJECT_DATA_PATH}/mongo:/data/db
@@ -11,7 +11,7 @@ services:
         ipv4_address: 172.18.0.2
 
   postgis:
-    image: ${IMAGES_POSTGIS}
+    image: cytomine/postgis:latest
     restart: unless-stopped
     volumes:
       - ${AAA_CONFIG_PROJECT_DATA_PATH}/postgis/data:/var/lib/postgresql/data
@@ -20,14 +20,14 @@ services:
         ipv4_address: 172.18.0.3
 
   pims-cache:
-    image: ${IMAGES_PIMS_CACHE}
+    image: redis:7.2
     restart: unless-stopped
     networks:
       cytomine-network:
         ipv4_address: 172.18.0.4
 
   pims:
-    image: ${IMAGES_PIMS}
+    image: cytomine/pims:latest
     restart: unless-stopped
     depends_on:
       - nginx
@@ -39,7 +39,7 @@ services:
         ipv4_address: 172.18.0.5
 
   core:
-    image: ${IMAGES_CORE}
+    image: cytomine/core:latest
     restart: unless-stopped
     depends_on:
       - nginx
@@ -54,7 +54,7 @@ services:
         ipv4_address: 172.18.0.6
 
   web_ui:
-    image: ${IMAGES_WEB_UI}
+    image: cytomine/web-ui:latest
     restart: unless-stopped
     volumes:
       - /etc/localtime:/etc/localtime
@@ -63,7 +63,7 @@ services:
         ipv4_address: 172.18.0.7
 
   nginx:
-    image: ${IMAGES_NGINX}
+    image: cytomine/nginx:latest
     restart: unless-stopped
     ports:
       - 80:80
@@ -72,7 +72,7 @@ services:
         ipv4_address: 172.18.0.8
 
   app-engine:
-    image: ${IMAGES_APPENGINE}
+    image: cytomine/app-engine:latest
     restart: unless-stopped
     depends_on:
       - registry
@@ -83,7 +83,7 @@ services:
         ipv4_address: 172.18.0.9
 
   registry:
-    image: ${IMAGES_REGISTRY}
+    image: registry:2.8.3
     restart: unless-stopped
     volumes:
       - ${AAA_CONFIG_PROJECT_DATA_PATH}/registry:/data
@@ -91,9 +91,8 @@ services:
       cytomine-network:
         ipv4_address: 172.18.0.10
 
-
   iam:
-    image: ${IMAGES_IAM}
+    image: cytomine/iam:latest
     restart: unless-stopped
     depends_on:
       - nginx
