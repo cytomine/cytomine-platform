@@ -361,7 +361,6 @@ failed-fetch-recent-projects,Failed to fetch recent projects,Erreur lors du char
 failed-fetch-total-counts,Failed to fetch the total counts,Une erreur a eu lieu lors du chargement des statistiques,No se pudo obtener el recuento total,Er is een fout opgetreden tijdens het laden van statistieken
 failed-to-retrieve-credentials,Failed to retrieve credentials information,Une erreur a eu lieu lors du chargement des informations d'indentification
 failed-to-retrieve-api-keys,Failed to retrieve API keys,Une erreur a eu lieu lors du chargement des clés API
-failed,Failed,Échoué,Fallido,Failed
 fav,Fav.,Fav.,Fav.,Fav.
 favorite,Favorite,Favori,Favorito,Favoriet
 file-tree,File tree,Arborescence de fichiers,Árbol de archivos,Fileboom
