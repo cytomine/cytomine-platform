@@ -145,7 +145,7 @@ RUN pip install --no-cache-dir gunicorn==${GUNICORN_VERSION} && \
 
 # Add default config
 COPY ./pims-config.env /app/pims-config.env
-COPY ./logging-prod.yml /app/logging-prod.yml
+COPY ./logging-prod.yml /app/logging.yml
 COPY ./docker/gunicorn_conf.py /app/gunicorn_conf.py
 
 COPY ./docker/start.sh /start.sh
