@@ -1,14 +1,9 @@
 stages:
-  - test-core
-  - test-app-engine
+  - build
 
-test-core:
-  stage: test-core
+build:
+  stage: build
   image: gradle:ubi-minimal
   script:
-    - gradle :core:test --no-daemon
-test-app-engine:
-  stage: test-app-engine
-  image: gradle:ubi-minimal
-  script:
-    - gradle :app-engine:test --no-daemon
+    - gradle build -x test
+
