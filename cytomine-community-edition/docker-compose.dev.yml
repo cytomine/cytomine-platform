@@ -1,8 +1,9 @@
-version: "3.9"
 services:
 
   mongo:
     image: cytomine/mongo:latest
+    build:
+      context: ../mongo
     restart: unless-stopped
     volumes:
       - ${AAA_CONFIG_PROJECT_DATA_PATH}/mongo:/data/db
@@ -12,6 +13,8 @@ services:
 
   postgis:
     image: cytomine/postgis:latest
+    build:
+      context: ../postgis
     restart: unless-stopped
     volumes:
       - ${AAA_CONFIG_PROJECT_DATA_PATH}/postgis/data:/var/lib/postgresql/data
@@ -28,6 +31,9 @@ services:
 
   pims:
     image: cytomine/pims:latest
+    build:
+      context: ../pims
+      dockerfile: docker/backend.dockerfile
     restart: unless-stopped
     depends_on:
       - nginx
@@ -40,6 +46,8 @@ services:
 
   core:
     image: cytomine/core:latest
+    build:
+      context: ../core
     restart: unless-stopped
     depends_on:
       - nginx
@@ -55,6 +63,9 @@ services:
 
   web_ui:
     image: cytomine/web-ui:latest
+    build:
+      context: ../web-ui
+      dockerfile: docker/Dockerfile
     restart: unless-stopped
     volumes:
       - /etc/localtime:/etc/localtime
@@ -64,6 +75,8 @@ services:
 
   nginx:
     image: cytomine/nginx:latest
+    build:
+      context: ../nginx
     restart: unless-stopped
     ports:
       - 80:80
@@ -73,6 +86,8 @@ services:
 
   app-engine:
     image: cytomine/app-engine:latest
+    build:
+      context: ../app-engine
     restart: unless-stopped
     depends_on:
       - registry
@@ -93,6 +108,10 @@ services:
 
   iam:
     image: cytomine/iam:latest
+    build:
+      context: ../iam
+      dockerfile: Dockerfile
+      target: ci
     restart: unless-stopped
     depends_on:
       - nginx

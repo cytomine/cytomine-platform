@@ -37,8 +37,6 @@ out/
 ### VS Code ###
 .vscode/
 
-
-*.sql
 ci/
 .ideal/
 

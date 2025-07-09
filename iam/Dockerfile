@@ -7,7 +7,7 @@ ARG IMAGE_REVISION
 
 #######################################################################################
 ## Stage: IAM build
-FROM quay.io/keycloak/keycloak:${KEYCLOAK_VERSION} as builder
+FROM quay.io/keycloak/keycloak:${KEYCLOAK_VERSION} AS builder
 
 # Enable health and metrics support
 ENV KC_HEALTH_ENABLED=true
@@ -25,7 +25,7 @@ RUN /opt/keycloak/bin/kc.sh build
 
 #######################################################################################
 ## Stage: entrypoint script. Use a multi-stage because COPY --from cannot interpolate variables
-FROM cytomine/entrypoint-scripts:${ENTRYPOINT_SCRIPTS_VERSION} as entrypoint-scripts
+FROM cytomine/entrypoint-scripts:${ENTRYPOINT_SCRIPTS_VERSION} AS entrypoint-scripts
 
 #######################################################################################
 ## Stage: Cytomine IAM dev external tools build

@@ -21,12 +21,14 @@ ARG IMAGE_REVISION
 
 #######################################################################################
 ## Stage 1: entrypoint script. Use a multi-stage because COPY --from cannot interpolate variables
-FROM cytomine/entrypoint-scripts:${ENTRYPOINT_SCRIPTS_VERSION} as entrypoint-scripts
+FROM cytomine/entrypoint-scripts:${ENTRYPOINT_SCRIPTS_VERSION} AS entrypoint-scripts
 
 ## Stage 2: mongo image
 FROM mongo:${MONGO_VERSION}
 
-RUN apt-get update \
+RUN rm /etc/apt/sources.list.d/mongodb*.list \
+    && apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 656408E390CFB1F5 \
+    && apt-get update \
     && apt-get install -y --no-install-recommends cron=3.0pl1-136ubuntu1 \
     && rm -rf /var/lib/apt/lists/*
 
