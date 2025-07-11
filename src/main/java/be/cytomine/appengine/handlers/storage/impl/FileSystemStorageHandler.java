@@ -1,5 +1,6 @@
 package be.cytomine.appengine.handlers.storage.impl;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -9,7 +10,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Comparator;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.zip.CRC32;
+import java.util.zip.Checksum;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -51,6 +55,8 @@ public class FileSystemStorageHandler implements StorageHandler {
                     try (InputStream inputStream = new FileInputStream(current.getData())) {
                         Files.copy(inputStream, filePath, StandardCopyOption.REPLACE_EXISTING);
                     }
+                    String identifier = getIdentifier(storageId);
+                    current.setChecksumCRC32(UUID.fromString(identifier), calculateFileCRC32(current.getData()));
                 } catch (IOException e) {
                     String error = "Failed to create file " + filename;
                     error += " in storage " + storageId + ": " + e.getMessage();
@@ -63,6 +69,36 @@ public class FileSystemStorageHandler implements StorageHandler {
                 createStorage(modifiedStorage);
             }
         }
+    }
+
+    private static String getIdentifier(String storageId)
+    {
+        String identifier = "";
+        if(storageId.startsWith("task-") && storageId.endsWith("-def")) { // task storage
+            identifier = storageId.replace("task-", "");
+            identifier = identifier.replace("-def" , "");
+        } else if(storageId.startsWith("task-run-inputs-")) { // inputs
+            identifier = storageId.replace("task-run-inputs-", "");
+        } else if(storageId.startsWith("task-run-outputs-")) { // outputs
+            identifier = storageId.replace("task-run-outputs-", "");
+        }
+        return identifier;
+    }
+
+    private long calculateFileCRC32(File file) throws IOException {
+        Checksum crc32 = new CRC32();
+        // Use try-with-resources to ensure the input stream is closed automatically
+        // BufferedInputStream is used for efficient reading in chunks
+        try (InputStream is = new BufferedInputStream(new FileInputStream(file))) {
+            byte[] buffer = new byte[8192]; // Define a buffer size (e.g., 8KB)
+            int bytesRead;
+
+            // Read the file chunk by chunk and update the CRC32 checksum
+            while ((bytesRead = is.read(buffer)) != -1) {
+                crc32.update(buffer, 0, bytesRead);
+            }
+        }
+        return crc32.getValue(); // Return the final CRC32 value
     }
 
     @Override
