@@ -448,9 +448,11 @@ public class TaskProvisioningService {
                     entryName = current.getName() + "/";
                 }
                 ZipEntry zipEntry = new ZipEntry(entryName);
+                zipEntry.setMethod(ZipEntry.STORED);
                 zipOut.putNextEntry(zipEntry);
 
                 if (current.getStorageDataType().equals(StorageDataType.FILE)) {
+                    zipEntry.setCrc(current.getChecksumCRC32(run.getId()));
                     Files.copy(current.getData().toPath(), zipOut);
                 }
 
