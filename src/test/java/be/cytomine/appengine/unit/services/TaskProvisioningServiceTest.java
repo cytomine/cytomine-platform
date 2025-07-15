@@ -1,16 +1,11 @@
 package be.cytomine.appengine.unit.services;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Random;
+import java.io.*;
+import java.util.*;
+import java.util.zip.CRC32;
 
-import be.cytomine.appengine.models.task.Parameter;
-import be.cytomine.appengine.models.task.Task;
-import be.cytomine.appengine.models.task.TypePersistence;
-import be.cytomine.appengine.models.task.ValueType;
+import be.cytomine.appengine.models.task.*;
+import be.cytomine.appengine.repositories.ChecksumRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -34,8 +29,6 @@ import be.cytomine.appengine.exceptions.ProvisioningException;
 import be.cytomine.appengine.handlers.SchedulerHandler;
 import be.cytomine.appengine.handlers.StorageData;
 import be.cytomine.appengine.handlers.StorageHandler;
-import be.cytomine.appengine.models.task.ParameterType;
-import be.cytomine.appengine.models.task.Run;
 import be.cytomine.appengine.models.task.integer.IntegerPersistence;
 import be.cytomine.appengine.repositories.RunRepository;
 import be.cytomine.appengine.repositories.TypePersistenceRepository;
@@ -71,6 +64,9 @@ public class TaskProvisioningServiceTest {
 
     @Mock
     private RunRepository runRepository;
+
+    @Mock
+    private ChecksumRepository checksumRepository;
 
     @Mock
     private TypePersistenceRepository typePersistenceRepository;
@@ -113,6 +109,9 @@ public class TaskProvisioningServiceTest {
 
         when(runRepository.findById(run.getId())).thenReturn(Optional.of(run));
 
+        Checksum crc32 = new Checksum(UUID.randomUUID(), "task-run-inputs-" + run.getId(), 938453439);
+        when(checksumRepository.save(any(Checksum.class))).thenReturn(crc32);
+
         JsonNode result = taskProvisioningService.provisionRunParameter(run.getId().toString(), name, value);
 
         assertNotNull(result);
@@ -121,6 +120,22 @@ public class TaskProvisioningServiceTest {
         assertEquals(run.getId().toString(), result.get("task_run_id").asText());
         verify(runRepository, times(1)).findById(run.getId());
         verify(storageHandler, times(1)).saveStorageData(any(Storage.class), any(StorageData.class));
+    }
+
+    private long calculateFileCRC32(File file) throws IOException {
+        java.util.zip.Checksum crc32 = new CRC32();
+        // Use try-with-resources to ensure the input stream is closed automatically
+        // BufferedInputStream is used for efficient reading in chunks
+        try (InputStream is = new BufferedInputStream(new FileInputStream(file))) {
+            byte[] buffer = new byte[8192]; // Define a buffer size (e.g., 8KB)
+            int bytesRead;
+
+            // Read the file chunk by chunk and update the CRC32 checksum
+            while ((bytesRead = is.read(buffer)) != -1) {
+                crc32.update(buffer, 0, bytesRead);
+            }
+        }
+        return crc32.getValue(); // Return the final CRC32 value
     }
 
     @DisplayName("Successfully provision a run parameter with binary data")
@@ -231,6 +246,9 @@ public class TaskProvisioningServiceTest {
         when(runRepository.findById(run.getId())).thenReturn(Optional.of(run));
         when(typePersistenceRepository.findTypePersistenceByRunIdAndParameterType(run.getId(), ParameterType.INPUT))
             .thenReturn(List.of(persistedProvision));
+
+        Checksum crc32 = new Checksum(UUID.randomUUID(), storageId, calculateFileCRC32(mockStorageData.peek().getData()));
+        when(checksumRepository.findByReference(any(String.class))).thenReturn(crc32);
 
         StorageData result = taskProvisioningService.retrieveIOZipArchive(run.getId().toString(), ParameterType.INPUT);
     
