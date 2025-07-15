@@ -18,8 +18,8 @@ RUN mkdir -p /opt/gradle/.gradle
 ENV GRADLE_USER_HOME=/opt/gradle/.gradle
 
 WORKDIR /app
-COPY src /app/src
-COPY build.gradle /app/build.gradle
+COPY ../src /app/src
+COPY ../build.gradle /app/build.gradle
 
 RUN gradle clean compileJava --no-daemon --console=verbose
 
@@ -31,8 +31,8 @@ ENV GRADLE_USER_HOME=/opt/gradle/.gradle
 COPY --from=deps-downloader /opt/gradle/.gradle /opt/gradle/.gradle
 
 WORKDIR /app
-COPY src /app/src
-COPY build.gradle /app/build.gradle
+COPY ../src /app/src
+COPY ../build.gradle /app/build.gradle
 
 ARG APP_ENGINE_VERSION
 ENV APP_ENGINE_VERSION=$APP_ENGINE_VERSION
@@ -51,9 +51,9 @@ FROM gradle:${GRADLE_DEV_VERSION} AS dev-server
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-      gettext=0.21-4ubuntu4 \
-      openssh-server=1:8.9p1-3ubuntu0.11 \
-      rsync=3.2.7-0ubuntu0.22.04.4
+      gettext \
+      openssh-server \
+      rsync
 
 ENV GRADLE_USER_HOME=/opt/gradle/.gradle
 
