@@ -423,7 +423,7 @@ public class TaskRunController {
     public ResponseEntity<?> updateState(
         @PathVariable("run_id") String runId,
         @RequestBody State state
-    ) throws ProvisioningException, SchedulingException {
+    ) throws ProvisioningException, SchedulingException, FileStorageException {
         log.info("/task-runs/{run_id}/state_actions POST");
         StateAction stateAction = taskRunService.updateRunState(runId, state);
         log.info("/task-runs/{run_id}/state_actions POST Ended");
