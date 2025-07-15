@@ -3,18 +3,22 @@ package be.cytomine.appengine.handlers.scheduler.impl;
 import java.io.File;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.EnvVarBuilder;
 import io.fabric8.kubernetes.api.model.HostPathVolumeSourceBuilder;
+import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodBuilder;
 import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.ResourceRequirements;
 import io.fabric8.kubernetes.api.model.ResourceRequirementsBuilder;
+import io.fabric8.kubernetes.api.model.Volume;
 import io.fabric8.kubernetes.api.model.VolumeBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
@@ -63,6 +67,12 @@ public class KubernetesScheduler implements SchedulerHandler {
     @Value("${scheduler.helper-containers-resources.cpu}")
     private String helperContainerCpu;
 
+    @Value("${storage.base-path}")
+    private String storageBasePath;
+
+    @Value("${scheduler.run-mode}")
+    private String runMode;
+
     private PodInformer podInformer;
 
     private String baseUrl;
@@ -104,8 +114,15 @@ public class KubernetesScheduler implements SchedulerHandler {
         String hostAddress = "http://" + getHostAddress();
 
         this.baseUrl = hostAddress + ":" + port + apiPrefix + apiVersion + "/task-runs/";
-        this.baseInputPath = "/tmp/app-engine/task-run-inputs-";
-        this.baseOutputPath = "/tmp/app-engine/task-run-outputs-";
+        String basePath = "";
+        if (runMode.equalsIgnoreCase("local")) {
+            basePath =  storageBasePath;
+        }
+        if (runMode.equalsIgnoreCase("cluster")) {
+            basePath = "/tmp/app-engine";
+        }
+        this.baseInputPath = basePath + "/task-run-inputs-";
+        this.baseOutputPath = basePath + "/task-run-outputs-";
     }
 
     @Override
@@ -177,7 +194,7 @@ public class KubernetesScheduler implements SchedulerHandler {
             .build();
 
         String fetchInputs = "curl -L -o inputs.zip " + url + "/inputs.zip";
-        String unzipInputs = "unzip -o inputs.zip -d " + task.getInputFolder();
+        String unzipInputs = "time unzip -o inputs.zip -d " + task.getInputFolder();
 
         Container inputContainer = new ContainerBuilder()
             .withName("inputs-provisioning")
@@ -225,11 +242,26 @@ public class KubernetesScheduler implements SchedulerHandler {
         wait += "| jq '.status | .containerStatuses[] | select(.name == \"task\") | .state ";
         wait += "| keys[0]' | grep -q -F \"terminated\"; do sleep 2; done";
 
+        String clusterOutputCommand = wait + and + zipOutputs + and + sendOutputs;
+        String updateAPIRequestJson = " '{ \"desired\" : \"FINISHED\" }' ";
+        String requestToUpdateRunStateToFinished = "curl -X POST -H 'Content-Type: application/json' -d";
+        requestToUpdateRunStateToFinished += updateAPIRequestJson;
+        requestToUpdateRunStateToFinished += url + "/" + "state-actions";
+        String localOutputCommand = wait + and + requestToUpdateRunStateToFinished;
+
+        String command = "";
+        if (runMode.equalsIgnoreCase("local")) {
+            command = localOutputCommand;
+        }
+        if (runMode.equalsIgnoreCase("cluster")) {
+            command = clusterOutputCommand;
+        }
+
         Container outputContainer = new ContainerBuilder()
             .withName("outputs-sending")
             .withImage("cytomineuliege/alpine-task-utils:latest")
             .withImagePullPolicy("IfNotPresent")
-            .withCommand("/bin/sh", "-c", wait + and + zipOutputs + and + sendOutputs)
+            .withCommand("/bin/sh", "-c", command)
 
             // request and limit helper container resources
             .withResources(helperContainersResources)
@@ -250,48 +282,57 @@ public class KubernetesScheduler implements SchedulerHandler {
 
             .build();
 
+        boolean isClusterMode = this.runMode.equalsIgnoreCase("cluster");
         // Defining the pod image to run
+
         PodBuilder podBuilder = new PodBuilder()
             .withNewMetadata()
             .withName(podName)
             .withLabels(labels)
             .endMetadata()
-
             .withNewSpec()
-
             .withHostNetwork(true)
-
             .addNewInitContainerLike(permissionContainer)
-            .endInitContainer()
-
-            // Pre-task for inputs provisioning
-            .addNewInitContainerLike(inputContainer)
-            .endInitContainer()
-
-            // Task container
-            .addNewContainerLike(taskContainer)
-            .endContainer()
-
-            // Post Task for outputs sending
-            .addNewContainerLike(outputContainer)
-            .endContainer()
-
-            // Mount volumes from the scheduler file system
-            .addToVolumes(new VolumeBuilder()
-            .withName("inputs")
-            .withHostPath(
-                new HostPathVolumeSourceBuilder().withPath(baseInputPath + runId).build())
-            .build())
-            .addToVolumes(new VolumeBuilder()
-            .withName("outputs")
-            .withHostPath(
-                new HostPathVolumeSourceBuilder().withPath(baseOutputPath + runId)
-            .build())
-            .build())
-
-            // Never restart the pod
+            .and()
             .withRestartPolicy("Never")
             .endSpec();
+
+        // After .endSpec(), modify the pod to add inputContainer and outputContainer conditionally,
+        // taskContainer unconditionally, and inputs/outputs volumes conditionally
+        Pod pod = podBuilder.build();
+        PodBuilder newPodBuilder = new PodBuilder(pod);
+        List<Container> initContainers = new ArrayList<>(pod.getSpec().getInitContainers());
+        List<Container> containers = new ArrayList<>(pod.getSpec().getContainers());
+        List<Volume> volumes = new ArrayList<>(pod.getSpec().getVolumes());
+
+        // Add inputContainer conditionally
+        if (isClusterMode) {
+            initContainers.add(inputContainer);
+        }
+
+        // Add taskContainer unconditionally
+        containers.add(taskContainer);
+        containers.add(outputContainer);
+
+        // Add inputs and outputs volumes conditionally
+        volumes.add(new VolumeBuilder()
+             .withName("inputs")
+             .withHostPath(
+                 new HostPathVolumeSourceBuilder().withPath(baseInputPath + runId).build())
+             .build());
+        volumes.add(new VolumeBuilder()
+             .withName("outputs")
+             .withHostPath(
+                 new HostPathVolumeSourceBuilder().withPath(baseOutputPath + runId).build())
+             .build());
+
+        newPodBuilder = newPodBuilder.editOrNewSpec()
+            .withInitContainers(initContainers)
+            .withContainers(containers)
+            .withVolumes(volumes)
+            .endSpec();
+
+        podBuilder = newPodBuilder;
 
         log.info("Schedule: Task Pod scheduled to run on the cluster");
         try {
