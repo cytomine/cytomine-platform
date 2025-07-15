@@ -1,7 +1,10 @@
 package be.cytomine.appengine.services;
 
+import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -15,9 +18,12 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
+import java.util.zip.CRC32;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import be.cytomine.appengine.models.task.Checksum;
+import be.cytomine.appengine.repositories.ChecksumRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -26,6 +32,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -85,6 +92,8 @@ public class TaskProvisioningService {
     private final SchedulerHandler schedulerHandler;
 
     private final TaskService taskService;
+
+    private final ChecksumRepository checksumRepository;
 
     public JsonNode provisionRunParameter(
         String runId,
@@ -295,8 +304,15 @@ public class TaskProvisioningService {
             StorageData inputProvisionFileData = inputForType
                 .getType()
                 .mapToStorageFileData(provision, run);
+            for (StorageDataEntry current : inputProvisionFileData.getEntryList()) {
+                String filename = current.getName();
+                if (!"descriptor.yml".equalsIgnoreCase(filename)) {
+                    setChecksumCRC32(runStorage.getIdStorage(), calculateFileCRC32(current.getData()), filename);
+                }
+            }
+
             fileStorageHandler.saveStorageData(runStorage, inputProvisionFileData);
-        } catch (FileStorageException e) {
+        } catch (FileStorageException | IOException e) {
             AppEngineError error = ErrorBuilder.buildParamRelatedError(
                 ErrorCode.STORAGE_STORING_INPUT_FAILED,
                 provision.get("param_name").asText(),
@@ -304,6 +320,22 @@ public class TaskProvisioningService {
             );
             throw new ProvisioningException(error);
         }
+    }
+
+    private long calculateFileCRC32(File file) throws IOException {
+        java.util.zip.Checksum crc32 = new CRC32();
+        // Use try-with-resources to ensure the input stream is closed automatically
+        // BufferedInputStream is used for efficient reading in chunks
+        try (InputStream is = new BufferedInputStream(new FileInputStream(file))) {
+            byte[] buffer = new byte[8192]; // Define a buffer size (e.g., 8KB)
+            int bytesRead;
+
+            // Read the file chunk by chunk and update the CRC32 checksum
+            while ((bytesRead = is.read(buffer)) != -1) {
+                crc32.update(buffer, 0, bytesRead);
+            }
+        }
+        return crc32.getValue(); // Return the final CRC32 value
     }
 
     private Parameter getParameter(String parameterName, ParameterType parameterType, Run run) {
@@ -447,12 +479,14 @@ public class TaskProvisioningService {
                 } else {
                     entryName = current.getName() + "/";
                 }
-                ZipEntry zipEntry = new ZipEntry(entryName);
-                zipEntry.setMethod(ZipEntry.STORED);
-                zipOut.putNextEntry(zipEntry);
 
                 if (current.getStorageDataType().equals(StorageDataType.FILE)) {
-                    zipEntry.setCrc(current.getChecksumCRC32(run.getId()));
+                    ZipEntry zipEntry = new ZipEntry(entryName);
+                    zipEntry.setMethod(ZipEntry.STORED);
+                    zipEntry.setSize(current.getData().length());
+                    zipEntry.setCompressedSize(current.getData().length());
+                    zipEntry.setCrc(getChecksumCRC32(current.getStorageId(), current.getName()));
+                    zipOut.putNextEntry(zipEntry);
                     Files.copy(current.getData().toPath(), zipOut);
                 }
 
@@ -465,6 +499,22 @@ public class TaskProvisioningService {
         log.info("Retrieving IO Archive: zipped...");
 
         return new StorageData(tempFile.toFile());
+    }
+
+    public long getChecksumCRC32(String identifier, String name) throws FileStorageException
+    {
+
+        String reference = identifier + "-" + name;
+        Checksum crc32 = checksumRepository.findByReference(reference);
+        return crc32.getChecksumCRC32();
+    }
+
+    public void setChecksumCRC32(String identifier, long checksumCRC32, String name)
+    {
+        String reference = identifier + "-" + name;
+        Checksum crc32 = new Checksum(UUID.randomUUID(), reference, checksumCRC32);
+
+        checksumRepository.save(crc32);
     }
 
     public List<TaskRunParameterValue> postOutputsZipArchive(
@@ -893,13 +943,15 @@ public class TaskProvisioningService {
     public StateAction updateRunState(
         String runId,
         State state
-    ) throws SchedulingException, ProvisioningException {
+    ) throws SchedulingException, ProvisioningException, FileStorageException
+    {
         log.info("Update State: validating Run...");
         Run run = getRunIfValid(runId);
 
         return switch (state.getDesired()) {
             case PROVISIONED -> updateToProvisioned(run);
             case RUNNING -> run(run);
+            case FINISHED -> updateToFinished(run);
             // to safeguard against unknown state transition requests
             default -> throw new ProvisioningException(ErrorBuilder.build(ErrorCode.UNKNOWN_STATE));
         };
@@ -1063,6 +1115,69 @@ public class TaskProvisioningService {
         log.info("Provisioning: state updated to PROVISIONED");
 
         return createStateAction(run, TaskRunState.PROVISIONED);
+    }
+
+    private StateAction updateToFinished(Run run) throws ProvisioningException, FileStorageException
+    {
+        // check the status of Run it should be Queueing
+        log.info("Provisioning: processing outputs...");
+        if (!run.getState().equals(TaskRunState.QUEUING)) {
+            AppEngineError error = ErrorBuilder.build(ErrorCode.INTERNAL_INVALID_TASK_RUN_STATE);
+            throw new ProvisioningException(error);
+        }
+        // list all outputs of the task
+        Set<Parameter> outputs = run
+            .getTask()
+            .getParameters()
+            .stream()
+            .filter(parameter -> parameter.getParameterType().equals(ParameterType.OUTPUT))
+            .collect(Collectors.toSet());
+        log.info("Provisioning: reading outputs...");
+        List<AppEngineError> multipleErrors = new ArrayList<>();
+        for (Parameter parameter : outputs) {
+            StorageData provisionFileData = fileStorageHandler.readStorageData(
+                new StorageData(parameter.getName(), "task-run-outputs-" + run.getId())
+            );
+            if (provisionFileData == null || provisionFileData.getEntryList().isEmpty()) {
+                AppEngineError error = ErrorBuilder.build(ErrorCode.INTERNAL_MISSING_OUTPUT_FILE_FOR_PARAMETER);
+                throw new ProvisioningException(error);
+            }
+
+            // validate files
+            log.info("Provisioning: validating output files...");
+            try {
+                validateFiles(run, parameter, provisionFileData);
+            } catch (TypeValidationException e) {
+                log.info(
+                    "Provisioning: "
+                        + "output provision is invalid value validation failed"
+                );
+                ParameterError parameterError = new ParameterError(parameter.getName());
+                AppEngineError error = ErrorBuilder.build(e.getErrorCode(), parameterError);
+                multipleErrors.add(error);
+                continue;
+            }
+            // store in database
+            log.info("Provisioning: storing output in database...");
+            saveOutput(run, parameter, provisionFileData);
+
+        }
+
+        multipleErrors.addAll(checkAfterExecutionMatches(run));
+
+        // throw multiple errors if exist
+        if (!multipleErrors.isEmpty()) {
+            log.info("Provisioning: state updated to FAILED");
+            run.setState(TaskRunState.FAILED);
+            runRepository.saveAndFlush(run);
+            AppEngineError error = ErrorBuilder.buildBatchError(multipleErrors);
+            throw new ProvisioningException(error);
+        }
+
+        log.info("Provisioning: state updated to FINISHED");
+        run.setState(TaskRunState.FINISHED);
+        runRepository.saveAndFlush(run);
+        return createStateAction(run, TaskRunState.FINISHED);
     }
 
     public TaskRunResponse retrieveRun(String runId) throws ProvisioningException {
