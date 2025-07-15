@@ -18,7 +18,6 @@ import lombok.NoArgsConstructor;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
-@AllArgsConstructor
 public class Checksum extends BaseEntity {
     @Id
     @Column(name = "id", updatable = false, nullable = false)
@@ -27,9 +26,10 @@ public class Checksum extends BaseEntity {
     private String reference; // identifier + file name
     private long checksumCRC32;
 
-    public Checksum(String reference,  long checksumCRC32)
+    public Checksum(UUID uuid, String reference,  long checksumCRC32)
     {
         super();
+        this.id = uuid;
         this.reference = reference;
         this.checksumCRC32 = checksumCRC32;
     }
