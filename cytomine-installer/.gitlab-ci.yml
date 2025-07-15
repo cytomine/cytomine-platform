@@ -1,0 +1,70 @@
+stages:
+  - test
+  - build
+  - release
+
+
+default:
+  tags:
+    - docker
+
+
+variables:
+  PYTHON_IMAGE_TAG: 3.12.4-slim-bookworm
+  PYTHON_IMAGE_TAG_TESTONLY_3_11: 3.11.9-slim-bookworm
+  PYTHON_IMAGE_TAG_TESTONLY_3_10: 3.10.9-slim-buster
+
+
+include:
+  - component: $CI_SERVER_FQDN/cm/rnd/cicd/component-python/linter@0.3.0
+    inputs:
+      targets: ./cytomine_installer ./tests
+      pylintrc-path: pylintrc
+      pylint-version:	3.2.5
+      python-image-tag:	${PYTHON_IMAGE_TAG}
+  - component: $CI_SERVER_FQDN/cm/rnd/cicd/component-python/unittest@0.3.0
+    inputs:
+      unittest-job-name: unittest-python-3.12
+      target: ./tests
+      python-image-tag:	${PYTHON_IMAGE_TAG}
+  - component: $CI_SERVER_FQDN/cm/rnd/cicd/component-python/unittest@0.3.0
+    inputs:
+      unittest-job-name: unittest-python-3.11
+      target: ./tests
+      python-image-tag:	${PYTHON_IMAGE_TAG_TESTONLY_3_11}
+  - component: $CI_SERVER_FQDN/cm/rnd/cicd/component-docker/build-docker-image@2.0.0
+    inputs:
+      docker-image-name: 'cytomine/installer'
+      dockerfile-path: './docker/Dockerfile'
+  - component: $CI_SERVER_FQDN/cm/rnd/cicd/component-docker/push-image-to-registry@2.0.0
+    inputs:
+      push-latest-tag: "true"
+
+.install-test-dependencies:
+  before_script:
+    - python -m pip install -r requirements.txt
+
+unittest-python-3.12:
+  extends: .install-test-dependencies
+
+unittest-python-3.11:
+  extends: .install-test-dependencies
+
+
+build-docker-image:
+  rules:
+    - if: $CI_COMMIT_TAG
+  variables:
+    DOCKER_TAG: $CI_COMMIT_TAG
+  before_script:
+    - sed -i -- "s/__version__ = \"v0.0.0\"/__version__ = \"${DOCKER_TAG}\"/g" cytomine_installer/__version__.py
+    - export _ARGS=""
+    - _ARGS="${_ARGS} --build-arg IMAGE_VERSION=${DOCKER_TAG}"
+    - _ARGS="${_ARGS} --build-arg IMAGE_REVISION=${CI_COMMIT_SHORT_SHA}"
+    - _ARGS="${_ARGS} --build-arg PYTHON_VERSION=$(echo ${PYTHON_IMAGE_TAG} | awk -F'-' '{print $1}')"
+    - export DOCKER_BUILD_ARGS="$ARGS"
+
+
+push-image-to-registry:
+  rules:
+    - if: $CI_COMMIT_TAG

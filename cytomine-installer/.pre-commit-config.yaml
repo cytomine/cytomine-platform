@@ -1,0 +1,8 @@
+repos:
+- repo: local
+  hooks:
+    - id: pylint
+      name: pylint
+      entry: pylint --rcfile=pylintrc ./cytomine_installer ./tests
+      language: system
+      types: [python]

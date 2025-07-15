@@ -1,0 +1,24 @@
+global:
+  namespace1:
+    constant:
+      VAR1: value1
+      VAR2: value2
+  namespace2:
+    auto:
+      KEY1: random_uuid
+      KEY2: random_uuid
+      
+services:
+  default:
+    core:
+      constant:
+        EMAIL: emailcore
+      global:
+        VAR1: namespace1.VAR1
+      auto:
+        GENERATED: random_uuid
+
+    rabbitmq: 
+      global: 
+        VAR1: namespace1.VAR1
+        VAR2: namespace2.KEY1
