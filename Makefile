@@ -1,6 +1,6 @@
 build:
+	docker build -t cytomine/installer:latest -f cytomine-installer/Dockerfile cytomine-installer
 	cd cytomine-community-edition \
-	&& docker pull cytomine/installer:latest \
 	&& docker run -v $$(pwd):/install --user $$(id -u):$$(id -g) --rm -it cytomine/installer:latest deploy -s /install \
 	&& docker compose -f docker-compose.dev.yml build
 
