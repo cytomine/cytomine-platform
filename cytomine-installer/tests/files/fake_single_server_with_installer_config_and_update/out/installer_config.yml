@@ -1,0 +1,5 @@
+update:
+  allow_list:
+   - global.ns1.GLOBAL_VAR1
+   - global.ns2.*
+   - services.*

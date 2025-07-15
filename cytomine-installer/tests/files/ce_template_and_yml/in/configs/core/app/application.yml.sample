@@ -1,0 +1,76 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://$POSTGIS_HOST:$POSTGIS_PORT/$POSTGIS_DB_NAME
+    username: $POSTGIS_USER
+    password: $POSTGIS_PASS
+
+  mail:
+    host: $SMTP_HOST
+    port: $SMTP_PORT
+    username: $SMTP_USER
+    password: $SMPT_PASS
+    auth: true
+
+  data:
+    mongodb:
+      authentication-database: admin
+      username: $MONGO_USER
+      password: $MONGO_PASS
+      database: $MONGO_DB_NAME
+      port: $MONGO_PORT
+      host: $MONGO_HOST
+
+javamelody:
+  enabled: true      
+  init-parameters:
+    authorized-users: $JAVAMELODY_USER:$JAVAMELODY_PASS
+    storage-directory: $JAVAMELODY_PATH
+
+logging:
+  config: file:/app/logback.xml
+
+application:
+  customUI:
+    global:
+      dashboard: ["ALL"]
+      search: [ "ROLE_ADMIN" ]
+      project: [ "ALL" ]
+      ontology: [ "ROLE_ADMIN" ]
+      storage: [ "ROLE_USER","ROLE_ADMIN" ]
+      software: []
+      activity: [ "ALL" ]
+      admin: [ "ROLE_ADMIN" ]
+      help: [ "ALL" ]
+      feedback: ["ROLE_USER","ROLE_ADMIN"]
+      explore: ["ROLE_USER","ROLE_ADMIN"]
+
+  serverId: $SERVER_ID
+  serverURL: $URL_CORE
+  imageServerURL: [$URL_IMS1, $URL_IMS2]
+
+  storagePath: $STORAGE_PATH
+  adminPassword: $ADMIN_PASSWORD
+  adminEmail: $ADMIN_EMAIL
+  adminPrivateKey: $ADMIN_PRIVATE_KEY
+  adminPublicKey: $ADMIN_PUBLIC_KEY
+  superAdminPrivateKey: $SUPER_ADMIN_PRIVATE_KEY
+  superAdminPublicKey: $SUPER_ADMIN_PUBLIC_KEY
+  ImageServerPrivateKey: $IMAGE_SERVER_PRIVATE_KEY
+  ImageServerPublicKey: $IMAGE_SERVER_PUBLIC_KEY
+  rabbitMQPrivateKey: $RABBITMQ_PRIVATE_KEY
+  rabbitMQPublicKey: $RABBITMQ_PUBLIC_KEY
+
+  notification:
+    email: your.email@gmail.com
+
+  useHTTPInternally: false
+
+  instanceHostWebsite: $INSTANCE_HOST_WEBSITE_URL
+  instanceHostSupportMail: $INSTANCE_HOST_SUPPORT_MAIL
+  instanceHostPhoneNumber: $INSTANCE_HOST_PHONE_NUMBER
+
+  authentication:
+    jwt:
+      # This token must be encoded using Base64 and be at least 256 bits long (you can type `openssl rand -base64 64` on your command line to generate a 512 bits one)
+      secret: $JWT_SECRET
+  

@@ -1,0 +1,8 @@
+services:
+  core:
+    volumes:
+      - ./configs/core/etc/cytomine/cytomine-app.yml:/cm_configs/etc/cytomine/cytomine-app.yml
+
+  ims:
+    volumes:
+      - ./configs/ims/usr/local/cytom/ims.conf:/cm_configs/usr/local/cytom/ims.conf
