@@ -1,0 +1,10 @@
+{
+  "private": true,
+  "devDependencies": {
+    "lerna": "^8.2.3"
+  },
+  "workspaces": [
+    "api-client",
+    "ui"
+  ]
+}
