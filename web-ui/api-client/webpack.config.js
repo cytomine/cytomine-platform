@@ -17,10 +17,9 @@ const config = {
             loader: 'babel-loader',
             options: {
               presets: ['@babel/env'],
-              plugins: ['@babel/plugin-proposal-object-rest-spread']
+              plugins: ['@babel/plugin-transform-object-rest-spread']
             }
           },
-          'eslint-loader'
         ]
       }
     ]

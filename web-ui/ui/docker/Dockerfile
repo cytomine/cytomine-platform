@@ -15,8 +15,8 @@
 
 ARG WEB_UI_VERSION
 ARG WEB_UI_REVISION
-ARG NODE_VERSION=16.20.2-alpine3.18
-ARG NODE_DEV_VERSION=16.20.2-buster-slim
+ARG NODE_VERSION=20.19.4-alpine3.22
+ARG NODE_DEV_VERSION=20.19.4-bookworm-slim
 ARG NGINX_VERSION=1.22.1
 ARG ENTRYPOINT_SCRIPTS_VERSION=1.4.0
 
@@ -28,8 +28,9 @@ WORKDIR /app
 
 # explicit listing for copy, to avoid copying dangling ./node_modules or alike
 
-COPY package.json /app
-COPY lerna.json /app
+COPY ./lerna.json /app/lerna.json
+COPY ./package.json /app/package.json
+COPY ./package-lock.json /app/package-lock.json
 
 COPY ./ui/src /app/ui/src
 COPY ./ui/public /app/ui/public
@@ -57,7 +58,7 @@ FROM node:${NODE_DEV_VERSION} AS dev-server
 # ui source code should be mounted in /app
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y --no-install-recommends gettext=0.19.8.1-9 git=1:2.20.1-2+deb10u9
+RUN apt-get update && apt-get install -y --no-install-recommends gettext git
 
 RUN mkdir /docker-entrypoint-cytomine.d/
 COPY --from=entrypoint-scripts --chmod=744 /cytomine-entrypoint.sh /usr/local/bin/
