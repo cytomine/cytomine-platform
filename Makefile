@@ -2,7 +2,7 @@ build:
 	docker build -t cytomine/installer:latest -f cytomine-installer/Dockerfile cytomine-installer
 	cd cytomine-community-edition \
 	&& docker run -v $$(pwd):/install --user $$(id -u):$$(id -g) --rm -it cytomine/installer:latest deploy -s /install \
-	&& docker compose -f docker-compose.dev.yml build
+	&& docker compose build
 
 start:
 	cd cytomine-community-edition \
@@ -17,6 +17,6 @@ down:
 
 clean:
 	cd cytomine-community-edition \
-	&& docker compose -f docker-compose.yml down --volumes --remove-orphans \
+	&& docker compose down --volumes --remove-orphans \
 	&& $(RM) .env cytomine.yml docker-compose.override.yml \
 	&& sudo $(RM) -rf data/ envs/

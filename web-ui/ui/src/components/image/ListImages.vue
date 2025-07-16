@@ -392,7 +392,7 @@ export default {
   },
   methods: {
     async fetchFilters() {
-      let stats = await new ImageInstanceCollection.fetchBounds({project: this.project.id});
+      let stats = await ImageInstanceCollection.fetchBounds({project: this.project.id});
       this.maxWidth = Math.max(100, stats.width.max);
       this.maxHeight = Math.max(100, stats.height.max);
       this.maxNbUserAnnotations = Math.max(100, stats.countImageAnnotations.max);
