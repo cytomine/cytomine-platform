@@ -306,7 +306,7 @@ public class TaskProvisioningService {
                 .mapToStorageFileData(provision, run);
             for (StorageDataEntry current : inputProvisionFileData.getEntryList()) {
                 String filename = current.getName();
-                if (!"descriptor.yml".equalsIgnoreCase(filename)) {
+                if (!"descriptor.yml".equalsIgnoreCase(filename) && current.getStorageDataType() != StorageDataType.DIRECTORY) {
                     setChecksumCRC32(runStorage.getIdStorage(), calculateFileCRC32(current.getData()), filename);
                 }
             }
