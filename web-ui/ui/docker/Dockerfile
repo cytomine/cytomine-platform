@@ -15,28 +15,37 @@
 
 ARG WEB_UI_VERSION
 ARG WEB_UI_REVISION
-ARG NODE_VERSION=16.20.2-alpine3.18
-ARG NODE_DEV_VERSION=16.20.2-buster-slim
+ARG NODE_VERSION=20.19.4-alpine3.22
+ARG NODE_DEV_VERSION=20.19.4-bookworm-slim
 ARG NGINX_VERSION=1.22.1
 ARG ENTRYPOINT_SCRIPTS_VERSION=1.4.0
 
 #######################################################################################
 ## Stage: build front-end
 FROM node:${NODE_VERSION} AS frontend-builder
+
 WORKDIR /app
 
 # explicit listing for copy, to avoid copying dangling ./node_modules or alike
-COPY ./src /app/src
-COPY ./public /app/public
-COPY ./scripts /app/scripts
+
+COPY ./lerna.json /app/lerna.json
 COPY ./package.json /app/package.json
 COPY ./package-lock.json /app/package-lock.json
-COPY ./babel.config.js /app/babel.config.js
-COPY ./.eslintrc.js /app/.eslintrc.js
+
+COPY ./ui/src /app/ui/src
+COPY ./ui/public /app/ui/public
+COPY ./ui/scripts /app/ui/scripts
+COPY ./ui/package.json /app/ui/package.json
+COPY ./ui/babel.config.js /app/ui/babel.config.js
+COPY ./ui/.eslintrc.js /app/ui/.eslintrc.js
+
+COPY ./api-client/src /app/api-client/src
+COPY ./api-client/package.json /app/api-client/package.json
+COPY ./api-client/webpack.config.js /app/api-client/webpack.config.js
 
 WORKDIR /app
-RUN npm install && \
-      npm run build
+RUN npm install \
+    && npm run build -w ui
 
 #######################################################################################
 ## Stage: entrypoint script. Use a multi-stage because COPY --from cannot interpolate variables
@@ -49,17 +58,17 @@ FROM node:${NODE_DEV_VERSION} AS dev-server
 # ui source code should be mounted in /app
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y --no-install-recommends gettext=0.19.8.1-9 git=1:2.20.1-2+deb10u9
+RUN apt-get update && apt-get install -y --no-install-recommends gettext git
 
 RUN mkdir /docker-entrypoint-cytomine.d/
 COPY --from=entrypoint-scripts --chmod=744 /cytomine-entrypoint.sh /usr/local/bin/
 COPY --from=entrypoint-scripts --chmod=744 /envsubst-on-templates-and-move.sh /docker-entrypoint-cytomine.d/500-envsubst-on-templates-and-move.sh
 COPY --from=entrypoint-scripts --chmod=744 /run-npm-install.sh /docker-entrypoint-cytomine.d/750-run-npm-install.sh
-COPY ./scripts/configuration.json /cm_configs/app/public/configuration.json.sample
+COPY ./ui/scripts/configuration.json /cm_configs/app/ui/public/configuration.json.sample
 
 ENTRYPOINT ["cytomine-entrypoint.sh", "docker-entrypoint.sh"]
 # rebuild (ignoring current node-module folder) then serve
-CMD ["npm", "run", "serve"]
+CMD ["npm", "run", "serve", "-w", "ui"]
 
 #######################################################################################
 ## Stage: building nginx image serving the front-end
@@ -90,11 +99,11 @@ RUN mkdir /docker-entrypoint-cytomine.d/
 COPY --from=entrypoint-scripts --chmod=774 /cytomine-entrypoint.sh /usr/local/bin/
 COPY --from=entrypoint-scripts --chmod=774 /envsubst-on-templates-and-move.sh /docker-entrypoint-cytomine.d/500-envsubst-on-templates-and-move.sh
 
-COPY docker/configs/nginx.conf /etc/nginx/nginx.conf
-COPY --chown=1000:1000 ./scripts/configuration.json /cm_configs/app/configuration.json.sample
+COPY ./ui/docker/configs/nginx.conf /etc/nginx/nginx.conf
+COPY --chown=1000:1000 ./ui/scripts/configuration.json /cm_configs/app/configuration.json.sample
 
 # actual front end
-COPY --from=frontend-builder /app/dist /app
+COPY --from=frontend-builder /app/ui/dist /app
 
 ENTRYPOINT ["cytomine-entrypoint.sh", "/docker-entrypoint.sh"]
 CMD ["nginx", "-g", "daemon off;"]

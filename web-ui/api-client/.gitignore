@@ -1,0 +1,10 @@
+node_modules
+dist
+tests/config.js
+.idea
+*.iml
+.vscode
+
+# Tests
+coverage
+reports
