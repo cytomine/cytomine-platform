@@ -376,7 +376,7 @@ export default {
       this.ontologies = ontologies;
     },
     async fetchMaxFilters() {
-      let stats = await new ProjectCollection.fetchBounds({withMembersCount:true});
+      let stats = await ProjectCollection.fetchBounds({withMembersCount:true});
 
       this.maxNbMembers = Math.max(10, stats.members.max);
       this.maxNbImages = Math.max(10, stats.numberOfImages.max);
