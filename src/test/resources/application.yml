@@ -56,6 +56,7 @@ scheduler:
   helper-containers-resources:
     cpu: 1
     ram: 1Gi
+  run-mode: ${SCHEDULER_RUN_MODE:local} # possible values [local,cluster]
 registry-client:
   authenticated: false
   user: user #ignored
