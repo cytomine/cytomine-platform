@@ -1,0 +1,58 @@
+name: Test
+
+on:
+  pull_request:
+    branches:
+      - master
+    paths:
+      - "web-ui/api-client/**/*.js"
+      - "web-ui/api-client/**/*.vue"
+      - "web-ui/ui/**/*.js"
+      - "web-ui/ui/**/*.vue"
+  push:
+    branches:
+      - master
+    paths:
+      - "web-ui/api-client/**/*.js"
+      - "web-ui/api-client/**/*.vue"
+      - "web-ui/ui/**/*.js"
+      - "web-ui/ui/**/*.vue"
+
+jobs:
+  unit-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set up the repository
+        uses: actions/checkout@v4
+
+      - name: Set up NodeJS
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ vars.NODE_VERSION }}
+
+      - name: Install Dependencies
+        run: |
+          cd web-ui
+          npm ci
+
+      - name: Run Unit Tests
+        run: |
+          cd web-ui
+          npm run test:unit
+
+      - name: Upload test coverage
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: web-ui/ui/coverage
+          retention-days: 7
+
+      - name: Upload test report
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-report.html
+          path: web-ui/ui/reports/test-report.html
+          retention-days: 7

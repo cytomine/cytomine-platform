@@ -5,7 +5,7 @@
     "serve": "npm run watch-translations & vue-cli-service serve",
     "build": "npm run translations-csv2json && vue-cli-service build",
     "lint": "eslint -c .eslintrc.js --ext .js,.vue --ignore-path .gitignore .",
-    "test": "vue-cli-service test:unit",
+    "test:unit": "vue-cli-service test:unit",
     "translations-csv2json": "node scripts/export_i18n_csv.mjs src/locales/translations.csv src/locales/json",
     "watch-translations": "onchange -i 'src/locales/translations.csv' -- npm run translations-csv2json",
     "watch": "npm-watch"
