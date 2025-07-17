@@ -3,11 +3,14 @@ name: Test
 on:
   pull_request:
     branches:
-      - main
+      - master
     paths:
-      - "src/main/resources/**"
-      - "src/test/resources/**"
-      - "src/**/*.java"
+      - "core/src/main/resources/**"
+      - "core/src/test/resources/**"
+      - "core/src/**/*.java"
+  push:
+    branches:
+      - master
 
 jobs:
   test-core:
@@ -15,20 +18,20 @@ jobs:
 
     services:
       mongodb:
-        image: mongo:${{ vars.MONGO_VERSION }}
+        image: cytomine/mongo:${{ vars.MONGO_VERSION }}
         env:
-          MONGO_INITDB_DATABASE: ${{ secrets.MONGO_DB }}
-          MONGO_INITDB_ROOT_USERNAME: ${{ secrets.MONGO_USER }}
-          MONGO_INITDB_ROOT_PASSWORD: ${{ secrets.MONGO_PASSWORD }}
+          MONGO_INITDB_DATABASE: cytomine
+          MONGO_INITDB_ROOT_USERNAME: mongoadmin
+          MONGO_INITDB_ROOT_PASSWORD: password
         ports:
           - 27017:27017
 
       postgres:
-        image: cytomineuliege/postgis:${{ vars.POSTGRES_DB_VERSION }}
+        image: cytomine/postgis:${{ vars.POSTGIS_VERSION }}
         env:
-          POSTGRES_NAME: ${{ secrets.POSTGRES_DB }}
-          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
-          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_NAME: docker
+          POSTGRES_USER: docker
+          POSTGRES_PASSWORD: docker
         ports:
           - 5432:5432
         options: >-
@@ -54,29 +57,30 @@ jobs:
 
       - name: Test core
         run: |
+          cd core
           sed -i -- "s/name=\"be.cytomine\" level=\"debug\"/name=\"be.cytomine\" level=\"info\"/g" src/test/resources/logback-test.xml
-          ./gradlew :test --no-daemon
+          gradle :test --no-daemon
 
       - name: Upload test reports
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
           name: reports
-          path: build/reports/
-          retention-days: 30
+          path: core/build/reports/
+          retention-days: 7
 
       - name: Upload test results
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
           name: test-results
-          path: build/test-results/
-          retention-days: 30
+          path: core/build/test-results/
+          retention-days: 7
 
       - name: Upload Java Code Coverage (JaCoCo)
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
           name: jacoco
-          path: build/jacoco/
-          retention-days: 30
+          path: core/build/jacoco/
+          retention-days: 7
