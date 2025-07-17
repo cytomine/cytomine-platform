@@ -18,7 +18,7 @@ module.exports = {
     'camelcase': ['error', {'properties': 'always'}],
     'curly': ['error', 'all'],
     'eqeqeq': ['error', 'always'],
-    'indent': ['error', 2,{'SwitchCase': 1}],
+    'indent': ['error', 2, {'SwitchCase': 1}],
     'keyword-spacing': ['error'],
     'no-console': ['off'],
     'no-redeclare': ['error'],
@@ -40,4 +40,4 @@ module.exports = {
     'jest/no-commented-out-tests': 'off',
     'jest/no-disabled-tests': 'off',
   }
-}
+};

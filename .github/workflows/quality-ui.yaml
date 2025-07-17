@@ -1,0 +1,42 @@
+name: Quality
+
+on:
+  pull_request:
+    branches:
+      - master
+    paths:
+      - "web-ui/api-client/**/*.js"
+      - "web-ui/api-client/**/*.vue"
+      - "web-ui/ui/**/*.js"
+      - "web-ui/ui/**/*.vue"
+  push:
+    branches:
+      - master
+    paths:
+      - "web-ui/api-client/**/*.js"
+      - "web-ui/api-client/**/*.vue"
+      - "web-ui/ui/**/*.js"
+      - "web-ui/ui/**/*.vue"
+
+jobs:
+  lint-web-ui:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set up the repository
+        uses: actions/checkout@v4
+
+      - name: Set up NodeJS
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ vars.NODE_VERSION }}
+
+      - name: Install Dependencies
+        run: |
+          cd web-ui
+          npm ci
+
+      - name: Check lint
+        run: |
+          cd web-ui
+          npm run lint
