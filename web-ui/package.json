@@ -1,5 +1,8 @@
 {
   "private": true,
+  "scripts": {
+    "lint": "lerna run lint"
+  },
   "devDependencies": {
     "lerna": "^8.2.3"
   },
