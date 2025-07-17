@@ -19,7 +19,7 @@ on:
       - "web-ui/ui/**/*.vue"
 
 jobs:
-  lint:
+  lint-web-ui:
     runs-on: ubuntu-latest
 
     steps:
