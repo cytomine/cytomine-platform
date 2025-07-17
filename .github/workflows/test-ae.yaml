@@ -3,14 +3,17 @@ name: Test
 on:
   pull_request:
     branches:
-      - main
+      - master
     paths:
-      - "src/main/resources/**"
-      - "src/test/resources/**"
-      - "src/**/*.java"
+      - "app-engine/src/main/resources/**"
+      - "app-engine/src/test/resources/**"
+      - "app-engine/src/**/*.java"
+  push:
+    branches:
+      - master
 
 jobs:
-  test:
+  ae-unit-tests:
     runs-on: ubuntu-latest
 
     steps:
@@ -29,12 +32,12 @@ jobs:
           gradle-version: ${{ vars.GRADLE_VERSION }}
 
       - name: Trigger unit tests
-        run: gradle test --info --tests "be.cytomine.appengine.unit.*"
+        run: gradle :app-engine:test --info --tests "be.cytomine.appengine.unit.*"
 
       - name: Upload test reports
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
           name: reports
-          path: build/reports/
-          retention-days: 30
+          path: app-engine/build/reports/
+          retention-days: 7
