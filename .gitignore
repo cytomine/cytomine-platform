@@ -1,5 +1,17 @@
+# Java files
+.gradle/
+build/
+
+# JetBrains IDEs files
+.idea/
+*.iml
+
+# VS Code files
+.vscode/
+
+# Kubernetes configuration
+.kube/
+
+# Env files
 .direnv
-.kube
-build
-.gradle
-.idea
+.env
