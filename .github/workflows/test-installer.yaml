@@ -32,7 +32,7 @@ jobs:
       - name: Install dependencies
         run: |
           cd cytomine-installer
-          python -m pip install --upgrade pip
+          python -m pip install --upgrade pip setuptools wheel
           pip install -r requirements-dev.txt
 
       - name: Run tests
