@@ -1,0 +1,28 @@
+services:
+  core:
+    image: core:dev-latest
+    build:
+      context: ../core
+      dockerfile: ../core/Dockerfile
+      target: dev-server
+    ports:
+      - "8080:8080"
+      - "10022:22"
+    command: ["/bin/sh"]
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+    volumes:
+      - ../core:/app
+      - /etc/localtime:/etc/localtime
+    env_file: ./envs/core.env
+    environment:
+      GRADLE_USER_HOME: /.gradle
+
+  postgis:
+    ports:
+      - "5432:5432"
+
+  mongo:
+    ports:
+      - "27017:27017"
