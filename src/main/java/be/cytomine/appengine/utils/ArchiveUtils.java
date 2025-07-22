@@ -3,6 +3,7 @@ package be.cytomine.appengine.utils;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.util.zip.ZipEntry;
 
@@ -25,10 +26,10 @@ public class ArchiveUtils {
 
     private static final String DEFAULT_IMAGE_NAME = "image.tar";
 
-    private boolean isZip(MultipartFile archive) throws BundleArchiveException {
+    public boolean isZip(InputStream archiveInputStream) throws BundleArchiveException {
         Tika tika = new Tika();
         try {
-            String type = tika.detect(archive.getInputStream());
+            String type = tika.detect(archiveInputStream);
             log.info("ArchiveUtils: archive detected {}", type);
 
             return type.equalsIgnoreCase("application/zip");
@@ -40,20 +41,20 @@ public class ArchiveUtils {
         }
     }
 
-    public UploadTaskArchive readArchive(MultipartFile archive) throws BundleArchiveException {
-        if (isZip(archive)) {
-            return readZipArchive(archive);
+    public UploadTaskArchive readArchive(InputStream archiveInputStream) throws BundleArchiveException {
+        if (isZip(archiveInputStream)) {
+            return readZipArchive(archiveInputStream);
         }
 
         AppEngineError error = ErrorBuilder.build(ErrorCode.INTERNAL_UNKNOWN_BUNDLE_ARCHIVE_FORAMT);
         throw new BundleArchiveException(error);
     }
 
-    public UploadTaskArchive readZipArchive(MultipartFile archive) throws BundleArchiveException {
-        File descriptorData = getDescriptorFileFromZip(archive);
-        File imageData = getDockerImageFromZip(archive, getCustomImageName(descriptorData));
+    public UploadTaskArchive readZipArchive(InputStream archiveInputStream) throws BundleArchiveException {
+//        File descriptorData = getDescriptorFileFromZip(archive);
+//        File imageData = getDockerImageFromZip(archive, getCustomImageName(descriptorData));
 
-        return new UploadTaskArchive(descriptorData, imageData);
+        return new UploadTaskArchive();
     }
 
     private String getCustomImageName(File descriptorData) {
