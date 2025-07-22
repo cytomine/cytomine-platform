@@ -8,6 +8,7 @@ spring:
       max-file-size: 15GB
       max-request-size: 15GB
       location: /tmp/appengine/uploads
+      enabled: false
   datasource:
     password: ${DB_PASSWORD:password}
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:appengine}
