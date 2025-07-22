@@ -11,5 +11,5 @@ services:
     volumes:
       - ${REPO_PATH}/web-ui:/app
     environment:
-      PORT: 80
+      PORT: ${DEV_UI_PORT:-80}
       NODE_ENV: development
