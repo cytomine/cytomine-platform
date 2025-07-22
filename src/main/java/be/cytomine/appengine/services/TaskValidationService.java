@@ -56,35 +56,35 @@ public class TaskValidationService {
     }
 
     private void checkManifestJsonExists(UploadTaskArchive task) throws ValidationException {
-        try (
-            FileInputStream fis = new FileInputStream(task.getDockerImage());
-            BufferedInputStream bis = new BufferedInputStream(fis);
-            TarArchiveInputStream tais = new TarArchiveInputStream(bis)
-        ) {
-            TarArchiveEntry tarArchiveEntry;
-
-            while ((tarArchiveEntry = tais.getNextTarEntry()) != null) {
-                String name = tarArchiveEntry.getName();
-                if (name.equalsIgnoreCase("manifest.json")) {
-                    return;
-                }
-            }
-        } catch (IOException e) {
-            log.error("Failed to check for manifest.json in the Docker image", e);
-            AppEngineError error = ErrorBuilder.build(
-                ErrorCode.INTERNAL_DOCKER_IMAGE_EXTRACTION_FAILED
-            );
-            throw new ValidationException(error);
-        }
-
-        log.info("Validation error [manifest.json does not exist]");
-        AppEngineError error = ErrorBuilder.build(ErrorCode.INTERNAL_DOCKER_IMAGE_MANIFEST_MISSING);
-        throw new ValidationException(error);
+//        try (
+//            FileInputStream fis = new FileInputStream(task.getDockerImage());
+//            BufferedInputStream bis = new BufferedInputStream(fis);
+//            TarArchiveInputStream tais = new TarArchiveInputStream(bis)
+//        ) {
+//            TarArchiveEntry tarArchiveEntry;
+//
+//            while ((tarArchiveEntry = tais.getNextTarEntry()) != null) {
+//                String name = tarArchiveEntry.getName();
+//                if (name.equalsIgnoreCase("manifest.json")) {
+//                    return;
+//                }
+//            }
+//        } catch (IOException e) {
+//            log.error("Failed to check for manifest.json in the Docker image", e);
+//            AppEngineError error = ErrorBuilder.build(
+//                ErrorCode.INTERNAL_DOCKER_IMAGE_EXTRACTION_FAILED
+//            );
+//            throw new ValidationException(error);
+//        }
+//
+//        log.info("Validation error [manifest.json does not exist]");
+//        AppEngineError error = ErrorBuilder.build(ErrorCode.INTERNAL_DOCKER_IMAGE_MANIFEST_MISSING);
+//        throw new ValidationException(error);
     }
 
-    public void validateDescriptorFile(UploadTaskArchive archive) throws ValidationException {
+    public void validateDescriptorFile(JsonNode descriptorFileAsJson) throws ValidationException {
         Set<ValidationMessage> errors = getDescriptorJsonSchemaV7()
-            .validate(archive.getDescriptorFileAsJson());
+            .validate(descriptorFileAsJson);
         // prepare error list just in case
         List<AppEngineError> multipleErrors = new ArrayList<>();
         for (ValidationMessage message : errors) {
