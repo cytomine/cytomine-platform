@@ -10,11 +10,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Comparator;
-import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.zip.CRC32;
-import java.util.zip.Checksum;
 
+import be.cytomine.appengine.handlers.StorageStringEntry;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -52,9 +50,14 @@ public class FileSystemStorageHandler implements StorageHandler {
                     Path filePath = Paths.get(basePath, storageId, filename);
                     Files.createDirectories(filePath.getParent());
 
-                    try (InputStream inputStream = new FileInputStream(current.getData())) {
-                        Files.copy(inputStream, filePath, StandardCopyOption.REPLACE_EXISTING);
+                    if (current instanceof StorageStringEntry currentString) {
+                        Files.writeString(filePath, currentString.getDataAsString());
+                    } else {
+                        try (InputStream inputStream = new FileInputStream(current.getData())) {
+                            Files.copy(inputStream, filePath, StandardCopyOption.REPLACE_EXISTING);
+                        }
                     }
+
                 } catch (IOException e) {
                     String error = "Failed to create file " + filename;
                     error += " in storage " + storageId + ": " + e.getMessage();
