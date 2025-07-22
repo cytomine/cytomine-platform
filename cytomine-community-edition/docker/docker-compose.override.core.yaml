@@ -20,7 +20,7 @@ services:
       - ${ROOT_PATH}/cache/core/.gradle:/.gradle
       # IntelliJ builds (to avoid file permission issues)
       - ${ROOT_PATH}/cache/core/build:/build
-    env_file: ${PROD_PATH}/envs/core.env
+    env_file: ${ROOT_PATH}/envs/core.env
     environment:
       GRADLE_USER_HOME: /.gradle
 

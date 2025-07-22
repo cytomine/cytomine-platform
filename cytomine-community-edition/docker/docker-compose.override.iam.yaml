@@ -16,7 +16,7 @@ services:
     restart: unless-stopped
     volumes:
       - /etc/localtime:/etc/localtime
-    env_file: ${PROD_PATH}/envs/iam.env
+    env_file: ${ROOT_PATH}/envs/iam.env
   postgis:
     ports:
       - ${DEV_POSTGIS_PORT:-5432}:5432

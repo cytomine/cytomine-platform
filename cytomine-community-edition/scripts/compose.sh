@@ -3,7 +3,6 @@
 # Define paths
 ROOT_PATH="$(pwd)"
 REPO_PATH="../"
-PROD_PATH="./"
 DEV_PATH="./docker"
 
 # Check if .dev.env file exists
@@ -13,7 +12,7 @@ if [ ! -f .dev.env ]; then
 fi
 
 echo "Running installer..."
-docker run -v ${PROD_PATH}:/install --user "$(id -u):$(id -g)" --rm -it cytomine/installer:latest deploy -s /install
+docker run -v ${ROOT_PATH}:/install --user "$(id -u):$(id -g)" --rm -it cytomine/installer:latest deploy -s /install
 installer_exit_code=$?
 
 # Check installer return code
@@ -62,7 +61,6 @@ echo "Running compose command '$@' with profiles: ${active_profiles}"
 export ROOT_PATH=${ROOT_PATH}
 export REPO_PATH=${REPO_PATH}
 export DEV_PATH=${DEV_PATH}
-export PROD_PATH=${PROD_PATH}
 export COMPOSE_PROFILES=${active_profiles}
 export COMPOSE_PROJECT_NAME="dev"
 for var in "${feature_flags[@]}"; do
@@ -71,11 +69,11 @@ done
 
 # Start Docker Compose configuration
 docker compose \
-  -f ${PROD_PATH}/docker-compose.yml \
-  -f ${PROD_PATH}/docker-compose.override.yml \
+  -f ${ROOT_PATH}/docker-compose.yml \
+  -f ${ROOT_PATH}/docker-compose.override.yml \
   -f ${DEV_PATH}/docker-compose.override.main.yaml \
   ${active_dev_overrides[@]} \
-  --env-file ${PROD_PATH}/.env \
+  --env-file ${ROOT_PATH}/.env \
   "$@"
 
 exit $?

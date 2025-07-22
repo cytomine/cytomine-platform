@@ -15,7 +15,7 @@ services:
     restart: unless-stopped
     volumes:
       - ${REPO_PATH}/pims:/app
-    env_file: ${PROD_PATH}/envs/pims.env
+    env_file: ${ROOT_PATH}/envs/pims.env
     environment:
       WEB_CONCURRENCY: 1 # only one process in dev
 

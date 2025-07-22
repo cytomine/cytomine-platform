@@ -7,7 +7,7 @@ services:
       target: dev-server
     working_dir: "/app"
     restart: unless-stopped
-    env_file: ${PROD_PATH}/envs/web_ui.env
+    env_file: ${ROOT_PATH}/envs/web_ui.env
     volumes:
       - ${REPO_PATH}/web-ui:/app
     environment:
