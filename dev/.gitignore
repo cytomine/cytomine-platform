@@ -1,0 +1,11 @@
+# cache folders
+cache/*
+!cache/README.md
+
+# temporary files
+*.env
+*.log
+
+# code editors
+.idea
+.vscode

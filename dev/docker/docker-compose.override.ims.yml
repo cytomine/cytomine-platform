@@ -1,0 +1,24 @@
+services:
+
+  pims:
+    image: pims:dev-latest
+    build:
+      context: ${REPO_PATH}/pims
+      dockerfile: ${REPO_PATH}/pims/docker/backend.dockerfile
+      target: dev-server
+    ports:
+      - ${DEV_PIMS_PORT:-5000}:5000
+      - ${DEV_SSH_PIMS_PORT:-10024}:22
+    command: ["/bin/bash"]
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+    volumes:
+      - ${REPO_PATH}/pims:/app
+    env_file: ${PROD_PATH}/envs/pims.env
+    environment:
+      WEB_CONCURRENCY: 1 # only one process in dev
+
+  pims-cache:
+    ports:
+      - ${DEV_PORT_REDIS:-6379}:6379

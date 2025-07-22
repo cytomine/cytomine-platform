@@ -1,0 +1,15 @@
+services:
+  web_ui:
+    image: web-ui:dev-latest
+    build:
+      context: ${REPO_PATH}/web-ui/
+      dockerfile: ${REPO_PATH}/web-ui/ui/docker/Dockerfile
+      target: dev-server
+    working_dir: "/app"
+    restart: unless-stopped
+    env_file: ${PROD_PATH}/envs/web_ui.env
+    volumes:
+      - ${REPO_PATH}/web-ui:/app
+    environment:
+      PORT: 80
+      NODE_ENV: development

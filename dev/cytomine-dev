@@ -1,0 +1,63 @@
+#!/bin/bash
+
+# Define paths
+ROOT_PATH=$(pwd)
+REPO_PATH="${ROOT_PATH}/repos"
+
+# Function to display help message
+display_help() {
+    echo "Usage: $0 <command> [ARGUMENTS..]"
+    echo ""
+    echo "Init:"
+    echo "  help               : Display this help message."
+    echo ""
+    echo "Profile:"
+    echo "  set-profile        : Set user profile for the dev environment."
+    echo "  get-profile        : Display currently active dev profile."
+    echo ""
+    echo "Docker :"
+    echo "  up                 : Start dev environment."
+    echo "  down               : Kill dev containers and volumes."
+    echo "  stop               : Stop dev containers."
+    echo "  compose            : Run compose commands against the complete dev compose configuration."
+    echo ""
+}
+
+#########################################
+#               COMMANDS                #
+#########################################
+
+# Check for subcommands
+case "$1" in
+  up)
+    echo "Running dev environment..."
+    ./scripts/compose.sh up --build -d
+    ;;
+  down)
+    echo "Killing (down) dev environment..."
+    ./scripts/compose.sh down -v
+    ;;
+  stop)
+    echo "Stopping dev environment..."
+    ./scripts/compose.sh stop
+    ;;
+  compose)
+    shift
+    ./scripts/compose.sh $@
+    ;;
+  set-profile)
+    ./scripts/set-profile.sh ${@:2}
+    ./scripts/get-profile.sh
+    ;;
+  get-profile)
+    ./scripts/get-profile.sh
+    ;;
+  help|--help|-h)
+    display_help
+    exit 0
+    ;;
+  *)
+    echo "Error: Unknown command."
+    display_help
+    exit 1
+esac

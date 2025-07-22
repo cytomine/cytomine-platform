@@ -1,0 +1,23 @@
+services:
+
+  app-engine:
+    image: app-engine:dev-latest
+    build:
+      context: ${REPO_PATH}/app-engine
+      dockerfile: ${REPO_PATH}/app-engine/Dockerfile
+      target: dev-server
+    working_dir: "/app"
+    restart: unless-stopped
+    env_file: ${PROD_PATH}/envs/app-engine.env
+    command: ["/bin/bash"]
+    stdin_open: true
+    tty: true
+    ports:
+      - "${DEV_AE_PORT:-8081}:8080"
+      - ${DEV_SSH_UI_PORT:-10023}:22
+    volumes:
+      - ${REPO_PATH}/app-engine:/app
+      # gradle cache for faster build
+      - ${ROOT_PATH}/cache/app-engine:/.gradle
+    environment:
+      GRADLE_USER_HOME: /.gradle
