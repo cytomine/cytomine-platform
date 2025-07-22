@@ -6,7 +6,7 @@ for arg in "$@"; do
     echo "Usage: $0 [service1 service2 ...]"
     echo "Configure development environment by setting services in dev mode."
     echo "To disable a service, use '~service-name'"
-    echo "Service short names: 'core', 'ims', 'ui', 'ae', 'monit', 'iam'"
+    echo "Service short names: 'ae', 'core', 'iam', 'ims', 'ui'"
     exit 0
   fi
 done

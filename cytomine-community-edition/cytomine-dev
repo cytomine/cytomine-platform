@@ -1,10 +1,5 @@
 #!/bin/bash
 
-# Define paths
-ROOT_PATH=$(pwd)
-REPO_PATH="${ROOT_PATH}/repos"
-
-# Function to display help message
 display_help() {
     echo "Usage: $0 <command> [ARGUMENTS..]"
     echo ""
@@ -15,7 +10,7 @@ display_help() {
     echo "  set-profile        : Set user profile for the dev environment."
     echo "  get-profile        : Display currently active dev profile."
     echo ""
-    echo "Docker :"
+    echo "Docker:"
     echo "  up                 : Start dev environment."
     echo "  down               : Kill dev containers and volumes."
     echo "  stop               : Stop dev containers."
@@ -27,7 +22,6 @@ display_help() {
 #               COMMANDS                #
 #########################################
 
-# Check for subcommands
 case "$1" in
   up)
     echo "Running dev environment..."

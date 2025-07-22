@@ -1,7 +1,9 @@
+# environment files
 envs
-.env
-*.override.yml
+*.env
+docker-compose.override.yml
 cytomine.yml
+*.log
 
 .idea
 **.iml
@@ -9,3 +11,7 @@ cytomine.yml
 
 data
 !data/README.md
+
+# cache folders
+cache/*
+!cache/README.md

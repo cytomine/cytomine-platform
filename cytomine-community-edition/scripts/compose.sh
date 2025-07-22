@@ -3,8 +3,8 @@
 # Define paths
 ROOT_PATH="$(pwd)"
 REPO_PATH="../"
-PROD_PATH="../cytomine-community-edition"
-DEV_PATH="${ROOT_PATH}/docker"
+PROD_PATH="./"
+DEV_PATH="./docker"
 
 # Check if .dev.env file exists
 if [ ! -f .dev.env ]; then
@@ -42,7 +42,7 @@ for service in "${valid_services[@]}"; do
     feature_flags+=("FF_${service^^}=true")
 
     if grep -q "${service}=dev" .dev.env; then
-      dev_override_file="${DEV_PATH}/docker-compose.override.${service}.yml"
+      dev_override_file="${DEV_PATH}/docker-compose.override.${service}.yaml"
       if [ -f "$dev_override_file" ]; then
         active_dev_overrides+=(-f)
         active_dev_overrides+=("$dev_override_file")
@@ -73,7 +73,7 @@ done
 docker compose \
   -f ${PROD_PATH}/docker-compose.yml \
   -f ${PROD_PATH}/docker-compose.override.yml \
-  -f ${DEV_PATH}/docker-compose.override.main.yml \
+  -f ${DEV_PATH}/docker-compose.override.main.yaml \
   ${active_dev_overrides[@]} \
   --env-file ${PROD_PATH}/.env \
   "$@"
