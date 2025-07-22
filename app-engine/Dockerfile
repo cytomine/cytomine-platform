@@ -51,9 +51,9 @@ FROM gradle:${GRADLE_DEV_VERSION} AS dev-server
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-      gettext=0.21-4ubuntu4 \
-      openssh-server=1:8.9p1-3ubuntu0.11 \
-      rsync=3.2.7-0ubuntu0.22.04.4
+      gettext \
+      openssh-server \
+      rsync
 
 ENV GRADLE_USER_HOME=/opt/gradle/.gradle
 

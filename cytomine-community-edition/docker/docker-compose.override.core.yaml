@@ -1,0 +1,33 @@
+services:
+
+  core:
+    image: core:dev-latest
+    build:
+      context: ${REPO_PATH}/core
+      dockerfile: ${REPO_PATH}/core/Dockerfile
+      target: dev-server
+    ports:
+      - ${DEV_CORE_PORT:-8080}:8080
+      - ${DEV_SSH_CORE_PORT:-10022}:22
+    command: ["/bin/sh"]
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+    volumes:
+      - ${REPO_PATH}/core:/app
+      - /etc/localtime:/etc/localtime
+      # gradle cache for faster build
+      - ${ROOT_PATH}/cache/core/.gradle:/.gradle
+      # IntelliJ builds (to avoid file permission issues)
+      - ${ROOT_PATH}/cache/core/build:/build
+    env_file: ${ROOT_PATH}/envs/core.env
+    environment:
+      GRADLE_USER_HOME: /.gradle
+
+  postgis:
+    ports:
+      - ${DEV_POSTGIS_PORT:-5432}:5432
+
+  mongo:
+    ports:
+      - ${DEV_MONGO_PORT:-27017}:27017

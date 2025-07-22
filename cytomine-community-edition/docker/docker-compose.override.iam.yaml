@@ -1,0 +1,22 @@
+services:
+  iam:
+    # overwriting image name:
+    # 1) to preserve vscode devcontainer cache
+    # 2) to prevent build from overwriting official docker image (i.e. with name from cytomine.yml)
+    image: iam:dev-latest
+    build:
+      context: ${REPO_PATH}/iam
+      dockerfile: ${REPO_PATH}/iam/Dockerfile
+      target: dev-server
+    ports:
+      - ${DEV_IAM_PORT:-8100}:8080
+      - ${DEV_SSH_IAM_PORT:-10025}:22
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+    volumes:
+      - /etc/localtime:/etc/localtime
+    env_file: ${ROOT_PATH}/envs/iam.env
+  postgis:
+    ports:
+      - ${DEV_POSTGIS_PORT:-5432}:5432

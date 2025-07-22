@@ -1,0 +1,69 @@
+services:
+
+  mongo:
+    profiles: ["dev"]
+    volumes:
+      - dev-mongo:/data/db
+    environment:
+      MONGO_INITDB_ROOT_PASSWORD: password
+
+  postgis:
+    profiles: ["dev"]
+    volumes:
+      - dev-postgis:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: password
+      APPENGINE_PASSWORD: password
+      IAM_PASSWORD: password
+
+  pims-cache:
+    profiles: ["dev-ims"]
+
+  pims:
+    profiles: ["dev-ims"]
+    volumes:
+      - dev-images:${CONTAINER_PATHS_IMAGES}
+
+  core:
+    profiles: ["dev-core"]
+    environment:
+      ADMIN_PASSWORD: password
+      POSTGIS_PASS: password
+      MONGO_PASS: password
+      JAVAMELODY_PASS: password
+      APPENGINE_ENABLED: ${FF_AE:-true}
+
+  web_ui:
+    profiles: ["dev-ui"]
+    environment:
+      APPENGINE_ENABLED: ${FF_AE:-true}
+
+  app-engine:
+    profiles: ["dev-ae"]
+    environment:
+      DB_PASSWORD: password
+    volumes:
+      - dev-app-engine:/data
+
+  registry:
+    profiles: ["dev-ae"]
+    ports:
+      - "${DEV_REGISTRY_PORT:-5051}:5000"
+    volumes:
+      - dev-registry:/data
+
+  nginx:
+    profiles: ["dev"]
+
+  iam:
+    profiles: ["dev-iam"]
+    environment:
+      KEYCLOAK_ADMIN_PASSWORD: password
+      KC_DB_PASSWORD: password
+
+volumes:
+  dev-app-engine:
+  dev-images:
+  dev-mongo:
+  dev-postgis:
+  dev-registry:
