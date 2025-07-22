@@ -1,5 +1,11 @@
 package be.cytomine.appengine.services;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -10,17 +16,31 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
 
+import be.cytomine.appengine.dto.responses.errors.details.ParameterError;
+import be.cytomine.appengine.exceptions.ProvisioningException;
+import be.cytomine.appengine.handlers.StorageDataType;
+import be.cytomine.appengine.handlers.StorageStringEntry;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
+import org.apache.commons.fileupload2.core.DiskFileItem;
+import org.apache.commons.fileupload2.core.DiskFileItemFactory;
+import org.apache.commons.fileupload2.core.FileItemFactory;
+import org.apache.commons.fileupload2.core.FileItemInput;
+import org.apache.commons.fileupload2.core.FileItemInputIterator;
+import org.apache.commons.fileupload2.jakarta.servlet6.JakartaServletFileUpload;
+import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import be.cytomine.appengine.dto.handlers.filestorage.Storage;
-import be.cytomine.appengine.dto.handlers.registry.DockerImage;
 import be.cytomine.appengine.dto.inputs.task.TaskAuthor;
 import be.cytomine.appengine.dto.inputs.task.TaskDescription;
 import be.cytomine.appengine.dto.inputs.task.TaskInput;
@@ -28,7 +48,6 @@ import be.cytomine.appengine.dto.inputs.task.TaskInputFactory;
 import be.cytomine.appengine.dto.inputs.task.TaskOutput;
 import be.cytomine.appengine.dto.inputs.task.TaskOutputFactory;
 import be.cytomine.appengine.dto.inputs.task.TaskRun;
-import be.cytomine.appengine.dto.inputs.task.UploadTaskArchive;
 import be.cytomine.appengine.dto.misc.TaskIdentifiers;
 import be.cytomine.appengine.dto.responses.errors.AppEngineError;
 import be.cytomine.appengine.dto.responses.errors.ErrorBuilder;
@@ -83,19 +102,110 @@ public class TaskService {
     private int defaultCpus;
 
     @Transactional
-    public Optional<TaskDescription> uploadTask(MultipartFile taskArchive)
-        throws BundleArchiveException, TaskServiceException, ValidationException {
+    public Optional<TaskDescription> uploadTask(HttpServletRequest request)
+        throws BundleArchiveException, TaskServiceException, ValidationException
+    {
 
+        // prepare for streaming
+        log.info("UploadTask: preparing streaming...");
+        InputStream inputStream = prepareStream(request);
+        String descriptorFileYmlContent = "";
+        JsonNode descriptorFileAsJson = null;
+        log.info("UploadTask: Task identifiers generated ");
+        UUID taskLocalIdentifier = UUID.randomUUID();
+        String storageIdentifier = "task-" + taskLocalIdentifier + "-def";
+        Storage storage = new Storage(storageIdentifier);
+        String imageRegistryCompliantName = null;
         log.info("UploadTask: building archive...");
-        UploadTaskArchive uploadTaskArchive = archiveUtils.readArchive(taskArchive);
-        log.info("UploadTask: Archive is built");
-        validateTaskBundle(uploadTaskArchive);
-        log.info("UploadTask: Archive validated");
+//        if (archiveUtils.isZip(inputStream)) {
+            log.info("UploadTask: extracting descriptor and Docker image from archive...");
 
-        TaskIdentifiers taskIdentifiers = generateTaskIdentifiers(uploadTaskArchive);
-        log.info("UploadTask: Task identifiers generated {}", taskIdentifiers);
 
-        Storage storage = new Storage(taskIdentifiers.getStorageIdentifier());
+            boolean descriptorFile = true;
+            boolean dockerImageFile = true;
+
+            try (ZipArchiveInputStream zais = new ZipArchiveInputStream(inputStream)) {
+                ZipEntry entry;
+
+                while ((entry = zais.getNextZipEntry()) != null) {
+                    String entryName = entry.getName();
+
+                    if (entryName.toLowerCase().matches("descriptor\\.(yml|yaml)")) {
+                        descriptorFileYmlContent = IOUtils.toString(zais, StandardCharsets.UTF_8);
+                        log.info("UploadTask: Descriptor file read into memory");
+                        try {
+                            log.info("UploadTask: validating descriptor file...");
+                            descriptorFileAsJson = new ObjectMapper(new YAMLFactory()).readTree(descriptorFileYmlContent);
+                            taskValidationService.validateDescriptorFile(descriptorFileAsJson);
+                            log.info("UploadTask: Descriptor file validated");
+                        } catch (ValidationException e) {
+                            log.info("UploadTask: Descriptor file not valid");
+                            if (imageRegistryCompliantName == null) {
+                                throw e;
+                            } else {
+                                try {
+                                    log.info("UploadTask: deleting image registry...");
+                                    registryHandler.deleteImage(imageRegistryCompliantName);
+                                    log.info("UploadTask: image deleted");
+                                } catch (RegistryException ex) {
+                                    log.debug("UploadTask: failed to delete image from registry");
+                                }
+                            }
+                        }
+                        log.info("UploadTask: Descriptor file extracted");
+                    }
+
+                    if (entryName.endsWith(".tar")) {
+                        String fullName = entryName
+                            .substring(0, entryName.length() - 4);
+                        String namespace = fullName
+                            .substring(0, fullName.indexOf("-"))
+                            .replace('.' , '/');
+                        String version = fullName
+                            .substring(fullName.indexOf('-') + 1);
+                        imageRegistryCompliantName = namespace + ":" + version;
+                        try {
+                            log.info("UploadTask: pushing docker image to registry...");
+                            registryHandler.pushImage(zais, imageRegistryCompliantName);
+                            log.info("UploadTask: Docker image pushed");
+                        } catch (RegistryException e) {
+                            try {
+                                log.debug("UploadTask: failed to push image to registry");
+                                log.debug("UploadTask: attempting to delete storage...");
+                                fileStorageHandler.deleteStorage(storage);
+                                log.info("UploadTask: storage deleted");
+                            } catch (FileStorageException ex) {
+                                log.error("UploadTask: file storage service is failing [{}]", ex.getMessage());
+                                AppEngineError error = ErrorBuilder
+                                    .build(ErrorCode.REGISTRY_PUSHING_TASK_IMAGE_FAILED);
+                                throw new TaskServiceException(error);
+                            }
+                        }
+                    }
+
+                }
+            } catch (IOException e) {
+                log.error("UploadTask: Failed to extract files from archive: " + imageRegistryCompliantName, e);
+                throw new BundleArchiveException(ErrorBuilder.build(ErrorCode.INTERNAL_DESCRIPTOR_EXTRACTION_FAILED)); // pick a general error
+            }
+
+            if (!descriptorFile) {
+                log.error("UploadTask: Descriptor file not found in archive: " + imageRegistryCompliantName);
+                throw new BundleArchiveException(ErrorBuilder.build(ErrorCode.INTERNAL_DESCRIPTOR_NOT_IN_DEFAULT_LOCATION));
+            }
+
+            if (!dockerImageFile) {
+                log.error("UploadTask: Docker image not found in archive");
+                throw new BundleArchiveException(ErrorBuilder.build(ErrorCode.INTERNAL_DOCKER_IMAGE_TAR_NOT_FOUND));
+            }
+//        } else {
+//            log.error("UploadTask: Unknown bundle archive format");
+//            AppEngineError error = ErrorBuilder.build(ErrorCode.INTERNAL_UNKNOWN_BUNDLE_ARCHIVE_FORAMT);
+//            throw new BundleArchiveException(error);
+//        }
+
+
+
         try {
             fileStorageHandler.createStorage(storage);
             log.info("UploadTask: Storage is created for task");
@@ -108,9 +218,9 @@ public class TaskService {
         try {
             fileStorageHandler.saveStorageData(
                 storage,
-                new StorageData(uploadTaskArchive.getDescriptorFile(), "descriptor.yml")
+                new StorageData(new StorageStringEntry(descriptorFileYmlContent, "descriptor.yml", StorageDataType.FILE))
             );
-            log.info("UploadTask: descriptor.yml is stored in object storage");
+            log.info("UploadTask: descriptor.yml is stored in storage");
         } catch (FileStorageException e) {
             try {
                 log.info("UploadTask: failed to store descriptor.yml");
@@ -125,61 +235,33 @@ public class TaskService {
             }
             return Optional.empty();
         }
-
-        log.info("UploadTask: pushing task image...");
-        DockerImage image =
-            new DockerImage(
-            uploadTaskArchive.getDockerImage(),
-            taskIdentifiers.getImageRegistryCompliantName());
-        try {
-            registryHandler.pushImage(image);
-        } catch (RegistryException e) {
-            try {
-                log.debug("UploadTask: failed to push image to registry");
-                log.debug("UploadTask: attempting to delete storage...");
-                fileStorageHandler.deleteStorage(storage);
-                log.info("UploadTask: storage deleted");
-            } catch (FileStorageException ex) {
-                log.error("UploadTask: file storage service is failing [{}]", ex.getMessage());
-                AppEngineError error = ErrorBuilder
-                    .build(ErrorCode.REGISTRY_PUSHING_TASK_IMAGE_FAILED);
-                throw new TaskServiceException(error);
-            }
-        } finally {
-            uploadTaskArchive.getDockerImage().delete();
-        }
-        log.info("UploadTask: image pushed to registry");
-
         // save task info
         Task task = new Task();
-        task.setIdentifier(taskIdentifiers.getLocalTaskIdentifier());
-        task.setStorageReference(taskIdentifiers.getStorageIdentifier());
-        task.setImageName(taskIdentifiers.getImageRegistryCompliantName());
-        task.setName(uploadTaskArchive.getDescriptorFileAsJson().get("name").textValue());
-        task.setNameShort(uploadTaskArchive
-            .getDescriptorFileAsJson()
+        task.setIdentifier(taskLocalIdentifier);
+        task.setStorageReference(storageIdentifier);
+        task.setImageName(imageRegistryCompliantName);
+        task.setName(descriptorFileAsJson.get("name").textValue());
+        task.setNameShort(descriptorFileAsJson
             .get("name_short")
             .textValue());
         task.setDescriptorFile(
-            uploadTaskArchive.getDescriptorFileAsJson().get("namespace").textValue());
-        task.setNamespace(uploadTaskArchive.getDescriptorFileAsJson().get("namespace").textValue());
-        task.setVersion(uploadTaskArchive.getDescriptorFileAsJson().get("version").textValue());
+            descriptorFileAsJson.get("namespace").textValue());
+        task.setNamespace(descriptorFileAsJson.get("namespace").textValue());
+        task.setVersion(descriptorFileAsJson.get("version").textValue());
         task.setInputFolder(
-            uploadTaskArchive
-            .getDescriptorFileAsJson()
+            descriptorFileAsJson
             .get("configuration")
             .get("input_folder")
             .textValue());
         task.setOutputFolder(
-            uploadTaskArchive
-            .getDescriptorFileAsJson()
+            descriptorFileAsJson
             .get("configuration")
             .get("output_folder")
             .textValue());
 
         // resources
         JsonNode resources =
-            uploadTaskArchive.getDescriptorFileAsJson().get("configuration").get("resources");
+            descriptorFileAsJson.get("configuration").get("resources");
 
         if (!Objects.nonNull(resources)) {
             task.setRam(defaultRam);
@@ -190,9 +272,9 @@ public class TaskService {
             task.setGpus(resources.path("gpus").asInt(0));
         }
 
-        task.setAuthors(getAuthors(uploadTaskArchive));
-        task.setParameters(getParameters(uploadTaskArchive));
-        task.setMatches(getMatches(uploadTaskArchive, task.getParameters()));
+        task.setAuthors(getAuthors(descriptorFileAsJson));
+        task.setParameters(getParameters(descriptorFileAsJson));
+        task.setMatches(getMatches(descriptorFileAsJson, task.getParameters()));
 
         log.info("UploadTask: saving task...");
         taskRepository.save(task);
@@ -201,9 +283,8 @@ public class TaskService {
         return Optional.of(makeTaskDescription(task));
     }
 
-    private List<Match> getMatches(UploadTaskArchive uploadTaskArchive, Set<Parameter> parameters) {
+    private List<Match> getMatches(JsonNode descriptor, Set<Parameter> parameters) {
         log.info("UploadTask: looking for matches...");
-        JsonNode descriptor = uploadTaskArchive.getDescriptorFileAsJson();
         JsonNode inputsNode = descriptor.get("inputs");
         JsonNode outputsNode = descriptor.get("outputs");
         List<Match> matches = new ArrayList<>();
@@ -296,13 +377,13 @@ public class TaskService {
         }
     }
 
-    private Set<Parameter> getParameters(UploadTaskArchive uploadTaskArchive) {
+    private Set<Parameter> getParameters(JsonNode descriptor) {
         log.info("UploadTask: getting inputs...");
         Set<Parameter> parameters = new HashSet<>();
-        JsonNode inputsNode = uploadTaskArchive.getDescriptorFileAsJson().get("inputs");
+        JsonNode inputsNode = descriptor.get("inputs");
 
         log.info("UploadTask: getting outputs...");
-        JsonNode outputsNode = uploadTaskArchive.getDescriptorFileAsJson().get("outputs");
+        JsonNode outputsNode = descriptor.get("outputs");
 
         if (!inputsNode.isObject() && !outputsNode.isObject()) {
             return new HashSet<>();
@@ -376,10 +457,10 @@ public class TaskService {
         return parameters;
     }
 
-    private Set<Author> getAuthors(UploadTaskArchive uploadTaskArchive) {
+    private Set<Author> getAuthors(JsonNode descriptor) {
         log.info("UploadTask: getting authors...");
         Set<Author> authors = new HashSet<>();
-        JsonNode authorNode = uploadTaskArchive.getDescriptorFileAsJson().get("authors");
+        JsonNode authorNode = descriptor.get("authors");
         if (authorNode.isArray()) {
             for (JsonNode author : authorNode) {
                 Author a = new Author();
@@ -393,27 +474,6 @@ public class TaskService {
         }
         log.info("UploadTask: successful authors ");
         return authors;
-    }
-
-    private void validateTaskBundle(UploadTaskArchive uploadTaskArchive)
-        throws ValidationException {
-        taskValidationService.validateDescriptorFile(uploadTaskArchive);
-        taskValidationService.checkIsNotDuplicate(uploadTaskArchive);
-        taskValidationService.validateImage(uploadTaskArchive);
-    }
-
-    private TaskIdentifiers generateTaskIdentifiers(UploadTaskArchive uploadTaskArchive) {
-        UUID taskLocalIdentifier = UUID.randomUUID();
-        String storageIdentifier = "task-" + taskLocalIdentifier + "-def";
-        String imageIdentifierFromDescriptor =
-            uploadTaskArchive.getDescriptorFileAsJson().get("namespace").textValue();
-        String version = uploadTaskArchive.getDescriptorFileAsJson().get("version").textValue();
-        String imageRegistryCompliantName = imageIdentifierFromDescriptor.replace(".", "/");
-        imageRegistryCompliantName += ":" + version;
-
-        return new TaskIdentifiers(taskLocalIdentifier,
-            storageIdentifier,
-            imageRegistryCompliantName);
     }
 
     public StorageData retrieveYmlDescriptor(String namespace, String version)
@@ -613,6 +673,60 @@ public class TaskService {
             log.error("tasks/{namespace}/{version}/runs: failed to create storage [{}]",
                 e.getMessage());
             throw new RunTaskServiceException(e);
+        }
+    }
+
+    public InputStream prepareStream(HttpServletRequest request)
+        throws TaskServiceException
+    {
+        log.info("UploadTask streaming: streaming...");
+        if (!JakartaServletFileUpload.isMultipartContent(request)) {
+            log.info("UploadTask streaming: not multipart");
+            AppEngineError error = ErrorBuilder.build(
+                ErrorCode.INTERNAL_NOT_MULTIPART);
+            throw new TaskServiceException(error);
+        }
+
+        FileItemFactory<DiskFileItem> factory = DiskFileItemFactory.builder().get();
+        JakartaServletFileUpload<DiskFileItem, FileItemFactory<DiskFileItem>> upload = new JakartaServletFileUpload<>(factory);
+
+        try {
+            // Get an iterator for the multipart parts. This avoids parsing the whole request at once.
+            FileItemInputIterator iter = upload.getItemIterator(request);
+
+            // Check if there's at least one part in the request
+            if (!iter.hasNext()) {
+                log.info("UploadTask streaming: No file parts found in the request body");
+                AppEngineError error = ErrorBuilder.build(
+                    ErrorCode.INTERNAL_NO_FILE_PARTS_FOUND
+                );
+                throw new TaskServiceException(error);
+            }
+
+            // Get the first part. We assume this is the single file we're interested in.
+            FileItemInput item = iter.next();
+
+            // Validate that the first part is indeed a file and not a simple form field
+            if (item.isFormField()) {
+                log.warn("UploadTask streaming: Expected a file but the first part is a form field: {}", item.getFieldName());
+                AppEngineError error = ErrorBuilder.build(
+                    ErrorCode.INTERNAL_NO_FILE_BUT_FORM_FIELD
+                );
+                throw new TaskServiceException(error);
+            }
+
+            // --- Stream the file content directly to the target File ---
+            InputStream uploadedStream = item.getInputStream();
+            log.info("UploadTask streaming: stream ready");
+
+            return uploadedStream;
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.warn("provisioning streaming: failed to stream input file {}", e.getMessage());
+            AppEngineError error = ErrorBuilder.build(
+                ErrorCode.INTERNAL_SERVER_ERROR
+            );
+            throw new TaskServiceException(error);
         }
     }
 }
