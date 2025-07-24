@@ -17,7 +17,7 @@
 ARG ENTRYPOINT_SCRIPTS_VERSION=1.3.0
 ARG IMAGE_VERSION
 ARG IMAGE_REVISION
-ARG NGINX_VERSION="1.24"
+ARG NGINX_VERSION="1.22.1"
 
 #######################################################################################
 ## Stage: entrypoint script. Use a multi-stage because COPY --from cannot interpolate variables
