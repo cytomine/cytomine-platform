@@ -81,7 +81,9 @@ public class ErrorDefinitions {
         codes.put(ErrorCode.INTERNAL_NOT_MULTIPART, new MessageCode("APPE-internal-not-multipart", "payload is not multipart"));
         codes.put(ErrorCode.INTERNAL_NO_FILE_PARTS_FOUND, new MessageCode("APPE-internal-no-file-parts", "payload does not contain file parts"));
         codes.put(ErrorCode.INTERNAL_NO_FILE_BUT_FORM_FIELD, new MessageCode("APPE-internal-no-file-but-form-field", "payload does not contain file but form field"));
+        codes.put(ErrorCode.INTERNAL_CRC32_CALC_FAILED, new MessageCode("APPE-internal-checksum-failure", "failed to calculate CRC32 checksum for zip entries"));
     }
+
 
     public static MessageCode fromCode(ErrorCode code) {
         if (!codes.containsKey(code)) {
