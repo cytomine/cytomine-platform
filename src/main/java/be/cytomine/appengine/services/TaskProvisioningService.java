@@ -603,7 +603,10 @@ public class TaskProvisioningService {
                         parameterZipEntryStorageData = new StorageData(
                             filePath.toFile(),
                             outputName);
-                        contentsOfZip.add(parameterZipEntryStorageData);
+                        // calculate CRC32 for all storage data entry and save it in the database
+                        log.info("Posting Outputs Archive: calculating CRC32 checksum for zip entry {}"
+                            , ze.getName());
+                        calculateCRC32Checksum(run, contentsOfZip, parameterZipEntryStorageData);
                         break;
                     }
                     // assuming it's the main directory of a collection parameter
@@ -627,7 +630,10 @@ public class TaskProvisioningService {
                             partialParameterZipEntryStorageData = new StorageData(
                                 filePath.toFile(),
                                 ze.getName());
-                            contentsOfZip.add(partialParameterZipEntryStorageData);
+                            // calculate CRC32 for all storage data entry and save it in the database
+                            log.info("Posting Outputs Archive: calculating CRC32 checksum for zip entry {}"
+                                , ze.getName());
+                            calculateCRC32Checksum(run, contentsOfZip, partialParameterZipEntryStorageData);
                         }
 
                         break;
@@ -761,6 +767,21 @@ public class TaskProvisioningService {
             log.info("Posting Outputs Archive: posted");
             return taskRunParameterValues;
         }
+    }
+
+    private void calculateCRC32Checksum(Run run, List<StorageData> contentsOfZip,
+                                        StorageData partialParameterZipEntryStorageData)
+        throws ProvisioningException
+    {
+        for (StorageDataEntry current : partialParameterZipEntryStorageData.getEntryList()) {
+            try {
+                setChecksumCRC32("task-run-outputs-" + run.getId(), calculateFileCRC32(current.getData()), current.getName());
+            } catch (IOException e) {
+                AppEngineError error = ErrorBuilder.build(ErrorCode.INTERNAL_CRC32_CALC_FAILED);
+                throw new ProvisioningException(error);
+            }
+        }
+        contentsOfZip.add(partialParameterZipEntryStorageData);
     }
 
     private void validateFiles(
@@ -1193,9 +1214,21 @@ public class TaskProvisioningService {
                 multipleErrors.add(error);
                 continue;
             }
-            // store in database
+            // store in the database
             log.info("Provisioning: storing output in database...");
             saveOutput(run, parameter, provisionFileData);
+
+            // calculate CRC32 for all storage data entry and save it in the database
+            log.info("Provisioning: calculating CRC32 checksum for zip entry {}"
+                , parameter.getName());
+            for (StorageDataEntry current : provisionFileData.getEntryList()) {
+                try {
+                    setChecksumCRC32("task-run-outputs-" + run.getId(), calculateFileCRC32(current.getData()), current.getName());
+                } catch (IOException e) {
+                    AppEngineError error = ErrorBuilder.build(ErrorCode.INTERNAL_CRC32_CALC_FAILED);
+                    throw new ProvisioningException(error);
+                }
+            }
 
         }
 
