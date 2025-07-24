@@ -25,7 +25,6 @@ INSTALL_PREREQUISITES = "install-prerequisites.sh"
 
 
 class Method(str, Enum):
-    DOWNLOAD = "download"
     DEPENDENCIES_BEFORE_VIPS = "dependencies_before_vips"
     DEPENDENCIES_BEFORE_PYTHON = "dependencies_before_python"
     INSTALL = "install"
@@ -63,20 +62,6 @@ def generate_checker_resolution_file(plugins, csv_path, name_column, resolution_
 
 def enabled_plugins(plugins):
     return [plugin for plugin in plugins if plugin["enabled"] != "0"]
-
-
-def download_plugins(plugins, install_path):
-    for plugin in plugins:
-        print(f"Download {plugin['name']}")
-
-        path = os.path.join(install_path, plugin["name"])
-        command = f"git clone {plugin['git_url']} {path}"
-        if plugin["git_branch_or_tag"]:
-            command += f" && cd {path} && git checkout {plugin['git_branch_or_tag']}"
-
-        output = subprocess.run(command, shell=True, check=True)
-        print(output.stdout)
-        print(output.stderr)
 
 
 def run_install_func_for_plugins(plugins, install_path, func):
@@ -139,9 +124,7 @@ if __name__ == "__main__":
             )
     else:
         os.makedirs(params.install_path, exist_ok=True)
-        if params.method == Method.DOWNLOAD:
-            download_plugins(plugins, params.install_path)
-        elif params.method == Method.INSTALL:
+        if params.method == Method.INSTALL:
             install_python_plugins(plugins, params.install_path)
         else:
             run_install_func_for_plugins(plugins, params.install_path, params.method)
