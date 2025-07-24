@@ -89,10 +89,7 @@ COPY ${PLUGIN_CSV} /app/plugins.csv
 
 # ="enabled,name,git_url,git_branch\n"
 ENV PLUGIN_INSTALL_PATH=/app/plugins
-RUN python plugins.py \
-   --plugin_csv /app/plugins.csv \
-   --install_path ${PLUGIN_INSTALL_PATH} \
-   --method download
+COPY ./plugins/ /app/plugins/
 
 RUN python plugins.py \
    --plugin_csv /app/plugins.csv \

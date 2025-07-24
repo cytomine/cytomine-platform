@@ -1,3 +1,3 @@
-enabled,name,git_url,git_branch_or_tag,resolution_order
-1,pims_plugin_format_openslide,https://github.com/cytomine/pims-plugin-format-openslide.git,main,2
-1,pims_plugin_format_dicom,https://github.com/cytomine/pims-plugin-format-dicom.git,master,3
+enabled,name,resolution_order
+1,pims-plugin-format-openslide,2
+1,pims-plugin-format-dicom,3
