@@ -1,0 +1,95 @@
+name: App Engine
+
+on:
+  pull_request:
+    branches:
+      - master
+    paths:
+      - "app-engine/src/main/resources/**"
+      - "app-engine/src/test/resources/**"
+      - "app-engine/src/**/*.java"
+  push:
+    branches:
+      - master
+
+jobs:
+  validate-json-schema:
+    runs-on: ubuntu-latest
+
+    container:
+      image: node:16-alpine3.18
+
+    defaults:
+      run:
+        working-directory: ./app-engine
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: >-
+          npm install -g
+          ajv-cli@5.0.0
+          ajv-formats@2.1.1
+          ajv-formats-draft2019@1.6.1
+
+      - name: Validate JSON schema
+        env:
+          SCHEMA_PATH: ./src/main/resources/schemas/tasks/task.v0.json
+        run: >-
+          ajv compile
+          -s ${{ env.SCHEMA_PATH }}
+          -c ajv-formats
+          -c ajv-formats-draft2019
+          --spec=draft2019
+          --strict=false
+          --all-errors
+
+  validate-openapi:
+    runs-on: ubuntu-latest
+
+    container:
+      image: redocly/cli:1.10.6
+
+    defaults:
+      run:
+        working-directory: ./app-engine
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate OpenAPI specifications
+        env:
+          OPENAPI_PATH: ./src/test/resources/spec/api/openapi_spec.v0.1.0.yml
+        run: redocly lint ${{ env.OPENAPI_PATH }}
+
+  unit-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set up the repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ vars.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: ${{ vars.JAVA_DIST }}
+          java-version: ${{ vars.JAVA_VERSION }}
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: ${{ vars.GRADLE_VERSION }}
+
+      - name: Trigger unit tests
+        run: gradle :app-engine:test --info --tests "be.cytomine.appengine.unit.*"
+
+      - name: Upload test reports
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: reports
+          path: app-engine/build/reports/
+          retention-days: 7
