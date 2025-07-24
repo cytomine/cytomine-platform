@@ -1,4 +1,4 @@
-name: Test
+name: Web UI
 
 on:
   pull_request:
@@ -13,8 +13,12 @@ on:
     branches:
       - master
 
+defaults:
+  run:
+    working-directory: ./web-ui
+
 jobs:
-  ui-unit-tests:
+  lint:
     runs-on: ubuntu-latest
 
     steps:
@@ -27,21 +31,35 @@ jobs:
           node-version: ${{ vars.NODE_VERSION }}
 
       - name: Install Dependencies
-        run: |
-          cd web-ui
-          npm ci
+        run: npm ci
+
+      - name: Check lint
+        run: npm run lint
+
+  unit-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set up the repository
+        uses: actions/checkout@v4
+
+      - name: Set up NodeJS
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ vars.NODE_VERSION }}
+
+      - name: Install Dependencies
+        run: npm ci
 
       - name: Run Unit Tests
-        run: |
-          cd web-ui
-          npm run test:unit
+        run: npm run test:unit
 
       - name: Upload test coverage
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
           name: coverage
-          path: web-ui/ui/coverage
+          path: ./ui/coverage
           retention-days: 7
 
       - name: Upload test report
@@ -49,5 +67,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: test-report.html
-          path: web-ui/ui/reports/test-report.html
+          path: ./ui/reports/test-report.html
           retention-days: 7
