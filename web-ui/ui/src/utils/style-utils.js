@@ -26,7 +26,7 @@ export function isCluster(feature) {
   if (!annot) {
     return;
   }
-  return annot.count !== null;
+  return annot.count != null;
 }
 
 // -----

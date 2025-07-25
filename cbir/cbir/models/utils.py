@@ -3,6 +3,7 @@
 import os
 from contextlib import nullcontext
 
+import numpy as np
 import torch
 
 from cbir.config import Settings
@@ -70,7 +71,7 @@ def hoptim_forward(model: Model, inputs: torch.Tensor) -> torch.Tensor:
     return outputs.cpu()
 
 
-def run_inference(model: Model, inputs: torch.Tensor) -> torch.Tensor:
+def run_inference(model: Model, inputs: torch.Tensor) -> np.ndarray:
     """Run inference on the model with the given inputs."""
 
     forwards = {
