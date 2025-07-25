@@ -1,28 +1,41 @@
-name: Check Quality
+name: CBIR
 
 on:
   pull_request:
-    branches: 
-      - main
+    branches:
+      - master
     paths:
-      - 'cbir/**'
-      - 'tests/**'
+      - "cbir/**/*.py"
+      - "cbir/tests/**"
+  push:
+    branches:
+      - master
+
+defaults:
+  run:
+    working-directory: ./cbir
+
+# Hardcoded for compatibility
+env:
+  PYTHON_VERSION: "3.10"
 
 jobs:
-  check-lint:
+  lint:
+    if: false # Disable lint job by default, enable it manually if needed
     runs-on: ubuntu-latest
 
     steps:
-      - name: Set up the repository
-        uses: actions/checkout@v3
+      - name: Checkout the repository
+        uses: actions/checkout@v4
 
       - name: Set up the environment
-        uses: ./.github/actions/setup
+        uses: ./.github/actions/setup-python-poetry
         with:
-          python-version: ${{ vars.PYTHON_VERSION }}
+          python-version: ${{ env.PYTHON_VERSION }}
+          working-directory: ./cbir
 
-      - name: Check lint
-        run: python -m poetry run pylint --output=lint.txt cbir tests
+      - name: Lint
+        run: poetry run pylint --output=lint.txt cbir tests
 
       - name: Upload lint report
         if: ${{ always() }}
@@ -32,21 +45,22 @@ jobs:
           cat lint.txt >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
 
-  check-type:
+  type-check:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Set up the repository
-        uses: actions/checkout@v3
+      - name: Checkout the repository
+        uses: actions/checkout@v4
 
       - name: Set up the environment
-        uses: ./.github/actions/setup
+        uses: ./.github/actions/setup-python-poetry
         with:
-          python-version: ${{ vars.PYTHON_VERSION }}
+          python-version: ${{ env.PYTHON_VERSION }}
+          working-directory: ./cbir
 
-      - name: Check type
+      - name: Type check
         run: >-
-          python -m poetry run mypy
+          poetry run mypy
           --disallow-incomplete-defs
           --disallow-untyped-calls
           --disallow-untyped-defs

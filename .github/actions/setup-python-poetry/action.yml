@@ -1,10 +1,14 @@
-name: 'Setup'
-description: 'Set up the environment for CBIR'
+name: Setup Python Poetry
+description: Set up a python environment with Poetry
 
 inputs:
   python-version:
-    description: 'The Python version to install'
+    description: The Python version to install
     required: true
+  working-directory:
+    description: Directory where the script should run
+    required: false
+    default: "."
 
 runs:
   using: composite
@@ -16,11 +20,9 @@ runs:
         python-version: ${{ inputs.python-version }}
 
     - name: Install dependencies
+      working-directory: ${{ inputs.working-directory }}
       shell: bash
       run: |
         python -m pip install --upgrade pip
         python -m pip install poetry
-
-    - name: Install CBIR
-      shell: bash
-      run: python -m poetry install
+        python -m poetry install

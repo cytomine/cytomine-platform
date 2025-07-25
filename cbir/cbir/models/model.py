@@ -25,7 +25,7 @@ class Model(nn.Module, metaclass=ABCMeta):
 
     def __init__(
         self,
-        n_features: int,
+        n_features: int = 128,
         device: torch.device = torch.device("cpu"),
     ) -> None:
         super().__init__()

@@ -52,7 +52,7 @@ def resnet_forward(model: Model, inputs: torch.Tensor) -> torch.Tensor:
     with torch.no_grad():
         outputs = model(inputs)
 
-    return outputs.cpu().numpy()
+    return outputs.cpu()
 
 
 def hoptim_forward(model: Model, inputs: torch.Tensor) -> torch.Tensor:
@@ -67,7 +67,7 @@ def hoptim_forward(model: Model, inputs: torch.Tensor) -> torch.Tensor:
     with amp_context, torch.inference_mode():
         outputs = model(inputs)
 
-    return outputs.cpu().numpy()
+    return outputs.cpu()
 
 
 def run_inference(model: Model, inputs: torch.Tensor) -> torch.Tensor:

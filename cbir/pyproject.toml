@@ -23,7 +23,7 @@ repository = "https://github.com/Cytomine-ULiege/Cytomine-cbir"
 packages = [{include = "cbir"}]
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.10"
 faiss-gpu = "^1.7.2"
 fastapi = "^0.104.1"
 numpy = "^1.26.2"
