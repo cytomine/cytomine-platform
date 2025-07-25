@@ -118,7 +118,7 @@ class ImageRetrieval:
         inputs = features_extraction(Image.open(BytesIO(image)).convert("RGB"))
         inputs = torch.unsqueeze(inputs, dim=0)
 
-        outputs = run_inference(model, inputs).numpy()
+        outputs = run_inference(model, inputs)
 
         labels, distances = self.indexer.search(outputs, nrt_neigh)
         filenames = [self.store.get(str(l)) or "" for l in labels]

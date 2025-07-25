@@ -132,6 +132,9 @@ services:
 
   cbir:
     image: cytomine/cbir:latest
+    build:
+      context: ../cbir
+      dockerfile: Dockerfile
     restart: unless-stopped
     depends_on:
       - redis
