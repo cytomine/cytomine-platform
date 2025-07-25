@@ -16,7 +16,6 @@ package be.cytomine.service.project;
 * limitations under the License.
 */
 
-import be.cytomine.config.properties.ApplicationProperties;
 import be.cytomine.domain.CytomineDomain;
 import be.cytomine.domain.command.*;
 import be.cytomine.domain.image.ImageInstance;
@@ -49,6 +48,7 @@ import be.cytomine.service.ontology.AnnotationTermService;
 import be.cytomine.service.ontology.OntologyService;
 import be.cytomine.service.ontology.ReviewedAnnotationService;
 import be.cytomine.service.search.ProjectSearchExtension;
+import be.cytomine.service.search.RetrievalService;
 import be.cytomine.service.security.UserService;
 import be.cytomine.service.security.SecurityACLService;
 import be.cytomine.service.utils.TaskService;
@@ -71,10 +71,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.*;
 import org.springframework.security.acls.domain.BasePermission;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 import java.math.BigInteger;
 import java.util.*;
@@ -91,9 +89,6 @@ import static org.springframework.security.acls.domain.BasePermission.*;
 @Service
 @Transactional
 public class ProjectService extends ModelService {
-
-    @Autowired
-    private ApplicationProperties applicationProperties;
 
     @Autowired
     private CommandHistoryRepository commandHistoryRepository;
@@ -159,7 +154,7 @@ public class ProjectService extends ModelService {
     private ProjectRepresentativeUserRepository projectRepresentativeUserRepository;
 
     @Autowired
-    private RestTemplate restTemplate;
+    private RetrievalService retrievalService;
 
     public Project get(Long id) {
         return find(id).orElse(null);
@@ -634,6 +629,8 @@ public class ProjectService extends ModelService {
             }
         }
 
+        retrievalService.createStorage(project.getId().toString());
+
         return commandResponse;
     }
 
@@ -890,6 +887,7 @@ public class ProjectService extends ModelService {
         undoStackItemRepository.deleteAllByCommand_Project(project);
         redoStackItemRepository.deleteAllByCommand_Project(project);
         commandRepository.deleteAllByProject(project);
+        retrievalService.deleteStorage(project.getId().toString());
     }
 
     public List<Object> getStringParamsI18n(CytomineDomain domain) {
@@ -933,7 +931,4 @@ public class ProjectService extends ModelService {
     public CytomineDomain createFromJSON(JsonObject json) {
         return new Project().buildDomainFromJson(json, getEntityManager());
     }
-
-
-
 }
