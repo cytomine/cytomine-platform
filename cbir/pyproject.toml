@@ -1,0 +1,58 @@
+[tool.isort]
+multi_line_output = 3
+profile = "black"
+line_length = 79
+
+[tool.mypy]
+ignore_missing_imports = true
+plugins = ["pydantic.mypy"]
+
+[tool.pylint]
+disable = ["redefined-outer-name"]
+max-args = 6
+output-format = "colorized"
+
+[tool.poetry]
+name = "cytomine-cbir"
+version = "0.5.0"
+description = ""
+authors = ["Ba Thien Le <ba.le@uliege.be>"]
+license = "Apache 2.0"
+readme = "README.md"
+repository = "https://github.com/Cytomine-ULiege/Cytomine-cbir"
+packages = [{include = "cbir"}]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+faiss-gpu = "^1.7.2"
+fastapi = "^0.104.1"
+numpy = "^1.26.2"
+pillow = "^10.1.0"
+pydantic-settings = "^2.0.3"
+python-multipart = "^0.0.6"
+redis = "3.5.3"
+timm = "1.0.15"
+torch = {version = "2.3.0+cu118", source = "torch-gpu"}
+torchvision = {version = "^0.18.0+cu118", source = "torch-gpu"}
+uvicorn = {extras = ["standard"], version = "^0.24.0.post1"}
+
+[tool.poetry.group.dev.dependencies]
+black = "^23.10.1"
+codespell = "^2.2.6"
+coverage = "^7.3.2"
+isort = "^5.12.0"
+pylint = "^3.0.2"
+mypy = {extras = ["reports"], version = "^1.7.0"}
+
+[tool.poetry.group.test.dependencies]
+pytest = "^7.4.3"
+httpx = "^0.25.1"
+
+[[tool.poetry.source]]
+name = "torch-gpu"
+url = "https://download.pytorch.org/whl/cu118"
+priority = "supplemental"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

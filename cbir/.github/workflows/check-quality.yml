@@ -1,0 +1,62 @@
+name: Check Quality
+
+on:
+  pull_request:
+    branches: 
+      - main
+    paths:
+      - 'cbir/**'
+      - 'tests/**'
+
+jobs:
+  check-lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set up the repository
+        uses: actions/checkout@v3
+
+      - name: Set up the environment
+        uses: ./.github/actions/setup
+        with:
+          python-version: ${{ vars.PYTHON_VERSION }}
+
+      - name: Check lint
+        run: python -m poetry run pylint --output=lint.txt cbir tests
+
+      - name: Upload lint report
+        if: ${{ always() }}
+        run: |
+          echo '# Lint report' >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat lint.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+  check-type:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set up the repository
+        uses: actions/checkout@v3
+
+      - name: Set up the environment
+        uses: ./.github/actions/setup
+        with:
+          python-version: ${{ vars.PYTHON_VERSION }}
+
+      - name: Check type
+        run: >-
+          python -m poetry run mypy
+          --disallow-incomplete-defs
+          --disallow-untyped-calls
+          --disallow-untyped-defs
+          --txt-report ./
+          cbir tests
+
+      - name: Upload type check coverage report
+        if: ${{ always() }}
+        run: |
+          echo '# Type check coverage report' >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat index.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY

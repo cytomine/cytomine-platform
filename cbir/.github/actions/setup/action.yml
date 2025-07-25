@@ -1,0 +1,26 @@
+name: 'Setup'
+description: 'Set up the environment for CBIR'
+
+inputs:
+  python-version:
+    description: 'The Python version to install'
+    required: true
+
+runs:
+  using: composite
+
+  steps:
+    - name: Set up Python ${{ inputs.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Install dependencies
+      shell: bash
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install poetry
+
+    - name: Install CBIR
+      shell: bash
+      run: python -m poetry install
