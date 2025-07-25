@@ -166,6 +166,17 @@
         </td>
       </tr>
 
+      <template>
+        <tr>
+          <td colspan="2">
+            <h5>{{ $t('similar-annotations') }}</h5>
+            <button class="button is-small is-fullwidth" @click="$emit('searchSimilarAnnotations')">
+              {{ $t('search-similar-annotation') }}
+            </button>
+          </td>
+        </tr>
+      </template>
+
       <template v-if="isPropDisplayed('linked-annotations')">
         <tr>
           <td colspan="2">
@@ -589,6 +600,11 @@ export default {
       this.loadPropertiesError = true;
       console.log(error);
     }
+
+    this.$eventBus.$emit('hide-similar-annotations');
+  },
+  destroyed() {
+    this.$eventBus.$emit('hide-similar-annotations');
   },
 };
 </script>
