@@ -1,7 +1,7 @@
 services:
   postgis:
     container_name: postgis
-    image: cytomineuliege/postgis:15-3.3-alpine-1.0.0
+    image: cytomine/postgis:latest
     ports:
       - "5432:5432"
     environment:
@@ -11,7 +11,7 @@ services:
 
   mongo:
     container_name: mongo
-    image: cytomineuliege/mongo:1.0.0
+    image: cytomine/mongo:latest
     ports:
       - "27017:27017"
     environment:

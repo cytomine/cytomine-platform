@@ -19,8 +19,11 @@ package be.cytomine.service.ontology;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
+import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.client.WireMock;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import org.apache.commons.lang3.time.DateUtils;
@@ -55,6 +58,9 @@ import be.cytomine.service.CommandService;
 import be.cytomine.utils.CommandResponse;
 import be.cytomine.utils.JsonObject;
 
+import static be.cytomine.service.middleware.ImageServerService.IMS_API_BASE_PATH;
+import static be.cytomine.service.search.RetrievalService.CBIR_API_BASE_PATH;
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(classes = CytomineCoreApplication.class)
@@ -78,6 +84,43 @@ public class UserAnnotationServiceTests {
     @Autowired
     EntityManager entityManager;
 
+    private static WireMockServer wireMockServer;
+
+    private static void setupStub() {
+        /* Simulate call to PIMS */
+        wireMockServer.stubFor(WireMock.post(urlPathMatching(IMS_API_BASE_PATH + "/image/.*/annotation/drawing"))
+            .withRequestBody(WireMock.matching(".*"))
+            .willReturn(aResponse().withBody(UUID.randomUUID().toString().getBytes()))
+        );
+
+        /* Simulate call to CBIR */
+        wireMockServer.stubFor(WireMock.post(urlPathEqualTo(CBIR_API_BASE_PATH + "/images"))
+            .withQueryParam("storage", WireMock.matching(".*"))
+            .withQueryParam("index", WireMock.equalTo("annotation"))
+            .willReturn(aResponse().withBody(UUID.randomUUID().toString()))
+        );
+
+        wireMockServer.stubFor(WireMock.delete(urlPathMatching(CBIR_API_BASE_PATH + "/images/.*"))
+            .withQueryParam("storage", WireMock.matching(".*"))
+            .withQueryParam("index", WireMock.equalTo("annotation"))
+            .willReturn(aResponse().withBody(UUID.randomUUID().toString()))
+        );
+    }
+
+    @BeforeAll
+    public static void beforeAll() {
+        wireMockServer = new WireMockServer(8888);
+        wireMockServer.start();
+        WireMock.configureFor("localhost", wireMockServer.port());
+
+        setupStub();
+    }
+
+    @AfterAll
+    public static void afterAll() {
+        wireMockServer.stop();
+    }
+
     @Test
     void get_userAnnotation_with_success() {
         UserAnnotation userAnnotation = builder.given_a_user_annotation();
@@ -100,7 +143,6 @@ public class UserAnnotationServiceTests {
     void find_unexisting_userAnnotation_return_empty() {
         assertThat(userAnnotationService.find(0L)).isEmpty();
     }
-
 
     static Map<String, String> POLYGONES = Map.of(
             "a", "POLYGON ((1 1, 2 1, 2 2, 1 2, 1 1))",
@@ -188,7 +230,6 @@ public class UserAnnotationServiceTests {
         assertThat(ids).doesNotContain(a4.getId());
         assertThat(ids).doesNotContain(a5.getId());
     }
-
 
     @Test
     void count_by_project() {
@@ -322,7 +363,6 @@ public class UserAnnotationServiceTests {
         assertThat(commandResponse.getStatus()).isEqualTo(200); // project is retrieve from image/slice
     }
 
-
     @Test
     void add_valid_user_annotation_with_terms() {
         UserAnnotation userAnnotation = builder.given_a_not_persisted_user_annotation();
@@ -352,7 +392,6 @@ public class UserAnnotationServiceTests {
         entityManager.refresh(userAnnotation);
         assertThat(userAnnotation.terms()).hasSize(2);
     }
-
 
     @Test
     void add_user_annotation_bad_geom() throws ParseException {
@@ -441,7 +480,6 @@ public class UserAnnotationServiceTests {
         }) ;
     }
 
-
     @Test
     void edit_valid_user_annotation_with_success() throws ParseException {
         UserAnnotation userAnnotation = builder.given_a_not_persisted_user_annotation();
@@ -471,7 +509,6 @@ public class UserAnnotationServiceTests {
 
         edited = userAnnotationService.find(commandResponse.getObject().getId()).get();
         AssertionsForClassTypes.assertThat(edited.getWktLocation()).isEqualTo(newLocation);
-
     }
 
     @Test
@@ -498,7 +535,6 @@ public class UserAnnotationServiceTests {
                         "0 " + userAnnotation.getImage().getBaseImage().getHeight() +"))");
     }
 
-
     @Test
     void edit_user_annotation_empty_polygon() throws ParseException {
         UserAnnotation userAnnotation = builder.given_a_user_annotation();
@@ -512,7 +548,6 @@ public class UserAnnotationServiceTests {
     @Test
     void delete_user_annotation_with_success() {
         UserAnnotation userAnnotation = builder.given_a_user_annotation();
-
         CommandResponse commandResponse = userAnnotationService.delete(userAnnotation, null, null, true);
 
         AssertionsForClassTypes.assertThat(commandResponse).isNotNull();
@@ -527,7 +562,6 @@ public class UserAnnotationServiceTests {
 
         AssertionsForClassTypes.assertThat(userAnnotationService.find(userAnnotation.getId()).isEmpty());
     }
-
 
     @Test
     void delete_user_annotation_with_terms() {
@@ -562,7 +596,6 @@ public class UserAnnotationServiceTests {
         TagDomainAssociation tagDomainAssociation = builder.given_a_tag_association(builder.given_a_tag(), userAnnotation);
         AttachedFile attachedFile = builder.given_a_attached_file(userAnnotation);
 
-
         assertThat(entityManager.find(UserAnnotation.class, userAnnotation.getId())).isNotNull();
         assertThat(entityManager.find(SharedAnnotation.class, sharedAnnotation.getId())).isNotNull();
         assertThat(entityManager.find(AnnotationTrack.class, annotationTrack.getId())).isNotNull();
@@ -585,7 +618,6 @@ public class UserAnnotationServiceTests {
         assertThat(entityManager.find(AttachedFile.class, attachedFile.getId())).isNull();
     }
 
-
     @Test
     void do_annotation_corrections() throws ParseException {
 
@@ -605,7 +637,6 @@ public class UserAnnotationServiceTests {
 
         assertThat(userAnnotationRepository.findById(anotherAnnotation.getId())).isEmpty();
     }
-
 
     @Test
     void do_annotation_corrections_with_remove() throws ParseException {
@@ -628,7 +659,6 @@ public class UserAnnotationServiceTests {
         assertThat(userAnnotationRepository.findById(anotherAnnotation.getId()).get().getLocation()).isEqualTo(new WKTReader().read("POLYGON ((10000 10000, 10000 16000, 16000 16000, 16000 10000, 10000 10000))"));
 
     }
-
 
     @Test
     @Disabled

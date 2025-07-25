@@ -29,6 +29,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.web.context.request.RequestContextHolder;
 
@@ -56,6 +57,11 @@ import be.cytomine.utils.filters.SearchParameterEntry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static be.cytomine.service.search.RetrievalService.CBIR_API_BASE_PATH;
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.delete;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.springframework.security.acls.domain.BasePermission.*;
 
@@ -69,54 +75,68 @@ public class UserServiceTests {
     UserService userService;
 
     @Autowired
-    BasicInstanceBuilder builder;
+    private BasicInstanceBuilder builder;
 
     @Autowired
-    ImageConsultationService imageConsultationService;
+    private ImageConsultationService imageConsultationService;
 
     @Autowired
-    ProjectConnectionService projectConnectionService;
+    private ProjectConnectionService projectConnectionService;
 
     @Autowired
-    PersistentConnectionRepository persistentConnectionRepository;
+    private PersistentConnectionRepository persistentConnectionRepository;
 
     @Autowired
-    LastConnectionRepository lastConnectionRepository;
+    private LastConnectionRepository lastConnectionRepository;
 
     @Autowired
-    PersistentImageConsultationRepository persistentImageConsultationRepository;
+    private PersistentImageConsultationRepository persistentImageConsultationRepository;
 
     @Autowired
-    PersistentProjectConnectionRepository persistentProjectConnectionRepository;
+    private PersistentProjectConnectionRepository persistentProjectConnectionRepository;
 
     @Autowired
-    ProjectConnectionRepository projectConnectionRepository;
+    private ProjectConnectionRepository projectConnectionRepository;
 
     @Autowired
-    PersistentUserPositionRepository persistentUserPositionRepository;
+    private PersistentUserPositionRepository persistentUserPositionRepository;
 
     @Autowired
-    LastUserPositionRepository lastUserPositionRepository;
+    private LastUserPositionRepository lastUserPositionRepository;
 
     @Autowired
-    SequenceService sequenceService;
+    private SequenceService sequenceService;
 
     @Autowired
-    PermissionService permissionService;
+    private PermissionService permissionService;
 
     @Autowired
-    EntityManager entityManager;
+    private EntityManager entityManager;
 
     @Autowired
-    UserPositionService userPositionService;
+    private UserPositionService userPositionService;
 
-    private static WireMockServer wireMockServer;
+    private static WireMockServer wireMockServer = new WireMockServer(8888);
+
+    private static void setupStub() {
+        /* Simulate call to CBIR */
+        wireMockServer.stubFor(delete(urlPathMatching(CBIR_API_BASE_PATH + "/images/.*"))
+            .withQueryParam("storage", WireMock.matching(".*"))
+            .withQueryParam("index", WireMock.equalTo("annotation"))
+            .willReturn(aResponse()
+                .withStatus(HttpStatus.OK.value())
+                .withHeader("Content-Type", "application/json")
+                .withBody(UUID.randomUUID().toString())
+            )
+        );
+    }
 
     @BeforeAll
     public static void beforeAll() {
-        wireMockServer = new WireMockServer(8888);
         wireMockServer.start();
-        WireMock.configureFor("localhost", wireMockServer.port());
+        WireMock.configureFor("localhost", 8888);
+
+        setupStub();
     }
 
     @AfterAll
