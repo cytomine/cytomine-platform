@@ -1,0 +1,76 @@
+name: CBIR
+
+on:
+  pull_request:
+    branches:
+      - master
+    paths:
+      - "cbir/**/*.py"
+      - "cbir/tests/**"
+  push:
+    branches:
+      - master
+
+defaults:
+  run:
+    working-directory: ./cbir
+
+# Hardcoded for compatibility
+env:
+  PYTHON_VERSION: "3.10"
+
+jobs:
+  lint:
+    if: false # Disable lint job by default, enable it manually if needed
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+
+      - name: Set up the environment
+        uses: ./.github/actions/setup-python-poetry
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          working-directory: ./cbir
+
+      - name: Lint
+        run: poetry run pylint --output=lint.txt cbir tests
+
+      - name: Upload lint report
+        if: ${{ always() }}
+        run: |
+          echo '# Lint report' >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat lint.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+  type-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+
+      - name: Set up the environment
+        uses: ./.github/actions/setup-python-poetry
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          working-directory: ./cbir
+
+      - name: Type check
+        run: >-
+          poetry run mypy
+          --disallow-incomplete-defs
+          --disallow-untyped-calls
+          --disallow-untyped-defs
+          --txt-report ./
+          cbir tests
+
+      - name: Upload type check coverage report
+        if: ${{ always() }}
+        run: |
+          echo '# Type check coverage report' >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat index.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
