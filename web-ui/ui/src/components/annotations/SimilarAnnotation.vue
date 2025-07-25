@@ -71,12 +71,14 @@
 </template>
 
 <script>
+import {Annotation, AnnotationTerm} from 'cytomine-client';
+
 import AnnotationPreview from '@/components/annotations/AnnotationPreview.vue';
 import CytomineTerm from '@/components/ontology/CytomineTerm';
-import {Annotation, AnnotationTerm} from 'cytomine-client';
 import VueDraggableResizable from 'vue-draggable-resizable';
+
 export default {
-  name: 'similar-annotation',
+  name: 'SimilarAnnotation',
   components: {
     AnnotationPreview,
     CytomineTerm,
@@ -139,8 +141,7 @@ export default {
       try {
         await new AnnotationTerm({annotation: this.annotation.id, term: term.id}).save();
         this.$emit('updateTermsOrTracks', this.annotation);
-      }
-      catch (error) {
+      } catch (error) {
         this.$notify({type: 'error', text: this.$t('notif-error-add-term')});
       }
     },
@@ -195,20 +196,24 @@ export default {
   padding: 0.35em;
   text-align: right;
 }
+
 .actions .button {
   margin-left: 0.25rem;
   width: 1.75rem;
 }
+
 .annotation-content {
   display: flex;
   flex-wrap: wrap;
 }
+
 .annotation-data {
   align-items: center;
   display: flex;
   flex-direction: column;
   margin-bottom: 0.5rem;
 }
+
 .draggable {
   background: #f2f2f2;
   border-radius: 5px;
@@ -217,6 +222,7 @@ export default {
   flex-direction: column;
   pointer-events: auto;
 }
+
 h1 {
   flex: 1;
   font-size: 1rem;
@@ -224,9 +230,11 @@ h1 {
   padding: 0;
   text-align: left;
 }
+
 .no-annotation-content {
   padding: 0.5rem;
 }
+
 .similar-annotations-playground {
   top: 3.5rem;
   bottom: 2em;
@@ -235,9 +243,11 @@ h1 {
   pointer-events: none;
   position: absolute;
 }
+
 .similar-annotations-playground .draggable {
   z-index: 20 !important;
 }
+
 .term-suggestion {
   flex-direction: column;
   margin: 0.5rem;
