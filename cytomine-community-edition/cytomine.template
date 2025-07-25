@@ -14,6 +14,8 @@ global:
       # External port to listen to. Customize if for example port 80 is already taken by a reverse proxy on the server
       NGINX_HTTP_LISTEN_PORT: 80
       KC_ADMIN_EMAIL: mail@mail.com
+      # Path to the directory where the weights of the models (if any) are stored for cbir.
+      WEIGHT_PATH: ./data/weight
 
   urls_with_scheme:
     constant:
@@ -34,12 +36,14 @@ global:
   aaa_services_uri:
     constant:
       WEB_UI: web_ui
+      CBIR: cbir:6000
       CORE: core:8080
       PIMS: pims:5000
       MONGO: mongo
       NGINX: nginx
       PIMS_CACHE: pims-cache:6379
       POSTGIS: postgis
+      REDIS: redis
       APPENGINE: app-engine:8080
       REGISTRY: registry
       IAM: iam:8100
@@ -61,6 +65,7 @@ global:
 
   images:
     constant:
+      CBIR: cytomineuliege/cbir:0.5.0
       CORE: cytomine/core:5.1.0
       MONGO: cytomine/mongo:1.0.0
       NGINX: cytomine/nginx:3.0.2-dev
@@ -75,6 +80,7 @@ global:
   container_paths:
     constant:
       APPENGINE_FILE_STORAGE: /data
+      CBIR_DATA: /data/cbir
       IMAGES: /data/images
       UPLOADED: /tmp/uploaded
 
@@ -128,6 +134,17 @@ global:
       PASS:
         type: openssl
         length: 32
+
+  cbir:
+    constant:
+      HOST: redis
+      DB: 0
+      # Choices: ['resnet', 'hoptim']
+      EXTRACTOR: resnet
+
+  redis:
+    constant:
+      PORT: 6380
 
   keys:
     auto:
@@ -285,3 +302,13 @@ services:
         SCHEDULER_MASTER_URL: app-engine.SCHEDULER_MASTER_URL
         SCHEDULER_OAUTH_TOKEN: app-engine.SCHEDULER_OAUTH_TOKEN
         SCHEDULER_USERNAME: app-engine.SCHEDULER_USERNAME
+
+    cbir:
+      global:
+        DATA_PATH: container_paths.CBIR_DATA
+        DB: cbir.DB
+        EXTRACTOR: cbir.EXTRACTOR
+        HOST: cbir.HOST
+        PORT: redis.PORT
+      constant:
+        API_BASE_PATH: /cbir
