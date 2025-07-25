@@ -12,7 +12,7 @@ for arg in "$@"; do
 done
 
 # Define array of valid service short names
-valid_services=('ae' 'core' 'iam' 'ims' 'ui')
+valid_services=('ae' 'cbir' 'core' 'iam' 'ims' 'ui')
 
 # Function to check if a service is valid
 is_valid_service() {

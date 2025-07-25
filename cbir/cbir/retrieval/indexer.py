@@ -51,13 +51,13 @@ class Indexer:
         index = faiss.index_gpu_to_cpu(self.index) if self.gpu else self.index
         faiss.write_index(index, self.index_path)
 
-    def add(self, last_id: int, images: torch.Tensor) -> List[int]:
+    def add(self, last_id: int, images: np.ndarray) -> List[int]:
         """
         Index the given images in the index.
 
         Args:
             last_id (int): The last ID in the index.
-            images (torch.Tensor): The images to be indexed.
+            images (np.ndarray): The images to be indexed.
 
         Returns:
             List[int]: A list of IDs of the indexed images.

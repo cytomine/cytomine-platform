@@ -57,6 +57,7 @@
           @select="$emit('select', $event)"
           @centerView="$emit('centerView', ($event) ? $event : annot)"
           @deletion="$emit('delete', annot)"
+          @searchSimilarAnnotations="searchSimilarAnnotations"
         />
 
         <annotation-simple-details
@@ -83,7 +84,7 @@
 
 <script>
 import VueDraggableResizable from 'vue-draggable-resizable';
-import {UserCollection} from 'cytomine-client';
+import {Cytomine, UserCollection} from 'cytomine-client';
 import AnnotationDetails from '@/components/annotations/AnnotationDetails';
 import AnnotationLinksPreview from '@/components/annotations/AnnotationLinksPreview';
 import AnnotationSimpleDetails from '@/components/viewer/annotations/AnnotationSimpleDetails';
@@ -213,6 +214,20 @@ export default {
         this.$nextTick(() => this.reload = true);
       }
     },
+    async searchSimilarAnnotations() {
+      let data = (await Cytomine.instance.api.get(
+        'retrieval/search',
+        {
+          params: {
+            annotation: this.selectedFeature.properties.annot.id,
+            nrt_neigh: 10 // eslint-disable-line camelcase
+          }
+        }
+      )).data;
+      this.$store.commit(this.imageModule + 'setShowSimilarAnnotations', true);
+      this.$store.commit(this.imageModule + 'setSimilarAnnotations', data);
+      this.$store.commit(this.imageModule + 'setQueryAnnotation', this.selectedFeature.properties.annot);
+    }
   },
   created() {
     this.fetchUsers();

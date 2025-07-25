@@ -27,6 +27,7 @@ import java.util.UUID;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.RequestPatternBuilder;
+import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 import jakarta.persistence.EntityManager;
 import org.apache.commons.lang3.time.DateUtils;
@@ -36,6 +37,7 @@ import org.locationtech.jts.io.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
@@ -58,8 +60,10 @@ import be.cytomine.domain.security.User;
 import be.cytomine.utils.JsonObject;
 
 import static be.cytomine.service.middleware.ImageServerService.IMS_API_BASE_PATH;
+import static be.cytomine.service.search.RetrievalService.CBIR_API_BASE_PATH;
+import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -93,9 +97,36 @@ public class UserAnnotationResourceTests {
     private User me;
     private UserAnnotation userAnnotation;
 
+    private static void setupStub() {
+        /* Simulate call to PIMS */
+        wireMockServer.stubFor(WireMock.post(urlPathMatching(IMS_API_BASE_PATH + "/image/.*/annotation/drawing"))
+            .withRequestBody(WireMock.matching(".*"))
+            .willReturn(aResponse()
+                .withStatus(HttpStatus.OK.value())
+                .withBody(UUID.randomUUID().toString().getBytes())
+            )
+        );
+
+        /* Simulate call to CBIR server */
+        wireMockServer.stubFor(WireMock.post(urlPathEqualTo(CBIR_API_BASE_PATH + "/images"))
+            .withQueryParam("storage", matching(".*"))
+            .withQueryParam("index", equalTo("annotation"))
+            .willReturn(aResponse().withBody(UUID.randomUUID().toString()))
+        );
+
+        wireMockServer.stubFor(WireMock.delete(urlPathMatching(CBIR_API_BASE_PATH + "/images/.*"))
+            .withQueryParam("storage", matching(".*"))
+            .withQueryParam("index", equalTo("annotation"))
+            .willReturn(aResponse().withBody(UUID.randomUUID().toString()))
+        );
+    }
+
     @BeforeAll
     public static void beforeAll() {
+        wireMockServer = new WireMockServer(8888);
         wireMockServer.start();
+
+        setupStub();
     }
 
     @AfterAll
@@ -467,7 +498,7 @@ public class UserAnnotationResourceTests {
         String body = "{\"level\":0,\"z_slices\":0,\"annotations\":[{\"geometry\":\"POLYGON ((1 1, 50 10, 50 50, 10 50, 1 1))\"}],\"timepoints\":0,\"background_transparency\":100}";
         System.out.println(url);
         System.out.println(body);
-        stubFor(post(urlEqualTo(IMS_API_BASE_PATH + url)).withRequestBody(equalTo(
+        stubFor(WireMock.post(urlEqualTo(IMS_API_BASE_PATH + url)).withRequestBody(equalTo(
                                 body
                         ))
                         .willReturn(
@@ -564,5 +595,4 @@ public class UserAnnotationResourceTests {
                 .andExpect(jsonPath("$.size").value(equalTo(3)))
                 .andExpect(jsonPath("$.collection", hasSize(1)));
     }
-
 }

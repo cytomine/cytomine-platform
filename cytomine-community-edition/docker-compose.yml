@@ -120,6 +120,31 @@ services:
       cytomine-network:
         ipv4_address: 172.18.0.11
 
+  redis:
+    image: redis:7.2
+    command: --port 6380
+    restart: unless-stopped
+    volumes:
+      - ${AAA_CONFIG_PROJECT_DATA_PATH}/redis:/data
+    networks:
+      cytomine-network:
+        ipv4_address: 172.18.0.12
+
+  cbir:
+    image: cytomine/cbir:latest
+    build:
+      context: ../cbir
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - ${AAA_CONFIG_PROJECT_DATA_PATH}/cbir:${CONTAINER_PATHS_CBIR_DATA}
+      - ${AAA_CONFIG_WEIGHT_PATH}:/weights
+    networks:
+      cytomine-network:
+        ipv4_address: 172.18.0.13
+
 networks:
   cytomine-network:
     driver: bridge

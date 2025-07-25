@@ -99,6 +99,12 @@ http {
             proxy_pass http://$tmpiamhost;
         }
 
+        # Internal communication to CBIR from other internal micro-services
+        location /cbir {
+            set $tmpcbirhost "$INTERNAL_URLS_CBIR";
+            proxy_pass http://$tmpcbirhost;
+        }
+
         # Internal communication to CORE from other internal micro-services.
         # Base path convention: "/api" + special endpoints that should be moved under "/api" base path in the future.
         location ~ /(api|ws|server/ping|session/admin|custom-ui) {

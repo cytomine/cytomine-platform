@@ -1,0 +1,18 @@
+services:
+
+  cbir:
+    image: cbir:dev-latest
+    build:
+      context: ${REPO_PATH}/cbir
+      dockerfile: ${REPO_PATH}/cbir/Dockerfile
+      target: dev-server
+    ports:
+      - ${DEV_CBIR_PORT:-6000}:6000
+      - ${DEV_SSH_CBIR_PORT:-10025}:22
+    command: ["/bin/bash"]
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+    volumes:
+      - ${REPO_PATH}/cbir:/app
+    env_file: ${ROOT_PATH}/envs/cbir.env

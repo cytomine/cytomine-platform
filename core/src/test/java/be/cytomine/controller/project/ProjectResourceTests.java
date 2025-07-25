@@ -18,17 +18,24 @@ package be.cytomine.controller.project;
 
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
-import org.apache.commons.lang3.time.DateUtils;
+import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.client.WireMock;
+
 import jakarta.persistence.EntityManager;
+import org.apache.commons.lang3.time.DateUtils;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
 import be.cytomine.BasicInstanceBuilder;
 import be.cytomine.CytomineCoreApplication;
@@ -52,6 +59,13 @@ import be.cytomine.service.social.ProjectConnectionService;
 import org.springframework.security.test.context.support.WithMockUser;
 
 
+import static be.cytomine.service.middleware.ImageServerService.IMS_API_BASE_PATH;
+import static be.cytomine.service.search.RetrievalService.CBIR_API_BASE_PATH;
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.matching;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.springframework.security.acls.domain.BasePermission.ADMINISTRATION;
@@ -95,6 +109,48 @@ public class ProjectResourceTests {
 
     @Autowired
     UserRepository userRepository;
+
+    private static WireMockServer wireMockServer;
+
+    private static void setupStub() {
+        /* Simulate call to PIMS */
+        wireMockServer.stubFor(WireMock.post(urlPathMatching(IMS_API_BASE_PATH + "/image/.*/annotation/drawing"))
+            .withRequestBody(WireMock.matching(".*"))
+            .willReturn(aResponse()
+                .withStatus(HttpStatus.OK.value())
+                .withBody(UUID.randomUUID().toString().getBytes())
+            )
+        );
+
+        /* Simulate call to CBIR server */
+        wireMockServer.stubFor(WireMock.post(urlPathEqualTo(CBIR_API_BASE_PATH + "/storages"))
+            .withRequestBody(matching(".*"))
+            .willReturn(aResponse().withBody(UUID.randomUUID().toString()))
+        );
+
+        wireMockServer.stubFor(WireMock.delete(urlPathEqualTo(CBIR_API_BASE_PATH + "/storages"))
+            .willReturn(aResponse().withBody(UUID.randomUUID().toString()))
+        );
+
+        wireMockServer.stubFor(WireMock.post(urlPathEqualTo(CBIR_API_BASE_PATH + "/images"))
+            .withQueryParam("storage", matching(".*"))
+            .withQueryParam("index", equalTo("annotation"))
+            .willReturn(aResponse().withBody(UUID.randomUUID().toString()))
+        );
+    }
+
+    @BeforeAll
+    public static void beforeAll() {
+        wireMockServer = new WireMockServer(8888);
+        wireMockServer.start();
+
+        setupStub();
+    }
+
+    @AfterAll
+    public static void afterAll() {
+        wireMockServer.stop();
+    }
 
     @BeforeEach
     public void cleanActivities() {
@@ -551,7 +607,6 @@ public class ProjectResourceTests {
         // check ontology access
         assertThat(permissionService.hasACLPermission(projectCreated.getOntology(), user.getUsername(), READ)).isTrue();
         assertThat(permissionService.hasACLPermission(projectCreated.getOntology(), admin.getUsername(), READ)).isTrue();
-
     }
 
     @Test
@@ -567,7 +622,6 @@ public class ProjectResourceTests {
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.errors").value(containsString("already exist")));
     }
-
 
     @Test
     @Transactional
@@ -585,9 +639,7 @@ public class ProjectResourceTests {
                 .andExpect(jsonPath("$.command").exists())
                 .andExpect(jsonPath("$.project.id").exists())
                 .andExpect(jsonPath("$.project.name").value("new_name"));
-
     }
-
 
     @Test
     @Transactional
@@ -600,7 +652,6 @@ public class ProjectResourceTests {
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.errors").exists());
-
     }
 
     @Test
@@ -626,9 +677,7 @@ public class ProjectResourceTests {
 
         assertThat(permissionService.hasACLPermission(project, previousUser.getUsername(), READ)).isFalse();
         assertThat(permissionService.hasACLPermission(project, newUser.getUsername(), READ)).isTrue();
-
     }
-
 
     @Test
     @Transactional
@@ -655,7 +704,6 @@ public class ProjectResourceTests {
         assertThat(permissionService.hasACLPermission(project, previousUser.getUsername(), ADMINISTRATION)).isFalse();
         assertThat(permissionService.hasACLPermission(project, newUser.getUsername(), ADMINISTRATION)).isTrue();
         assertThat(permissionService.hasACLPermission(project, newUser.getUsername(), READ)).isTrue();
-
     }
 
     @Test
@@ -704,7 +752,6 @@ public class ProjectResourceTests {
                 .andExpect(jsonPath("$.errors").exists());
     }
 
-
     @Test
     @Transactional
     public void list_last_action() throws Exception {
@@ -718,7 +765,6 @@ public class ProjectResourceTests {
                 .andExpect(jsonPath("$.collection", hasSize(greaterThanOrEqualTo(1))));
     }
 
-
     @Test
     @Transactional
     public void list_last_opened_with_empty_dataset() throws Exception {
@@ -727,13 +773,11 @@ public class ProjectResourceTests {
         Project projectNotOpened = builder.given_a_project();
         builder.addUserToProject(projectNotOpened, builder.given_superadmin().getUsername());
 
-
         restProjectControllerMockMvc.perform(get("/api/project/method/lastopened.json"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.collection", hasSize(greaterThanOrEqualTo(2))));
         // last opened list unopened project (hum...) if user has not open any project
     }
-
 
     @Test
     @Transactional
@@ -764,7 +808,6 @@ public class ProjectResourceTests {
         Project project = builder.given_a_project();
         builder.addUserToProject(project, builder.given_superadmin().getUsername());
 
-
         restProjectControllerMockMvc.perform(get("/api/ontology/{id}/project.json", project.getOntology().getId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.collection[0].id").value(project.getId()));
@@ -778,7 +821,6 @@ public class ProjectResourceTests {
         builder.addUserToProject(project, builder.given_superadmin().getUsername());
         restProjectControllerMockMvc.perform(get("/api/ontology/{id}/project.json", 0L))
                 .andExpect(status().isNotFound());
-
     }
 
     @Test
@@ -789,7 +831,6 @@ public class ProjectResourceTests {
         restProjectControllerMockMvc.perform(get("/api/user/{id}/project.json", builder.given_superadmin().getId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.collection[0].id").value(project.getId()));
-
     }
 
     @Test
@@ -799,7 +840,6 @@ public class ProjectResourceTests {
                 .andExpect(status().isNotFound());
     }
 
-
     @Test
     @Transactional
     public void list_by_user_light() throws Exception {
@@ -808,7 +848,6 @@ public class ProjectResourceTests {
         restProjectControllerMockMvc.perform(get("/api/user/{id}/project/light.json", builder.given_superadmin().getId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.collection[?(@.id=='"+project.getId()+"')]").exists());
-
     }
 
     @Test
@@ -836,7 +875,6 @@ public class ProjectResourceTests {
                         .param("creator", "true"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.collection[?(@.id=='"+project.getId()+"')]").doesNotExist());
-
     }
 
     @Test
@@ -892,7 +930,6 @@ public class ProjectResourceTests {
                         .param("user", "true"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.collection[?(@.id=='"+project.getId()+"')]").exists());
-
     }
 
     @Test
@@ -943,10 +980,7 @@ public class ProjectResourceTests {
                 .andExpect(jsonPath("$.numberOfImages.max").value(10))
                 .andExpect(jsonPath("$.members.min").value(lessThanOrEqualTo(1)))
                 .andExpect(jsonPath("$.members.max").value(2));
-
     }
-
-
 
     @Test
     @Transactional
@@ -967,8 +1001,6 @@ public class ProjectResourceTests {
                         .param("user", builder.given_superadmin().getId().toString()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[?(@.project=="+project.getId()+")]").exists());
-
-
     }
 
     @Test
@@ -981,7 +1013,6 @@ public class ProjectResourceTests {
         Date start = DateUtils.addSeconds(new Date(), -5);
         Date stop = DateUtils.addSeconds(new Date(), 5);
         UserAnnotation userAnnotation = builder.given_a_not_persisted_user_annotation(project);
-
         userAnnotationService.add(userAnnotation.toJsonObject());
 
         restProjectControllerMockMvc.perform(get("/api/project/{id}/commandhistory.json", project.getId())
@@ -1002,8 +1033,6 @@ public class ProjectResourceTests {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$[?(@.project=="+project.getId()+")]").doesNotExist());
     }
-
-
 
     @Autowired
     ProjectConnectionService projectConnectionService;

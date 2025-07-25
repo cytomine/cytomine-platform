@@ -22,7 +22,7 @@ if [ $installer_exit_code -ne 0 ]; then
 fi
 
 # Extract services from .dev.env file
-valid_services=('ae' 'core' 'iam' 'ims' 'ui')
+valid_services=('ae' 'cbir' 'core' 'iam' 'ims' 'ui')
 
 # Build profiles and docker compose override files for dev services
 active_profiles=""

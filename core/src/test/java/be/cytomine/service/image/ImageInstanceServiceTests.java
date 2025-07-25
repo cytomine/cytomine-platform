@@ -60,9 +60,13 @@ import be.cytomine.utils.JsonObject;
 import be.cytomine.utils.filters.SearchOperation;
 import be.cytomine.utils.filters.SearchParameterEntry;
 
+import static be.cytomine.service.search.RetrievalService.CBIR_API_BASE_PATH;
 import static be.cytomine.service.social.UserPositionServiceTests.USER_VIEW;
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.delete;
+import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.matching;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
 @SpringBootTest(classes = CytomineCoreApplication.class)
@@ -100,11 +104,22 @@ public class ImageInstanceServiceTests {
 
     private static WireMockServer wireMockServer;
 
+    private static void setupStub() {
+        /* Simulate call to CBIR */
+        wireMockServer.stubFor(delete(urlPathMatching(CBIR_API_BASE_PATH + "/images/.*"))
+            .withQueryParam("storage", matching(".*"))
+            .withQueryParam("index", equalTo("annotation"))
+            .willReturn(aResponse().withBody(UUID.randomUUID().toString()))
+        );
+    }
+
     @BeforeAll
     public static void beforeAll() {
         wireMockServer = new WireMockServer(8888);
         wireMockServer.start();
         WireMock.configureFor("localhost", wireMockServer.port());
+
+        setupStub();
     }
 
     @AfterAll
@@ -803,6 +818,4 @@ public class ImageInstanceServiceTests {
         assertThat(imageInstance.getReviewStop()).isNull();
         assertThat(imageInstance.getReviewUser()).isNull();
     }
-
-
 }

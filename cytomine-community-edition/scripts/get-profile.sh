@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Extract services from .dev.env file
-valid_services=('ae' 'core' 'iam' 'ims' 'ui')
+valid_services=('ae' 'cbir' 'core' 'iam' 'ims' 'ui')
 
 # Function to print colored symbols
 print_symbol() {
