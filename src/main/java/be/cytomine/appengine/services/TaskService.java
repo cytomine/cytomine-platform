@@ -137,6 +137,7 @@ public class TaskService {
                             log.info("UploadTask: validating descriptor file...");
                             descriptorFileAsJson = new ObjectMapper(new YAMLFactory()).readTree(descriptorFileYmlContent);
                             taskValidationService.validateDescriptorFile(descriptorFileAsJson);
+                            taskValidationService.checkIsNotDuplicate(descriptorFileAsJson);
                             log.info("UploadTask: Descriptor file validated");
                         } catch (ValidationException e) {
                             log.info("UploadTask: Descriptor file not valid");
