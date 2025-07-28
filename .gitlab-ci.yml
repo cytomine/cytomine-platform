@@ -1,9 +1,0 @@
-stages:
-  - build
-
-build:
-  stage: build
-  image: gradle:ubi-minimal
-  script:
-    - gradle build -x test
-
