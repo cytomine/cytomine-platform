@@ -40,7 +40,7 @@ from pims.api.utils.response import serialize_cytomine_model
 from pims.config import Settings, get_settings
 from pims.files.archive import make_zip_archive
 from pims.files.file import Path
-from pims.importer.importer import PENDING_PATH, run_import
+from pims.importer.importer import run_import
 from pims.importer.listeners import CytomineListener
 from pims.tasks.queue import Task, send_task
 from pims.utils.iterables import ensure_list
@@ -68,6 +68,8 @@ def import_dataset(
 
     if not storage_id:
         raise BadRequestException(detail="'storage' parameter is missing.")
+
+    Path(WRITING_PATH).mkdir(parents=True, exist_ok=True)
 
     # Dataset discovery
     valid_datasets = []
@@ -120,26 +122,26 @@ def import_dataset(
         project_names = [project.name for project in projects]
         datasets = [ds for ds in valid_datasets if os.path.basename(ds) not in project_names]
 
-        for dataset_path in valid_datasets:
+        for dataset_path in datasets:
             dataset_name = os.path.basename(dataset_path)
 
             if create_project:
                 project = Project(name=dataset_name).save()
 
-            for image_path in Path(dataset_path).recursive_iterdir():
-                if image_path.is_file():
-                    tmp_path = Path(PENDING_PATH) / image_path.name
-                    tmp_path.symlink_to(image_path, target_is_directory=image_path.is_dir())
+            image_paths = [p for p in Path(dataset_path).recursive_iterdir() if p.is_file()]
+            for image_path in image_paths:
+                tmp_path = Path(WRITING_PATH, image_path.name)
+                tmp_path.symlink_to(image_path, target_is_directory=image_path.is_dir())
 
                 uploadedFile = UploadedFile(
-                    image_path.name,
-                    tmp_path,
-                    os.path.getsize(image_path),
-                    "",
-                    "",
-                    [project.id] if create_project else [],
-                    storage_id,
-                    user.id,
+                    original_filename=image_path.name,
+                    filename=str(tmp_path),
+                    size=image_path.size,
+                    ext="",
+                    content_type="",
+                    id_projects=[project.id] if create_project else [],
+                    id_storage=storage_id,
+                    id_user=user.id,
                     status=UploadedFile.UPLOADED,
                 )
 
@@ -147,6 +149,7 @@ def import_dataset(
                     cytomine_auth,
                     uploadedFile,
                     projects=projects,
+                    user_properties=iter([]),
                 )
 
                 try:
