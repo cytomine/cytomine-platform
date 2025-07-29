@@ -118,7 +118,7 @@ def import_dataset(
         # Filter out existing datasets
         projects = ProjectCollection().fetch()
         project_names = [project.name for project in projects]
-        datasets = [ds for ds in datasets if os.path.basename(ds) not in project_names]
+        datasets = [ds for ds in valid_datasets if os.path.basename(ds) not in project_names]
 
         for dataset_path in valid_datasets:
             dataset_name = os.path.basename(dataset_path)
