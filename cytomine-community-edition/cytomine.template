@@ -16,6 +16,8 @@ global:
       KC_ADMIN_EMAIL: mail@mail.com
       # Path to the directory where the weights of the models (if any) are stored for cbir.
       WEIGHT_PATH: ./data/weight
+      # Path to the directory where image dataset folders (if any) are stored for importing large numbers of images.
+      DATASET_PATH: ./data/dataset
 
   urls_with_scheme:
     constant:
@@ -81,6 +83,7 @@ global:
     constant:
       APPENGINE_FILE_STORAGE: /data
       CBIR_DATA: /data/cbir
+      DATASET: /dataset
       IMAGES: /data/images
       UPLOADED: /tmp/uploaded
 
@@ -242,6 +245,7 @@ services:
         CYTOMINE_PUBLIC_KEY: keys.IMAGE_SERVER_PUBLIC
         CYTOMINE_PRIVATE_KEY: keys.IMAGE_SERVER_PRIVATE
         ROOT: container_paths.IMAGES
+        DATASET_PATH: container_paths.DATASET
         PENDING_PATH: container_paths.UPLOADED
         INTERNAL_URL_CORE: urls_with_scheme.INTERNAL_PROXY
 
