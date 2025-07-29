@@ -40,7 +40,7 @@ from pims.api.utils.response import serialize_cytomine_model
 from pims.config import Settings, get_settings
 from pims.files.archive import make_zip_archive
 from pims.files.file import Path
-from pims.importer.importer import run_import
+from pims.importer.importer import PENDING_PATH, run_import
 from pims.importer.listeners import CytomineListener
 from pims.tasks.queue import Task, send_task
 from pims.utils.iterables import ensure_list
@@ -59,6 +59,7 @@ INTERNAL_URL_CORE = get_settings().internal_url_core
 def import_dataset(
     request: Request,
     storage_id: int = Query(..., description="The storage where to import the dataset"),
+    create_project: bool = Query(False, description="Create a project for each dataset"),
     config: Settings = Depends(get_settings),
 ) -> JSONResponse:
     """
@@ -68,12 +69,34 @@ def import_dataset(
     if not storage_id:
         raise BadRequestException(detail="'storage' parameter is missing.")
 
+    # Dataset discovery
+    valid_datasets = []
+    invalid_datasets = {}
+
+    for dataset in os.listdir(DATASET_PATH):
+        dataset_path = os.path.join(DATASET_PATH, dataset)
+
+        if not os.path.isdir(dataset_path):
+            continue
+
+        is_valid, missing = check_dataset_structure(dataset_path)
+
+        if is_valid:
+            valid_datasets.append(dataset_path)
+        else:
+            invalid_datasets[dataset_path] = missing
+
     public_key, signature = parse_authorization_header(request.headers)
     cytomine_auth = (
         INTERNAL_URL_CORE,
         config.cytomine_public_key,
         config.cytomine_private_key
     )
+
+    response = {
+        os.path.basename(dataset_path): {"uploaded_files": [], "failed_files": []}
+        for dataset_path in valid_datasets
+    }
 
     with Cytomine(*cytomine_auth, configure_logging=False) as c:
         if not c.current_user:
@@ -97,23 +120,49 @@ def import_dataset(
         project_names = [project.name for project in projects]
         datasets = [ds for ds in datasets if os.path.basename(ds) not in project_names]
 
-    # Dataset discovery
-    valid_datasets = []
-    invalid_datasets = {}
+        for dataset_path in valid_datasets:
+            dataset_name = os.path.basename(dataset_path)
 
-    for dataset in os.listdir(DATASET_PATH):
-        dataset_path = os.path.join(DATASET_PATH, dataset)
+            if create_project:
+                project = Project(name=dataset_name).save()
 
-        if not os.path.isdir(dataset_path):
-            continue
+            for image_path in Path(dataset_path).recursive_iterdir():
+                if image_path.is_file():
+                    tmp_path = Path(PENDING_PATH) / image_path.name
+                    tmp_path.symlink_to(image_path, target_is_directory=image_path.is_dir())
 
-        is_valid, missing = check_dataset_structure(dataset_path)
+                uploadedFile = UploadedFile(
+                    image_path.name,
+                    tmp_path,
+                    os.path.getsize(image_path),
+                    "",
+                    "",
+                    [project.id] if create_project else [],
+                    storage_id,
+                    user.id,
+                    status=UploadedFile.UPLOADED,
+                )
 
-        if is_valid:
-            valid_datasets.append(dataset_path)
-        else:
-            invalid_datasets[dataset_path] = missing
+                cytomine_listener = CytomineListener(
+                    cytomine_auth,
+                    uploadedFile,
+                    projects=projects,
+                )
 
+                try:
+                    run_import(
+                        tmp_path,
+                        image_path.name,
+                        extra_listeners=[cytomine_listener],
+                    )
+                    response[dataset_name]["uploaded_files"].append(image_path.name)
+                except Exception as e:
+                    response[dataset_name]["failed_files"].append({
+                        "file": image_path.name,
+                        "error": str(e),
+                    })
+
+    return response
 
 @router.post('/upload', tags=['Import'])
 async def import_direct_chunks(
