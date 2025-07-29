@@ -30,7 +30,7 @@ from setuptools import Command, find_packages, setup
 
 # Package meta-data.
 NAME = 'cytomine-pims'
-REQUIRES_PYTHON = '>=3.8.0,<3.9.0'
+REQUIRES_PYTHON = '>=3.10.0,<3.11.0'
 
 # What packages are required for this module to be executed?
 REQUIRED = [
@@ -162,8 +162,7 @@ setup(
         'License :: OSI Approved :: Apache Software License',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.8',
-        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
         'Programming Language :: Python :: Implementation :: CPython',
     ],
     # $ setup.py publish support.
