@@ -33,6 +33,7 @@ from pims.api.utils.cytomine_auth import (
     parse_authorization_header,
     parse_request_token, sign_token
 )
+from pims.api.utils.dataset import check_dataset_structure
 from pims.api.utils.multipart import FastSinglePartParser
 from pims.api.utils.parameter import filepath_parameter, imagepath_parameter, sanitize_filename
 from pims.api.utils.response import serialize_cytomine_model
@@ -49,8 +50,69 @@ router = APIRouter(prefix=get_settings().api_base_path)
 
 cytomine_logger = logging.getLogger("pims.cytomine")
 
+DATASET_PATH = get_settings().dataset_path
 WRITING_PATH = get_settings().writing_path
 INTERNAL_URL_CORE = get_settings().internal_url_core
+
+
+@router.post("/import", tags=["Import"])
+def import_dataset(
+    request: Request,
+    storage_id: int = Query(..., description="The storage where to import the dataset"),
+    config: Settings = Depends(get_settings),
+) -> JSONResponse:
+    """
+    Import a dataset from a predefined folder without moving the data.
+    """
+
+    if not storage_id:
+        raise BadRequestException(detail="'storage' parameter is missing.")
+
+    public_key, signature = parse_authorization_header(request.headers)
+    cytomine_auth = (
+        INTERNAL_URL_CORE,
+        config.cytomine_public_key,
+        config.cytomine_private_key
+    )
+
+    with Cytomine(*cytomine_auth, configure_logging=False) as c:
+        if not c.current_user:
+            raise AuthenticationException("PIMS authentication to Cytomine failed.")
+
+        cyto_keys = c.get(f"userkey/{public_key}/keys.json")
+        private_key = cyto_keys["privateKey"]
+
+        if sign_token(private_key, parse_request_token(request)) != signature:
+            raise AuthenticationException("Authentication to Cytomine failed")
+
+        c.set_credentials(public_key, private_key)
+        user = c.current_user
+
+        storage = Storage().fetch(storage_id)
+        if not storage:
+            raise CytomineProblem(f"Storage {storage_id} not found")
+
+        # Filter out existing datasets
+        projects = ProjectCollection().fetch()
+        project_names = [project.name for project in projects]
+        datasets = [ds for ds in datasets if os.path.basename(ds) not in project_names]
+
+    # Dataset discovery
+    valid_datasets = []
+    invalid_datasets = {}
+
+    for dataset in os.listdir(DATASET_PATH):
+        dataset_path = os.path.join(DATASET_PATH, dataset)
+
+        if not os.path.isdir(dataset_path):
+            continue
+
+        is_valid, missing = check_dataset_structure(dataset_path)
+
+        if is_valid:
+            valid_datasets.append(dataset_path)
+        else:
+            invalid_datasets[dataset_path] = missing
 
 
 @router.post('/upload', tags=['Import'])
