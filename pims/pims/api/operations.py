@@ -58,16 +58,17 @@ INTERNAL_URL_CORE = get_settings().internal_url_core
 @router.post("/import", tags=["Import"])
 def import_dataset(
     request: Request,
-    storage_id: int = Query(..., description="The storage where to import the dataset"),
+    storage_id: int = Query(..., description="The storage where to import the datasets"),
+    dataset_names: str = Query(None, description="Comma-separated list of dataset names to import"),
     create_project: bool = Query(False, description="Create a project for each dataset"),
     config: Settings = Depends(get_settings),
 ) -> JSONResponse:
     """
-    Import a dataset from a predefined folder without moving the data.
+    Import datasets from a predefined folder without moving the data.
     """
 
     if not storage_id:
-        raise BadRequestException(detail="'storage' parameter is missing.")
+        raise BadRequestException(detail="'storage_id' parameter is missing.")
 
     Path(WRITING_PATH).mkdir(parents=True, exist_ok=True)
 
@@ -75,7 +76,8 @@ def import_dataset(
     valid_datasets = []
     invalid_datasets = {}
 
-    for dataset in os.listdir(DATASET_PATH):
+    dataset_paths = dataset_names.split(",") if dataset_names else os.listdir(DATASET_PATH)
+    for dataset in dataset_paths:
         dataset_path = os.path.join(DATASET_PATH, dataset)
 
         if not os.path.isdir(dataset_path):
@@ -96,8 +98,11 @@ def import_dataset(
     )
 
     response = {
-        os.path.basename(dataset_path): {"uploaded_files": [], "failed_files": []}
-        for dataset_path in valid_datasets
+        "valid_datasets": {
+            os.path.basename(dataset_path): {"uploaded_files": [], "failed_files": []}
+            for dataset_path in valid_datasets
+        },
+        "invalid_datasets": invalid_datasets,
     }
 
     with Cytomine(*cytomine_auth, configure_logging=False) as c:
@@ -158,9 +163,9 @@ def import_dataset(
                         image_path.name,
                         extra_listeners=[cytomine_listener],
                     )
-                    response[dataset_name]["uploaded_files"].append(image_path.name)
+                    response["valid_datasets"][dataset_name]["uploaded_files"].append(image_path.name)
                 except Exception as e:
-                    response[dataset_name]["failed_files"].append({
+                    response["valid_datasets"][dataset_name]["failed_files"].append({
                         "file": image_path.name,
                         "error": str(e),
                     })
