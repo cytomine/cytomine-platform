@@ -12,6 +12,10 @@ on:
     branches:
       - master
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   validate-json-schema:
     runs-on: self-hosted
@@ -76,7 +80,7 @@ jobs:
 
     steps:
       - name: Set up the repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v2
 
       - name: Set up JDK ${{ vars.JAVA_VERSION }}
         uses: actions/setup-java@v4
