@@ -1,14 +1,29 @@
 package be.cytomine.appengine.utils;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.zip.ZipEntry;
 
+import be.cytomine.appengine.dto.responses.errors.AppEngineError;
+import be.cytomine.appengine.dto.responses.errors.ErrorBuilder;
+import be.cytomine.appengine.dto.responses.errors.ErrorCode;
+import be.cytomine.appengine.exceptions.*;
 import be.cytomine.appengine.models.task.ParameterType;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
+import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.mock.web.MockMultipartFile;
@@ -222,31 +237,25 @@ public class TestTaskBuilder {
 
     public static Task buildTaskFromResource(String bundleFilename, UUID taskUUID) {
         ClassPathResource resource = buildByBundleFilename(bundleFilename);
-        ArchiveUtils archiveUtils = new ArchiveUtils();
 
         try {
-            MockMultipartFile taskMultipartFile = new MockMultipartFile(
-                bundleFilename,
-                resource.getInputStream()
-            );
-            UploadTaskArchive taskArchive = archiveUtils.readArchive(taskMultipartFile);
+            JsonNode descriptorAsJsonNode = getDescriptorJsonFromArchive(resource.getInputStream());
 
             Task task = new Task();
             task.setIdentifier(taskUUID);
             task.setStorageReference("task-" + taskUUID + "-def");
-            JsonNode taskDescriptorJson = taskArchive.getDescriptorFileAsJson();
-            task.setName(taskDescriptorJson.get("name").textValue());
-            task.setNameShort(taskDescriptorJson.get("name_short").textValue());
-            task.setDescriptorFile(taskDescriptorJson.get("namespace").textValue());
-            task.setNamespace(taskDescriptorJson.get("namespace").textValue());
-            task.setVersion(taskDescriptorJson.get("version").textValue());
-            task.setInputFolder(taskDescriptorJson.get("configuration").get("input_folder").textValue());
-            task.setOutputFolder(taskDescriptorJson.get("configuration").get("output_folder").textValue());
-            if (taskDescriptorJson.get("description") != null) {
-                task.setDescription(taskDescriptorJson.get("description").textValue());
+            task.setName(descriptorAsJsonNode.get("name").textValue());
+            task.setNameShort(descriptorAsJsonNode.get("name_short").textValue());
+            task.setDescriptorFile(descriptorAsJsonNode.get("namespace").textValue());
+            task.setNamespace(descriptorAsJsonNode.get("namespace").textValue());
+            task.setVersion(descriptorAsJsonNode.get("version").textValue());
+            task.setInputFolder(descriptorAsJsonNode.get("configuration").get("input_folder").textValue());
+            task.setOutputFolder(descriptorAsJsonNode.get("configuration").get("output_folder").textValue());
+            if (descriptorAsJsonNode.get("description") != null) {
+                task.setDescription(descriptorAsJsonNode.get("description").textValue());
             }
 
-            JsonNode resources = taskDescriptorJson.get("configuration").get("resources");
+            JsonNode resources = descriptorAsJsonNode.get("configuration").get("resources");
             if (!Objects.nonNull(resources)) {
                 task.setRam(defaultRam);
                 task.setCpus(defaultCpus);
@@ -256,30 +265,64 @@ public class TestTaskBuilder {
                 task.setGpus(resources.path("gpus").asInt(0));
             }
 
-            task.setAuthors(getAuthors(taskArchive));
-            task.setParameters(getInputs(taskArchive));
-            task.getParameters().addAll(getOnputs(taskArchive));
+            task.setAuthors(getAuthors(descriptorAsJsonNode));
+            task.setParameters(getInputs(descriptorAsJsonNode));
+            task.getParameters().addAll(getOnputs(descriptorAsJsonNode));
             return task;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
+    private static JsonNode getDescriptorJsonFromArchive(InputStream inputStream) {
+        try (ZipArchiveInputStream zais = new ZipArchiveInputStream(inputStream)) {
+            ZipEntry entry;
+
+            while ((entry = zais.getNextZipEntry()) != null) {
+                String entryName = entry.getName();
+
+                if (entryName.toLowerCase().matches("descriptor\\.(yml|yaml)")) {
+                    String descriptorFileYmlContent = IOUtils.toString(zais, StandardCharsets.UTF_8);
+                    return new ObjectMapper(new YAMLFactory()).readTree(descriptorFileYmlContent);
+
+                }
+            }
+        } catch (Exception ignored) {}
+        return null;
+    }
+
+    private static String getDescriptorYmlFromArchive(InputStream inputStream) {
+        try (ZipArchiveInputStream zais = new ZipArchiveInputStream(inputStream)) {
+            ZipEntry entry;
+
+            while ((entry = zais.getNextZipEntry()) != null) {
+                String entryName = entry.getName();
+
+                if (entryName.toLowerCase().matches("descriptor\\.(yml|yaml)")) {
+                    return IOUtils.toString(zais, StandardCharsets.UTF_8);
+
+                }
+            }
+        } catch (Exception ignored) {}
+        return null;
+    }
+
     public static File getDescriptorFromBundleResource(String bundleFilename) {
         ClassPathResource resource = buildByBundleFilename(bundleFilename);
-        ArchiveUtils archiveUtils = new ArchiveUtils();
         try {
-            MockMultipartFile taskMultipartFile = new MockMultipartFile(bundleFilename, resource.getInputStream());
-            UploadTaskArchive taskArchive = archiveUtils.readArchive(taskMultipartFile);
-            return taskArchive.getDescriptorFile();
+            String descriptorYmlContent = getDescriptorYmlFromArchive(resource.getInputStream());
+            Path tempFile = Files.createTempFile("descriptor-", ".yml");
+            assert descriptorYmlContent != null;
+            Files.writeString(tempFile, descriptorYmlContent, StandardOpenOption.WRITE);
+            return  tempFile.toFile();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    private static Set<Parameter> getInputs(UploadTaskArchive uploadTaskArchive) {
+    private static Set<Parameter> getInputs(JsonNode descriptorAsJsonNode) {
         Set<Parameter> inputs = new HashSet<>();
-        JsonNode inputsNode = uploadTaskArchive.getDescriptorFileAsJson().get("inputs");
+        JsonNode inputsNode = descriptorAsJsonNode.get("inputs");
         if (inputsNode.isObject()) {
             Iterator<String> fieldNames = inputsNode.fieldNames();
             while (fieldNames.hasNext()) {
@@ -311,9 +354,9 @@ public class TestTaskBuilder {
         return inputs;
     }
 
-    private static Set<Parameter> getOnputs(UploadTaskArchive uploadTaskArchive) {
+    private static Set<Parameter> getOnputs(JsonNode descriptorAsJsonNode) {
         Set<Parameter> outputs = new HashSet<>();
-        JsonNode outputsNode = uploadTaskArchive.getDescriptorFileAsJson().get("outputs");
+        JsonNode outputsNode = descriptorAsJsonNode.get("outputs");
         if (outputsNode.isObject()) {
             Iterator<String> fieldNames = outputsNode.fieldNames();
             while (fieldNames.hasNext()) {
@@ -335,9 +378,9 @@ public class TestTaskBuilder {
         return outputs;
     }
 
-    private static Set<Author> getAuthors(UploadTaskArchive uploadTaskArchive) {
+    private static Set<Author> getAuthors(JsonNode descriptorAsJsonNode) {
         Set<Author> authors = new HashSet<>();
-        JsonNode authorNode = uploadTaskArchive.getDescriptorFileAsJson().get("authors");
+        JsonNode authorNode = descriptorAsJsonNode.get("authors");
         if (authorNode.isArray()) {
             for (JsonNode author : authorNode) {
                 Author a = new Author();
