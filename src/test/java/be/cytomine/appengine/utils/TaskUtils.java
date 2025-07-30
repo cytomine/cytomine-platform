@@ -28,18 +28,18 @@ import be.cytomine.appengine.models.task.integer.IntegerType;
 import be.cytomine.appengine.states.TaskRunState;
 
 public class TaskUtils {
-    public static UploadTaskArchive createTestUploadTaskArchive() throws IOException {
-        File descriptorFile = new ClassPathResource("artifacts/descriptor.yml").getFile();
-
-        // Create a copy because it will be deleted after the upload process
-        Path original = new ClassPathResource("artifacts/image.tar").getFile().toPath();
-        Path copy = Path.of("src/test/resources/artifacts/docker-test-image.tar");
-        Files.copy(original, copy, StandardCopyOption.REPLACE_EXISTING);
-        File dockerImage = copy.toFile();
-        dockerImage.deleteOnExit();
-
-        return new UploadTaskArchive(descriptorFile, dockerImage);
-    }
+//    public static UploadTaskArchive createTestUploadTaskArchive() throws IOException {
+//        File descriptorFile = new ClassPathResource("artifacts/descriptor.yml").getFile();
+//
+//        // Create a copy because it will be deleted after the upload process
+//        Path original = new ClassPathResource("artifacts/image.tar").getFile().toPath();
+//        Path copy = Path.of("src/test/resources/artifacts/docker-test-image.tar");
+//        Files.copy(original, copy, StandardCopyOption.REPLACE_EXISTING);
+//        File dockerImage = copy.toFile();
+//        dockerImage.deleteOnExit();
+//
+//        return new UploadTaskArchive(descriptorFile, dockerImage);
+//    }
 
     public static Author createTestAuthor() {
         Author author = new Author();

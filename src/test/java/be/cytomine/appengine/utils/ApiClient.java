@@ -216,10 +216,8 @@ public class ApiClient {
     public JsonNode provisionInput(String uuid, String parameterName, String type, String value)
         throws JsonProcessingException
     {
-        HttpEntity<Object> entity = null;
+
         if (type.equals("image") || type.equals("wsi") || type.equals("file")) {
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 
             MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
             ByteArrayResource fileResource = new ByteArrayResource(value.getBytes()) {
@@ -228,10 +226,20 @@ public class ApiClient {
                     return "file.txt";
                 }
             };
-            body.add("file", fileResource);
 
-            entity = new HttpEntity<>(body, headers);
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.parseMediaType("text/plain"));
+
+            HttpEntity<ByteArrayResource> entity = new HttpEntity<>(fileResource, headers);
+            body.add("file", entity);
+
+            HttpHeaders requestHeaders = new HttpHeaders();
+            requestHeaders.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+            HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, requestHeaders);
+            return post(baseUrl + "/task-runs/" + uuid + "/input-provisions/" + parameterName, requestEntity, JsonNode.class).getBody();
         } else {
+            HttpEntity<Object> entity = null;
             ObjectMapper mapper = new ObjectMapper();
             ObjectNode jsonNode = mapper.valueToTree(
                 TaskTestsUtils.createProvision(parameterName, type, value)
@@ -241,9 +249,9 @@ public class ApiClient {
             headers.setContentType(MediaType.APPLICATION_JSON);
 
             entity = new HttpEntity<>(jsonNode, headers);
+            return put(baseUrl + "/task-runs/" + uuid + "/input-provisions/" + parameterName, entity, JsonNode.class).getBody();
         }
 
-        return put(baseUrl + "/task-runs/" + uuid + "/input-provisions/" + parameterName, entity, JsonNode.class).getBody();
     }
 
     public List<JsonNode> provisionMultipleInputs(String uuid, List<ObjectNode> body) {
