@@ -189,7 +189,6 @@ public class RunTaskStepDefinitions {
         Task task = TestTaskBuilder.buildHardcodedAddInteger(UUID.fromString(uuid));
         secret = UUID.randomUUID().toString();
         persistedRun = new Run(UUID.fromString(uuid), null, null , secret);
-        task.setRuns(List.of(persistedRun));
         task = taskRepository.saveAndFlush(task);
         persistedRun.setTask(task);
         persistedRun = runRepository.saveAndFlush(persistedRun);
@@ -441,9 +440,6 @@ public class RunTaskStepDefinitions {
         task = taskRepository.save(task);
         persistedRun = new Run(UUID.fromString(runId), null, null);
         persistedRun = runRepository.save(persistedRun);
-        task.setRuns(List.of(persistedRun));
-        task = taskRepository.saveAndFlush(task);
-        task.setRuns(List.of(persistedRun));
         persistedRun.setTask(task);
         taskRepository.saveAndFlush(task);
         persistedRun = runRepository.findById(persistedRun.getId()).get();
@@ -699,8 +695,6 @@ public class RunTaskStepDefinitions {
     @And("a task run has been created with {string}")
     public void createTaskRun(String uuid) {
         persistedRun = new Run(UUID.fromString(uuid), TaskRunState.CREATED, persistedTask);
-//        persistedRun = runRepository.save(persistedRun);
-        persistedTask.setRuns(List.of(persistedRun));
         persistedTask = taskRepository.saveAndFlush(persistedTask);
 
     }
