@@ -147,7 +147,7 @@ http {
             set $tmpcorehost "$INTERNAL_URLS_CORE";
             proxy_pass http://$tmpcorehost;
         }
-        location /upload {
+        location ~ ^/(upload|import)$ {
             if ($request_method = OPTIONS ) {
               include /etc/nginx/cors_params;
               add_header 'Access-Control-Allow-Credentials' 'false' always;

@@ -39,6 +39,7 @@ services:
       - nginx
       - pims-cache
     volumes:
+      - ${AAA_CONFIG_DATASET_PATH}:/${CONTAINER_PATHS_DATASET}
       - ${AAA_CONFIG_PROJECT_DATA_PATH}/images:${CONTAINER_PATHS_IMAGES}
     networks:
       cytomine-network:
