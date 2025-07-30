@@ -6,6 +6,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -37,6 +38,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.NotNull;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
@@ -94,6 +96,7 @@ import be.cytomine.appengine.states.TaskRunState;
 @Slf4j
 @RequiredArgsConstructor
 @Service
+@Data
 public class TaskProvisioningService {
 
     private final TypePersistenceRepository typePersistenceRepository;
@@ -452,7 +455,7 @@ public class TaskProvisioningService {
     public void retrieveIOZipArchive(
         String runId,
         ParameterType type,
-        ServletOutputStream outputStream
+        OutputStream outputStream
     ) throws ProvisioningException, FileStorageException, IOException {
         log.info("Retrieving IO Archive: retrieving...");
         Run run = getRunIfValid(runId);
@@ -475,7 +478,6 @@ public class TaskProvisioningService {
         log.info("Retrieving IO Archive: zipping...");
 
         String io = type.equals(ParameterType.INPUT) ? "inputs" : "outputs";
-//        Path tempFile = Files.createTempFile(io + "-archive-", runId);
         ZipOutputStream zipOut = new ZipOutputStream(outputStream);
         for (TypePersistence provision : provisions) {
             // check that this type persistence is actually associated with a parameter
@@ -516,7 +518,6 @@ public class TaskProvisioningService {
 
         log.info("Retrieving IO Archive: zipped...");
 
-//        return new StorageData(tempFile.toFile());
     }
 
     public long getChecksumCRC32(String identifier, String name) throws FileStorageException
@@ -598,6 +599,7 @@ public class TaskProvisioningService {
                         String outputName = currentOutput.getName(); //
                         Path filePath = Path.of(basePath, "/", "task-run-outputs-" + run.getId(), outputName);
                         log.info("Posting Outputs Archive: storing {} in storage...", currentOutput);
+                        Files.createDirectories(filePath.getParent());
                         Files.copy(zais, filePath, StandardCopyOption.REPLACE_EXISTING);
                         log.info("Posting Outputs Archive: stored ");
                         parameterZipEntryStorageData = new StorageData(
