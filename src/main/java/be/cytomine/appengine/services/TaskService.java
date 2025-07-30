@@ -117,7 +117,6 @@ public class TaskService {
         Storage storage = new Storage(storageIdentifier);
         String imageRegistryCompliantName = null;
         log.info("UploadTask: building archive...");
-//        if (archiveUtils.isZip(inputStream)) {
             log.info("UploadTask: extracting descriptor and Docker image from archive...");
 
 
@@ -188,6 +187,13 @@ public class TaskService {
             } catch (IOException e) {
                 log.error("UploadTask: Failed to extract files from archive: " + imageRegistryCompliantName, e);
                 throw new BundleArchiveException(ErrorBuilder.build(ErrorCode.INTERNAL_DESCRIPTOR_EXTRACTION_FAILED)); // pick a general error
+            } catch (ValidationException e) {
+                log.error("UploadTask: task already exists");
+                throw e;
+            } catch (Exception e) {
+                log.error("UploadTask: Unknown bundle archive format");
+                AppEngineError error = ErrorBuilder.build(ErrorCode.INTERNAL_UNKNOWN_BUNDLE_ARCHIVE_FORAMT);
+                throw new BundleArchiveException(error);
             }
 
             if (!descriptorFile) {
@@ -199,13 +205,6 @@ public class TaskService {
                 log.error("UploadTask: Docker image not found in archive");
                 throw new BundleArchiveException(ErrorBuilder.build(ErrorCode.INTERNAL_DOCKER_IMAGE_TAR_NOT_FOUND));
             }
-//        } else {
-//            log.error("UploadTask: Unknown bundle archive format");
-//            AppEngineError error = ErrorBuilder.build(ErrorCode.INTERNAL_UNKNOWN_BUNDLE_ARCHIVE_FORAMT);
-//            throw new BundleArchiveException(error);
-//        }
-
-
 
         try {
             fileStorageHandler.createStorage(storage);
