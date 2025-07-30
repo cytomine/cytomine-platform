@@ -41,21 +41,6 @@ public class ArchiveUtils {
         }
     }
 
-    public UploadTaskArchive readArchive(InputStream archiveInputStream) throws BundleArchiveException {
-        if (isZip(archiveInputStream)) {
-            return readZipArchive(archiveInputStream);
-        }
-
-        AppEngineError error = ErrorBuilder.build(ErrorCode.INTERNAL_UNKNOWN_BUNDLE_ARCHIVE_FORAMT);
-        throw new BundleArchiveException(error);
-    }
-
-    public UploadTaskArchive readZipArchive(InputStream archiveInputStream) throws BundleArchiveException {
-//        File descriptorData = getDescriptorFileFromZip(archive);
-//        File imageData = getDockerImageFromZip(archive, getCustomImageName(descriptorData));
-
-        return new UploadTaskArchive();
-    }
 
     private String getCustomImageName(File descriptorData) {
         try {
