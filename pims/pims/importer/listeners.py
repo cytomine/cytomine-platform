@@ -230,7 +230,7 @@ class CytomineListener(ImportListener):
     def get_uf(self, path: Union[str, Path]) -> UploadedFile:
         uf = self.path_uf_mapping.get(str(path))
         if not uf:
-            path = path.resolve()
+            path = path.readlink()
             uf = self.path_uf_mapping.get(str(path))
             if not uf:
                 raise KeyError(f"No UploadedFile found for {path}")

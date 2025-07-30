@@ -28,6 +28,7 @@ class ReadableSettings(BaseSettings):
     api_base_path: str = ""  # if set, must start with /.
 
     root: str
+    dataset_path: str = "/dataset"
     pending_path: str = "/tmp/uploaded"
     writing_path: str = "/data/pims/tmp"
     checker_resolution_file: str = "checkerResolution.csv"
