@@ -124,14 +124,18 @@ def import_dataset(
 
         # Filter out existing datasets
         projects = ProjectCollection().fetch()
-        project_names = [project.name for project in projects]
-        datasets = [ds for ds in valid_datasets if os.path.basename(ds) not in project_names]
+        project_names = {project.name: project for project in projects}
 
-        for dataset_path in datasets:
+        for dataset_path in valid_datasets:
             dataset_name = os.path.basename(dataset_path)
 
             if create_project:
-                project = Project(name=dataset_name).save()
+                if dataset_name in project_names:
+                    project = project_names[dataset_name]
+                    response["valid_datasets"][dataset_name]["project_created"] = False
+                else:
+                    project = Project(name=dataset_name).save()
+                    response["valid_datasets"][dataset_name]["project_created"] = True
 
             image_paths = [p for p in Path(dataset_path).recursive_iterdir() if p.is_file()]
             for image_path in image_paths:
