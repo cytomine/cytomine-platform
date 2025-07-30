@@ -21,7 +21,7 @@ defaults:
 
 jobs:
   lint:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
@@ -50,7 +50,7 @@ jobs:
           echo '```' >> $GITHUB_STEP_SUMMARY
 
   unit-tests:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     strategy:

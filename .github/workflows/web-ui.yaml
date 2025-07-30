@@ -23,7 +23,7 @@ defaults:
 
 jobs:
   lint:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
@@ -42,7 +42,7 @@ jobs:
         run: npm run lint
 
   unit-tests:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:

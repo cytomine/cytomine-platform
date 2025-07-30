@@ -18,7 +18,7 @@ concurrency:
 
 jobs:
   validate-json-schema:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     permissions:
       contents: read
 
@@ -53,7 +53,7 @@ jobs:
           --all-errors
 
   validate-openapi:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     permissions:
       contents: read
 
@@ -74,7 +74,7 @@ jobs:
         run: redocly lint ${{ env.OPENAPI_PATH }}
 
   unit-tests:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     permissions:
       contents: read
 

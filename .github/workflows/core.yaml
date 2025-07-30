@@ -18,7 +18,7 @@ concurrency:
 
 jobs:
   unit-tests:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     services:

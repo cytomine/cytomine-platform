@@ -26,7 +26,7 @@ env:
 jobs:
   lint:
     if: false # Disable lint job by default, enable it manually if needed
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
@@ -51,7 +51,7 @@ jobs:
           echo '```' >> $GITHUB_STEP_SUMMARY
 
   type-check:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
