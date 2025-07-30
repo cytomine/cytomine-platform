@@ -4,12 +4,16 @@ on:
   pull_request:
     branches:
       - master
-    paths:
-      - "cytomine-installer/**/*.py"
-      - "cytomine-installer/tests/**"
+    # paths:
+    #   - "cytomine-installer/**/*.py"
+    #   - "cytomine-installer/tests/**"
   push:
     branches:
       - master
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 defaults:
   run:
@@ -17,8 +21,9 @@ defaults:
 
 jobs:
   lint:
-    runs-on: ubuntu-latest
-
+    runs-on: self-hosted
+    permissions:
+      contents: read
     steps:
       - name: Set up the repository
         uses: actions/checkout@v4
@@ -45,7 +50,9 @@ jobs:
           echo '```' >> $GITHUB_STEP_SUMMARY
 
   unit-tests:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
+    permissions:
+      contents: read
     strategy:
       matrix:
         python-version:

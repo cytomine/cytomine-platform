@@ -4,14 +4,18 @@ on:
   pull_request:
     branches:
       - master
-    paths:
-      - "web-ui/api-client/**/*.js"
-      - "web-ui/api-client/**/*.vue"
-      - "web-ui/ui/**/*.js"
-      - "web-ui/ui/**/*.vue"
+    # paths:
+    #   - "web-ui/api-client/**/*.js"
+    #   - "web-ui/api-client/**/*.vue"
+    #   - "web-ui/ui/**/*.js"
+    #   - "web-ui/ui/**/*.vue"
   push:
     branches:
       - master
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 defaults:
   run:
@@ -19,8 +23,9 @@ defaults:
 
 jobs:
   lint:
-    runs-on: ubuntu-latest
-
+    runs-on: self-hosted
+    permissions:
+      contents: read
     steps:
       - name: Set up the repository
         uses: actions/checkout@v4
@@ -37,8 +42,9 @@ jobs:
         run: npm run lint
 
   unit-tests:
-    runs-on: ubuntu-latest
-
+    runs-on: self-hosted
+    permissions:
+      contents: read
     steps:
       - name: Set up the repository
         uses: actions/checkout@v4

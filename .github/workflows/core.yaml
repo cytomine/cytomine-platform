@@ -4,18 +4,23 @@ on:
   pull_request:
     branches:
       - master
-    paths:
-      - "core/src/main/resources/**"
-      - "core/src/test/resources/**"
-      - "core/src/**/*.java"
+    # paths:
+    #   - "core/src/main/resources/**"
+    #   - "core/src/test/resources/**"
+    #   - "core/src/**/*.java"
   push:
     branches:
       - master
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   unit-tests:
-    runs-on: ubuntu-latest
-
+    runs-on: self-hosted
+    permissions:
+      contents: read
     services:
       mongodb:
         image: cytomine/mongo:${{ vars.MONGO_VERSION }}

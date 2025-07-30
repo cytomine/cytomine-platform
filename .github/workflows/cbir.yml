@@ -4,12 +4,16 @@ on:
   pull_request:
     branches:
       - master
-    paths:
-      - "cbir/**/*.py"
-      - "cbir/tests/**"
+    # paths:
+    #   - "cbir/**/*.py"
+    #   - "cbir/tests/**"
   push:
     branches:
       - master
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 defaults:
   run:
@@ -22,8 +26,9 @@ env:
 jobs:
   lint:
     if: false # Disable lint job by default, enable it manually if needed
-    runs-on: ubuntu-latest
-
+    runs-on: self-hosted
+    permissions:
+      contents: read
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v4
@@ -46,8 +51,9 @@ jobs:
           echo '```' >> $GITHUB_STEP_SUMMARY
 
   type-check:
-    runs-on: ubuntu-latest
-
+    runs-on: self-hosted
+    permissions:
+      contents: read
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v4
