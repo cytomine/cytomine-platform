@@ -24,7 +24,7 @@ REQUIRES_PYTHON = '>=3.10.0'
 # What packages are required for this module to be executed?
 REQUIRED = [
     'pims',
-    'wsidicom>=0.5.0'
+    'wsidicom>=0.21.0',
 ]
 
 DEPENDENCY_LINKS = []

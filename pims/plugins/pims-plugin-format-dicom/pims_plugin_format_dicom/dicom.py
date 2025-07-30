@@ -174,13 +174,13 @@ class WSIDicomParser(AbstractParser):
         pyramid = Pyramid()
 
         wsidicom_object = cached_wsi_dicom_file(self.format)
-        levels = wsidicom_object.levels
 
-        for level in wsidicom_object.levels.levels:
-            level_info = wsidicom_object.levels.get_level(level)
-            level_size = level_info.size
-            tile_size = level_info.tile_size
-            pyramid.insert_tier(level_size.width, level_size.height, (tile_size.width, tile_size.height))
+        for level in wsidicom_object.levels:
+            pyramid.insert_tier(
+                level.size.width,
+                level.size.height,
+                (level.tile_size.width, level.tile_size.height),
+            )
 
         return pyramid
 
@@ -242,11 +242,17 @@ class WSIDicomReader(AbstractReader):
     def read_window(self, region, out_width, out_height, c=None, z=None, t=None):
         img = cached_wsi_dicom_file(self.format)
 
-        tier = self.format.pyramid.most_appropriate_tier(region, (out_width, out_height))
+        tier = self.format.pyramid.most_appropriate_tier(
+            region,
+            (out_width, out_height),
+        )
         region = region.scale_to_tier(tier)
-        level = tier.level
-        norm_level = img.levels.levels[level]
-        return img.read_region((region.left, region.top), norm_level, (region.width, region.height))
+
+        return img.read_region(
+            (region.left, region.top),
+            tier.level,
+            (region.width, region.height),
+        )
 
     def read_tile(self, tile, c=None, z=None, t=None):
         return self.read_window(tile, tile.width, tile.height, c, z, t)
