@@ -31,7 +31,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Install dependencies
         run: >-
@@ -66,7 +66,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Validate OpenAPI specifications
         env:
@@ -80,7 +80,7 @@ jobs:
 
     steps:
       - name: Set up the repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Set up JDK ${{ vars.JAVA_VERSION }}
         uses: actions/setup-java@v4

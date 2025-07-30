@@ -31,7 +31,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Set up the environment
         uses: ./.github/actions/setup-python-poetry
@@ -56,7 +56,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Set up the environment
         uses: ./.github/actions/setup-python-poetry
