@@ -4,11 +4,11 @@ on:
   pull_request:
     branches:
       - master
-    paths:
-      - "web-ui/api-client/**/*.js"
-      - "web-ui/api-client/**/*.vue"
-      - "web-ui/ui/**/*.js"
-      - "web-ui/ui/**/*.vue"
+    # paths:
+    #   - "web-ui/api-client/**/*.js"
+    #   - "web-ui/api-client/**/*.vue"
+    #   - "web-ui/ui/**/*.js"
+    #   - "web-ui/ui/**/*.vue"
   push:
     branches:
       - master
@@ -19,7 +19,7 @@ defaults:
 
 jobs:
   lint:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     steps:
       - name: Set up the repository
@@ -37,7 +37,7 @@ jobs:
         run: npm run lint
 
   unit-tests:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     steps:
       - name: Set up the repository

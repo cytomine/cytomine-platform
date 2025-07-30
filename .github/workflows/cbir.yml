@@ -4,9 +4,9 @@ on:
   pull_request:
     branches:
       - master
-    paths:
-      - "cbir/**/*.py"
-      - "cbir/tests/**"
+    # paths:
+    #   - "cbir/**/*.py"
+    #   - "cbir/tests/**"
   push:
     branches:
       - master
@@ -22,7 +22,7 @@ env:
 jobs:
   lint:
     if: false # Disable lint job by default, enable it manually if needed
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     steps:
       - name: Checkout the repository
@@ -46,7 +46,7 @@ jobs:
           echo '```' >> $GITHUB_STEP_SUMMARY
 
   type-check:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     steps:
       - name: Checkout the repository

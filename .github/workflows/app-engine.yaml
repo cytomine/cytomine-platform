@@ -4,17 +4,17 @@ on:
   pull_request:
     branches:
       - master
-    paths:
-      - "app-engine/src/main/resources/**"
-      - "app-engine/src/test/resources/**"
-      - "app-engine/src/**/*.java"
+    # paths:
+      # - "app-engine/src/main/resources/**"
+      # - "app-engine/src/test/resources/**"
+      # - "app-engine/src/**/*.java"
   push:
     branches:
       - master
 
 jobs:
   validate-json-schema:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     container:
       image: node:16-alpine3.18
@@ -47,7 +47,7 @@ jobs:
           --all-errors
 
   validate-openapi:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     container:
       image: redocly/cli:1.10.6
@@ -66,7 +66,7 @@ jobs:
         run: redocly lint ${{ env.OPENAPI_PATH }}
 
   unit-tests:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     steps:
       - name: Set up the repository
