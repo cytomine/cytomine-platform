@@ -25,6 +25,6 @@ public class UploadTaskArchive {
     public UploadTaskArchive(JsonNode descriptorFileAsJson) {
 //        this.descriptorFile = descriptorFile;
 //        this.dockerImage = dockerImage;
-        this.descriptorFileAsJson = descriptorFileAsJson;//DescriptorHelper.parseDescriptor(descriptorFile);
+        this.descriptorFileAsJson = descriptorFileAsJson;//
     }
 }
