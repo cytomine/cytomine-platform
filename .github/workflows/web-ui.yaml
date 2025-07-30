@@ -28,7 +28,7 @@ jobs:
       contents: read
     steps:
       - name: Set up the repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v2
 
       - name: Set up NodeJS
         uses: actions/setup-node@v4
@@ -47,7 +47,7 @@ jobs:
       contents: read
     steps:
       - name: Set up the repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v2
 
       - name: Set up NodeJS
         uses: actions/setup-node@v4
