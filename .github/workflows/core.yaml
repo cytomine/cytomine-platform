@@ -12,9 +12,6 @@ on:
     branches:
       - master
 
-permissions:
-  contents: read
-
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -22,6 +19,8 @@ concurrency:
 jobs:
   unit-tests:
     runs-on: self-hosted
+    permissions:
+      contents: read
     services:
       mongodb:
         image: cytomine/mongo:${{ vars.MONGO_VERSION }}
