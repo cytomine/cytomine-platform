@@ -27,8 +27,6 @@ jobs:
   lint:
     if: false # Disable lint job by default, enable it manually if needed
     runs-on: self-hosted
-    permissions:
-      contents: read
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v4
@@ -54,8 +52,6 @@ jobs:
 
   type-check:
     runs-on: self-hosted
-    permissions:
-      contents: read
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v4

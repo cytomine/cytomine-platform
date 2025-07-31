@@ -19,9 +19,6 @@ concurrency:
 jobs:
   validate-json-schema:
     runs-on: self-hosted
-    permissions:
-      contents: read
-
     container:
       image: node:16-alpine3.18
 
@@ -55,9 +52,6 @@ jobs:
 
   validate-openapi:
     runs-on: self-hosted
-    permissions:
-      contents: read
-
     container:
       image: redocly/cli:1.10.6
 
@@ -78,9 +72,6 @@ jobs:
 
   unit-tests:
     runs-on: self-hosted
-    permissions:
-      contents: read
-
     steps:
       - name: Set up the repository
         uses: actions/checkout@v4
