@@ -7,9 +7,13 @@ on:
     paths:
       - "cbir/**/*.py"
       - "cbir/tests/**"
+      - ".github/**"
   push:
     branches:
       - master
+
+permissions:
+  contents: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

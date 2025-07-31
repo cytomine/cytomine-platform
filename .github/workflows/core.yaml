@@ -8,9 +8,13 @@ on:
       - "core/src/main/resources/**"
       - "core/src/test/resources/**"
       - "core/src/**/*.java"
+      - ".github/**"
   push:
     branches:
       - master
+
+permissions:
+  contents: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -19,8 +23,6 @@ concurrency:
 jobs:
   unit-tests:
     runs-on: self-hosted
-    permissions:
-      contents: read
     services:
       mongodb:
         image: cytomine/mongo:${{ vars.MONGO_VERSION }}
