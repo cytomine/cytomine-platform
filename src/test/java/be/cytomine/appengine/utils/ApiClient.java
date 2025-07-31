@@ -114,6 +114,17 @@ public class ApiClient {
         return restTemplate.exchange(finalUrl, HttpMethod.PUT, entity, responseType);
     }
 
+    public <T> ResponseEntity<T> postDataPart(String url, HttpEntity<Object> entity, Class<T> responseType, Map<String, String> params) {
+        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(url);
+
+        for (Map.Entry<String, String> entry : params.entrySet()) {
+            builder.queryParam(entry.getKey(), entry.getValue());
+        }
+        String finalUrl = builder.toUriString();
+
+        return restTemplate.exchange(finalUrl, HttpMethod.POST, entity, responseType);
+    }
+
     public <T> ResponseEntity<T> put(String url, HttpEntity<Object> entity, ParameterizedTypeReference<T> responseType) {
         return restTemplate.exchange(url, HttpMethod.PUT, entity, responseType);
     }
@@ -226,18 +237,9 @@ public class ApiClient {
                     return "file.txt";
                 }
             };
+            body.add("file", fileResource);
 
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.parseMediaType("text/plain"));
-
-            HttpEntity<ByteArrayResource> entity = new HttpEntity<>(fileResource, headers);
-            body.add("file", entity);
-
-            HttpHeaders requestHeaders = new HttpHeaders();
-            requestHeaders.setContentType(MediaType.MULTIPART_FORM_DATA);
-
-            HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, requestHeaders);
-            return post(baseUrl + "/task-runs/" + uuid + "/input-provisions/" + parameterName, requestEntity, JsonNode.class).getBody();
+            return postData(baseUrl + "/task-runs/" + uuid + "/input-provisions/" + parameterName, body, JsonNode.class).getBody();
         } else {
             HttpEntity<Object> entity = null;
             ObjectMapper mapper = new ObjectMapper();
@@ -321,6 +323,9 @@ public class ApiClient {
             body.add("file", fileResource);
 
             entity = new HttpEntity<>(body, headers);
+            Map<String,String> params = new HashMap<>();
+            params.put("value", String.valueOf(index));
+            return postDataPart(baseUrl + "/task-runs/" + uuid + "/input-provisions/" + parameterName + "/indexes", entity, JsonNode.class, params).getBody();
         } else {
             ObjectMapper mapper = new ObjectMapper();
             ObjectNode jsonNode = mapper.valueToTree(
