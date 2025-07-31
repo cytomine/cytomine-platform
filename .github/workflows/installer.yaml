@@ -11,17 +11,24 @@ on:
     branches:
       - master
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 defaults:
   run:
     working-directory: ./cytomine-installer
 
 jobs:
   lint:
-    runs-on: ubuntu-latest
-
+    runs-on: self-hosted
+    permissions:
+      contents: read
     steps:
       - name: Set up the repository
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Python ${{ vars.PYTHON_VERSION }}
         uses: actions/setup-python@v4
@@ -45,7 +52,9 @@ jobs:
           echo '```' >> $GITHUB_STEP_SUMMARY
 
   unit-tests:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
+    permissions:
+      contents: read
     strategy:
       matrix:
         python-version:
@@ -55,6 +64,8 @@ jobs:
     steps:
       - name: Set up the repository
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4

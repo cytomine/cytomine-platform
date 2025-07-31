@@ -11,6 +11,10 @@ on:
     branches:
       - master
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 defaults:
   run:
     working-directory: ./cbir
@@ -22,11 +26,14 @@ env:
 jobs:
   lint:
     if: false # Disable lint job by default, enable it manually if needed
-    runs-on: ubuntu-latest
-
+    runs-on: self-hosted
+    permissions:
+      contents: read
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up the environment
         uses: ./.github/actions/setup-python-poetry
@@ -46,11 +53,14 @@ jobs:
           echo '```' >> $GITHUB_STEP_SUMMARY
 
   type-check:
-    runs-on: ubuntu-latest
-
+    runs-on: self-hosted
+    permissions:
+      contents: read
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up the environment
         uses: ./.github/actions/setup-python-poetry
