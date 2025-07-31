@@ -53,6 +53,8 @@ jobs:
 
   unit-tests:
     runs-on: self-hosted
+    permissions:
+      contents: read
     strategy:
       matrix:
         python-version:
