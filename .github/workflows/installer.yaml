@@ -4,9 +4,9 @@ on:
   pull_request:
     branches:
       - master
-    paths:
-      - "cytomine-installer/**/*.py"
-      - "cytomine-installer/tests/**"
+    # paths:
+    #   - "cytomine-installer/**/*.py"
+    #   - "cytomine-installer/tests/**"
   push:
     branches:
       - master
