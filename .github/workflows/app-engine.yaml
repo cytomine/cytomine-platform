@@ -39,7 +39,7 @@ jobs:
           ajv-formats-draft2019@1.6.1
 
       - name: Validate JSON schema
-        with:
+        env:
           SCHEMA_PATH: ./src/main/resources/schemas/tasks/task.v0.json
         run: >-
           ajv compile
