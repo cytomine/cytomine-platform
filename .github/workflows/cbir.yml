@@ -32,8 +32,8 @@ jobs:
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v4
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up the environment
         uses: ./.github/actions/setup-python-poetry
@@ -59,8 +59,8 @@ jobs:
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v4
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up the environment
         uses: ./.github/actions/setup-python-poetry

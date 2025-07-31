@@ -27,8 +27,8 @@ jobs:
     steps:
       - name: Set up the repository
         uses: actions/checkout@v4
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Python ${{ vars.PYTHON_VERSION }}
         uses: actions/setup-python@v4
@@ -64,8 +64,8 @@ jobs:
     steps:
       - name: Set up the repository
         uses: actions/checkout@v4
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
