@@ -4,9 +4,10 @@ on:
   pull_request:
     branches:
       - master
-    # paths:
-    #   - "cbir/**/*.py"
-    #   - "cbir/tests/**"
+    paths:
+      - "cbir/**/*.py"
+      - "cbir/tests/**"
+      - ".github"
   push:
     branches:
       - master

@@ -4,11 +4,12 @@ on:
   pull_request:
     branches:
       - master
-    # paths:
-    #   - "web-ui/api-client/**/*.js"
-    #   - "web-ui/api-client/**/*.vue"
-    #   - "web-ui/ui/**/*.js"
-    #   - "web-ui/ui/**/*.vue"
+    paths:
+      - "web-ui/api-client/**/*.js"
+      - "web-ui/api-client/**/*.vue"
+      - "web-ui/ui/**/*.js"
+      - "web-ui/ui/**/*.vue"
+      - ".github"
   push:
     branches:
       - master
