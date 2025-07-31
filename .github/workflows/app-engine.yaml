@@ -83,8 +83,9 @@ jobs:
         with:
           image: redocly/cli:1.10.6
           run: 'redocly lint ${{ env.OPENAPI_PATH }}'
+          options: -v ${{ github.workspace }}/app-engine:/app-engine
         env:
-          OPENAPI_PATH: ./app-engine/src/test/resources/spec/api/openapi_spec.v0.1.0.yml
+          OPENAPI_PATH: /app-engine/src/test/resources/spec/api/openapi_spec.v0.1.0.yml
 
 
   unit-tests:
