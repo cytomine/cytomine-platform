@@ -4,10 +4,10 @@ on:
   pull_request:
     branches:
       - master
-    # paths:
-      # - "app-engine/src/main/resources/**"
-      # - "app-engine/src/test/resources/**"
-      # - "app-engine/src/**/*.java"
+    paths:
+      - "app-engine/src/main/resources/**"
+      - "app-engine/src/test/resources/**"
+      - "app-engine/src/**/*.java"
   push:
     branches:
       - master

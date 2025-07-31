@@ -4,10 +4,10 @@ on:
   pull_request:
     branches:
       - master
-    # paths:
-    #   - "core/src/main/resources/**"
-    #   - "core/src/test/resources/**"
-    #   - "core/src/**/*.java"
+    paths:
+      - "core/src/main/resources/**"
+      - "core/src/test/resources/**"
+      - "core/src/**/*.java"
   push:
     branches:
       - master
