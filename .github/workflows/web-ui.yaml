@@ -13,6 +13,9 @@ on:
     branches:
       - master
 
+permissions:
+  contents: read
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -24,8 +27,6 @@ defaults:
 jobs:
   lint:
     runs-on: self-hosted
-    permissions:
-      contents: read
     steps:
       - name: Set up the repository
         uses: actions/checkout@v4
@@ -45,8 +46,6 @@ jobs:
 
   unit-tests:
     runs-on: self-hosted
-    permissions:
-      contents: read
     steps:
       - name: Set up the repository
         uses: actions/checkout@v4
