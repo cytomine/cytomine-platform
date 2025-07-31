@@ -67,10 +67,6 @@ jobs:
 
   validate-openapi:
     runs-on: self-hosted
-
-    # container:
-    #   image: redocly/cli:1.10.6
-
     defaults:
       run:
         working-directory: ./app-engine
@@ -82,9 +78,11 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Validate OpenAPI specifications
-        uses: fluximus-prime/redocly-cli-github-action@v1
+        #uses: fluximus-prime/redocly-cli-github-action@v1
+        uses: addnab/docker-run-action@v3
         with:
-          args: 'lint ${{ env.OPENAPI_PATH }}'
+          image: redocly/cli:1.10.6
+          run: 'redocly lint ${{ env.OPENAPI_PATH }}'
         env:
           OPENAPI_PATH: ./app-engine/src/test/resources/spec/api/openapi_spec.v0.1.0.yml
 
