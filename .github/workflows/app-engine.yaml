@@ -86,7 +86,7 @@ jobs:
         with:
           args: 'lint ${{ env.OPENAPI_PATH }}'
         env:
-          OPENAPI_PATH: ./src/test/resources/spec/api/openapi_spec.v0.1.0.yml
+          OPENAPI_PATH: ./app-engine/src/test/resources/spec/api/openapi_spec.v0.1.0.yml
 
 
   unit-tests:
