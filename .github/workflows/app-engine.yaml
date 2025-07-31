@@ -8,7 +8,7 @@ on:
       - "app-engine/src/main/resources/**"
       - "app-engine/src/test/resources/**"
       - "app-engine/src/**/*.java"
-      - ".github"
+      - ".github/**"
   push:
     branches:
       - master

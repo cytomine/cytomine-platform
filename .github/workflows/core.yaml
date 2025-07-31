@@ -8,7 +8,7 @@ on:
       - "core/src/main/resources/**"
       - "core/src/test/resources/**"
       - "core/src/**/*.java"
-      - ".github"
+      - ".github/**"
   push:
     branches:
       - master

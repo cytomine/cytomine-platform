@@ -7,7 +7,7 @@ on:
     paths:
       - "cbir/**/*.py"
       - "cbir/tests/**"
-      - ".github"
+      - ".github/**"
   push:
     branches:
       - master
