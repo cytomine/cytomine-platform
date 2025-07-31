@@ -82,9 +82,12 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Validate OpenAPI specifications
+        uses: fluximus-prime/redocly-cli-github-action@v1
+        with:
+          args: 'lint ${{ env.OPENAPI_PATH }}'
         env:
           OPENAPI_PATH: ./src/test/resources/spec/api/openapi_spec.v0.1.0.yml
-        run: redocly lint ${{ env.OPENAPI_PATH }}
+
 
   unit-tests:
     runs-on: self-hosted
