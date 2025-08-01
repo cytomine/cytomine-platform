@@ -31,8 +31,7 @@ jobs:
   lint:
     if: false # Disable lint job by default, enable it manually if needed
     runs-on: self-hosted
-    permissions:
-      contents: read
+
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v4
@@ -58,8 +57,7 @@ jobs:
 
   type-check:
     runs-on: self-hosted
-    permissions:
-      contents: read
+
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v4
@@ -87,4 +85,36 @@ jobs:
           echo '# Type check coverage report' >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
           cat index.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+  test:
+    runs-on: self-hosted
+
+    services:
+      redis:
+        image: redis:${{ vars.REDIS_VERSION }}
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Set up the repository
+        uses: actions/checkout@v4
+
+      - name: Set up the environment
+        uses: ./.github/actions/setup-python-poetry
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          working-directory: ./cbir
+
+      - name: Run tests
+        run: python -m poetry run coverage run -m pytest
+        env:
+          DATA_PATH: ./
+          WEIGHTS: ./weights/resnet
+
+      - name: Upload coverage report
+        run: |
+          echo '# Coverage report' >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          python -m poetry run coverage report -m >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
