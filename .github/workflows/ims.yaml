@@ -36,7 +36,7 @@ jobs:
       packages: write
 
     outputs:
-      tags: ${{ steps.meta.outputs.tags }}
+      tag: ${{ steps.vars.outputs.tag }}
 
     steps:
       - name: Checkout the repository
@@ -52,28 +52,25 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ github.token }}
 
-      - name: Extract metadata (tags, labels) for Docker
-        id: meta
-        uses: docker/metadata-action@v4
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+      - name: Create docker tag
+        id: vars
+        run: |
+          echo "TAG=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}" >> $GITHUB_ENV
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
 
       - name: Build pims image
-        uses: docker/build-push-action@v4
-        with:
-          context: pims
-          file: pims/docker/backend.dockerfile
-          labels: ${{ steps.meta.outputs.labels }}
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
+        run: docker build -t $TAG -f docker/backend.dockerfile .
+
+      - name: Push pims image
+        run: docker push $TAG
 
   tests:
     runs-on: self-hosted
-    needs: 
+    needs:
       - build-docker-image
 
     container:
-      image: ${{ needs.build-docker-image.outputs.tags }}
+      image: ${{ needs.build-docker-image.outputs.tag }}
       credentials:
         username: ${{ github.actor }}
         password: ${{ github.token }}
