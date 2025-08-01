@@ -2,12 +2,13 @@ package be.cytomine.appengine.controllers;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.regex.Pattern;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.FileSystemResource;
@@ -24,7 +25,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
 
 import be.cytomine.appengine.dto.inputs.task.State;
 import be.cytomine.appengine.dto.inputs.task.StateAction;
@@ -37,7 +37,6 @@ import be.cytomine.appengine.exceptions.FileStorageException;
 import be.cytomine.appengine.exceptions.ProvisioningException;
 import be.cytomine.appengine.exceptions.SchedulingException;
 import be.cytomine.appengine.exceptions.TypeValidationException;
-import be.cytomine.appengine.handlers.StorageData;
 import be.cytomine.appengine.models.task.ParameterType;
 import be.cytomine.appengine.services.TaskProvisioningService;
 
@@ -70,27 +69,44 @@ public class TaskRunController {
         return ResponseEntity.ok(provisioned);
     }
 
-    @PutMapping(
+    @PostMapping(
         value = "/task-runs/{run_id}/input-provisions/{param_name}",
         consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
     @ResponseStatus(code = HttpStatus.OK)
+    @SuppressWarnings("unchecked")
     public ResponseEntity<?> provisionData(
         @PathVariable("run_id") String runId,
         @PathVariable("param_name") String parameterName,
-        @RequestParam MultipartFile file
+        HttpServletRequest request
     ) throws IOException, ProvisioningException {
-        log.info("/task-runs/{run_id}/input-provisions/{param_name} File PUT");
-
-        Path data = Files.createTempFile(parameterName, null);
-        file.transferTo(data);
-
+        log.info("/task-runs/{run_id}/input-provisions/{param_name} File POST");
+        // find the path for the storage
+        Path filePath = taskRunService.prepareStreaming(
+            runId,
+            parameterName
+        );
+        // stream file directly to storage in the dedicated path and get back a File object
+        File uploadedFile = taskRunService.streamToStorage(
+            parameterName,
+            request,
+            filePath);
+        // validate
         JsonNode provisioned = taskRunService.provisionRunParameter(
             runId,
             parameterName,
-            data.toFile()
+            uploadedFile
         );
-        log.info("/task-runs/{run_id}/input-provisions/{param_name} File PUT Ended");
+
+        log.info("ProvisionParameter: calculating & caching CRC32 checksum...");
+        taskRunService.setChecksumCRC32(
+            "task-run-inputs-" + runId,
+            taskRunService.calculateFileCRC32(uploadedFile),
+            parameterName
+        );
+
+
+        log.info("/task-runs/{run_id}/input-provisions/{param_name} File POST Ended");
 
         return ResponseEntity.ok(provisioned);
     }
@@ -218,7 +234,7 @@ public class TaskRunController {
 
     }
 
-    @PutMapping(
+    @PostMapping(
         value = "/task-runs/{run_id}/input-provisions/{param_name}/indexes",
         consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
@@ -226,10 +242,10 @@ public class TaskRunController {
     public ResponseEntity<?> provisionCollectionItemData(
         @PathVariable("run_id") String runId,
         @PathVariable("param_name") String parameterName,
-        @RequestParam String value,
-        @RequestParam MultipartFile file
+        @RequestParam("value") String value,
+        HttpServletRequest request
     ) throws ProvisioningException, TypeValidationException, IOException {
-        log.info("/task-runs/{run_id}/input-provisions/{param_name} Binary PUT");
+        log.info("/task-runs/{run_id}/input-provisions/{param_name} Binary POST");
         String regex = "^(0(/[0-9]+)*|[1-9][0-9]*(/[0-9]+)*)$";
         boolean isValid = Pattern.matches(regex, value);
         if (!isValid) {
@@ -242,16 +258,31 @@ public class TaskRunController {
         }
         String[] indexesArray = value.split("/");
 
-        Path data = Files.createTempFile(parameterName, null);
-        file.transferTo(data);
+        Path filePath = taskRunService.prepareStreaming(
+            runId,
+            parameterName,
+            indexesArray
+        );
+        File uploadedFile = taskRunService.streamToStorage(
+            parameterName,
+            request,
+            filePath
+        );
 
         JsonNode provisioned = taskRunService.provisionCollectionItem(
             runId,
             parameterName,
-            data.toFile(),
+            uploadedFile,
             indexesArray
         );
-        log.info("/task-runs/{run_id}/input-provisions/{param_name}/indexes Binary PUT Ended");
+
+        log.info("ProvisionCollectionItem: calculating & caching CRC32 checksum...");
+        taskRunService.setChecksumCRC32(
+            "task-run-inputs-" + runId,
+            taskRunService.calculateFileCRC32(uploadedFile),
+            parameterName + "/" + String.join("/", indexesArray)
+        );
+        log.info("/task-runs/{run_id}/input-provisions/{param_name}/indexes Binary POST Ended");
 
         return ResponseEntity.ok(provisioned);
     }
@@ -284,24 +315,20 @@ public class TaskRunController {
 
     @GetMapping(value = "/task-runs/{run_id}/inputs.zip")
     @ResponseStatus(code = HttpStatus.OK)
-    public ResponseEntity<?> getInputProvisionsArchives(
-        @PathVariable("run_id") String runId
+    public void getInputProvisionsArchives(
+        @PathVariable("run_id") String runId,
+        HttpServletResponse response
     ) throws ProvisioningException, IOException, FileStorageException {
         log.info("/task-runs/{run_id}/inputs.zip GET");
-        StorageData data = taskRunService.retrieveIOZipArchive(runId, ParameterType.INPUT);
-        File file = data.peek().getData();
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.add(
-            HttpHeaders.CONTENT_DISPOSITION,
-            "attachment; filename=\"" + file.getName() + "\""
-        );
-        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+        // Set response headers for a file download
+        response.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE); // Or "application/zip"
+        response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"inputs-" + runId + ".zip\"");
+
+        taskRunService.retrieveIOZipArchive(runId, ParameterType.INPUT, response.getOutputStream());
+        response.flushBuffer();
 
         log.info("/task-runs/{run_id}/inputs.zip GET Ended");
-        return ResponseEntity.ok()
-            .headers(headers)
-            .body(new FileSystemResource(file));
     }
 
     @GetMapping(value = "/task-runs/{run_id}/inputs")
@@ -382,24 +409,20 @@ public class TaskRunController {
 
     @GetMapping(value = "/task-runs/{run_id}/outputs.zip")
     @ResponseStatus(code = HttpStatus.OK)
-    public ResponseEntity<?> getOutputsProvisionsArchives(
-        @PathVariable("run_id") String runId
+    public void getOutputsProvisionsArchives(
+        @PathVariable("run_id") String runId,
+        HttpServletResponse response
     ) throws ProvisioningException, IOException, FileStorageException {
         log.info("/task-runs/{run_id}/outputs.zip GET");
-        StorageData data = taskRunService.retrieveIOZipArchive(runId, ParameterType.OUTPUT);
-        File file = data.peek().getData();
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.add(
-            HttpHeaders.CONTENT_DISPOSITION,
-            "attachment; filename=\"" + file.getName() + "\""
-        );
-        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+        // Set response headers for a file download
+        response.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE); // Or "application/zip"
+        response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"outputs-" + runId + ".zip\"");
+
+        taskRunService.retrieveIOZipArchive(runId, ParameterType.OUTPUT,response.getOutputStream());
+        response.flushBuffer();
 
         log.info("/task-runs/{run_id}/outputs.zip GET Ended");
-        return ResponseEntity.ok()
-            .headers(headers)
-            .body(new FileSystemResource(file));
     }
 
     @PostMapping(value = "/task-runs/{run_id}/{secret}/outputs.zip")
@@ -407,13 +430,14 @@ public class TaskRunController {
     public ResponseEntity<?> postOutputsProvisionsArchives(
         @PathVariable("run_id") String runId,
         @PathVariable String secret,
-        @RequestParam MultipartFile outputs
+        HttpServletRequest request
     ) throws ProvisioningException {
         log.info("/task-runs/{run_id}/outputs.zip POST");
+
         List<TaskRunParameterValue> taskOutputs = taskRunService.postOutputsZipArchive(
             runId,
             secret,
-            outputs);
+            taskRunService.prepareStream(request));
         log.info("/task-runs/{run_id}/outputs.zip POST Ended");
         return new ResponseEntity<>(taskOutputs, HttpStatus.OK);
     }
@@ -423,7 +447,7 @@ public class TaskRunController {
     public ResponseEntity<?> updateState(
         @PathVariable("run_id") String runId,
         @RequestBody State state
-    ) throws ProvisioningException, SchedulingException {
+    ) throws ProvisioningException, SchedulingException, FileStorageException {
         log.info("/task-runs/{run_id}/state_actions POST");
         StateAction stateAction = taskRunService.updateRunState(runId, state);
         log.info("/task-runs/{run_id}/state_actions POST Ended");

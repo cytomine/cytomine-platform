@@ -8,6 +8,7 @@ spring:
       max-file-size: 15GB
       max-request-size: 15GB
       location: /tmp/appengine/uploads
+      enabled: false
   datasource:
     password: ${DB_PASSWORD:password}
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:appengine}
@@ -36,7 +37,7 @@ spring:
     serialization:
       fail-on-empty-beans: false
 storage:
-  base-path: ${STORAGE_BASE_PATH:/data}
+  base-path: ${STORAGE_BASE_PATH:/home/siddig-hamed/ae}
   impl: ${STORAGE_IMPL:filesystem} # possible values [filesystem]
   input:
     charset: UTF_8 # possible values [UTF_8,US_ASCII,ISO_8859_1,UTF_16LE,UTF_16BE,UTF_16] and UTF_8 is default
@@ -47,20 +48,21 @@ registry:
   url: ${registry.scheme:http}://${registry.host}
 scheduler:
   impl: default # possible values [default]
-  master-url: ${SCHEDULER_MASTER_URL:http://scheduler:16443}
-  oauth-token: ${SCHEDULER_OAUTH_TOKEN:token}
+  master-url: ${SCHEDULER_MASTER_URL:https://10.28.51.130:16443}
+  oauth-token: ${SCHEDULER_OAUTH_TOKEN:eyJhbGciOiJSUzI1NiIsImtpZCI6IjhLS0lpckVOZjhIM0VOUTA2bHZsMGFSUWVSa000UFpJWFNOZjlBT1I3cmcifQ.eyJhdWQiOlsiaHR0cHM6Ly9rdWJlcm5ldGVzLmRlZmF1bHQuc3ZjIl0sImV4cCI6MTc1MzM1MzgxOSwiaWF0IjoxNzUzMzUwMjE5LCJpc3MiOiJodHRwczovL2t1YmVybmV0ZXMuZGVmYXVsdC5zdmMiLCJqdGkiOiIwNjUyMTllMS04N2U0LTRhMDktOGMxZC1lMTZlNDFhMGE1YjgiLCJrdWJlcm5ldGVzLmlvIjp7Im5hbWVzcGFjZSI6ImRlZmF1bHQiLCJzZXJ2aWNlYWNjb3VudCI6eyJuYW1lIjoiZGVmYXVsdCIsInVpZCI6IjRlMjliYzkzLTNkZDItNDE3YS1iNGQ0LTc1YzIzYTFkY2M4NSJ9fSwibmJmIjoxNzUzMzUwMjE5LCJzdWIiOiJzeXN0ZW06c2VydmljZWFjY291bnQ6ZGVmYXVsdDpkZWZhdWx0In0.xFh2qmruV9crKwC7pyphfweZd_mm8LrDgegv-MxOeeNMDttehO0ONj4N9ww90r0JoQK7sYPoCl1srU0QUVur5uM9y8JpcgV-SHLJ0qMDIoGTKcgXGaSt9YNKCzoSJRlmDF5oWqZrh887jWoTrRqXu9VugKYo5StVLy5fylYXilp6GugQNB-WVxyxEGnYRKTxvTUtqoqdmN7J32Z-XG0iHxFoFi6JmAxijJXn3ltHHMHwuoAk5VIuJNaE0eF1fa_qgajo598EvayNRYCf0C5hC-KvFqya5c80uZ1cVFCdtxu4xlyAoXR135BPFs_k33wqWcqJVnUSF548yZtBg-yY2Q}
   username: ${SCHEDULER_USERNAME:admin}
   task-resources:
     cpus: 1
     ram: 4Gi
   helper-containers-resources:
-    cpu: 200m
-    ram: 200Mi
+    cpu: 1
+    ram: 1Gi
+  run-mode: ${SCHEDULER_RUN_MODE:local} # possible values [local,cluster]
 registry-client:
   authenticated: false
   user: user #ignored
   password: password #ignored
-  host: ${REGISTRY_HOST:registry}
+  host: ${REGISTRY_HOST:localhost}
   port: ${REGISTRY_PORT:5000}
   scheme: ${REGISTRY_SCHEME:http}
 logging:

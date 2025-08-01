@@ -8,6 +8,7 @@ spring:
       max-file-size: 15GB
       max-request-size: 15GB
       location: /tmp/appengine/uploads
+      enabled: false
   datasource:
     password: ${DB_PASSWORD:password}
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:appengine}
@@ -36,7 +37,7 @@ spring:
     serialization:
       fail-on-empty-beans: false
 storage:
-  base-path: ${STORAGE_BASE_PATH:/tmp/appengine/storage}
+  base-path: /tmp/appengine/storage
   impl: ${STORAGE_IMPL:filesystem} # possible values [filesystem]
   input:
     charset: UTF_8 # possible values [UTF_8,US_ASCII,ISO_8859_1,UTF_16LE,UTF_16BE,UTF_16] and UTF_8 is default
@@ -47,15 +48,16 @@ registry:
   url: ${registry.scheme:http}://${registry.host}
 scheduler:
   impl: default # possible values [default]
-  master-url: ${SCHEDULER_MASTER_URL:http://scheduler:16443}
-  oauth-token: ${SCHEDULER_OAUTH_TOKEN:token}
+  master-url: https://10.28.51.130:16443
+  oauth-token: eyJhbGciOiJSUzI1NiIsImtpZCI6IjhLS0lpckVOZjhIM0VOUTA2bHZsMGFSUWVSa000UFpJWFNOZjlBT1I3cmcifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJkZWZhdWx0Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZWNyZXQubmFtZSI6ImFwcGVuZ2luZS1zYS10b2tlbiIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50Lm5hbWUiOiJhcHBlbmdpbmUtc2EiLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC51aWQiOiIwODVkZjEwNS1iYWIxLTRmOTItYjc2My04NjA1MGI4OWIwY2YiLCJzdWIiOiJzeXN0ZW06c2VydmljZWFjY291bnQ6ZGVmYXVsdDphcHBlbmdpbmUtc2EifQ.Dh1NQXPg54jZstneXxHg8Rta2CR_AcAgZd7rNV9gVxYUAIFFfmCLfgMpjW3IOwJZ03Ers8hR4pWlEGy3BidvFsJo1s5SXn8pENb6lvH1CvM_fDDp1QqWEDn6qsoBMVtw3e2ujAFrFzboCdGnRNVlzYrpmaOlz6BEGi6YUlU02jIoOmsTLOe5bADtoSBF0ZDhdY1IuKbg_-U9eM_DxjwTv6A3hMFdBfKfQnusuz8dueUbQ-jDUh40xX2s3topQOIbeSeTf8o6UNfrR8HbbOWDPoAZH4E-IUKXyeNlTutFEHh0mjtHJqpSq3xVENUeLKdISZJu1rFCQlZVHJSnDDhDsg
   username: ${SCHEDULER_USERNAME:admin}
   task-resources:
     cpus: 1
     ram: 4Gi
   helper-containers-resources:
-    cpu: 200m
-    ram: 200Mi
+    cpu: 1
+    ram: 1Gi
+  run-mode: ${SCHEDULER_RUN_MODE:local} # possible values [local,cluster]
 registry-client:
   authenticated: false
   user: user #ignored

@@ -16,15 +16,15 @@ import be.cytomine.appengine.utils.DescriptorHelper;
 @NoArgsConstructor
 public class UploadTaskArchive {
 
-    private File descriptorFile;
-
-    private File dockerImage;
+//    private File descriptorFile;
+//
+//    private File dockerImage;
 
     private JsonNode descriptorFileAsJson;
 
-    public UploadTaskArchive(File descriptorFile, File dockerImage) {
-        this.descriptorFile = descriptorFile;
-        this.dockerImage = dockerImage;
-        this.descriptorFileAsJson = DescriptorHelper.parseDescriptor(descriptorFile);
+    public UploadTaskArchive(JsonNode descriptorFileAsJson) {
+//        this.descriptorFile = descriptorFile;
+//        this.dockerImage = dockerImage;
+        this.descriptorFileAsJson = descriptorFileAsJson;//
     }
 }

@@ -3,7 +3,6 @@ Feature: [URS00003-TASK] Execute a task
   Background:
     Given App Engine is up and running
     And File storage service is up and running
-    And Scheduler is up and running
     And Registry service is up and running
 
   @Scheduler
