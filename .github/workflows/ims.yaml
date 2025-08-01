@@ -58,6 +58,11 @@ jobs:
           echo "TAG=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}" >> $GITHUB_ENV
           echo "tag=$TAG" >> $GITHUB_OUTPUT
 
+      - name: Download deps
+        run: |
+          apt-get -y update && apt-get -y install --no-install-recommends --no-install-suggests wget
+          wget https://github.com/uclouvain/openjpeg/archive/v2.5.2/openjpeg-2.5.2.tar.gz
+
       - name: Build pims image
         run: docker build -t $TAG -f docker/backend.dockerfile .
 
