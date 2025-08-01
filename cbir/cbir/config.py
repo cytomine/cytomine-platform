@@ -36,7 +36,7 @@ class Settings(BaseSettings):
     # Deep learning model
     device: torch.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     extractor: str = "resnet"
-    weights: str = f"/weights/{extractor}"
+    weights: str = "/app/weights/resnet"
 
 
 def get_settings() -> Settings:
