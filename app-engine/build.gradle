@@ -1,0 +1,159 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.1.3'
+    id 'io.spring.dependency-management' version '1.1.3'
+    id 'jacoco'
+    id 'org.liquibase.gradle' version '2.2.0'
+    id 'checkstyle'
+}
+
+bootJar {
+    archiveFileName = 'cytomine-app-engine.jar'
+}
+
+group = 'be.cytomine'
+version = 'ce-0.0.0-SNAPSHOT' // do not modify this, it will be replace during build (ci)
+
+java {
+    sourceCompatibility = '17'
+}
+
+checkstyle {
+    toolVersion = '10.21.2'
+    configFile = file("${rootProject.projectDir}/config/checkstyle.xml")
+}
+
+configurations {
+    liquibaseRuntime.extendsFrom runtimeClasspath
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+    maven {
+        url "https://maven.dcm4che.org/"
+    }
+}
+
+ext {
+    mapstructVersion = "1.5.5.Final"
+    lombokVersion = "1.18.28"
+    lombokMapstructBindingVersion = "0.2.0"
+}
+
+springBoot {
+    mainClass = "be.cytomine.appengine.AppEngineApplication"
+}
+
+dependencies {
+    // Lombok
+    implementation "org.mapstruct:mapstruct:${mapstructVersion}", "org.projectlombok:lombok:${lombokVersion}"
+    annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}", "org.projectlombok:lombok:${lombokVersion}", "org.projectlombok:lombok-mapstruct-binding:${lombokMapstructBindingVersion}"
+
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    compileOnly("org.springframework.boot:spring-boot-devtools")
+
+    implementation group: 'com.networknt', name: 'json-schema-validator', version: '1.0.87'
+    implementation group: 'org.apache.commons', name: 'commons-compress', version: '1.24.0'
+    implementation group: 'org.apache.tika', name: 'tika-core', version: '2.9.1'
+    implementation 'org.apache.commons:commons-fileupload2-jakarta-servlet6:2.0.0-M4'
+    implementation 'commons-io:commons-io:2.15.1'
+    // Geometry
+    implementation 'org.locationtech.jts:jts-core:1.19.0'
+    implementation 'org.locationtech.jts.io:jts-io-common:1.19.0'
+
+    // Hibernate
+    implementation 'io.hypersistence:hypersistence-utils-hibernate-60:3.5.2'
+    implementation 'org.hibernate:hibernate-core:6.3.2.Final'
+    implementation 'org.hibernate:hibernate-spatial:6.3.2.Final'
+
+    // Jackson
+    implementation 'com.fasterxml.jackson.core:jackson-core:2.16.0'
+    // TODO : fix CVE-2022-41854, Score 6.5 medium vulnerability -> risk of denial of service
+    // TODO : fix CVE-2022-1471, Score 9.8 high vulnerability -> remote code execution
+    implementation group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-yaml', version: '2.16.0'
+
+    // Jakarta
+    implementation 'jakarta.persistence:jakarta.persistence-api:3.1.0'
+    implementation 'jakarta.servlet:jakarta.servlet-api:6.1.0'
+
+    // PostgreSQL
+    runtimeOnly 'org.postgresql:postgresql'
+
+    // Kubernetes
+    implementation 'io.fabric8:kubernetes-client:6.10.0'
+
+    // Test dependencies
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+
+    // Cucumber dependencies
+    implementation group: 'io.cucumber', name: 'cucumber-spring', version: '6.10.4'
+    testImplementation 'io.cucumber:cucumber-java:6.10.4'
+    testImplementation 'io.cucumber:cucumber-junit:6.10.4'
+    testImplementation 'org.assertj:assertj-core:3.4.1'
+    testImplementation 'org.junit.vintage:junit-vintage-engine:5.7.2'
+
+    // registry client
+    implementation 'com.cytomine:registry-client:3.0.0'
+
+    // liquibase
+    liquibaseRuntime 'info.picocli:picocli:4.7.5'
+    implementation 'org.liquibase:liquibase-core:4.25.0'
+
+    // Image processing
+    implementation 'org.apache.commons:commons-imaging:1.0.0-alpha5'
+    implementation 'org.dcm4che:dcm4che-core:5.31.0'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+// Jacoco coverage report is always generated after tests run
+test.finalizedBy jacocoTestReport
+
+jacocoTestReport {
+}
+
+// Cucumber as a test implementation
+configurations {
+    cucumberRuntime {
+        extendsFrom testImplementation
+    }
+}
+
+// run cucumber to verify features
+tasks.register('cucumber') {
+    group "verification"
+    dependsOn assemble, testClasses
+    doLast {
+        javaexec {
+            main = "io.cucumber.core.cli.Main"
+            classpath = configurations.cucumberRuntime + sourceSets.main.output + sourceSets.test.output
+            args = ['--plugin', 'pretty', '--glue', 'be.cytomine.appengine', 'src/test/resources']
+        }
+    }
+}
+
+// liquibase activities
+liquibase {
+    activities {
+        main {
+            changelogFile 'src/test/resources/master-changelog.yml'
+            url 'jdbc:postgresql://localhost:5432/appengine'
+            username 'appengine'
+            password 'password'
+            referenceUrl 'jdbc:postgresql://localhost:5432/appengine'
+            referenceUsername 'appengine'
+            referencePassword 'password'
+        }
+    }
+}

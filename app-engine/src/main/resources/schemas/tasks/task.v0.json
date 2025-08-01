@@ -1,0 +1,687 @@
+{
+  "$schema": "https://json-schema.org/draft/2019-09/schema",
+  "required": [
+    "$schema",
+    "name",
+    "namespace",
+    "version",
+    "authors",
+    "configuration",
+    "inputs",
+    "outputs"
+  ],
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "description": "Base JSON schema reference",
+      "type": "string",
+      "format": "uri"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 30,
+      "pattern": "^[a-zA-Z0-9_\\s\\-]+$",
+      "description": "The name of the task."
+    },
+    "version": {
+      "$ref": "#/$defs/types/semver",
+      "description": "The version of the task, following the Semantic Versioning specification."
+    },
+    "namespace": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9_]*(\\.[a-zA-Z0-9_-]+)+$",
+      "description": "The namespace of the task, must follow the reverse domain name notation and must uniquely identify the task."
+    },
+    "description": {
+      "type": "string",
+      "default": "",
+      "maxLength": 2048,
+      "description": "A brief description of the task."
+    },
+    "authors": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/contact"
+      },
+      "description": "Lists the authors of the task. At least one author must be specified."
+    },
+    "external": {
+      "type": "object",
+      "description": "Lists external references (source code, scientific articles,...).",
+      "properties": {
+        "source_code": {
+          "type": "string",
+          "format": "uri",
+          "description": "An external reference to a source code."
+        },
+        "doi": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uri",
+            "description": "An external reference to a Digital Object Identifier, referencing for instance a scientific pulibcation that served as a basis for the task ideation."
+          }
+        }
+      }
+    },
+    "configuration": {
+      "type": "object",
+      "properties": {
+        "input_folder": {
+          "$ref": "#/$defs/types/path",
+          "default": "/inputs",
+          "description": "The folder (within the task container) where the App Engine must provide the input files."
+        },
+        "output_folder": {
+          "$ref": "#/$defs/types/path",
+          "default": "/outputs",
+          "description": "The folder (within the task container) where the output files will be written by the task."
+        },
+        "resources": {
+          "type": "object",
+          "properties": {
+            "ram": {
+              "$ref": "#/$defs/types/memory",
+              "default": "1Gi",
+              "description": "The minimum amount of RAM that the task requires."
+            },
+            "gpus": {
+              "type": "integer",
+              "default": 0,
+              "description": "The number of GPUs that the task requires."
+            },
+            "cpus": {
+              "type": "integer",
+              "default": 1,
+              "description": "The number of CPU cores that the task requires."
+            },
+            "internet": {
+              "type": "boolean",
+              "default": false,
+              "description": "Whether the task requires internet access."
+            }
+          }
+        }
+      }
+    },
+    "inputs": {
+      "type": "object",
+      "patternProperties": {
+        "^[a-zA-Z0-9_]+$": {
+          "$ref": "#/$defs/io/input_parameter"
+        }
+      },
+      "additionalProperties": false,
+      "description": "The input parameters that the task requires."
+    },
+    "outputs": {
+      "type": "object",
+      "patternProperties": {
+        "^[a-zA-Z0-9_]+$": {
+          "$ref": "#/$defs/io/output_parameter"
+        }
+      },
+      "additionalProperties": false,
+      "description": "The output parameters that the task produces."
+    }
+  },
+  "$defs": {
+    "dependencies": {
+      "derived_from": {
+        "type": "string",
+        "pattern": "^inputs(?:/[a-zA-Z0-9_]+)+$"
+
+      },
+      "matching": {
+        "type": "array",
+        "min_size": 1,
+        "items": {
+          "type": "string",
+          "pattern": "^(inputs|outputs)(?:/[a-zA-Z0-9_]+)+$"
+        }
+      }
+    },
+    "types": {
+      "semver": {
+        "type": "string",
+        "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$"
+      },
+      "path": {
+        "type": "string",
+        "pattern": "^\/.*$"
+      },
+      "memory": {
+        "type": "string",
+        "pattern": "^(?:0|[1-9]\\d*)(?:\\.\\d+)?\\s*(?:Ki|Mi|Gi|Ti|Pi|Ei|Zi|Yi|k|M|G|T|P|E|Z|Y|R|Q)"
+      },
+      "enum_item": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256,
+        "pattern": "^[^\\r\\n]+$"
+      }
+    },
+    "contact": {
+      "type": "object",
+      "properties": {
+        "first_name": {
+          "type": "string",
+          "description": "This person's first name."
+        },
+        "last_name": {
+          "type": "string",
+          "description": "This person's last name."
+        },
+        "organization": {
+          "type": "string",
+          "description": "This person's organization name."
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "This person's email address."
+        },
+        "is_contact": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether this person is the main contact for the task."
+        }
+      },
+      "required": ["first_name" , "last_name" , "organization" , "email" , "is_contact"]
+    },
+    "io": {
+      "parameter": {
+        "description": {
+          "type": "string"
+        },
+        "optional": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "base_parameter": {
+        "type": "object",
+        "required": ["description"],
+        "properties": {
+          "display_name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": {
+            "$ref": "#/$defs/io/parameter/description",
+            "description": "A text description of the parameter."
+          }
+        }
+      },
+      "type_specs": {
+        "integer": {
+          "oneOf": [
+            {
+              "const": "integer"
+            },
+            {
+              "type": "object",
+              "required": ["id"],
+              "properties": {
+                "id": {"const": "integer"},
+                "$comment": "TODO add validation rules for range validators",
+                "gt": {"type": "integer"},
+                "lt": {"type": "integer"},
+                "geq": {"type": "integer"},
+                "leq": {"type": "integer"}
+              }
+            }
+          ]
+        },
+        "boolean": {
+          "oneOf": [
+            {
+              "const": "boolean"
+            },
+            {
+              "type": "object",
+              "required": ["id"],
+              "properties": {
+                "id": {"const": "boolean"}
+              }
+            }
+          ]
+        },
+        "number": {
+          "oneOf": [
+            {
+              "const": "number"
+            },
+            {
+              "type": "object",
+              "required": ["id"],
+              "properties": {
+                "id": {"const": "number"},
+                "gt": {"type": "number"},
+                "lt": {"type": "number"},
+                "geq": {"type": "number"},
+                "leq": {"type": "number"},
+                "infinity_allowed": {"type": "boolean", "default": false},
+                "nan_allowed": {"type": "boolean", "default": false}
+              }
+            }
+          ]
+        },
+        "string": {
+          "oneOf": [
+            {
+              "const": "string"
+            },
+            {
+              "type": "object",
+              "required": ["id"],
+              "properties": {
+                "id": {"const": "string"},
+                "min_length": {"type": "integer", "default": 0},
+                "max_length": {"type": "integer"}
+              }
+            }
+          ]
+        },
+        "enumeration": {
+          "type": "object",
+          "required": ["id", "values"],
+          "properties": {
+            "id": {"const": "enumeration"},
+            "values": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "#/$defs/types/enum_item"
+              }
+            }
+          }
+        },
+        "datetime": {
+          "oneOf": [
+            {
+              "const": "datetime"
+            },
+            {
+              "type": "object",
+              "required": ["id"],
+              "properties": {
+                "id": {"const": "datetime"},
+                "before": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "after": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            }
+          ]
+        },
+        "geometry": {
+          "oneOf":[
+            {
+              "const": "geometry"
+            },
+            {
+              "type": "object",
+              "required": ["id"],
+              "properties": {
+                "id": {"const": "geometry"}
+              }
+            }
+          ]
+        },
+        "file": {
+          "oneOf": [
+            {
+              "const": "file"
+            },
+            {
+              "type": "object",
+              "required": ["id"],
+              "properties": {
+                "id": {"const": "file"},
+                "max_file_size": {
+                  "$ref": "#/$defs/types/memory"
+                },
+                "formats": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "string",
+                    "enum": ["binary", "text"]
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "image": {
+          "oneOf": [
+            {
+              "const": "image"
+            },
+            {
+              "type": "object",
+              "required": ["id"],
+              "properties": {
+                "id": {"const": "image"},
+                "max_file_size": {
+                  "$ref": "#/$defs/types/memory"
+                },
+                "formats": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "string",
+                    "enum": ["png", "jpeg", "tiff"]
+                  }
+                },
+                "max_width": {
+                  "type": "integer"
+                },
+                "max_height": {
+                  "type": "integer"
+                }
+              }
+            }
+          ]
+        },
+        "wsi": {
+          "oneOf": [
+            {
+              "const": "wsi"
+            },
+            {
+              "type": "object",
+              "required": ["id"],
+              "properties": {
+                "id": {"const": "wsi"},
+                "formats": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "string",
+                    "enum": ["dicom", "wsidicom"]
+                  }
+                },
+                "max_file_size": {
+                  "$ref": "#/$defs/types/memory"
+                },
+                "max_height": {
+                  "type": "integer"
+                },
+                "max_width": {
+                  "type": "integer"
+                }
+              }
+            }
+          ]
+        },
+        "array": {
+          "type": "object",
+          "required": ["id", "subtype"],
+          "properties": {
+            "id": {"const": "array"},
+            "min_size": {
+              "type": "integer"
+            },
+            "max_size": {
+              "type": "integer"
+            },
+            "subtype": {
+              "oneOf": [
+                {"$ref": "#/$defs/io/type_specs/integer"},
+                {"$ref": "#/$defs/io/type_specs/boolean"},
+                {"$ref": "#/$defs/io/type_specs/number"},
+                {"$ref": "#/$defs/io/type_specs/string"},
+                {"$ref": "#/$defs/io/type_specs/enumeration"},
+                {"$ref": "#/$defs/io/type_specs/datetime"},
+                {"$ref": "#/$defs/io/type_specs/geometry"},
+                {"$ref": "#/$defs/io/type_specs/image"},
+                {"$ref": "#/$defs/io/type_specs/array"},
+                {"$ref": "#/$defs/io/type_specs/file"}
+              ]
+            }
+          }
+        }
+      },
+      "typed_parameter": {
+        "integer": {
+          "type": "object",
+          "allOf": [
+            {"$ref": "#/$defs/io/base_parameter"}
+          ],
+          "required": ["type"],
+          "properties": {
+            "type": {"$ref": "#/$defs/io/type_specs/integer"}
+          },
+          "unevaluatedProperties": true
+        },
+        "boolean": {
+          "type": "object",
+          "allOf": [
+            {"$ref": "#/$defs/io/base_parameter"}
+          ],
+          "required": ["type"],
+          "properties": {
+            "type": {"$ref": "#/$defs/io/type_specs/boolean"}
+          },
+          "unevaluatedProperties": true
+        },
+        "number": {
+          "type": "object",
+          "allOf": [
+            {"$ref": "#/$defs/io/base_parameter"}
+          ],
+          "required": ["type"],
+          "properties": {
+            "type": {"$ref": "#/$defs/io/type_specs/number"}
+          },
+          "unevaluatedProperties": true
+        },
+        "string": {
+          "type": "object",
+          "allOf": [
+            {"$ref": "#/$defs/io/base_parameter"}
+          ],
+          "required": ["type"],
+          "properties": {
+            "type": {"$ref": "#/$defs/io/type_specs/string"}
+          },
+          "unevaluatedProperties": true
+        },
+        "enumeration": {
+          "type": "object",
+          "allOf": [
+            {"$ref": "#/$defs/io/base_parameter"}
+          ],
+          "required": ["type"],
+          "properties": {
+            "type": {"$ref": "#/$defs/io/type_specs/enumeration"}
+          },
+          "unevaluatedProperties": true
+        },
+        "datetime": {
+          "type": "object",
+          "allOf": [
+            {"$ref": "#/$defs/io/base_parameter"}
+          ],
+          "required": ["type"],
+          "properties": {
+            "type": {"$ref": "#/$defs/io/type_specs/datetime"}
+          },
+          "unevaluatedProperties": true
+        },
+        "geometry": {
+          "type": "object",
+          "allOf": [
+            {"$ref": "#/$defs/io/base_parameter"}
+          ],
+          "required": ["type"],
+          "properties": {
+            "type": {"$ref": "#/$defs/io/type_specs/geometry"}
+          },
+          "unevaluatedProperties": true
+        },
+        "file": {
+          "type": "object",
+          "allOf": [
+            {"$ref": "#/$defs/io/base_parameter"}
+          ],
+          "required": ["type"],
+          "properties": {
+            "type": {"$ref": "#/$defs/io/type_specs/file"}
+          },
+          "unevaluatedProperties": true
+        },
+        "image": {
+          "type": "object",
+          "allOf": [
+            {"$ref": "#/$defs/io/base_parameter"}
+          ],
+          "required": ["type"],
+          "properties": {
+            "type": {"$ref": "#/$defs/io/type_specs/image"}
+          },
+          "unevaluatedProperties": true
+        },
+        "wsi": {
+          "type": "object",
+          "allOf": [
+            {"$ref": "#/$defs/io/base_parameter"}
+          ],
+          "required": ["type"],
+          "properties": {
+            "type": {"$ref": "#/$defs/io/type_specs/wsi"}
+          },
+          "unevaluatedProperties": true
+        },
+        "array": {
+          "type": "object",
+          "allOf": [
+            {"$ref": "#/$defs/io/base_parameter"},
+            {
+              "type": "object",
+              "properties": {
+                "dependencies": {
+                  "type": "object",
+                  "properties": {
+                    "$ref": "#/$defs/dependencies/matching"
+                  }
+                }
+              }
+            }
+          ],
+          "required": ["type"],
+          "properties": {
+            "type": {"$ref": "#/$defs/io/type_specs/array"}
+          },
+          "unevaluatedProperties": true
+        }
+      },
+      "input_parameter": {
+        "$comment": "input definition is more verbose than output's because we increase with 'default' and 'optional' fields which are not available for outputs",
+        "allOf": [
+          {
+            "oneOf": [
+              {
+                "allOf": [
+                  {"$ref": "#/$defs/io/typed_parameter/integer"},
+                  { "type": "object", "properties": { "default": {"type": "integer"}} }
+                ]
+              },
+              {
+                "allOf": [
+                  {"$ref": "#/$defs/io/typed_parameter/boolean"},
+                  { "type": "object", "properties": { "default": {"type": "boolean"}} }
+                ]
+              },
+              {
+                "allOf": [
+                  {"$ref": "#/$defs/io/typed_parameter/number"},
+                  { "type": "object", "properties": { "default": {"type": "number"}} }
+                ]
+              },
+              {
+                "allOf": [
+                  {"$ref": "#/$defs/io/typed_parameter/string"},
+                  { "type": "object", "properties": { "default": {"type": "string"}} }
+                ]
+              },
+              {
+                "allOf": [
+                  {"$ref": "#/$defs/io/typed_parameter/enumeration"},
+                  { "type": "object", "properties": { "default": {"$ref": "#/$defs/types/enum_item"}} }
+                ]
+              },
+              {
+                "allOf": [
+                  {"$ref": "#/$defs/io/typed_parameter/datetime"},
+                  { "type": "object", "properties": {"default": { "type": "string", "format": "date-time"}} }
+                ]
+              },
+              {
+                "$ref": "#/$defs/io/typed_parameter/geometry"
+              },
+              {
+                "$ref": "#/$defs/io/typed_parameter/file"
+              },
+              {
+                "$ref": "#/$defs/io/typed_parameter/image"
+              },
+              {
+                "$ref": "#/$defs/io/typed_parameter/wsi"
+              },
+              {
+                "$ref": "#/$defs/io/typed_parameter/array"
+              }
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "optional": {"$ref": "#/$defs/io/parameter/optional"}
+            },
+            "unevaluatedProperties": true
+          }
+        ]
+      },
+      "output_parameter": {
+        "allOf": [
+          {
+            "oneOf": [
+              {"$ref": "#/$defs/io/typed_parameter/integer"},
+              {"$ref": "#/$defs/io/typed_parameter/boolean"},
+              {"$ref": "#/$defs/io/typed_parameter/number"},
+              {"$ref": "#/$defs/io/typed_parameter/string"},
+              {"$ref": "#/$defs/io/typed_parameter/enumeration"},
+              {"$ref": "#/$defs/io/typed_parameter/datetime"},
+              {"$ref": "#/$defs/io/typed_parameter/geometry"},
+              {"$ref": "#/$defs/io/typed_parameter/file"},
+              {"$ref": "#/$defs/io/typed_parameter/image"},
+              {"$ref": "#/$defs/io/typed_parameter/wsi"},
+              {"$ref": "#/$defs/io/typed_parameter/array"}
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "dependencies": {
+                "type": "object",
+                "properties": {
+                  "$ref": "#/$defs/dependencies/derived_from"
+                },
+                "unevaluatedProperties": true
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

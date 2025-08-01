@@ -1,0 +1,13 @@
+
+ALTER TABLE integer_type
+    ALTER COLUMN geq DROP NOT NULL;
+
+ALTER TABLE integer_type
+    ALTER COLUMN gt DROP NOT NULL;
+
+ALTER TABLE integer_type
+    ALTER COLUMN leq DROP NOT NULL;
+
+ALTER TABLE integer_type
+    ALTER COLUMN lt DROP NOT NULL;
+
