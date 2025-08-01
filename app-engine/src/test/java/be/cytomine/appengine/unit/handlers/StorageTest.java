@@ -40,7 +40,7 @@ public class StorageTest {
         Properties properties = yamlFactory.getObject();
         assert properties != null;
         String property = properties.getProperty("storage.base-path");
-        basePath = property.substring(property.indexOf(':'), property.lastIndexOf('}'));
+        basePath = property;//.substring(property.indexOf(':'), property.lastIndexOf('}'));
         storageHandler = new FileSystemStorageHandler(basePath);
     }
 

@@ -63,7 +63,8 @@ dependencies {
     implementation group: 'com.networknt', name: 'json-schema-validator', version: '1.0.87'
     implementation group: 'org.apache.commons', name: 'commons-compress', version: '1.24.0'
     implementation group: 'org.apache.tika', name: 'tika-core', version: '2.9.1'
-
+    implementation 'org.apache.commons:commons-fileupload2-jakarta-servlet6:2.0.0-M4'
+    implementation 'commons-io:commons-io:2.15.1'
     // Geometry
     implementation 'org.locationtech.jts:jts-core:1.19.0'
     implementation 'org.locationtech.jts.io:jts-io-common:1.19.0'
@@ -81,6 +82,7 @@ dependencies {
 
     // Jakarta
     implementation 'jakarta.persistence:jakarta.persistence-api:3.1.0'
+    implementation 'jakarta.servlet:jakarta.servlet-api:6.1.0'
 
     // PostgreSQL
     runtimeOnly 'org.postgresql:postgresql'

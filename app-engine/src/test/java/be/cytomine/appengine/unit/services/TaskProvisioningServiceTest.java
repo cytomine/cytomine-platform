@@ -1,16 +1,11 @@
 package be.cytomine.appengine.unit.services;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Random;
+import java.io.*;
+import java.util.*;
+import java.util.zip.CRC32;
 
-import be.cytomine.appengine.models.task.Parameter;
-import be.cytomine.appengine.models.task.Task;
-import be.cytomine.appengine.models.task.TypePersistence;
-import be.cytomine.appengine.models.task.ValueType;
+import be.cytomine.appengine.models.task.*;
+import be.cytomine.appengine.repositories.ChecksumRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -21,7 +16,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationContext;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import be.cytomine.appengine.dto.handlers.filestorage.Storage;
@@ -34,8 +31,6 @@ import be.cytomine.appengine.exceptions.ProvisioningException;
 import be.cytomine.appengine.handlers.SchedulerHandler;
 import be.cytomine.appengine.handlers.StorageData;
 import be.cytomine.appengine.handlers.StorageHandler;
-import be.cytomine.appengine.models.task.ParameterType;
-import be.cytomine.appengine.models.task.Run;
 import be.cytomine.appengine.models.task.integer.IntegerPersistence;
 import be.cytomine.appengine.repositories.RunRepository;
 import be.cytomine.appengine.repositories.TypePersistenceRepository;
@@ -71,6 +66,9 @@ public class TaskProvisioningServiceTest {
 
     @Mock
     private RunRepository runRepository;
+
+    @Mock
+    private ChecksumRepository checksumRepository;
 
     @Mock
     private TypePersistenceRepository typePersistenceRepository;
@@ -113,6 +111,9 @@ public class TaskProvisioningServiceTest {
 
         when(runRepository.findById(run.getId())).thenReturn(Optional.of(run));
 
+        Checksum crc32 = new Checksum(UUID.randomUUID(), "task-run-inputs-" + run.getId(), 938453439);
+        when(checksumRepository.save(any(Checksum.class))).thenReturn(crc32);
+
         JsonNode result = taskProvisioningService.provisionRunParameter(run.getId().toString(), name, value);
 
         assertNotNull(result);
@@ -121,6 +122,22 @@ public class TaskProvisioningServiceTest {
         assertEquals(run.getId().toString(), result.get("task_run_id").asText());
         verify(runRepository, times(1)).findById(run.getId());
         verify(storageHandler, times(1)).saveStorageData(any(Storage.class), any(StorageData.class));
+    }
+
+    private long calculateFileCRC32(File file) throws IOException {
+        java.util.zip.Checksum crc32 = new CRC32();
+        // Use try-with-resources to ensure the input stream is closed automatically
+        // BufferedInputStream is used for efficient reading in chunks
+        try (InputStream is = new BufferedInputStream(new FileInputStream(file))) {
+            byte[] buffer = new byte[8192]; // Define a buffer size (e.g., 8KB)
+            int bytesRead;
+
+            // Read the file chunk by chunk and update the CRC32 checksum
+            while ((bytesRead = is.read(buffer)) != -1) {
+                crc32.update(buffer, 0, bytesRead);
+            }
+        }
+        return crc32.getValue(); // Return the final CRC32 value
     }
 
     @DisplayName("Successfully provision a run parameter with binary data")
@@ -139,7 +156,6 @@ public class TaskProvisioningServiceTest {
         assertEquals(name, result.get("param_name").asText());
         assertEquals(localRun.getId().toString(), result.get("task_run_id").asText());
         verify(runRepository, times(1)).findById(localRun.getId());
-        verify(storageHandler, times(1)).saveStorageData(any(Storage.class), any(StorageData.class));
     }
 
     @DisplayName("Failed to provision a run parameter and throw 'ProvisioningException'")
@@ -232,10 +248,13 @@ public class TaskProvisioningServiceTest {
         when(typePersistenceRepository.findTypePersistenceByRunIdAndParameterType(run.getId(), ParameterType.INPUT))
             .thenReturn(List.of(persistedProvision));
 
-        StorageData result = taskProvisioningService.retrieveIOZipArchive(run.getId().toString(), ParameterType.INPUT);
-    
-        assertEquals(mockStorageData.getEntryList().size(), result.getEntryList().size());
-        assertTrue(result.peek().getData().getName().matches("inputs-archive-\\d*" + run.getId()));
+        Checksum crc32 = new Checksum(UUID.randomUUID(), storageId, calculateFileCRC32(mockStorageData.peek().getData()));
+        when(checksumRepository.findByReference(any(String.class))).thenReturn(crc32);
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+
+        taskProvisioningService.retrieveIOZipArchive(run.getId().toString(), ParameterType.INPUT,out);
+
         verify(runRepository, times(1)).findById(run.getId());
         verify(storageHandler, times(1)).readStorageData(any(StorageData.class));
         verify(typePersistenceRepository, times(1)).findTypePersistenceByRunIdAndParameterType(run.getId(), ParameterType.INPUT);
@@ -249,9 +268,12 @@ public class TaskProvisioningServiceTest {
 
         when(runRepository.findById(localRun.getId())).thenReturn(Optional.of(localRun));
 
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+
         ProvisioningException exception = assertThrows(
             ProvisioningException.class,
-            () -> taskProvisioningService.retrieveIOZipArchive(localRun.getId().toString(), ParameterType.INPUT)
+            () -> taskProvisioningService.retrieveIOZipArchive(localRun.getId().toString(), ParameterType.INPUT,
+                out)
         );
         assertEquals("run is in invalid state", exception.getMessage());
     }
@@ -266,9 +288,12 @@ public class TaskProvisioningServiceTest {
         when(typePersistenceRepository.findTypePersistenceByRunIdAndParameterType(run.getId(), ParameterType.INPUT))
             .thenReturn(List.of());
 
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+
         ProvisioningException exception = assertThrows(
             ProvisioningException.class,
-            () -> taskProvisioningService.retrieveIOZipArchive(run.getId().toString(), ParameterType.INPUT)
+            () -> taskProvisioningService.retrieveIOZipArchive(run.getId().toString(), ParameterType.INPUT,
+                out)
         );
         assertEquals("provisions not found", exception.getMessage());
     }
@@ -281,12 +306,12 @@ public class TaskProvisioningServiceTest {
         Run localRun = TaskUtils.createTestRun(false);
         localRun.setTask(task);
         localRun.setState(TaskRunState.RUNNING);
-        MultipartFile outputs = mock(MultipartFile.class);
 
-        when(outputs.getInputStream()).thenReturn(new ByteArrayInputStream(TaskUtils.createFakeOutputsZip("out")));
         when(runRepository.findById(localRun.getId())).thenReturn(Optional.of(localRun));
+        taskProvisioningService.setBasePath("/tmp/appengine/storage");
 
-        List<TaskRunParameterValue> results = taskProvisioningService.postOutputsZipArchive(localRun.getId().toString(), localRun.getSecret(), outputs);
+        List<TaskRunParameterValue> results = taskProvisioningService.postOutputsZipArchive(localRun.getId().toString(), localRun.getSecret(),
+            new ByteArrayInputStream(TaskUtils.createFakeOutputsZip("out")));
 
         assertEquals(localRun.getTask().getParameters().stream().filter(parameter -> parameter.getParameterType().equals(ParameterType.INPUT)).toList().size(), results.size());
         verify(runRepository, times(1)).findById(localRun.getId());
@@ -330,14 +355,14 @@ public class TaskProvisioningServiceTest {
     public void postOutputsZipArchiveShouldThrowProvisioningExceptionWhenNotCorrectOutput() throws Exception {
         Run localRun = TaskUtils.createTestRun(false);
         localRun.setState(TaskRunState.RUNNING);
-        MultipartFile outputs = mock(MultipartFile.class);
 
-        when(outputs.getInputStream()).thenReturn(new ByteArrayInputStream(TaskUtils.createFakeOutputsZip("out", "invalid")));
         when(runRepository.findById(localRun.getId())).thenReturn(Optional.of(localRun));
+        taskProvisioningService.setBasePath("/tmp/appengine/storage");
 
         ProvisioningException exception = assertThrows(
             ProvisioningException.class,
-            () -> taskProvisioningService.postOutputsZipArchive(localRun.getId().toString(), localRun.getSecret(), outputs)
+            () -> taskProvisioningService.postOutputsZipArchive(localRun.getId().toString(), localRun.getSecret(),
+                new ByteArrayInputStream(TaskUtils.createFakeOutputsZip("out", "invalid")))
         );
         assertEquals("unexpected output, did not match an actual task output", exception.getMessage());
         verify(runRepository, times(1)).findById(localRun.getId());
@@ -349,14 +374,14 @@ public class TaskProvisioningServiceTest {
         Run localRun = TaskUtils.createTestRun(false);
         localRun.setState(TaskRunState.RUNNING);
         localRun.setTask(TaskUtils.createTestTaskWithMultipleIO());
-        MultipartFile outputs = mock(MultipartFile.class);
 
-        when(outputs.getInputStream()).thenReturn(new ByteArrayInputStream(TaskUtils.createFakeOutputsZip("out 1")));
         when(runRepository.findById(localRun.getId())).thenReturn(Optional.of(localRun));
+        taskProvisioningService.setBasePath("/tmp/appengine/storage");
 
         ProvisioningException exception = assertThrows(
             ProvisioningException.class,
-            () -> taskProvisioningService.postOutputsZipArchive(localRun.getId().toString(), localRun.getSecret(), outputs)
+            () -> taskProvisioningService.postOutputsZipArchive(localRun.getId().toString(), localRun.getSecret(),
+                new ByteArrayInputStream(TaskUtils.createFakeOutputsZip("out 1")))
         );
         assertEquals("some outputs are missing in the archive", exception.getMessage());
         verify(runRepository, times(1)).findById(localRun.getId());

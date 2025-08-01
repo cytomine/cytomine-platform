@@ -244,9 +244,6 @@ public class ProvisionTaskStepDefinitions {
     public void a_task_run_has_been_created_for_this_task() throws FileStorageException {
         persistedRun = new Run(UUID.randomUUID(), TaskRunState.CREATED, null);
         persistedRun = taskRunRepository.save(persistedRun);
-        persistedTask.setRuns(List.of(persistedRun));
-        persistedTask = taskRepository.saveAndFlush(persistedTask);
-        persistedTask.setRuns(List.of(persistedRun));
         persistedRun.setTask(persistedTask);
         persistedRun = taskRunRepository.saveAndFlush(persistedRun);
         Storage runStorage = new Storage("task-run-inputs-" + persistedRun.getId().toString());
@@ -347,9 +344,6 @@ public class ProvisionTaskStepDefinitions {
         }
 
         persistedRun = taskRunRepository.save(persistedRun);
-        persistedTask.setRuns(List.of(persistedRun));
-        persistedTask = taskRepository.saveAndFlush(persistedTask);
-        persistedTask.setRuns(List.of(persistedRun));
         persistedRun.setTask(persistedTask);
         persistedRun = taskRunRepository.saveAndFlush(persistedRun);
 

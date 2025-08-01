@@ -29,18 +29,18 @@ Feature: [URS00001-TASK] Upload a task
     And App Engine cleans up any temporary file created during the process (e.g. uploaded zip file, etc)
 
     Examples:
-      | task namespace                                 | task version | tar filepath | task uuid                            | storage identifier                            | image name                                             |
-      | com.cytomine.dummy.arithmetic.integer.addition | 1.0.0        | image.tar    | acde070d-8c4c-4f0d-9d8a-162843c10333 | task-acde070d-8c4c-4f0d-9d8a-162843c10333-def | com/cytomine/dummy/arithmetic/integer/addition:1.0.0   |
-      | com.cytomine.dummy.identity.boolean            | 1.0.0        | image.tar    | acde070d-8c4c-4f0d-9d8a-162843c10333 | task-acde070d-8c4c-4f0d-9d8a-162843c10333-def | com/cytomine/dummy/identity/boolean:1.0.0              |
-      | com.cytomine.dummy.identity.enumeration        | 1.0.0        | image.tar    | acde070d-8c4c-4f0d-9d8a-162843c10333 | task-acde070d-8c4c-4f0d-9d8a-162843c10333-def | com/cytomine/dummy/identity/enumeration:1.0.0          |
-      | com.cytomine.dummy.identity.number             | 1.0.0        | image.tar    | acde070d-8c4c-4f0d-9d8a-162843c10333 | task-acde070d-8c4c-4f0d-9d8a-162843c10333-def | com/cytomine/dummy/identity/number:1.0.0               |
-      | com.cytomine.dummy.identity.string             | 1.0.0        | image.tar    | acde070d-8c4c-4f0d-9d8a-162843c10333 | task-acde070d-8c4c-4f0d-9d8a-162843c10333-def | com/cytomine/dummy/identity/string:1.0.0               |
-      | com.cytomine.dummy.identity.geometry           | 1.0.0        | image.tar    | acde070d-8c4c-4f0d-9d8a-162843c10333 | task-acde070d-8c4c-4f0d-9d8a-162843c10333-def | com/cytomine/dummy/identity/geometry:1.0.0             |
-      | com.cytomine.dummy.identity.image              | 1.0.0        | image.tar    | acde070d-8c4c-4f0d-9d8a-162843c10333 | task-acde070d-8c4c-4f0d-9d8a-162843c10333-def | com/cytomine/dummy/identity/image:1.0.0                |
-      | com.cytomine.dummy.identity.wsi                | 1.0.0        | image.tar    | acde070d-8c4c-4f0d-9d8a-162843c10333 | task-acde070d-8c4c-4f0d-9d8a-162843c10333-def | com/cytomine/dummy/identity/wsi:1.0.0                  |
-      | com.cytomine.dummy.identity.file               | 1.0.0        | image.tar    | acde070d-8c4c-4f0d-9d8a-162843c10333 | task-acde070d-8c4c-4f0d-9d8a-162843c10333-def | com/cytomine/dummy/identity/file:1.0.0                 |
-      | com.cytomine.dummy.identity.datetime           | 1.0.0        | image.tar    | acde070d-8c4c-4f0d-9d8a-162843c10333 | task-acde070d-8c4c-4f0d-9d8a-162843c10333-def | com/cytomine/dummy/identity/datetime:1.0.0             |
-      | com.cytomine.dummy.identity.integer.collection | 0.1.0        | image.tar    | acde070d-8c4c-4f0d-9d8a-162843c10333 | task-acde070d-8c4c-4f0d-9d8a-162843c10333-def | com/cytomine/dummy/identity/primitive-collection:0.1.0 |
+      | task namespace                                 | task version | tar filepath                                                | task uuid                            | storage identifier                            | image name                                             |
+      | com.cytomine.dummy.arithmetic.integer.addition | 1.0.0        | com.cytomine.dummy.arithmetic.integer.addition-1.0.0.tar    | acde070d-8c4c-4f0d-9d8a-162843c10333 | task-acde070d-8c4c-4f0d-9d8a-162843c10333-def | com/cytomine/dummy/arithmetic/integer/addition:1.0.0   |
+      | com.cytomine.dummy.identity.boolean            | 1.0.0        | com.cytomine.dummy.identity.boolean-1.0.0.tar               | acde070d-8c4c-4f0d-9d8a-162843c10333 | task-acde070d-8c4c-4f0d-9d8a-162843c10333-def | com/cytomine/dummy/identity/boolean:1.0.0              |
+      | com.cytomine.dummy.identity.enumeration        | 1.0.0        | com.cytomine.dummy.identity.enumeration-1.0.0.tar           | acde070d-8c4c-4f0d-9d8a-162843c10333 | task-acde070d-8c4c-4f0d-9d8a-162843c10333-def | com/cytomine/dummy/identity/enumeration:1.0.0          |
+      | com.cytomine.dummy.identity.number             | 1.0.0        | com.cytomine.dummy.identity.number-1.0.0.tar                | acde070d-8c4c-4f0d-9d8a-162843c10333 | task-acde070d-8c4c-4f0d-9d8a-162843c10333-def | com/cytomine/dummy/identity/number:1.0.0               |
+      | com.cytomine.dummy.identity.string             | 1.0.0        | com.cytomine.dummy.identity.string-1.0.0.tar                | acde070d-8c4c-4f0d-9d8a-162843c10333 | task-acde070d-8c4c-4f0d-9d8a-162843c10333-def | com/cytomine/dummy/identity/string:1.0.0               |
+      | com.cytomine.dummy.identity.geometry           | 1.0.0        | com.cytomine.dummy.identity.geometry-1.0.0.tar              | acde070d-8c4c-4f0d-9d8a-162843c10333 | task-acde070d-8c4c-4f0d-9d8a-162843c10333-def | com/cytomine/dummy/identity/geometry:1.0.0             |
+      | com.cytomine.dummy.identity.image              | 1.0.0        | com.cytomine.dummy.identity.image-1.0.0.tar                 | acde070d-8c4c-4f0d-9d8a-162843c10333 | task-acde070d-8c4c-4f0d-9d8a-162843c10333-def | com/cytomine/dummy/identity/image:1.0.0                |
+      | com.cytomine.dummy.identity.wsi                | 1.0.0        | com.cytomine.dummy.identity.wsi-1.0.0.tar                   | acde070d-8c4c-4f0d-9d8a-162843c10333 | task-acde070d-8c4c-4f0d-9d8a-162843c10333-def | com/cytomine/dummy/identity/wsi:1.0.0                  |
+      | com.cytomine.dummy.identity.file               | 1.0.0        | com.cytomine.dummy.identity.file-1.0.0.tar                  | acde070d-8c4c-4f0d-9d8a-162843c10333 | task-acde070d-8c4c-4f0d-9d8a-162843c10333-def | com/cytomine/dummy/identity/file:1.0.0                 |
+      | com.cytomine.dummy.identity.datetime           | 1.0.0        | com.cytomine.dummy.identity.datetime-1.0.0.tar              | acde070d-8c4c-4f0d-9d8a-162843c10333 | task-acde070d-8c4c-4f0d-9d8a-162843c10333-def | com/cytomine/dummy/identity/datetime:1.0.0             |
+      | com.cytomine.dummy.identity.integer.collection | 0.1.0        | com.cytomine.dummy.identity.integer.collection-0.1.0.tar    | acde070d-8c4c-4f0d-9d8a-162843c10333 | task-acde070d-8c4c-4f0d-9d8a-162843c10333-def | com/cytomine/dummy/identity/primitive-collection:0.1.0 |
 
   Scenario Outline: unsuccessful upload of duplicate task
     Given a task uniquely identified by an "<task namespace>" and a "<task version>"
@@ -83,7 +83,7 @@ Feature: [URS00001-TASK] Upload a task
     But App Engine does not create the "<task namespace>" and related data in the File storage, registry and database services
 
     Examples:
-      | task  | task namespace                                 | task version | docker image path | expected docker image path | reason                 |
-      | task1 | com.cytomine.dummy.arithmetic.integer.addition |              | image.tar         | image.tar                  | no version             |
-      | task2 | com.cytomine.dummy.arithmetic.integer.addition | 1.0.0        | image.tar         | docker/image.tar           | invalid image location |
-      | task3 | com.cytomine.dummy.arithmetic.integer.addition | 1.0.0        | myimage.tar       | image.tar                  | invalid image location |
+      | task  | task namespace                                 | task version | docker image path                                                     | expected docker image path                                                | reason                 |
+      | task1 | com.cytomine.dummy.arithmetic.integer.addition |              | com.cytomine.dummy.arithmetic.integer.addition-1.0.0.tar              | com.cytomine.dummy.arithmetic.integer.addition-1.0.0.tar                  | no version             |
+      | task2 | com.cytomine.dummy.arithmetic.integer.addition | 1.0.0        | image.tar                                                             | docker/image.tar                                                          | invalid image location |
+      | task3 | com.cytomine.dummy.arithmetic.integer.addition | 1.0.0        | /something/com.cytomine.dummy.arithmetic.integer.addition-1.0.0.tar   | com.cytomine.dummy.arithmetic.integer.addition-1.0.0.tar                  | invalid image location |

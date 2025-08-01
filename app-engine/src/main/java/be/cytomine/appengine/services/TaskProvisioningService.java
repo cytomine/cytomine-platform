@@ -1,12 +1,20 @@
 package be.cytomine.appengine.services;
 
+import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -15,17 +23,33 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.zip.CRC32;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import be.cytomine.appengine.models.task.Checksum;
+import be.cytomine.appengine.repositories.ChecksumRepository;
+import be.cytomine.appengine.utils.FileHelper;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import jakarta.servlet.ServletOutputStream;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.NotNull;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
+import org.apache.commons.fileupload2.core.DiskFileItem;
+import org.apache.commons.fileupload2.core.DiskFileItemFactory;
+import org.apache.commons.fileupload2.core.FileItemFactory;
+import org.apache.commons.fileupload2.core.FileItemInput;
+import org.apache.commons.fileupload2.core.FileItemInputIterator;
+import org.apache.commons.fileupload2.jakarta.servlet6.JakartaServletFileUpload;
+import org.apache.commons.io.IOUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -72,6 +96,7 @@ import be.cytomine.appengine.states.TaskRunState;
 @Slf4j
 @RequiredArgsConstructor
 @Service
+@Data
 public class TaskProvisioningService {
 
     private final TypePersistenceRepository typePersistenceRepository;
@@ -85,6 +110,11 @@ public class TaskProvisioningService {
     private final SchedulerHandler schedulerHandler;
 
     private final TaskService taskService;
+
+    private final ChecksumRepository checksumRepository;
+
+    @Value("${storage.base-path}")
+    private String basePath;
 
     public JsonNode provisionRunParameter(
         String runId,
@@ -134,16 +164,15 @@ public class TaskProvisioningService {
         JsonNode provision = null;
         if (value instanceof JsonNode) {
             provision = (JsonNode) value;
+            log.info("ProvisionParameter: storing provision to storage...");
+            saveProvisionInStorage(name, provision, run);
+            log.info("ProvisionParameter: stored");
         } else if (value instanceof File) {
             ObjectNode objectNode = (new ObjectMapper()).createObjectNode();
             objectNode.put("param_name", name);
             objectNode.put("value", ((File) value).getAbsolutePath());
             provision = objectNode;
         }
-
-        log.info("ProvisionParameter: storing provision to storage...");
-        saveProvisionInStorage(name, provision, run);
-        log.info("ProvisionParameter: stored");
 
         log.info("ProvisionParameter: saving provision in database...");
         saveInDatabase(name, provision, run);
@@ -187,7 +216,7 @@ public class TaskProvisioningService {
         Run run = getRunIfValid(runId);
         log.info("ProvisionMultipleParameter: found");
         log.info("ProvisionMultipleParameter: handling provision list");
-        // prepare error list just in case
+        // prepare an error list just in case
         List<AppEngineError> multipleErrors = new ArrayList<>();
         for (JsonNode provision : provisions) {
             GenericParameterProvision genericParameterProvision = new GenericParameterProvision();
@@ -295,8 +324,15 @@ public class TaskProvisioningService {
             StorageData inputProvisionFileData = inputForType
                 .getType()
                 .mapToStorageFileData(provision, run);
+            for (StorageDataEntry current : inputProvisionFileData.getEntryList()) {
+                String filename = current.getName();
+                if (!"descriptor.yml".equalsIgnoreCase(filename) && current.getStorageDataType() != StorageDataType.DIRECTORY) {
+                    setChecksumCRC32(runStorage.getIdStorage(), calculateFileCRC32(current.getData()), filename);
+                }
+            }
+
             fileStorageHandler.saveStorageData(runStorage, inputProvisionFileData);
-        } catch (FileStorageException e) {
+        } catch (FileStorageException | IOException e) {
             AppEngineError error = ErrorBuilder.buildParamRelatedError(
                 ErrorCode.STORAGE_STORING_INPUT_FAILED,
                 provision.get("param_name").asText(),
@@ -306,7 +342,23 @@ public class TaskProvisioningService {
         }
     }
 
-    private Parameter getParameter(String parameterName, ParameterType parameterType, Run run) {
+    public long calculateFileCRC32(File file) throws IOException {
+        java.util.zip.Checksum crc32 = new CRC32();
+        // Use try-with-resources to ensure the input stream is closed automatically
+        // BufferedInputStream is used for efficient reading in chunks
+        try (InputStream is = new BufferedInputStream(new FileInputStream(file))) {
+            byte[] buffer = new byte[8192]; // Define a buffer size (e.g., 8KB)
+            int bytesRead;
+
+            // Read the file chunk by chunk and update the CRC32 checksum
+            while ((bytesRead = is.read(buffer)) != -1) {
+                crc32.update(buffer, 0, bytesRead);
+            }
+        }
+        return crc32.getValue(); // Return the final CRC32 value
+    }
+
+    public Parameter getParameter(String parameterName, ParameterType parameterType, Run run) {
         return run
             .getTask()
             .getParameters()
@@ -400,9 +452,10 @@ public class TaskProvisioningService {
         return type;
     }
 
-    public StorageData retrieveIOZipArchive(
+    public void retrieveIOZipArchive(
         String runId,
-        ParameterType type
+        ParameterType type,
+        OutputStream outputStream
     ) throws ProvisioningException, FileStorageException, IOException {
         log.info("Retrieving IO Archive: retrieving...");
         Run run = getRunIfValid(runId);
@@ -425,8 +478,7 @@ public class TaskProvisioningService {
         log.info("Retrieving IO Archive: zipping...");
 
         String io = type.equals(ParameterType.INPUT) ? "inputs" : "outputs";
-        Path tempFile = Files.createTempFile(io + "-archive-", runId);
-        ZipOutputStream zipOut = new ZipOutputStream(Files.newOutputStream(tempFile));
+        ZipOutputStream zipOut = new ZipOutputStream(outputStream);
         for (TypePersistence provision : provisions) {
             // check that this type persistence is actually associated with a parameter
             Parameter parameter = getParameter(
@@ -447,10 +499,14 @@ public class TaskProvisioningService {
                 } else {
                     entryName = current.getName() + "/";
                 }
-                ZipEntry zipEntry = new ZipEntry(entryName);
-                zipOut.putNextEntry(zipEntry);
 
                 if (current.getStorageDataType().equals(StorageDataType.FILE)) {
+                    ZipEntry zipEntry = new ZipEntry(entryName);
+                    zipEntry.setMethod(ZipEntry.STORED);
+                    zipEntry.setSize(current.getData().length());
+                    zipEntry.setCompressedSize(current.getData().length());
+                    zipEntry.setCrc(getChecksumCRC32("task-run-" + io + "-" + run.getId(), current.getName()));
+                    zipOut.putNextEntry(zipEntry);
                     Files.copy(current.getData().toPath(), zipOut);
                 }
 
@@ -462,13 +518,27 @@ public class TaskProvisioningService {
 
         log.info("Retrieving IO Archive: zipped...");
 
-        return new StorageData(tempFile.toFile());
+    }
+
+    public long getChecksumCRC32(String identifier, String name) throws FileStorageException
+    {
+
+        String reference = identifier + "-" + name;
+        Checksum crc32 = checksumRepository.findByReference(reference);
+        return crc32.getChecksumCRC32();
+    }
+
+    public void setChecksumCRC32(String identifier, long checksumCRC32, String name)
+    {
+        String reference = identifier + "-" + name;
+        Checksum crc32 = new Checksum(UUID.randomUUID(), reference, checksumCRC32);
+        checksumRepository.save(crc32);
     }
 
     public List<TaskRunParameterValue> postOutputsZipArchive(
         String runId,
         String secret,
-        MultipartFile outputs
+        InputStream outputsInputStream
     ) throws ProvisioningException {
         log.info("Posting Outputs Archive: posting...");
         Run run = getRunIfValid(runId);
@@ -491,7 +561,7 @@ public class TaskProvisioningService {
         log.info("Posting Outputs Archive: unzipping...");
         try {
             List<TaskRunParameterValue> outputList = processOutputFiles(
-                outputs,
+                outputsInputStream,
                 runTaskOutputs,
                 run
             );
@@ -505,12 +575,12 @@ public class TaskProvisioningService {
     }
 
     private List<TaskRunParameterValue> processOutputFiles(
-        MultipartFile outputs,
+        InputStream outputsInputStream,
         Set<Parameter> runTaskOutputs,
         Run run
     ) throws IOException, ProvisioningException {
         // read files from the archive
-        try (ZipArchiveInputStream zais = new ZipArchiveInputStream(outputs.getInputStream())) {
+        try (ZipArchiveInputStream zais = new ZipArchiveInputStream(outputsInputStream)) {
             log.info("Posting Outputs Archive: unzipped");
             List<Parameter> remainingOutputs = new ArrayList<>(runTaskOutputs);
             List<TaskRunParameterValue> taskRunParameterValues = new ArrayList<>();
@@ -526,13 +596,19 @@ public class TaskProvisioningService {
                     if (currentOutput.getName().equals(ze.getName())) { // assuming it's a file
                         remainingOutputs.remove(i);
                         StorageData parameterZipEntryStorageData;
-                        String outputName = currentOutput.getName();
-                        Path tempFile = Files.createTempFile(outputName, null);
-                        Files.copy(zais, tempFile, StandardCopyOption.REPLACE_EXISTING);
+                        String outputName = currentOutput.getName(); //
+                        Path filePath = Path.of(basePath, "/", "task-run-outputs-" + run.getId(), outputName);
+                        log.info("Posting Outputs Archive: storing {} in storage...", currentOutput);
+                        Files.createDirectories(filePath.getParent());
+                        Files.copy(zais, filePath, StandardCopyOption.REPLACE_EXISTING);
+                        log.info("Posting Outputs Archive: stored ");
                         parameterZipEntryStorageData = new StorageData(
-                            tempFile.toFile(),
+                            filePath.toFile(),
                             outputName);
-                        contentsOfZip.add(parameterZipEntryStorageData);
+                        // calculate CRC32 for all storage data entry and save it in the database
+                        log.info("Posting Outputs Archive: calculating CRC32 checksum for zip entry {}"
+                            , ze.getName());
+                        calculateCRC32Checksum(run, contentsOfZip, parameterZipEntryStorageData);
                         break;
                     }
                     // assuming it's the main directory of a collection parameter
@@ -541,15 +617,25 @@ public class TaskProvisioningService {
                         if (ze.isDirectory()) {
                             partialParameterZipEntryStorageData = new StorageData(ze.getName());
                             contentsOfZip.add(partialParameterZipEntryStorageData);
+                            log.info("Posting Outputs Archive: creating directory {} in storage...", ze.getName());
+                            Path directoryPath = Path.of(basePath, "/", "task-run-outputs-" + run.getId(), ze.getName());
+                            log.info("Posting Outputs Archive: created");
+                            Files.createDirectories(directoryPath);
                         } else {
-                            Path tempFile = Files.createTempFile(ze
+                            Path filePath = Path.of(basePath, "/", "task-run-outputs-" + run.getId(), ze
                                 .getName()
-                                .replace("/", ""), null);
-                            Files.copy(zais, tempFile, StandardCopyOption.REPLACE_EXISTING);
+                                .replace("/", ""));
+                            Files.createDirectories(filePath);
+                            log.info("Posting Outputs Archive: storing {} in storage...", ze.getName());
+                            Files.copy(zais, filePath, StandardCopyOption.REPLACE_EXISTING);
+                            log.info("Posting Outputs Archive: stored ");
                             partialParameterZipEntryStorageData = new StorageData(
-                                tempFile.toFile(),
+                                filePath.toFile(),
                                 ze.getName());
-                            contentsOfZip.add(partialParameterZipEntryStorageData);
+                            // calculate CRC32 for all storage data entry and save it in the database
+                            log.info("Posting Outputs Archive: calculating CRC32 checksum for zip entry {}"
+                                , ze.getName());
+                            calculateCRC32Checksum(run, contentsOfZip, partialParameterZipEntryStorageData);
                         }
 
                         break;
@@ -558,7 +644,7 @@ public class TaskProvisioningService {
                     currentOutput = null;
                 }
 
-                // there's a file that do not match any output parameter
+                // there's a file that does not match any output parameter
                 if (currentOutput == null) {
                     AppEngineError error = ErrorBuilder.build(ErrorCode.INTERNAL_UNKNOWN_OUTPUT);
                     log.info("Posting Outputs Archive: output invalid (unknown output)");
@@ -615,7 +701,7 @@ public class TaskProvisioningService {
                 }
             }
 
-            // prepare error list just in case
+            // prepare an error list just in case
             List<AppEngineError> multipleErrors = new ArrayList<>();
 
             // processing of files
@@ -633,12 +719,13 @@ public class TaskProvisioningService {
                 if (currentOutputStorageDataOptional.isPresent()) {
                     currentOutputStorageData = currentOutputStorageDataOptional.get();
                 }
-                // read file
+                // read the file
                 String outputName = currentOutput.getName();
                 // validate files/directories contents and structure
                 try {
                     validateFiles(run, currentOutput, currentOutputStorageData);
                 } catch (TypeValidationException e) {
+                    // todo : delete all outputs of the run in case of validation errors
                     log.info(
                         "ProcessOutputFiles: "
                         + "output provision is invalid value validation failed"
@@ -646,12 +733,21 @@ public class TaskProvisioningService {
                     ParameterError parameterError = new ParameterError(outputName);
                     AppEngineError error = ErrorBuilder.build(e.getErrorCode(), parameterError);
                     multipleErrors.add(error);
-                    continue;
+                    run.setState(TaskRunState.FAILED);
+                    runRepository.saveAndFlush(run);
+                    log.info("Posting Outputs Archive: updated Run state to FAILED because of invalid output");
+                    try (Stream<Path> paths = Files.walk(Paths.get(basePath, "/", "task-run-outputs-" + run.getId()))) {
+                        paths.sorted(Comparator.reverseOrder()) // Delete children before parent
+                            .forEach(path -> {
+                                try {
+                                    Files.delete(path);
+                                } catch (IOException ignored) {}
+                            });
+                    } catch (IOException ignored) {}
+                    break;
                 }
-                // saving to database does not care about the type
+                // saving to the database does not care about the type
                 saveOutput(run, currentOutput, currentOutputStorageData);
-                // saving to the storage does not care about the type
-                storeOutputInFileStorage(run, currentOutputStorageData, outputName);
                 // based on parsed type build the response
                 taskRunParameterValues.add(currentOutput
                     .getType()
@@ -673,6 +769,21 @@ public class TaskProvisioningService {
             log.info("Posting Outputs Archive: posted");
             return taskRunParameterValues;
         }
+    }
+
+    private void calculateCRC32Checksum(Run run, List<StorageData> contentsOfZip,
+                                        StorageData partialParameterZipEntryStorageData)
+        throws ProvisioningException
+    {
+        for (StorageDataEntry current : partialParameterZipEntryStorageData.getEntryList()) {
+            try {
+                setChecksumCRC32("task-run-outputs-" + run.getId(), calculateFileCRC32(current.getData()), current.getName());
+            } catch (IOException e) {
+                AppEngineError error = ErrorBuilder.build(ErrorCode.INTERNAL_CRC32_CALC_FAILED);
+                throw new ProvisioningException(error);
+            }
+        }
+        contentsOfZip.add(partialParameterZipEntryStorageData);
     }
 
     private void validateFiles(
@@ -742,7 +853,7 @@ public class TaskProvisioningService {
         return outputList;
     }
 
-    private Run getRunIfValid(String runId) throws ProvisioningException {
+    public Run getRunIfValid(String runId) throws ProvisioningException {
         Optional<Run> runOptional = runRepository.findById(UUID.fromString(runId));
         if (runOptional.isEmpty()) {
             AppEngineError error = ErrorBuilder.build(ErrorCode.RUN_NOT_FOUND);
@@ -891,13 +1002,15 @@ public class TaskProvisioningService {
     public StateAction updateRunState(
         String runId,
         State state
-    ) throws SchedulingException, ProvisioningException {
+    ) throws SchedulingException, ProvisioningException, FileStorageException
+    {
         log.info("Update State: validating Run...");
         Run run = getRunIfValid(runId);
 
         return switch (state.getDesired()) {
             case PROVISIONED -> updateToProvisioned(run);
             case RUNNING -> run(run);
+            case FINISHED -> updateToFinished(run);
             // to safeguard against unknown state transition requests
             default -> throw new ProvisioningException(ErrorBuilder.build(ErrorCode.UNKNOWN_STATE));
         };
@@ -1063,6 +1176,81 @@ public class TaskProvisioningService {
         return createStateAction(run, TaskRunState.PROVISIONED);
     }
 
+    private StateAction updateToFinished(Run run) throws ProvisioningException, FileStorageException
+    {
+        // check the status of Run it should be Queueing
+        log.info("Provisioning: processing outputs...");
+        if (!run.getState().equals(TaskRunState.QUEUING)) {
+            AppEngineError error = ErrorBuilder.build(ErrorCode.INTERNAL_INVALID_TASK_RUN_STATE);
+            throw new ProvisioningException(error);
+        }
+        // list all outputs of the task
+        Set<Parameter> outputs = run
+            .getTask()
+            .getParameters()
+            .stream()
+            .filter(parameter -> parameter.getParameterType().equals(ParameterType.OUTPUT))
+            .collect(Collectors.toSet());
+        log.info("Provisioning: reading outputs...");
+        List<AppEngineError> multipleErrors = new ArrayList<>();
+        for (Parameter parameter : outputs) {
+            StorageData provisionFileData = fileStorageHandler.readStorageData(
+                new StorageData(parameter.getName(), "task-run-outputs-" + run.getId())
+            );
+            if (provisionFileData == null || provisionFileData.getEntryList().isEmpty()) {
+                AppEngineError error = ErrorBuilder.build(ErrorCode.INTERNAL_MISSING_OUTPUT_FILE_FOR_PARAMETER);
+                throw new ProvisioningException(error);
+            }
+
+            // validate files
+            log.info("Provisioning: validating output files...");
+            try {
+                validateFiles(run, parameter, provisionFileData);
+            } catch (TypeValidationException e) {
+                log.info(
+                    "Provisioning: "
+                        + "output provision is invalid value validation failed"
+                );
+                ParameterError parameterError = new ParameterError(parameter.getName());
+                AppEngineError error = ErrorBuilder.build(e.getErrorCode(), parameterError);
+                multipleErrors.add(error);
+                continue;
+            }
+            // store in the database
+            log.info("Provisioning: storing output in database...");
+            saveOutput(run, parameter, provisionFileData);
+
+            // calculate CRC32 for all storage data entry and save it in the database
+            log.info("Provisioning: calculating CRC32 checksum for zip entry {}"
+                , parameter.getName());
+            for (StorageDataEntry current : provisionFileData.getEntryList()) {
+                try {
+                    setChecksumCRC32("task-run-outputs-" + run.getId(), calculateFileCRC32(current.getData()), current.getName());
+                } catch (IOException e) {
+                    AppEngineError error = ErrorBuilder.build(ErrorCode.INTERNAL_CRC32_CALC_FAILED);
+                    throw new ProvisioningException(error);
+                }
+            }
+
+        }
+
+        multipleErrors.addAll(checkAfterExecutionMatches(run));
+
+        // throw multiple errors if exist
+        if (!multipleErrors.isEmpty()) {
+            log.info("Provisioning: state updated to FAILED");
+            run.setState(TaskRunState.FAILED);
+            runRepository.saveAndFlush(run);
+            AppEngineError error = ErrorBuilder.buildBatchError(multipleErrors);
+            throw new ProvisioningException(error);
+        }
+
+        log.info("Provisioning: state updated to FINISHED");
+        run.setState(TaskRunState.FINISHED);
+        runRepository.saveAndFlush(run);
+        return createStateAction(run, TaskRunState.FINISHED);
+    }
+
     public TaskRunResponse retrieveRun(String runId) throws ProvisioningException {
         log.info("Retrieving Run: retrieving...");
         Run run = getRunIfValid(runId);
@@ -1149,17 +1337,16 @@ public class TaskProvisioningService {
             objectNode.put("index", name + "/" + String.join("/", indexesArray));
             objectNode.set("value", provision.get("value"));
             provision = objectNode;
+            // store item in storage -> crawl indexes and store
+            log.info("ProvisionCollectionItem: storing provision to storage...");
+            saveProvisionInStorage(name, provision, run);
+            log.info("ProvisionCollectionItem: stored");
         } else if (value instanceof File) {
             ObjectNode objectNode = (new ObjectMapper()).createObjectNode();
             objectNode.put("index", name + "/" + String.join("/", indexesArray));
             objectNode.put("value", ((File) value).getAbsolutePath());
             provision = objectNode;
         }
-
-        // store item in storage -> crawl indexes and store
-        log.info("ProvisionCollectionItem: storing provision to storage...");
-        saveProvisionInStorage(name, provision, run);
-        log.info("ProvisionCollectionItem: stored");
 
         // store item in the database
         log.info("ProvisionCollectionItem: validating item...");
@@ -1170,5 +1357,174 @@ public class TaskProvisioningService {
 
         return getInputParameterType(name, run)
             .createInputProvisioningEndpointResponse(provision, run);
+    }
+
+    public Path prepareStreaming(
+        String runId, String parameterName
+    ) throws IOException
+    {
+        log.info("provisioning streaming: preparing...");
+        Storage runStorage = new Storage("task-run-inputs-" + runId);
+        Path filePath = Paths.get(basePath, runStorage.getIdStorage(), parameterName);
+        Files.createDirectories(filePath.getParent());
+        return filePath;
+    }
+
+    public Path prepareStreaming(
+        String runId,
+        String parameterName,
+        String[] indexesArray
+    ) throws IOException
+    {
+        log.info("provisioning collection item streaming: preparing...");
+        Storage runStorage = new Storage("task-run-inputs-" + runId);
+        Path filePath = Paths.get(basePath, runStorage.getIdStorage(), parameterName + "/" + String.join("/", indexesArray));
+        Files.createDirectories(filePath.getParent());
+        String[] arrayYmlPosition = Arrays.stream(indexesArray)
+            .limit(indexesArray.length - 1)
+            .toArray(String[]::new);
+        String arrayYmlFilePath = parameterName + "/" + (arrayYmlPosition.length > 0 ? String.join("/", arrayYmlPosition) + "/" : "") + "array.yml";
+        Path arrayYmlPath = Paths.get(basePath, runStorage.getIdStorage(), "/" + arrayYmlFilePath);
+        if (Files.exists(arrayYmlPath)) {
+            // update the array.yml metadata file
+            log.info("provisioning collection item streaming: updating collection array.yml...");
+            String content = FileHelper.read(arrayYmlPath.toFile(), Charset.defaultCharset());
+            int size = Integer.parseInt(content.substring(content.indexOf(':') + 1).trim()) + 1;
+            String newContent = "size: " + size;
+            Files.delete(arrayYmlPath);
+            Files.writeString(arrayYmlPath, newContent, Charset.defaultCharset());
+            // update CRC32 checksum for it
+            long updatedChecksum = calculateFileCRC32(arrayYmlPath.toFile());
+            Checksum checksum = checksumRepository.findByReference(runStorage.getIdStorage() + "-" + arrayYmlFilePath);
+            checksum.setChecksumCRC32(updatedChecksum);
+            checksumRepository.saveAndFlush(checksum);
+        } else {
+            // create the array.yml metadata file
+            log.info("provisioning collection item streaming: creating collection array.yml...");
+            String newContent = "size: 1";
+            Files.writeString(arrayYmlPath, newContent, Charset.defaultCharset());
+            // create CRC32 checksum for it
+            setChecksumCRC32(
+                runStorage.getIdStorage(),
+                calculateFileCRC32(arrayYmlPath.toFile()),
+                arrayYmlFilePath);
+        }
+        return filePath;
+    }
+
+    public File streamToStorage(String parameterName, HttpServletRequest request, Path filePath)
+        throws ProvisioningException
+    {
+        log.info("provisioning streaming: streaming...");
+        if (!JakartaServletFileUpload.isMultipartContent(request)) {
+            log.info("provisioning streaming: not multipart");
+            AppEngineError error = ErrorBuilder.build(
+                ErrorCode.INTERNAL_NOT_MULTIPART,
+                new ParameterError(parameterName)
+            );
+            throw new ProvisioningException(error);
+        }
+
+        FileItemFactory<DiskFileItem> factory = DiskFileItemFactory.builder().get();
+        JakartaServletFileUpload<DiskFileItem, FileItemFactory<DiskFileItem>> upload = new JakartaServletFileUpload<>(factory);
+        File uploadedFile = new File(filePath.toAbsolutePath().toString());
+        ;
+        try {
+            // Get an iterator for the multipart parts. This avoids parsing the whole request at once.
+            FileItemInputIterator iter = upload.getItemIterator(request);
+
+            // Check if there's at least one part in the request
+            if (!iter.hasNext()) {
+                log.info("provisioning streaming: No file parts found in the request body");
+                AppEngineError error = ErrorBuilder.build(
+                    ErrorCode.INTERNAL_NO_FILE_PARTS_FOUND,
+                    new ParameterError(parameterName)
+                );
+                throw new ProvisioningException(error);
+            }
+
+            // Get the first part. We assume this is the single file we're interested in.
+            FileItemInput item = iter.next();
+
+            // Validate that the first part is indeed a file and not a simple form field
+            if (item.isFormField()) {
+                log.warn("provisioning streaming: Expected a file but the first part is a form field: {}", item.getFieldName());
+                AppEngineError error = ErrorBuilder.build(
+                    ErrorCode.INTERNAL_NO_FILE_BUT_FORM_FIELD,
+                    new ParameterError(parameterName)
+                );
+                throw new ProvisioningException(error);
+            }
+
+            // --- Stream the file content directly to the target File ---
+            try (InputStream uploadedStream = item.getInputStream();
+                FileOutputStream fos = new FileOutputStream(uploadedFile)) {
+                IOUtils.copyLarge(uploadedStream, fos); // Efficiently copy bytes from input to output
+                log.info("provisioning streaming: file successfully streamed and saved ");
+            }
+
+        } catch (Exception e) {
+            log.warn("provisioning streaming: failed to stream input file {}", e.getMessage());
+            AppEngineError error = ErrorBuilder.build(
+                ErrorCode.INTERNAL_SERVER_ERROR,
+                new ParameterError(parameterName)
+            );
+            throw new ProvisioningException(error);
+        }
+        return uploadedFile;
+    }
+
+    public InputStream prepareStream(HttpServletRequest request)
+        throws ProvisioningException
+    {
+        log.info("provisioning streaming: streaming...");
+        if (!JakartaServletFileUpload.isMultipartContent(request)) {
+            log.info("provisioning streaming: not multipart");
+            AppEngineError error = ErrorBuilder.build(
+                ErrorCode.INTERNAL_NOT_MULTIPART
+            );
+            throw new ProvisioningException(error);
+        }
+
+        FileItemFactory<DiskFileItem> factory = DiskFileItemFactory.builder().get();
+        JakartaServletFileUpload<DiskFileItem, FileItemFactory<DiskFileItem>> upload = new JakartaServletFileUpload<>(factory);
+
+        InputStream uploadedStream;
+        try {
+            // Get an iterator for the multipart parts. This avoids parsing the whole request at once.
+            FileItemInputIterator iter = upload.getItemIterator(request);
+
+            // Check if there's at least one part in the request
+            if (!iter.hasNext()) {
+                log.info("provisioning streaming: No file parts found in the request body");
+                AppEngineError error = ErrorBuilder.build(
+                    ErrorCode.INTERNAL_NO_FILE_PARTS_FOUND
+                );
+                throw new ProvisioningException(error);
+            }
+
+            // Get the first part. We assume this is the single file we're interested in.
+            FileItemInput item = iter.next();
+
+            // Validate that the first part is indeed a file and not a simple form field
+            if (item.isFormField()) {
+                log.warn("provisioning streaming: Expected a file but the first part is a form field: {}", item.getFieldName());
+                AppEngineError error = ErrorBuilder.build(
+                    ErrorCode.INTERNAL_NO_FILE_BUT_FORM_FIELD
+                );
+                throw new ProvisioningException(error);
+            }
+
+            // --- Stream the file content directly to the target File ---
+           uploadedStream = item.getInputStream();
+
+        } catch (Exception e) {
+            log.warn("provisioning streaming: failed to stream input file {}", e.getMessage());
+            AppEngineError error = ErrorBuilder.build(
+                ErrorCode.INTERNAL_SERVER_ERROR
+            );
+            throw new ProvisioningException(error);
+        }
+        return uploadedStream;
     }
 }
