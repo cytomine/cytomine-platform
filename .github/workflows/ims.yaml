@@ -97,23 +97,23 @@ jobs:
       #     path: ${{ env.REPORT }}
       #     retention-days: 1
 
-  remove-docker-image:
-    if: false
-    runs-on: self-hosted
-    needs:
-      - tests
+  # remove-docker-image:
+  #   if: false
+  #   runs-on: self-hosted
+  #   needs:
+  #     - tests
 
-    steps:
-      - name: Delete pims test image from registry
-        uses: actions/github-script@v6
-        with:
-          script: |
-            try {
-              github.rest.packages.deletePackageForOrg({
-                org: context.repo.owner,
-                package_type: "container",
-                package_name: "pims",
-              });
-            } catch (error) {
-              core.setFailed(error.message);
-            }
+  #   steps:
+  #     - name: Delete pims test image from registry
+  #       uses: actions/github-script@v6
+  #       with:
+  #         script: |
+  #           try {
+  #             github.rest.packages.deletePackageForOrg({
+  #               org: context.repo.owner,
+  #               package_type: "container",
+  #               package_name: "pims",
+  #             });
+  #           } catch (error) {
+  #             core.setFailed(error.message);
+  #           }
