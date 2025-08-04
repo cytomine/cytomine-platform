@@ -77,9 +77,9 @@ jobs:
 
     container:
       image: docker/backend.dockerfile
-      credentials:
-        username: ${{ github.actor }}
-        password: ${{ github.token }}
+      # credentials:
+      #   username: ${{ github.actor }}
+      #   password: ${{ github.token }}
 
     steps:
       - name: Set up the repository
