@@ -45,35 +45,24 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # - name: Log in to the Container registry
-      #   uses: docker/login-action@v2
-      #   with:
-      #     registry: ${{ env.REGISTRY }}
-      #     username: ${{ github.actor }}
-      #     password: ${{ github.token }}
+      - name: Log in to the Container registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
 
       - name: Create docker tag
         id: vars
-          # echo "TAG=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}" >> $GITHUB_ENV
         run: |
-          echo "TAG=pims" >> $GITHUB_ENV
+          echo "TAG=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}" >> $GITHUB_ENV
           echo "tag=$TAG" >> $GITHUB_OUTPUT
-
-      # - name: Download deps
-      #   run: |
-      #     apt-get -y update && apt-get -y install --no-install-recommends --no-install-suggests wget
-      #     wget https://github.com/uclouvain/openjpeg/archive/v2.5.2/openjpeg-2.5.2.tar.gz
 
       - name: Build pims image
         run: docker buildx build --load -t $TAG .
 
-      # - name: Push pims image
-      #   run: docker push $TAG
-
-      - name: test image
-        run: |
-          docker run pims bash -c "python --version"
-          docker run pims bash -c "pip list"
+      - name: Push pims image
+        run: docker push $TAG
 
   tests:
     runs-on: self-hosted
@@ -82,9 +71,9 @@ jobs:
 
     container:
       image: ${{ needs.build-docker-image.outputs.tag }}
-      # credentials:
-      #   username: ${{ github.actor }}
-      #   password: ${{ github.token }}
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ github.token }}
 
     steps:
       - name: Set up the repository
@@ -103,30 +92,29 @@ jobs:
       - name: Run tests
         run: pytest tests --junitxml=${{ env.REPORT }}
 
-      # - name: Upload tests report
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: ${{ env.REPORT }}
-      #     path: ${{ env.REPORT }}
-      #     retention-days: 1
+      - name: Upload tests report
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.REPORT }}
+          path: ${{ env.REPORT }}
+          retention-days: 1
 
-  # remove-docker-image:
-  #   if: false
-  #   runs-on: self-hosted
-  #   needs:
-  #     - tests
+  remove-docker-image:
+    runs-on: self-hosted
+    needs:
+      - tests
 
-  #   steps:
-  #     - name: Delete pims test image from registry
-  #       uses: actions/github-script@v6
-  #       with:
-  #         script: |
-  #           try {
-  #             github.rest.packages.deletePackageForOrg({
-  #               org: context.repo.owner,
-  #               package_type: "container",
-  #               package_name: "pims",
-  #             });
-  #           } catch (error) {
-  #             core.setFailed(error.message);
-  #           }
+    steps:
+      - name: Delete pims test image from registry
+        uses: actions/github-script@v6
+        with:
+          script: |
+            try {
+              github.rest.packages.deletePackageForOrg({
+                org: context.repo.owner,
+                package_type: "container",
+                package_name: "pims",
+              });
+            } catch (error) {
+              core.setFailed(error.message);
+            }
