@@ -20,30 +20,21 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+defaults:
+  run:
+    working-directory: ./app-engine
+
 jobs:
   validate-json-schema:
     runs-on: self-hosted
 
-
-    # container:
-    #   image: node:16-alpine3.18
-
-    defaults:
-      run:
-        working-directory: ./app-engine
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up node
         uses: actions/setup-node@v4
         with:
-          # Version Spec of the version to use in SemVer notation.
-          # It also admits such aliases as lts/*, latest, nightly and canary builds
-          # Examples: 12.x, 10.15.1, >=10.15.0, lts/Hydrogen, 16-nightly, latest, node
           node-version: '16'
 
       - name: Install dependencies
@@ -66,31 +57,20 @@ jobs:
           --all-errors
 
   validate-openapi:
-    if: false # checkout works but validation not. I don't know why.
     runs-on: self-hosted
-    defaults:
-      run:
-        working-directory: ./app-engine
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-        # we can also use:
-        # uses: fluximus-prime/redocly-cli-github-action@v1
-        # but then we cannot set the redocli version.
 
       - name: Validate OpenAPI specifications
         uses: addnab/docker-run-action@v3
         with:
           image: redocly/cli:1.10.6
           run: 'redocly lint ${{ env.OPENAPI_PATH }}'
-          options: -v ${{ github.workspace }}/app-engine:/app-engine
+          options: -v ${{ github.workspace }}/app-engine:/app-engine -w /app-engine
         env:
           OPENAPI_PATH: /app-engine/src/test/resources/spec/api/openapi_spec.v0.1.0.yml
-
 
   unit-tests:
     runs-on: self-hosted
@@ -98,8 +78,6 @@ jobs:
     steps:
       - name: Set up the repository
         uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up JDK ${{ vars.JAVA_VERSION }}
         uses: actions/setup-java@v4
