@@ -53,6 +53,7 @@ RUN apt-get -y update && apt-get -y install --no-install-recommends --no-install
         liblcms2-dev \
         libopenslide-dev \
         libopenjp2-7-dev \
+        libvips42 \
         libpng-dev
 #         gobject-introspection \
 #         `# Other tools` \
@@ -106,19 +107,19 @@ RUN python plugins.py \
         --method dependencies_before_vips
 
 # vips
-ARG VIPS_VERSION=8.15.2
-ARG VIPS_URL=https://github.com/libvips/libvips/releases/download
-RUN pip install --no-cache-dir meson
-RUN cd /usr/local/src && \
-    wget ${VIPS_URL}/v${VIPS_VERSION}/vips-${VIPS_VERSION}.tar.xz && \
-    tar -xvf vips-${VIPS_VERSION}.tar.xz && \
-    rm -rf vips-${VIPS_VERSION}.tar.xz && \
-    cd vips-${VIPS_VERSION} && \
-    meson build --libdir lib -Dintrospection=disabled --buildtype release && \
-    cd build && \
-    ninja && \
-    ninja install && \
-    ldconfig
+# ARG VIPS_VERSION=8.15.2
+# ARG VIPS_URL=https://github.com/libvips/libvips/releases/download
+# RUN pip install --no-cache-dir meson
+# RUN cd /usr/local/src && \
+#     wget ${VIPS_URL}/v${VIPS_VERSION}/vips-${VIPS_VERSION}.tar.xz && \
+#     tar -xvf vips-${VIPS_VERSION}.tar.xz && \
+#     rm -rf vips-${VIPS_VERSION}.tar.xz && \
+#     cd vips-${VIPS_VERSION} && \
+#     meson build --libdir lib -Dintrospection=disabled --buildtype release && \
+#     cd build && \
+#     ninja && \
+#     ninja install && \
+#     ldconfig
 
 # Run before_python() from plugins prerequisites
 RUN python plugins.py \
