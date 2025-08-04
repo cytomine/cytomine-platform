@@ -54,8 +54,9 @@ jobs:
 
       - name: Create docker tag
         id: vars
+          # echo "TAG=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}" >> $GITHUB_ENV
         run: |
-          echo "TAG=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}" >> $GITHUB_ENV
+          echo "TAG=pims" >> $GITHUB_ENV
           echo "tag=$TAG" >> $GITHUB_OUTPUT
 
       # - name: Download deps
@@ -72,7 +73,7 @@ jobs:
   tests:
     runs-on: self-hosted
     needs:
-      - build-docker-image
+    - build-docker-image
 
     container:
       image: ${{ needs.build-docker-image.outputs.tag }}
