@@ -85,6 +85,13 @@ jobs:
       - name: Set up the repository
         uses: actions/checkout@v4
 
+      - name: Debug Python & pip
+        run: |
+          which python
+          which pip
+          python --version
+          pip list
+
       - name: Set up pytest
         run: pip install pytest httpx
 
