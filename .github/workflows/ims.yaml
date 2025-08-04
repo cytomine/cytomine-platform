@@ -30,7 +30,6 @@ env:
 
 jobs:
   build-docker-image:
-    if: false
     runs-on: self-hosted
     permissions:
       contents: read
