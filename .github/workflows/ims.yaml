@@ -70,6 +70,11 @@ jobs:
       # - name: Push pims image
       #   run: docker push $TAG
 
+      - name: test image
+        run: |
+          docker run pims bash -c "python --version"
+          docker run pims bash -c "pip list"
+
   tests:
     runs-on: self-hosted
     needs:
