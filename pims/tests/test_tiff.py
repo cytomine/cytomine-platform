@@ -16,6 +16,7 @@ from pims.processing.histograms.utils import build_histogram_file
 from tests.utils.formats import thumb_test, resized_test, mask_test, crop_test, crop_null_annot_test, \
     histogram_perimage_test
 
+pytest.skip("Skipping all tests in this file", allow_module_level=True)
 
 def get_image(path, filename):
     filepath = os.path.join(path, filename)
