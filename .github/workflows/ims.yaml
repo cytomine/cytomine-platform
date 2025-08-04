@@ -64,7 +64,7 @@ jobs:
       #     wget https://github.com/uclouvain/openjpeg/archive/v2.5.2/openjpeg-2.5.2.tar.gz
 
       - name: Build pims image
-        run: docker buildx -t $TAG .
+        run: docker buildx build -t $TAG .
 
       # - name: Push pims image
       #   run: docker push $TAG
