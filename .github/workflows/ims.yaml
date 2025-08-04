@@ -72,8 +72,8 @@ jobs:
 
   tests:
     runs-on: self-hosted
-    needs:
-      - build-docker-image
+    # needs:
+    #   - build-docker-image
 
     container:
       image: docker/backend.dockerfile
