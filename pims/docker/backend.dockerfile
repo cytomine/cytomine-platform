@@ -69,9 +69,11 @@ RUN cd /tmp && \
 # openjpeg 2.4 is required by vips (J2000 support)
 ARG OPENJPEG_VERSION=2.5.2
 ARG OPENJPEG_URL=https://github.com/uclouvain/openjpeg/archive
-RUN cd /usr/local/src && \
-    wget ${OPENJPEG_URL}/v${OPENJPEG_VERSION}/openjpeg-${OPENJPEG_VERSION}.tar.gz && \
-    tar -zxvf openjpeg-${OPENJPEG_VERSION}.tar.gz && \
+
+WORKDIR /usr/local/src
+
+RUN wget ${OPENJPEG_URL}/v${OPENJPEG_VERSION}/openjpeg-${OPENJPEG_VERSION}.tar.gz
+RUN tar -zxvf openjpeg-${OPENJPEG_VERSION}.tar.gz && \
     rm -rf openjpeg-${OPENJPEG_VERSION}.tar.gz && \
     cd openjpeg-${OPENJPEG_VERSION} && \
     mkdir build && cd build && \
