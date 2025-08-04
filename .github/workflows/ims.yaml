@@ -91,14 +91,15 @@ jobs:
       - name: Run tests
         run: pytest tests --junitxml=${{ env.REPORT }}
 
-      - name: Upload tests report
-        uses: actions/upload-artifact@v3
-        with:
-          name: ${{ env.REPORT }}
-          path: ${{ env.REPORT }}
-          retention-days: 1
+      # - name: Upload tests report
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: ${{ env.REPORT }}
+      #     path: ${{ env.REPORT }}
+      #     retention-days: 1
 
   remove-docker-image:
+    if: false
     runs-on: self-hosted
     needs:
       - tests
