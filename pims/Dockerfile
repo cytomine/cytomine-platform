@@ -52,6 +52,7 @@ RUN apt-get -y update && apt-get -y install --no-install-recommends --no-install
         libwebp-dev \
         liblcms2-dev \
         libopenslide-dev \
+        libopenjp2-7-dev \
         libpng-dev
 #         gobject-introspection \
 #         `# Other tools` \
@@ -67,21 +68,21 @@ RUN apt-get -y update && apt-get -y install --no-install-recommends --no-install
 #     rm -rf get-pip.py
 
 # openjpeg 2.4 is required by vips (J2000 support)
-ARG OPENJPEG_VERSION=2.5.2
-ARG OPENJPEG_URL=https://github.com/uclouvain/openjpeg/archive
+# ARG OPENJPEG_VERSION=2.5.2
+# ARG OPENJPEG_URL=https://github.com/uclouvain/openjpeg/archive
 
-WORKDIR /usr/local/src
+# WORKDIR /usr/local/src
 
-RUN wget ${OPENJPEG_URL}/v${OPENJPEG_VERSION}/openjpeg-${OPENJPEG_VERSION}.tar.gz
-RUN tar -zxvf openjpeg-${OPENJPEG_VERSION}.tar.gz && \
-    rm -rf openjpeg-${OPENJPEG_VERSION}.tar.gz && \
-    cd openjpeg-${OPENJPEG_VERSION} && \
-    mkdir build && cd build && \
-    cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr -DBUILD_STATIC_LIBS=ON .. && \
-    make && \
-    make install && \
-    make clean && \
-    ldconfig
+# RUN wget ${OPENJPEG_URL}/v${OPENJPEG_VERSION}/openjpeg-${OPENJPEG_VERSION}.tar.gz
+# RUN tar -zxvf openjpeg-${OPENJPEG_VERSION}.tar.gz && \
+#     rm -rf openjpeg-${OPENJPEG_VERSION}.tar.gz && \
+#     cd openjpeg-${OPENJPEG_VERSION} && \
+#     mkdir build && cd build && \
+#     cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr -DBUILD_STATIC_LIBS=ON .. && \
+#     make && \
+#     make install && \
+#     make clean && \
+#     ldconfig
 
 # Download plugins
 ARG PLUGIN_CSV=scripts/plugin-list.csv
