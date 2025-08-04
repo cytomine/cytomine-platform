@@ -30,6 +30,7 @@ env:
 
 jobs:
   build-docker-image:
+    if: false
     runs-on: self-hosted
     permissions:
       contents: read
@@ -75,7 +76,7 @@ jobs:
       - build-docker-image
 
     container:
-      image: ${{ needs.build-docker-image.outputs.tag }}
+      image: docker/backend.dockerfile
       credentials:
         username: ${{ github.actor }}
         password: ${{ github.token }}
