@@ -76,7 +76,7 @@ jobs:
     #   - build-docker-image
 
     container:
-      image: docker/backend.dockerfile
+      image: ./docker/backend.dockerfile
       # credentials:
       #   username: ${{ github.actor }}
       #   password: ${{ github.token }}
