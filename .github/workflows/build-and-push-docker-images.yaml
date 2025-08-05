@@ -14,11 +14,19 @@ concurrency:
 
 
 jobs:
-  build-core:
-    defaults:
-      run:
-        working-directory: ./core
 
+
+
+
+  build-push:
+    strategy:
+      fail-fast: true
+      matrix:
+        image:
+        - name: core
+          folder: core
+        - name: app-engine
+          folder: app-engine
     runs-on: self-hosted
 
     steps:
@@ -38,22 +46,9 @@ jobs:
       id: push
       uses: docker/build-push-action@v6
       with:
-        context: ./core
-        file: ./core/Dockerfile
+        context: ./${{ matrix.image.folder }}
+        file: ./${{ matrix.image.folder }}/Dockerfile
         push: true
-        tags: cytomine/core
+        tags: cytomine/${{ matrix.image.name }}
         labels: latest
 
-  build-pims:
-    if: false #wait for https://github.com/cytomine/cytomine/pull/49
-    defaults:
-      run:
-        working-directory: ./pims
-    runs-on: self-hosted
-
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-
-    - name: build docker
-      run: docker build . -t pims
