@@ -24,7 +24,6 @@ defaults:
 
 env:
   PYTHON_VERSION: "3.10"
-  REPORT: test-report.xml
 
 jobs:
   tests:
@@ -66,6 +65,6 @@ jobs:
             --method install
 
       - name: Run tests
-        run: pytest tests --junitxml=${{ env.REPORT }}
+        run: pytest tests
         env:
           CONFIG_FILE: ./tests/pims-config.env
