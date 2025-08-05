@@ -56,7 +56,7 @@ jobs:
         context: ./core
         file: ./Dockerfile
         push: true
-        tags: cytomine/ccore
+        tags: cytomine/core
         labels: latest
 
   build-pims:
