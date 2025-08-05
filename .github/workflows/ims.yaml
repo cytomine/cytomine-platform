@@ -74,7 +74,8 @@ jobs:
 
       - name: Install system dependencies
         run: |
-          apt-get -y update && apt-get -y install --no-install-recommends --no-install-suggests \
+          sudo apt-get -y update && \
+          sudo apt-get -y install --no-install-recommends --no-install-suggests \
             libopenslide-dev \
             libopenjp2-7-dev \
             libvips42 \
