@@ -104,9 +104,9 @@ jobs:
             --method install
 
       - name: Run tests
-        run: pytest tests --junitxml=${{ env.REPORT }}
-        env:
-          CONFIG_FILE: tests/pims-config.env
+        run: |
+          mkdir -p /data/pims/tmp
+          pytest tests --junitxml=${{ env.REPORT }}
 
   # tests-old:
   #   runs-on: self-hosted

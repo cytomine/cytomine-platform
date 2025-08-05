@@ -78,7 +78,7 @@ class Settings(ReadableSettings):
     task_queue_password: str = "router"
 
 
-#@lru_cache()
+@lru_cache()
 def get_settings():
     env_file = os.getenv("CONFIG_FILE", "pims-config.env")
     logger.info(f"Loading config from {env_file}")
