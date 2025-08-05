@@ -91,7 +91,7 @@ WORKDIR /app
 COPY ./docker/plugins.py /app/plugins.py
 COPY ${PLUGIN_CSV} /app/plugins.csv
 COPY tests /app/tests
-# ="enabled,name,git_url,git_branch\n"
+
 ENV PLUGIN_INSTALL_PATH=/app/plugins
 COPY ./plugins/ /app/plugins/
 
