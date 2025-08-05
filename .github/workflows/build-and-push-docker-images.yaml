@@ -1,0 +1,21 @@
+name: Build and Push Docker images
+
+on:
+  pull_request:
+    branches:
+      - master # to remove
+  push:
+    branches:
+      - master
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate-json-schema:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
