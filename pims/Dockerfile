@@ -29,7 +29,7 @@ RUN apt-get -y update && apt-get -y install --no-install-recommends --no-install
 #         automake \
 #         bc \
 #         build-essential \
-#         ca-certificates \
+        ca-certificates \
         cmake \
 #         git \
 #         gcc \
