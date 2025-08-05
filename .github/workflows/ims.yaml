@@ -99,7 +99,7 @@ jobs:
       - name: Install plugins
         run: |
           python docker/plugins.py \
-            --plugin_csv docker/plugins.csv \
+            --plugin_csv scripts/plugins.csv \
             --install_path plugins \
             --method install
 
