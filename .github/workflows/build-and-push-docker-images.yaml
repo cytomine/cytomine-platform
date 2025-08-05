@@ -1,9 +1,6 @@
 name: Build and Push Docker images
 
 on:
-  pull_request:
-    branches:
-      - main # to remove
   push:
     branches:
       - main
@@ -15,7 +12,7 @@ concurrency:
 jobs:
   build-push:
     strategy:
-      fail-fast: false # to change
+      fail-fast: true
       matrix:
         image:
         - name: core
