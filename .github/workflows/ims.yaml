@@ -50,7 +50,7 @@ jobs:
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
-          password: ${{ github.token }}
+          password: ${{ secrets.GH_TOKEN }}
 
       - name: Create docker tag
         id: vars
@@ -73,7 +73,7 @@ jobs:
       image: ${{ needs.build-docker-image.outputs.tag }}
       credentials:
         username: ${{ github.actor }}
-        password: ${{ github.token }}
+        password: ${{ secrets.GH_TOKEN }}
 
     steps:
       - name: Set up the repository
