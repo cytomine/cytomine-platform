@@ -58,7 +58,10 @@ jobs:
           echo "tag=$TAG" >> $GITHUB_OUTPUT
 
       - name: Build pims image
-        run: docker buildx build --push -t $TAG .
+        run: docker buildx build -t $TAG .
+
+      - name: Push image
+        run: docker push $TAG
 
   tests:
     runs-on: self-hosted
