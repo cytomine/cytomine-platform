@@ -53,7 +53,7 @@ jobs:
       id: push
       uses: docker/build-push-action@v6
       with:
-        context: .
+        context: ./core
         file: ./core/Dockerfile
         push: true
         tags: cytomine/core
