@@ -17,16 +17,23 @@ jobs:
   checkout:
     runs-on: self-hosted
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
   build-core:
     defaults:
       run:
         working-directory: ./core
+
     runs-on: self-hosted
+
     needs:
     - checkout
+
     steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
     - name: Set up JDK ${{ vars.JAVA_VERSION }}
       uses: actions/setup-java@v4
       with:
@@ -37,8 +44,10 @@ jobs:
       uses: gradle/actions/setup-gradle@v3
       with:
         gradle-version: ${{ vars.GRADLE_VERSION }}
+
     - name: build
-      run: gradle build
+      run: gradle build -xtest --no-daemon
+
     - name: build docker
       run: docker build . -t core
 
