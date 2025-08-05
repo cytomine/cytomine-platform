@@ -28,12 +28,12 @@ jobs:
           folder: cbir
         # - name: pims
         #   folder: pims
-        - name: web-ui
-          folder: web-ui
-        - name: mongo
-          folder: mongo
-        # - name: iam
-        #   folder: iam
+        # - name: web-ui
+        #   folder: web-ui
+        # - name: mongo
+        #   folder: mongo
+        - name: iam
+          folder: iam
         - name: nginx
           folder: nginx
     runs-on: self-hosted
