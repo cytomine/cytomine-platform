@@ -1,6 +1,9 @@
 name: Build and Push Docker images
 
 on:
+  pull_request:
+    branches:
+      - main # to remove
   push:
     branches:
       - main
