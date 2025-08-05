@@ -12,10 +12,33 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-jobs:
-  validate-json-schema:
-    runs-on: self-hosted
 
+jobs:
+  checkout:
+    runs-on: self-hosted
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+  build-core:
+    defaults:
+      run:
+        working-directory: ./core
+    runs-on: self-hosted
+    needs:
+    - checkout
+    steps:
+    - name: build
+      run: gradle build
+    - name: build docker
+      run: docker build . -t core
+
+  build-pims:
+    defaults:
+      run:
+        working-directory: ./pims
+    runs-on: self-hosted
+    needs:
+    - checkout
+    steps:
+    - name: build docker
+      run: docker build . -t pims
