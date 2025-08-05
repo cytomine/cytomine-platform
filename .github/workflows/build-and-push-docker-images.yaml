@@ -22,7 +22,7 @@ jobs:
   build-core:
     defaults:
       run:
-        working-directory: ./core
+        working-directory: core
     runs-on: self-hosted
     needs:
     - checkout
@@ -35,7 +35,7 @@ jobs:
   build-pims:
     defaults:
       run:
-        working-directory: ./pims
+        working-directory: pims
     runs-on: self-hosted
     needs:
     - checkout
