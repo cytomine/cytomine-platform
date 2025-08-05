@@ -104,10 +104,7 @@ jobs:
             --method install
 
       - name: Run tests
-        run: |
-          printenv
-          cat $CONFIG_FILE
-          pytest tests --junitxml=${{ env.REPORT }}
+        run: pytest tests --junitxml=${{ env.REPORT }}
         env:
           CONFIG_FILE: tests/pims-config.env
 
