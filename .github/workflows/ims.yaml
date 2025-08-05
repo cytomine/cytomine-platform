@@ -59,10 +59,7 @@ jobs:
           echo "tag=$TAG" >> $GITHUB_OUTPUT
 
       - name: Build pims image
-        run: docker buildx build --load -t $TAG .
-
-      - name: Push pims image
-        run: docker push $TAG
+        run: docker buildx build --push -t $TAG .
 
   tests:
     runs-on: self-hosted
@@ -85,6 +82,7 @@ jobs:
           which pip
           python --version
           pip list
+          echo "Test container is: ${{ needs.build-docker-image.outputs.tag }}"
 
       - name: Set up pytest
         run: pip install pytest httpx
