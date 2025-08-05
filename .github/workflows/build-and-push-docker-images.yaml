@@ -25,17 +25,6 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Set up JDK ${{ vars.JAVA_VERSION }}
-      uses: actions/setup-java@v4
-      with:
-        distribution: ${{ vars.JAVA_DIST }}
-        java-version: ${{ vars.JAVA_VERSION }}
-
-    - name: Setup Gradle
-      uses: gradle/actions/setup-gradle@v3
-      with:
-        gradle-version: ${{ vars.GRADLE_VERSION }}
-
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
 
