@@ -105,6 +105,8 @@ jobs:
 
       - name: Run tests
         run: pytest tests --junitxml=${{ env.REPORT }}
+        env:
+          CONFIG_FILE: tests/pims-config.env
 
   # tests-old:
   #   runs-on: self-hosted
