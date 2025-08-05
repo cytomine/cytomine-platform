@@ -22,11 +22,21 @@ jobs:
   build-core:
     defaults:
       run:
-        working-directory: core
+        working-directory: ./core
     runs-on: self-hosted
     needs:
     - checkout
     steps:
+    - name: Set up JDK ${{ vars.JAVA_VERSION }}
+      uses: actions/setup-java@v4
+      with:
+        distribution: ${{ vars.JAVA_DIST }}
+        java-version: ${{ vars.JAVA_VERSION }}
+
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v3
+      with:
+        gradle-version: ${{ vars.GRADLE_VERSION }}
     - name: build
       run: gradle build
     - name: build docker
@@ -35,7 +45,7 @@ jobs:
   build-pims:
     defaults:
       run:
-        working-directory: pims
+        working-directory: ./pims
     runs-on: self-hosted
     needs:
     - checkout
