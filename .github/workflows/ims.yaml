@@ -55,7 +55,7 @@ jobs:
       - name: Create docker tag
         id: vars
         run: |
-          echo "TAG=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}" >> $GITHUB_ENV
+          echo "TAG=${{ env.REGISTRY }}/cytomine/${{ env.IMAGE_NAME }}:${{ github.sha }}" >> $GITHUB_ENV
           echo "tag=$TAG" >> $GITHUB_OUTPUT
 
       - name: Build pims image
