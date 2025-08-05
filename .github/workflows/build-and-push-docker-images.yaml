@@ -1,0 +1,60 @@
+name: Build and Push Docker images
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-push:
+    strategy:
+      fail-fast: true
+      matrix:
+        image:
+        - name: core
+          folder: core
+        - name: app-engine
+          folder: app-engine
+        - name: postgis
+          folder: postgis
+        - name: cbir
+          folder: cbir
+        # - name: pims
+        #   folder: pims
+        # - name: web-ui
+        #   folder: web-ui
+        # - name: mongo
+        #   folder: mongo
+        # - name: iam
+        #   folder: iam
+        - name: nginx
+          folder: nginx
+    runs-on: self-hosted
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    - name: Build and push Docker image
+      id: push
+      uses: docker/build-push-action@v6
+      with:
+        context: ./${{ matrix.image.folder }}
+        file: ./${{ matrix.image.folder }}/Dockerfile
+        push: true
+        tags: cytomine/${{ matrix.image.name }}
+        labels: latest
+
