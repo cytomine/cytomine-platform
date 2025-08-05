@@ -34,10 +34,6 @@ jobs:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-    - name: build
-      run: gradle build -xtest --no-daemon
-
-
     - name: Build and push Docker image
       id: push
       uses: docker/build-push-action@v6
