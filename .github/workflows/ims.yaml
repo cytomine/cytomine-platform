@@ -23,48 +23,10 @@ defaults:
     working-directory: ./pims
 
 env:
-  IMAGE_NAME: pims
   PYTHON_VERSION: "3.10"
   REPORT: test-report.xml
-  REGISTRY: ghcr.io
 
 jobs:
-  # build-docker-image:
-  #   runs-on: self-hosted
-  #   permissions:
-  #     contents: read
-  #     packages: write
-
-  #   outputs:
-  #     tag: ${{ steps.vars.outputs.tag }}
-
-  #   steps:
-  #     - name: Checkout the repository
-  #       uses: actions/checkout@v4
-
-  #     - name: Set up Docker Buildx
-  #       uses: docker/setup-buildx-action@v3
-
-  #     - name: Log in to the Container registry
-  #       uses: docker/login-action@v2
-  #       with:
-  #         registry: ${{ env.REGISTRY }}
-  #         username: ${{ github.actor }}
-  #         password: ${{ secrets.GH_TOKEN }}
-
-  #     - name: Create docker tag
-  #       id: vars
-  #       run: |
-  #         TAG=${{ env.REGISTRY }}/cytomine/${{ env.IMAGE_NAME }}:${{ github.sha }}
-  #         echo "TAG=$TAG" >> $GITHUB_ENV
-  #         echo "tag=$TAG" >> $GITHUB_OUTPUT
-
-  #     - name: Build pims image
-  #       run: docker buildx build --load -t $TAG .
-
-  #     - name: Push image
-  #       run: docker push $TAG
-
   tests:
     runs-on: self-hosted
 
@@ -104,63 +66,6 @@ jobs:
             --method install
 
       - name: Run tests
-        run: |
-          sudo mkdir -p /data/pims/tmp
-          pytest tests --junitxml=${{ env.REPORT }}
-
-  # tests-old:
-  #   runs-on: self-hosted
-  #   needs:
-  #     - build-docker-image
-
-  #   container:
-  #     image: ${{ needs.build-docker-image.outputs.tag }}
-  #     credentials:
-  #       username: ${{ github.actor }}
-  #       password: ${{ secrets.GH_TOKEN }}
-
-  #   steps:
-  #     - name: Set up the repository
-  #       uses: actions/checkout@v4
-
-  #     - name: Debug Python & pip
-  #       run: |
-  #         which python
-  #         which pip
-  #         python --version
-  #         pip list
-  #         echo "Test container is: ${{ needs.build-docker-image.outputs.tag }}"
-  #         cat /etc/os-release
-
-  #     - name: Set up pytest
-  #       run: pip install pytest httpx
-
-  #     - name: Run tests
-  #       run: pytest tests --junitxml=${{ env.REPORT }}
-
-  #     - name: Upload tests report
-  #       uses: actions/upload-artifact@v4
-  #       with:
-  #         name: ${{ env.REPORT }}
-  #         path: ${{ env.REPORT }}
-  #         retention-days: 1
-
-  # remove-docker-image:
-  #   runs-on: self-hosted
-  #   needs:
-  #     - tests
-
-  #   steps:
-  #     - name: Delete pims test image from registry
-  #       uses: actions/github-script@v6
-  #       with:
-  #         script: |
-  #           try {
-  #             github.rest.packages.deletePackageForOrg({
-  #               org: context.repo.owner,
-  #               package_type: "container",
-  #               package_name: "pims",
-  #             });
-  #           } catch (error) {
-  #             core.setFailed(error.message);
-  #           }
+        run: pytest tests --junitxml=${{ env.REPORT }}
+        env:
+          CONFIG_FILE: ./tests/pims-config.env
