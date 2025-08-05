@@ -1,9 +1,6 @@
 name: Build and Push Docker images
 
 on:
-  pull_request:
-    branches:
-      - main # to remove
   push:
     branches:
       - main
@@ -12,12 +9,7 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-
 jobs:
-
-
-
-
   build-push:
     strategy:
       fail-fast: true
@@ -37,8 +29,8 @@ jobs:
           folder: web-ui
         - name: mongo
           folder: mongo
-        - name: iam
-          folder: iam
+        # - name: iam
+        #   folder: iam
         - name: nginx
           folder: nginx
     runs-on: self-hosted
