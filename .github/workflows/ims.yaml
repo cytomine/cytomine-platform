@@ -83,6 +83,7 @@ jobs:
           python --version
           pip list
           echo "Test container is: ${{ needs.build-docker-image.outputs.tag }}"
+          cat /etc/os-release
 
       - name: Set up pytest
         run: pip install pytest httpx
