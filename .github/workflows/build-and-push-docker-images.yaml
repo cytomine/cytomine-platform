@@ -36,13 +36,28 @@ jobs:
       with:
         gradle-version: ${{ vars.GRADLE_VERSION }}
 
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v3.5.0
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+
     - name: build
       run: gradle build -xtest --no-daemon
 
-    - name: build docker
-      run: docker build . -t core
+
+    - name: Build and push Docker image
+      id: push
+      uses: docker/build-push-action@v6.18.0
+      with:
+        context: .
+        file: ./Dockerfile
+        push: true
+        tags: cytomine/ccore
+        labels: latest
 
   build-pims:
+    if: false #wait for https://github.com/cytomine/cytomine/pull/49
     defaults:
       run:
         working-directory: ./pims
