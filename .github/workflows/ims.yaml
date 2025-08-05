@@ -54,7 +54,8 @@ jobs:
       - name: Create docker tag
         id: vars
         run: |
-          echo "TAG=${{ env.REGISTRY }}/cytomine/${{ env.IMAGE_NAME }}:${{ github.sha }}" >> $GITHUB_ENV
+          TAG=${{ env.REGISTRY }}/cytomine/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          echo "TAG=$TAG" >> $GITHUB_ENV
           echo "tag=$TAG" >> $GITHUB_OUTPUT
 
       - name: Build pims image
@@ -66,7 +67,7 @@ jobs:
   tests:
     runs-on: self-hosted
     needs:
-    - build-docker-image
+      - build-docker-image
 
     container:
       image: ${{ needs.build-docker-image.outputs.tag }}
