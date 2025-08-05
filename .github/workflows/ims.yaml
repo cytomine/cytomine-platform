@@ -76,12 +76,6 @@ jobs:
         password: ${{ secrets.GH_TOKEN }}
 
     steps:
-      - name: Test connection
-        run: |
-          curl -v https://github.com
-          git --version
-          git clone https://github.com/cytomine/cytomine.git
-
       - name: Set up the repository
         uses: actions/checkout@v4
 
