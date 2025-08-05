@@ -33,7 +33,6 @@ services:
     image: cytomine/pims:latest
     build:
       context: ../pims
-      dockerfile: docker/backend.dockerfile
     restart: unless-stopped
     depends_on:
       - nginx
