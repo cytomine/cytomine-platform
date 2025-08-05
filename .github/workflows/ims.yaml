@@ -5,8 +5,7 @@ on:
     branches:
       - master
     paths:
-      - "pims/**/*.py"
-      - "pims/tests/**"
+      - "pims/**"
       - ".github/**"
   push:
     branches:
