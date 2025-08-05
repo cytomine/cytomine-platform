@@ -74,7 +74,7 @@ def get_image(path, filename):
         except Exception as e:
             print("Creation of histogram representation could not be done")
             print(e)
-            
+
 def test_tiff_exists(image_path_tiff):
     # Test if the file exists, either locally either with the OAC
     path, filename = image_path_tiff
