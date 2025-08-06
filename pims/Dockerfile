@@ -7,7 +7,7 @@ ARG PIMS_REVISION
 ARG PIMS_VERSION
 ARG PLUGIN_CSV=scripts/plugin-list.csv
 ARG PY_VERSION=3.10
-ARG SETUPTOOLS_VERSION=59.6.0
+ARG SETUPTOOLS_VERSION=80.9.0
 ARG UBUNTU_VERSION=22.04
 ARG VIPS_URL=https://github.com/libvips/libvips/releases/download
 ARG VIPS_VERSION=8.15.2
@@ -42,7 +42,6 @@ ARG PLUGIN_CSV=scripts/plugin-list.csv
 WORKDIR /app
 COPY ./docker/plugins.py /app/plugins.py
 COPY ${PLUGIN_CSV} /app/plugins.csv
-COPY tests /app/tests
 
 ENV PLUGIN_INSTALL_PATH=/app/plugins
 COPY ./plugins/ /app/plugins/
