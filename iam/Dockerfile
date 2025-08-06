@@ -102,7 +102,7 @@ CMD ["start-dev" , "--import-realm" , "--http-port=8100"]
 
 #######################################################################################
 ## Stage: Cytomine IAM image
-FROM quay.io/keycloak/keycloak:${KEYCLOAK_VERSION} AS prodcution
+FROM quay.io/keycloak/keycloak:${KEYCLOAK_VERSION} AS production
 
 ARG ENTRYPOINT_SCRIPTS_VERSION
 ARG KEYCLOAK_VERSION

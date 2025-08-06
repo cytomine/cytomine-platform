@@ -6,7 +6,7 @@ on:
       - main
     paths:
       - "pims/**"
-      # - ".github/**"
+      - ".github/**"
   push:
     branches:
       - main
