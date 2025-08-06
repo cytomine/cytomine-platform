@@ -16,24 +16,24 @@ jobs:
       fail-fast: true
       matrix:
         image:
-        - name: core
-          folder: core
-        - name: app-engine
-          folder: app-engine
-        - name: postgis
-          folder: postgis
-        - name: cbir
-          folder: cbir
+        # - name: core
+        #   folder: core
+        # - name: app-engine
+        #   folder: app-engine
+        # - name: postgis
+        #   folder: postgis
+        # - name: cbir
+        #   folder: cbir
         # - name: pims
         #   folder: pims
-        - name: web-ui
-          folder: web-ui
+        # - name: web-ui
+        #   folder: web-ui
         - name: mongo
           folder: mongo
         # - name: iam
         #   folder: iam
-        - name: nginx
-          folder: nginx
+        # - name: nginx
+        #   folder: nginx
     runs-on: self-hosted
 
     steps:
