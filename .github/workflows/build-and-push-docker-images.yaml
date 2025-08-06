@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+  pull_request:
+
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -25,8 +27,8 @@ jobs:
           folder: cbir
         # - name: pims
         #   folder: pims
-        # - name: web-ui
-        #   folder: web-ui
+        - name: web-ui
+          folder: web-ui
         # - name: mongo
         #   folder: mongo
         # - name: iam
