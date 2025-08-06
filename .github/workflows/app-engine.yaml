@@ -3,7 +3,7 @@ name: App Engine
 on:
   pull_request:
     branches:
-      - master
+      - main
     paths:
       - "app-engine/src/main/resources/**"
       - "app-engine/src/test/resources/**"
@@ -11,7 +11,7 @@ on:
       - ".github/**"
   push:
     branches:
-      - master
+      - main
 
 permissions:
   contents: read
