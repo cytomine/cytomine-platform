@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ARG MONGO_VERSION=4.4.18-focal
+ARG MONGO_VERSION=4-focal
 ARG ENTRYPOINT_SCRIPTS_VERSION=1.3.0
 ARG IMAGE_VERSION
 ARG IMAGE_REVISION
@@ -29,7 +29,7 @@ FROM mongo:${MONGO_VERSION}
 RUN rm /etc/apt/sources.list.d/mongodb*.list
 RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 656408E390CFB1F5
 RUN apt-get update
-RUN apt-get install -y --no-install-recommends cron=3.0pl1-136ubuntu1
+RUN apt-get install -y --no-install-recommends cron=3.0pl1-137ubuntu3
 RUN rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /docker-entrypoint-cytomine.d/ /data/db/backup
