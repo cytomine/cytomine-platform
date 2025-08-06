@@ -27,10 +27,8 @@ FROM cytomine/entrypoint-scripts:${ENTRYPOINT_SCRIPTS_VERSION} AS entrypoint-scr
 FROM mongo:${MONGO_VERSION}
 
 RUN rm /etc/apt/sources.list.d/mongodb*.list
-# RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 656408E390CFB1F5
 RUN apt-get update
 RUN apt-get install -y --no-install-recommends cron
-# RUN rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /docker-entrypoint-cytomine.d/ /data/db/backup
 COPY --from=entrypoint-scripts --chmod=774 /cytomine-entrypoint.sh /usr/local/bin/
