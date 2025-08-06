@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ARG MONGO_VERSION=4-focal
+ARG MONGO_VERSION=4.4-focal
 ARG ENTRYPOINT_SCRIPTS_VERSION=1.3.0
 ARG IMAGE_VERSION
 ARG IMAGE_REVISION
