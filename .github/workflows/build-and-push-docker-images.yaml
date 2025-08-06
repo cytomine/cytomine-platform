@@ -29,8 +29,8 @@ jobs:
           folder: web-ui
         - name: mongo
           folder: mongo
-        # - name: iam
-        #   folder: iam
+        - name: iam
+          folder: iam
         - name: nginx
           folder: nginx
     runs-on: self-hosted
