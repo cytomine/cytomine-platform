@@ -7,7 +7,7 @@ ARG PIMS_REVISION
 ARG PIMS_VERSION
 ARG PLUGIN_CSV=scripts/plugin-list.csv
 ARG PY_VERSION=3.10
-ARG SETUPTOOLS_VERSION=80.9.0
+ARG SETUPTOOLS_VERSION=59.6.0
 ARG UBUNTU_VERSION=22.04
 ARG VIPS_URL=https://github.com/libvips/libvips/releases/download
 ARG VIPS_VERSION=8.15.2
@@ -18,24 +18,68 @@ FROM cytomine/entrypoint-scripts:${ENTRYPOINT_SCRIPTS_VERSION} AS entrypoint-scr
 
 #######################################################################################
 ## Stage: Pims
-FROM python:${PY_VERSION}-bookworm AS base-pims
+FROM ubuntu:${UBUNTU_VERSION} AS base-pims
 
 ENV LANG=C.UTF-8
 ENV DEBIAN_FRONTEND=noninteractive
 
+ARG PY_VERSION=3.10
+
 RUN apt-get -y update && apt-get -y install --no-install-recommends --no-install-suggests \
-        libexif-dev \
-        libgsf-1-dev \
-        libimage-exiftool-perl \
-        liblcms2-dev \
-        libopenjp2-7-dev \
-        libopenslide-dev \
-        liborc-dev \
-        libpng-dev \
+        `# Essentials` \
+        automake \
+        bc \
+        build-essential \
+        ca-certificates \
+        cmake \
+        git \
+        gcc \
+        net-tools \
+        python${PY_VERSION} \
+        python${PY_VERSION}-dev \
+        python${PY_VERSION}-distutils \
+        ninja-build \
+        wget \
+        software-properties-common \
+        `# Vips dependencies` \
+        pkg-config \
+        glib2.0-dev \
+        libexpat-dev \
         libtiff-dev \
-        libvips-dev \
-        libvips42 \
-        libwebp-dev
+        libjpeg-turbo8-dev \
+        libgsf-1-dev \
+        libexif-dev \
+        liborc-dev \
+        libwebp-dev \
+        liblcms2-dev \
+        libpng-dev \
+        gobject-introspection \
+        `# Other tools` \
+        libimage-exiftool-perl
+
+RUN cd /usr/bin && \
+    ln -s python${PY_VERSION} python
+
+# Official pip install: https://pip.pypa.io/en/stable/installation/#get-pip-py
+RUN cd /tmp && \
+    wget https://bootstrap.pypa.io/get-pip.py && \
+    python get-pip.py && \
+    rm -rf get-pip.py
+
+# openjpeg 2.4 is required by vips (J2000 support)
+ARG OPENJPEG_VERSION=2.5.2
+ARG OPENJPEG_URL=https://github.com/uclouvain/openjpeg/archive
+RUN cd /usr/local/src && \
+    wget ${OPENJPEG_URL}/v${OPENJPEG_VERSION}/openjpeg-${OPENJPEG_VERSION}.tar.gz && \
+    tar -zxvf openjpeg-${OPENJPEG_VERSION}.tar.gz && \
+    rm -rf openjpeg-${OPENJPEG_VERSION}.tar.gz && \
+    cd openjpeg-${OPENJPEG_VERSION} && \
+    mkdir build && cd build && \
+    cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr -DBUILD_STATIC_LIBS=ON .. && \
+    make && \
+    make install && \
+    make clean && \
+    ldconfig
 
 # Download plugins
 ARG PLUGIN_CSV=scripts/plugin-list.csv
@@ -47,30 +91,52 @@ ENV PLUGIN_INSTALL_PATH=/app/plugins
 COPY ./plugins/ /app/plugins/
 
 RUN python plugins.py \
-        --plugin_csv /app/plugins.csv \
-        --checkerResolution_file_path /app/checkerResolution.csv \
-        --method checker_resolution_file
+   --plugin_csv /app/plugins.csv \
+   --checkerResolution_file_path /app/checkerResolution.csv \
+   --method checker_resolution_file
+
+# Run before_vips() from plugins prerequisites
+RUN python plugins.py \
+   --plugin_csv /app/plugins.csv \
+   --install_path ${PLUGIN_INSTALL_PATH} \
+   --method dependencies_before_vips
+
+# vips
+ARG VIPS_VERSION=8.15.2
+ARG VIPS_URL=https://github.com/libvips/libvips/releases/download
+RUN pip install --no-cache-dir meson
+RUN cd /usr/local/src && \
+    wget ${VIPS_URL}/v${VIPS_VERSION}/vips-${VIPS_VERSION}.tar.xz && \
+    tar -xvf vips-${VIPS_VERSION}.tar.xz && \
+    rm -rf vips-${VIPS_VERSION}.tar.xz && \
+    cd vips-${VIPS_VERSION} && \
+    meson build --libdir lib -Dintrospection=disabled --buildtype release && \
+    cd build && \
+    ninja && \
+    ninja install && \
+    ldconfig
 
 # Run before_python() from plugins prerequisites
 RUN python plugins.py \
-        --plugin_csv /app/plugins.csv \
-        --install_path ${PLUGIN_INSTALL_PATH} \
-        --method dependencies_before_python
+   --plugin_csv /app/plugins.csv \
+   --install_path ${PLUGIN_INSTALL_PATH} \
+   --method dependencies_before_python
+
 
 # Cleaning. Cannot be done before as plugin prerequisites could use apt-get.
 RUN rm -rf /var/lib/apt/lists/*
 
 # Install python requirements
 ARG GUNICORN_VERSION=22.0.0
-ARG SETUPTOOLS_VERSION=80.9.0
+ARG SETUPTOOLS_VERSION=59.6.0
 COPY ./requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir gunicorn==${GUNICORN_VERSION} && \
-    pip install --no-cache-dir setuptools==${SETUPTOOLS_VERSION} && \
     pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir setuptools==${SETUPTOOLS_VERSION} && \
     python plugins.py \
-        --plugin_csv /app/plugins.csv \
-        --install_path ${PLUGIN_INSTALL_PATH} \
-        --method install && \
+   --plugin_csv /app/plugins.csv \
+   --install_path ${PLUGIN_INSTALL_PATH} \
+   --method install && \
     rm -f /app/plugins.csv
 
 # Add default config

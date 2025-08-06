@@ -57,3 +57,5 @@ jobs:
         push: true
         tags: cytomine/${{ matrix.image.name }}
         labels: latest
+        allow: network.host
+        network: host
