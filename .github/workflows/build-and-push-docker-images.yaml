@@ -60,4 +60,6 @@ jobs:
         labels: latest
         allow: network.host
         network: host
+      env:
+        DOCKER_BUILD_SUMMARY: false
 
