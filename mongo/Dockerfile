@@ -26,9 +26,7 @@ FROM cytomine/entrypoint-scripts:${ENTRYPOINT_SCRIPTS_VERSION} AS entrypoint-scr
 ## Stage 2: mongo image
 FROM mongo:${MONGO_VERSION}
 
-RUN rm /etc/apt/sources.list.d/mongodb*.list
-RUN apt-get update
-RUN apt-get install -y --no-install-recommends cron
+RUN rm /etc/apt/sources.list.d/mongodb*.list && apt-get update && apt-get install -y --no-install-recommends cron
 
 RUN mkdir -p /docker-entrypoint-cytomine.d/ /data/db/backup
 COPY --from=entrypoint-scripts --chmod=774 /cytomine-entrypoint.sh /usr/local/bin/
