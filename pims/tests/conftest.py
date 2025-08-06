@@ -22,7 +22,6 @@ from fastapi.testclient import TestClient
 
 from pims import config
 
-os.environ['CONFIG_FILE'] = "./pims-config.env"
 CLEAR_AT_SHUTDOWN=False
 
 with open(os.path.join(os.path.dirname(__file__), 'fake_files.csv'), 'r') as f:
