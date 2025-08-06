@@ -108,6 +108,7 @@ ARG ENTRYPOINT_SCRIPTS_VERSION
 ARG KEYCLOAK_VERSION
 ARG IMAGE_VERSION
 ARG IMAGE_REVISION
+ARG UBI_VERSION
 
 LABEL org.opencontainers.image.authors="dev@cytomine.com" \
       org.opencontainers.image.url="https://www.cytomine.com/" \
