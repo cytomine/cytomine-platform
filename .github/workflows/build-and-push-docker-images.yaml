@@ -23,12 +23,12 @@ jobs:
           folder: postgis
         - name: cbir
           folder: cbir
-        # - name: pims
-        #   folder: pims
+        - name: pims
+          folder: pims
         - name: web-ui
           folder: web-ui
-        # - name: mongo
-        #   folder: mongo
+        - name: mongo
+          folder: mongo
         # - name: iam
         #   folder: iam
         - name: nginx
@@ -57,4 +57,7 @@ jobs:
         push: true
         tags: cytomine/${{ matrix.image.name }}
         labels: latest
+        allow: network.host
+        network: host
+
 
