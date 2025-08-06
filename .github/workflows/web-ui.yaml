@@ -9,7 +9,7 @@ on:
       - "web-ui/api-client/**/*.vue"
       - "web-ui/ui/**/*.js"
       - "web-ui/ui/**/*.vue"
-      - ".github/**"
+      # - ".github/**"
   push:
     branches:
       - master
