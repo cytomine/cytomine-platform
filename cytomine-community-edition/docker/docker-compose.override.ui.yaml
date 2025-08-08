@@ -3,7 +3,7 @@ services:
     image: web-ui:dev-latest
     build:
       context: ${REPO_PATH}/web-ui/
-      dockerfile: ${REPO_PATH}/web-ui/ui/docker/Dockerfile
+      dockerfile: ${REPO_PATH}/web-ui/Dockerfile
       target: dev-server
     working_dir: "/app"
     restart: unless-stopped
