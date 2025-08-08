@@ -70,8 +70,11 @@ public class KubernetesScheduler implements SchedulerHandler {
     @Value("${storage.base-path}")
     private String storageBasePath;
 
-    @Value("${scheduler.run-mode}")
+    @Value("${scheduler.run.mode}")
     private String runMode;
+
+    @Value("${scheduler.run.storage-base-path}")
+    private String runModeStorageBasePath;
 
     private PodInformer podInformer;
 
@@ -116,7 +119,7 @@ public class KubernetesScheduler implements SchedulerHandler {
         this.baseUrl = hostAddress + ":" + port + apiPrefix + apiVersion + "/task-runs/";
         String basePath = "";
         if (runMode.equalsIgnoreCase("local")) {
-            basePath =  storageBasePath;
+            basePath =  runModeStorageBasePath;
         }
         if (runMode.equalsIgnoreCase("cluster")) {
             basePath = "/tmp/app-engine";
