@@ -40,7 +40,7 @@ services:
       - appengine_network
 
   app-engine:
-    image: appengine:1.0.1
+    image: <appe-engine-image>
     ports:
       - 8080:8080
     profiles:
@@ -57,7 +57,7 @@ services:
       REGISTRY_SCHEME: http
       DB_HOST: postgres
       SCHEDULER_MASTER_URL: <https://scheduler:16443>
-      SCHEDULER_OAUTH_TOKEN: <scheduler token>
+      SCHEDULER_OAUTH_TOKEN: <scheduler-token>
     networks:
       - appengine_network
 
