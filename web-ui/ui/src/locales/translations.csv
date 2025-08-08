@@ -359,8 +359,8 @@ failed-fetch-current-stats,Failed to fetch current statistics,Une erreur a eu li
 failed-fetch-profile,Failed to fetch image profile,Une erreur a empêché le chargement du profil,,Door een fout kon het profiel niet worden geladen
 failed-fetch-recent-projects,Failed to fetch recent projects,Erreur lors du chargement des projets récents,Error al buscar proyectos recientes,Fout bij het laden van recente projecten
 failed-fetch-total-counts,Failed to fetch the total counts,Une erreur a eu lieu lors du chargement des statistiques,No se pudo obtener el recuento total,Er is een fout opgetreden tijdens het laden van statistieken
-failed-to-retrieve-credentials,Failed to retrieve credentials information,Une erreur a eu lieu lors du chargement des informations d'indentification
-failed-to-retrieve-api-keys,Failed to retrieve API keys,Une erreur a eu lieu lors du chargement des clés API
+failed-to-retrieve-credentials,Failed to retrieve credentials information,Une erreur a eu lieu lors du chargement des informations d'indentification,Error al obtener la información de credenciales,Kan inloggegevens niet ophalen
+failed-to-retrieve-api-keys,Failed to retrieve API keys,Une erreur a eu lieu lors du chargement des clés API,Error al obtener las claves API,Kan API-sleutels niet ophalen
 fav,Fav.,Fav.,Fav.,Fav.
 favorite,Favorite,Favori,Favorito,Favoriet
 file-tree,File tree,Arborescence de fichiers,Árbol de archivos,Fileboom
@@ -464,7 +464,7 @@ last-month,Last month,Dernier mois,Último mes,Vorige maand
 last-opened-image,Last opened image,Dernière image consultée,Última imagen abierta,Laatst bekeken afbeelding
 last-project-connection,Last project connection,Dernière connexion au projet,Última conexión al proyecto,Laatste verbinding met het project
 last-release,Last release,Dernière version,Ultimo lanzamiento,Laatste versie
-last-updated-on,Last updated on,Dernière mise à jour le
+last-updated-on,Last updated on,Dernière mise à jour le,Última actualización el,Laatst bijgewerkt op
 last-week,Last week,Dernière semaine,Última pasada,Vorige week
 last-year,Last year,Dernière année,Último año,Afgelopen jaar
 lastname,Last name,Nom,Apellido,Naam
@@ -548,7 +548,7 @@ no-log-to-display,No log to display,Aucun log disponible,No hay registro para mo
 no-member-fitting-criteria,No member fitting criteria,Aucun membre ne remplissant les critères de recherche,No hay criterios de ajuste para miembros,Geen enkel lid voldoet aan de zoekcriteria
 no-ontology,No ontology,Pas d'ontologie,Sin ontología,Geen ontologie
 no-outline,No outline,Pas de contour,Sin contorno,Geen outline
-no-password,No password, Pas de mot de passe
+no-password,No password,Pas de mot de passe,Sin contraseña,Geen wachtwoord
 no-preview-available,No preview available,Pas d'aperçu disponible,No hay vista previa disponible,Geen preview beschikbaar
 no-profile,No profile,Pas de profil,,Geen profiel
 no-project-connection,No project connection,Aucune connexion au projet,Ninguna conexión del proyecto,Geen projectverbinding
