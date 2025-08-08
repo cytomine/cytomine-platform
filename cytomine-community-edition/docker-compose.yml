@@ -65,7 +65,6 @@ services:
     image: cytomine/web-ui:latest
     build:
       context: ../web-ui
-      dockerfile: ui/docker/Dockerfile
     restart: unless-stopped
     volumes:
       - /etc/localtime:/etc/localtime
