@@ -245,8 +245,8 @@ Feature: [URS00003-TASK] Provision a task run
     And the App Engine returns a '200 OK' HTTP response with the updated task run information as JSON payload
 
     Examples:
-      | task_namespace                                   | task_version | param_name | item_type  | payload    | index | item_value  | task_run_initial_state | task_run_new_state | param_file_content   |
-      | com.cytomine.dummy.identity.file.collection      | 0.1.0        | input      | file       | item       | 0     | some_random_value       | CREATED                | PROVISIONED        | content             |
+      | task_namespace                                   | task_version | param_name | item_type  | payload    | index | item_value              | task_run_initial_state | task_run_new_state | param_file_content   |
+      | com.cytomine.dummy.identity.file.collection      | 0.1.0        | input      | file       | item       | 0     | some_random_value       | CREATED                | PROVISIONED        | content              |
 
   # TODO failed re-provisioning of a task of which the state is not one of {'CREATED', 'PROVISIONED'}
 

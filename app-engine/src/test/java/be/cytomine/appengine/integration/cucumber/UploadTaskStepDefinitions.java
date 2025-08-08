@@ -154,7 +154,7 @@ public class UploadTaskStepDefinitions {
             persistedUploadResponse = apiClient.uploadTask(persistedBundle.getFile());
             Assertions.assertNotNull(persistedUploadResponse);
         } catch (IOException e) {
-            Assertions.assertTrue(false, "bundle '" + persistedBundle.getFilename() + "' not found, cannot upload");
+            Assertions.fail("bundle '" + persistedBundle.getFilename() + "' not found, cannot upload");
         } catch (RestClientResponseException e) {
             persistedException = e;
             Assertions.assertNotNull(persistedException);
@@ -360,17 +360,16 @@ public class UploadTaskStepDefinitions {
     public void app_engine_fails_to_validate_the_task_descriptor_against_the_descriptor_schema(String taskName) throws JsonProcessingException {
         ErrorCode code;
         switch (taskName) {
-            case "task1":
+            case "task1", "task3":
                 code = ErrorCode.INTERNAL_SCHEMA_VALIDATION_ERROR;
                 break;
             case "task2":
-            case "task3":
                 code = ErrorCode.INTERNAL_DOCKER_IMAGE_TAR_NOT_FOUND;
                 break;
             default:
                 throw new RuntimeException("invalid test task");
         }
         JsonNode jsonPayLoad = new ObjectMapper().readTree(persistedException.getResponseBodyAsString());
-        Assertions.assertTrue(jsonPayLoad.get("error_code").textValue().equals(ErrorDefinitions.fromCode(code).code));
+        Assertions.assertEquals(jsonPayLoad.get("error_code").textValue(), ErrorDefinitions.fromCode(code).code);
     }
 }

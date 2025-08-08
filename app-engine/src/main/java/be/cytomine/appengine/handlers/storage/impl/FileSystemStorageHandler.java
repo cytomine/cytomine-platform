@@ -1,5 +1,6 @@
 package be.cytomine.appengine.handlers.storage.impl;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -11,6 +12,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.Comparator;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import be.cytomine.appengine.handlers.StorageStringEntry;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -48,9 +50,14 @@ public class FileSystemStorageHandler implements StorageHandler {
                     Path filePath = Paths.get(basePath, storageId, filename);
                     Files.createDirectories(filePath.getParent());
 
-                    try (InputStream inputStream = new FileInputStream(current.getData())) {
-                        Files.copy(inputStream, filePath, StandardCopyOption.REPLACE_EXISTING);
+                    if (current instanceof StorageStringEntry currentString) {
+                        Files.writeString(filePath, currentString.getDataAsString());
+                    } else {
+                        try (InputStream inputStream = new FileInputStream(current.getData())) {
+                            Files.copy(inputStream, filePath, StandardCopyOption.REPLACE_EXISTING);
+                        }
                     }
+
                 } catch (IOException e) {
                     String error = "Failed to create file " + filename;
                     error += " in storage " + storageId + ": " + e.getMessage();
@@ -63,6 +70,20 @@ public class FileSystemStorageHandler implements StorageHandler {
                 createStorage(modifiedStorage);
             }
         }
+    }
+
+    private static String getIdentifier(String storageId)
+    {
+        String identifier = "";
+        if(storageId.startsWith("task-") && storageId.endsWith("-def")) { // task storage
+            identifier = storageId.replace("task-", "");
+            identifier = identifier.replace("-def" , "");
+        } else if(storageId.startsWith("task-run-inputs-")) { // inputs
+            identifier = storageId.replace("task-run-inputs-", "");
+        } else if(storageId.startsWith("task-run-outputs-")) { // outputs
+            identifier = storageId.replace("task-run-outputs-", "");
+        }
+        return identifier;
     }
 
     @Override
