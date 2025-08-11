@@ -1,15 +1,12 @@
 # List ARGs here for better readability.
 ARG CORE_VERSION
 ARG CORE_REVISION
-ARG ENTRYPOINT_SCRIPTS_VERSION=1.4.0
-ARG GRADLE_VERSION=7.6-jdk17-alpine
-ARG GRADLE_DEV_VERSION=7.6.4-jdk17-jammy
+ARG GRADLE_VERSION=7.6-jdk17
 ARG OPENJDK_VERSION=17-slim-bullseye
-
 
 #######################################################################################
 # Stage: core dependencies download via gradle
-FROM gradle:${GRADLE_VERSION} AS deps-downloader
+FROM gradle:${GRADLE_VERSION}-alpine AS deps-downloader
 
 # We first copy the build.gradle file and the binaries stored in the source repository.
 # This way, we retrieve all gradle dependencies at the beginning. All these steps will be
@@ -25,7 +22,7 @@ RUN gradle clean build --no-daemon --console=verbose
 
 #######################################################################################
 ## Stage: building the core jar file
-FROM gradle:${GRADLE_VERSION} AS jar-builder
+FROM gradle:${GRADLE_VERSION}-alpine AS jar-builder
 
 ENV GRADLE_USER_HOME=/opt/gradle/.gradle
 COPY --from=deps-downloader /opt/gradle/.gradle /opt/gradle/.gradle
@@ -41,12 +38,8 @@ RUN sed -i -- 's/version: 0.0.0/version: '$CORE_VERSION'/g' /app/src/main/resour
     gradle bootJar --console=verbose
 
 #######################################################################################
-## Stage: entrypoint script. Use a multi-stage because COPY --from cannot interpolate variables
-FROM cytomine/entrypoint-scripts:${ENTRYPOINT_SCRIPTS_VERSION} AS entrypoint-scripts
-
-#######################################################################################
 ## Stage: Cytomine core development image
-FROM gradle:${GRADLE_DEV_VERSION} AS dev-server
+FROM gradle:${GRADLE_VERSION}-jammy AS dev-server
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -56,14 +49,9 @@ RUN apt-get update \
 
 ENV GRADLE_USER_HOME=/opt/gradle/.gradle
 
-# startup scripts
-RUN mkdir /docker-entrypoint-cytomine.d/
-COPY --from=entrypoint-scripts --chmod=774 /cytomine-entrypoint.sh /usr/local/bin/
-COPY --from=entrypoint-scripts --chmod=774 /envsubst-on-templates-and-move.sh /docker-entrypoint-cytomine.d/500-envsubst-on-templates-and-move.sh
-COPY --from=entrypoint-scripts --chmod=774 /setup-ssh-dev-env.sh /docker-entrypoint-cytomine.d/1-start-ssh-dev-env.sh
-
 WORKDIR /app
-ENTRYPOINT ["cytomine-entrypoint.sh"]
+
+CMD ["/bin/sh"]
 
 #######################################################################################
 ## Stage: Cytomine core image
@@ -71,20 +59,18 @@ FROM openjdk:${OPENJDK_VERSION} AS production
 
 ARG CORE_VERSION
 ARG CORE_REVISION
-ARG ENTRYPOINT_SCRIPTS_VERSION
 ARG GRADLE_VERSION
 ARG OPENJDK_VERSION
 
 LABEL org.opencontainers.image.authors="dev@cytomine.com" \
       org.opencontainers.image.url="https://uliege.cytomine.org/" \
-      org.opencontainers.image.documentation="https://doc.cytomine.com/" \
+      org.opencontainers.image.documentation="https://doc.uliege.cytomine.org/" \
       org.opencontainers.image.source="https://github.com/cytomine/Cytomine-core" \
       org.opencontainers.image.vendor="Cytomine ULiège" \
       org.opencontainers.image.version="${CORE_VERSION}" \
       org.opencontainers.image.revision="${CORE_REVISION}" \
       org.opencontainers.image.deps.openjdk.version="${OPENJDK_VERSION}" \
-      org.opencontainers.image.deps.gradle.version="${GRADLE_VERSION}" \
-      org.opencontainers.image.deps.entrypoint.scripts.version="${ENTRYPOINT_SCRIPTS_VERSION}"
+      org.opencontainers.image.deps.gradle.version="${GRADLE_VERSION}"
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV LANG=C.UTF-8
@@ -99,12 +85,6 @@ RUN apt-get update -y \
 
 COPY --from=jar-builder /app/build/libs/cytomine.jar /app/cytomine.jar
 
-# entrypoint scripts
-RUN mkdir /docker-entrypoint-cytomine.d/
-COPY --from=entrypoint-scripts --chmod=774 /cytomine-entrypoint.sh /usr/local/bin/
-COPY --from=entrypoint-scripts --chmod=774 /envsubst-on-templates-and-move.sh /docker-entrypoint-cytomine.d/500-envsubst-on-templates-and-move.sh
-
 WORKDIR /app
-ENTRYPOINT ["cytomine-entrypoint.sh"]
 
 CMD ["java", "-jar", "/app/cytomine.jar"]
