@@ -19,13 +19,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.mock.web.MockHttpServletRequest;
-import org.springframework.mock.web.MockMultipartFile;
 
 import be.cytomine.appengine.dto.handlers.filestorage.Storage;
-import be.cytomine.appengine.dto.handlers.registry.DockerImage;
 import be.cytomine.appengine.dto.inputs.task.TaskDescription;
 import be.cytomine.appengine.dto.inputs.task.TaskRun;
-import be.cytomine.appengine.dto.inputs.task.UploadTaskArchive;
 import be.cytomine.appengine.exceptions.FileStorageException;
 import be.cytomine.appengine.exceptions.RunTaskServiceException;
 import be.cytomine.appengine.exceptions.TaskNotFoundException;
