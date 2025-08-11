@@ -130,6 +130,8 @@ public class RunTaskStepDefinitions {
 
     private StorageData outputFileData;
 
+    private Task task;
+
     @NotNull
     private static String removeWhitespacesFromPath(File file) {
         String absolutePath = file.getAbsolutePath();
@@ -185,7 +187,7 @@ public class RunTaskStepDefinitions {
     public void scheduler_is_up_and_running() throws SchedulingException {
         schedulerHandler.alive();
     }
-    Task task;
+
     @Given("a task run exists with identifier {string}")
     public void a_task_run_exists_with_identifier(String uuid) throws FileStorageException {
         runRepository.deleteAll();
