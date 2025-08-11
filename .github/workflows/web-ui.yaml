@@ -3,7 +3,7 @@ name: Web UI
 on:
   pull_request:
     branches:
-      - master
+      - main
     paths:
       - "web-ui/api-client/**/*.js"
       - "web-ui/api-client/**/*.vue"
@@ -12,7 +12,7 @@ on:
       - ".github/**"
   push:
     branches:
-      - master
+      - main
 
 permissions:
   contents: read

@@ -33,7 +33,6 @@ services:
     image: cytomine/pims:latest
     build:
       context: ../pims
-      dockerfile: docker/backend.dockerfile
     restart: unless-stopped
     depends_on:
       - nginx
@@ -66,7 +65,6 @@ services:
     image: cytomine/web-ui:latest
     build:
       context: ../web-ui
-      dockerfile: ui/docker/Dockerfile
     restart: unless-stopped
     volumes:
       - /etc/localtime:/etc/localtime

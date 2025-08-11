@@ -4,7 +4,6 @@ services:
     image: core:dev-latest
     build:
       context: ${REPO_PATH}/core
-      dockerfile: ${REPO_PATH}/core/Dockerfile
       target: dev-server
     ports:
       - ${DEV_CORE_PORT:-8080}:8080

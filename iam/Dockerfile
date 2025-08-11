@@ -102,12 +102,13 @@ CMD ["start-dev" , "--import-realm" , "--http-port=8100"]
 
 #######################################################################################
 ## Stage: Cytomine IAM image
-FROM quay.io/keycloak/keycloak:${KEYCLOAK_VERSION} AS prodcution
+FROM quay.io/keycloak/keycloak:${KEYCLOAK_VERSION} AS production
 
 ARG ENTRYPOINT_SCRIPTS_VERSION
 ARG KEYCLOAK_VERSION
 ARG IMAGE_VERSION
 ARG IMAGE_REVISION
+ARG UBI_VERSION
 
 LABEL org.opencontainers.image.authors="dev@cytomine.com" \
       org.opencontainers.image.url="https://www.cytomine.com/" \
