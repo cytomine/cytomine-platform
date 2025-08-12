@@ -44,11 +44,11 @@ jobs:
       - name: Check lint
         run: gradle :app-engine:checkstyleMain
 
-      - name: Upload test reports
+      - name: Upload lint reports
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
-          name: reports
+          name: lint-report
           path: app-engine/build/reports/checkstyle
           retention-days: 7
 
