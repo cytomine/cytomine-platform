@@ -16,6 +16,7 @@ jobs:
 
     strategy:
       fail-fast: true
+      max-parallel: 2
       matrix:
         image:
           - app-engine
