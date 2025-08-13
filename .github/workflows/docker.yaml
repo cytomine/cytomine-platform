@@ -23,11 +23,11 @@ jobs:
           - cbir
           - core
           - iam
-          - mongo
           - nginx
           - pims
           - postgis
           - web-ui
+          - mongo
 
     steps:
       - name: Checkout repository
