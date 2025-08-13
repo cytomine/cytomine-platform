@@ -20,9 +20,9 @@ jobs:
           - core
           # - iam
           - mongo
-          - nginx
+          # - nginx
           - pims
-          - postgis
+          # - postgis
           - web-ui
 
     steps:
