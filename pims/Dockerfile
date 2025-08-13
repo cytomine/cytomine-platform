@@ -5,6 +5,7 @@ ARG OPENJPEG_VERSION=2.5.2
 ARG PIMS_REVISION
 ARG PIMS_VERSION
 ARG PLUGIN_CSV=scripts/plugin-list.csv
+ARG PROXY_CACHE=registry.cytomine.org/docker
 ARG PY_VERSION=3.10
 ARG SETUPTOOLS_VERSION=80.9.0
 ARG UBUNTU_VERSION=22.04
@@ -13,7 +14,7 @@ ARG VIPS_VERSION=8.15.2
 
 #######################################################################################
 ## Stage: Pims
-FROM python:${PY_VERSION}-bookworm AS base-pims
+FROM ${PROXY_CACHE}/python:${PY_VERSION}-bookworm AS base-pims
 
 ARG GUNICORN_VERSION
 ARG OPENJPEG_URL

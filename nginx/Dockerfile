@@ -18,13 +18,14 @@ ARG ENTRYPOINT_SCRIPTS_VERSION=1.3.0
 ARG IMAGE_VERSION
 ARG IMAGE_REVISION
 ARG NGINX_VERSION="1.22.1"
+ARG PROXY_CACHE=registry.cytomine.org/docker
 
 #######################################################################################
 ## Stage: entrypoint script. Use a multi-stage because COPY --from cannot interpolate variables
-FROM cytomine/entrypoint-scripts:${ENTRYPOINT_SCRIPTS_VERSION} AS entrypoint-scripts
+FROM ${PROXY_CACHE}/cytomine/entrypoint-scripts:${ENTRYPOINT_SCRIPTS_VERSION} AS entrypoint-scripts
 
 ## Stage: nginx
-FROM nginx:${NGINX_VERSION}-alpine AS nginx-server
+FROM ${PROXY_CACHE}/nginx:${NGINX_VERSION}-alpine AS nginx-server
 
 ENV IMAGES_CORE="not provided"
 ENV IMAGES_MONGO="not provided"

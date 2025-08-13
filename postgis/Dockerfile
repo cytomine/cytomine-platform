@@ -22,7 +22,7 @@ ARG POSTGIS_VERSION="15-3.3-alpine"
 
 #######################################################################################
 ## Stage: entrypoint script. Use a multi-stage because COPY --from cannot interpolate variables
-FROM cytomine/entrypoint-scripts:${ENTRYPOINT_SCRIPTS_VERSION} AS entrypoint-scripts
+FROM ${PROXY_CACHE}/cytomine/entrypoint-scripts:${ENTRYPOINT_SCRIPTS_VERSION} AS entrypoint-scripts
 
 FROM ${PROXY_CACHE}/postgis/postgis:${POSTGIS_VERSION}
 ARG ENTRYPOINT_SCRIPTS_VERSION

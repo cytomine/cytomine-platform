@@ -15,13 +15,13 @@ jobs:
       fail-fast: true
       matrix:
         image:
-          # - app-engine
-          # - cbir
-          # - core
+          - app-engine
+          - cbir
+          - core
           # - iam
-          # - mongo
-          # - nginx
-          # - pims
+          - mongo
+          - nginx
+          - pims
           - postgis
           - web-ui
 
