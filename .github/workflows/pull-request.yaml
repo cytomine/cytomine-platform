@@ -22,7 +22,7 @@ jobs:
           # - mongo
           # - nginx
           - pims
-          # - postgis
+          - postgis
           - web-ui
 
     steps:
