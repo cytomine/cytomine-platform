@@ -18,7 +18,7 @@ jobs:
           - app-engine
           - cbir
           - core
-          # - iam
+          - iam
           # - mongo
           # - nginx
           - pims

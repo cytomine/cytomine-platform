@@ -1,6 +1,7 @@
 # List ARGs here for better readability.
 ARG ENTRYPOINT_SCRIPTS_VERSION=1.4.0
 ARG KEYCLOAK_VERSION=24.0.2
+ARG PROXY_CACHE=registry.cytomine.org/docker
 ARG UBI_VERSION=9.3-1610
 ARG IMAGE_VERSION
 ARG IMAGE_REVISION
@@ -25,7 +26,7 @@ RUN /opt/keycloak/bin/kc.sh build
 
 #######################################################################################
 ## Stage: entrypoint script. Use a multi-stage because COPY --from cannot interpolate variables
-FROM cytomine/entrypoint-scripts:${ENTRYPOINT_SCRIPTS_VERSION} AS entrypoint-scripts
+FROM ${PROXY_CACHE}/cytomine/entrypoint-scripts:${ENTRYPOINT_SCRIPTS_VERSION} AS entrypoint-scripts
 
 #######################################################################################
 ## Stage: Cytomine IAM dev external tools build
