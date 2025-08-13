@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+ARG PROXY_CACHE=registry.cytomine.org/docker
 ARG ENTRYPOINT_SCRIPTS_VERSION="1.3.0"
 ARG IMAGE_VERSION
 ARG IMAGE_REVISION
@@ -23,7 +24,7 @@ ARG POSTGIS_VERSION="15-3.3-alpine"
 ## Stage: entrypoint script. Use a multi-stage because COPY --from cannot interpolate variables
 FROM cytomine/entrypoint-scripts:${ENTRYPOINT_SCRIPTS_VERSION} AS entrypoint-scripts
 
-FROM postgis/postgis:${POSTGIS_VERSION}
+FROM ${PROXY_CACHE}/postgis/postgis:${POSTGIS_VERSION}
 ARG ENTRYPOINT_SCRIPTS_VERSION
 ARG IMAGE_VERSION
 ARG IMAGE_REVISION
