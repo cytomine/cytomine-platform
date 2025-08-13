@@ -8,7 +8,7 @@ ARG IMAGE_REVISION
 
 #######################################################################################
 ## Stage: IAM build
-FROM quay.io/keycloak/keycloak:${KEYCLOAK_VERSION} AS builder
+FROM ${PROXY_CACHE}/quay.io/keycloak/keycloak:${KEYCLOAK_VERSION} AS builder
 
 # Enable health and metrics support
 ENV KC_HEALTH_ENABLED=true
@@ -30,7 +30,7 @@ FROM ${PROXY_CACHE}/cytomine/entrypoint-scripts:${ENTRYPOINT_SCRIPTS_VERSION} AS
 
 #######################################################################################
 ## Stage: Cytomine IAM dev external tools build
-FROM registry.access.redhat.com/ubi9:${UBI_VERSION} AS dev-tools-builder
+FROM ${PROXY_CACHE}/registry.access.redhat.com/ubi9:${UBI_VERSION} AS dev-tools-builder
 RUN mkdir -p /mnt/rootfs
 RUN dnf install --installroot /mnt/rootfs findutils gettext openssh-server rsync --releasever 9 --setopt install_weak_deps=false --nodocs -y && \
     dnf --installroot /mnt/rootfs clean all && \
@@ -43,7 +43,7 @@ COPY --from=entrypoint-scripts --chmod=774 /envsubst-on-templates-and-move.sh /d
 
 #######################################################################################
 ## Stage: Cytomine IAM development image
-FROM quay.io/keycloak/keycloak:${KEYCLOAK_VERSION} AS dev-server
+FROM ${PROXY_CACHE}/quay.io/keycloak/keycloak:${KEYCLOAK_VERSION} AS dev-server
 
 COPY --from=builder /opt/keycloak/ /opt/keycloak/
 COPY --from=dev-tools-builder /mnt/rootfs /
@@ -60,7 +60,7 @@ CMD ["start-dev", "--import-realm"]
 
 #######################################################################################
 ## Stage: Cytomine IAM external tools build
-FROM registry.access.redhat.com/ubi9:${UBI_VERSION} AS prod-tools-builder
+FROM ${PROXY_CACHE}/registry.access.redhat.com/ubi9:${UBI_VERSION} AS prod-tools-builder
 RUN mkdir -p /mnt/rootfs
 RUN dnf install --installroot /mnt/rootfs findutils gettext --releasever 9 --setopt install_weak_deps=false --nodocs -y && \
     dnf --installroot /mnt/rootfs clean all && \
@@ -72,7 +72,7 @@ COPY --from=entrypoint-scripts --chmod=774 /envsubst-on-templates-and-move.sh /d
 
 #######################################################################################
 ## Stage: Cytomine IAM image
-FROM quay.io/keycloak/keycloak:${KEYCLOAK_VERSION} AS ci
+FROM ${PROXY_CACHE}/quay.io/keycloak/keycloak:${KEYCLOAK_VERSION} AS ci
 
 ARG ENTRYPOINT_SCRIPTS_VERSION
 ARG KEYCLOAK_VERSION
@@ -103,7 +103,7 @@ CMD ["start-dev" , "--import-realm" , "--http-port=8100"]
 
 #######################################################################################
 ## Stage: Cytomine IAM image
-FROM quay.io/keycloak/keycloak:${KEYCLOAK_VERSION} AS production
+FROM ${PROXY_CACHE}/quay.io/keycloak/keycloak:${KEYCLOAK_VERSION} AS production
 
 ARG ENTRYPOINT_SCRIPTS_VERSION
 ARG KEYCLOAK_VERSION
