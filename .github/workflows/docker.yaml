@@ -55,11 +55,8 @@ jobs:
         with:
           context: ./${{ matrix.image }}
           file: ./${{ matrix.image }}/Dockerfile
-          load: true
+          push: true
           tags: cytomine/${{ matrix.image }}
           labels: latest
           allow: network.host
           network: host
-
-      - name: Push with max concurrent uploads
-        run: docker push --max-concurrent-uploads=2 cytomine/${{ matrix.image }}
