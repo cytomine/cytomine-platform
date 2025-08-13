@@ -1,5 +1,3 @@
-# syntax=docker/dockerfile:1
-
 # Copyright (c) 2009-2022. Authors: see NOTICE file.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
