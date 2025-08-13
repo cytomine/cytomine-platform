@@ -1,11 +1,13 @@
-FROM python:3.10-slim-bullseye AS base
+ARG PROXY_CACHE=registry.cytomine.org/docker
+
+FROM ${PROXY_CACHE}/python:3.10-slim-bullseye AS base
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends git \
     && rm -rf /var/lib/apt/lists/*
 
 COPY cbir /app/cbir
-COPY pyproject.toml poetry.lock README.md /app
+COPY pyproject.toml poetry.lock README.md /app/
 COPY weights/resnet /app/weights/resnet
 
 WORKDIR /app

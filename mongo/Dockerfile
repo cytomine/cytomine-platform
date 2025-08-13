@@ -1,5 +1,3 @@
-# syntax=docker/dockerfile:1
-
 # Copyright (c) 2009-2022. Authors: see NOTICE file.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,13 +16,14 @@ ARG MONGO_VERSION=4.4-focal
 ARG ENTRYPOINT_SCRIPTS_VERSION=1.3.0
 ARG IMAGE_VERSION
 ARG IMAGE_REVISION
+ARG PROXY_CACHE=registry.cytomine.org/docker
 
 #######################################################################################
 ## Stage 1: entrypoint script. Use a multi-stage because COPY --from cannot interpolate variables
-FROM cytomine/entrypoint-scripts:${ENTRYPOINT_SCRIPTS_VERSION} AS entrypoint-scripts
+FROM ${PROXY_CACHE}/cytomine/entrypoint-scripts:${ENTRYPOINT_SCRIPTS_VERSION} AS entrypoint-scripts
 
 ## Stage 2: mongo image
-FROM mongo:${MONGO_VERSION}
+FROM ${PROXY_CACHE}/mongo:${MONGO_VERSION}
 
 RUN rm /etc/apt/sources.list.d/mongodb*.list && apt-get update && apt-get install -y --no-install-recommends cron
 

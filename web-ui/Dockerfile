@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+ARG PROXY_CACHE=registry.cytomine.org/docker
 ARG WEB_UI_VERSION
 ARG WEB_UI_REVISION
 ARG NODE_VERSION=20.19.4
@@ -20,7 +21,7 @@ ARG NGINX_VERSION=1.22.1
 
 #######################################################################################
 ## Stage: build front-end
-FROM node:${NODE_VERSION}-alpine AS frontend-builder
+FROM ${PROXY_CACHE}/node:${NODE_VERSION}-alpine AS frontend-builder
 
 WORKDIR /app
 
@@ -45,7 +46,7 @@ RUN npm install && npm run build -w ui
 
 #######################################################################################
 ## Stage: dev image (with hot swap)
-FROM node:${NODE_VERSION}-bookworm-slim AS dev-server
+FROM ${PROXY_CACHE}/node:${NODE_VERSION}-bookworm-slim AS dev-server
 
 WORKDIR /app
 
@@ -55,7 +56,7 @@ CMD ["npm", "run", "serve", "-w", "ui"]
 
 #######################################################################################
 ## Stage: building nginx image serving the front-end
-FROM nginx:${NGINX_VERSION}-alpine AS prod-server
+FROM ${PROXY_CACHE}/nginx:${NGINX_VERSION}-alpine AS prod-server
 
 ARG WEB_UI_VERSION
 ARG WEB_UI_REVISION
