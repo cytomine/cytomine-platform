@@ -1,8 +1,6 @@
 package be.cytomine.appengine.integration.cucumber;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -14,9 +12,11 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.zip.CRC32;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import be.cytomine.appengine.repositories.ChecksumRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -84,6 +84,9 @@ public class RunTaskStepDefinitions {
     private RunRepository runRepository;
 
     @Autowired
+    private ChecksumRepository checksumRepository;
+
+    @Autowired
     private RunService runService;
 
     @Autowired
@@ -126,6 +129,8 @@ public class RunTaskStepDefinitions {
     private StorageData param2FileData;
 
     private StorageData outputFileData;
+
+    private Task task;
 
     @NotNull
     private static String removeWhitespacesFromPath(File file) {
@@ -186,13 +191,12 @@ public class RunTaskStepDefinitions {
     @Given("a task run exists with identifier {string}")
     public void a_task_run_exists_with_identifier(String uuid) throws FileStorageException {
         runRepository.deleteAll();
-        Task task = TestTaskBuilder.buildHardcodedAddInteger(UUID.fromString(uuid));
+        task = TestTaskBuilder.buildHardcodedAddInteger(UUID.fromString(uuid));
         secret = UUID.randomUUID().toString();
         persistedRun = new Run(UUID.fromString(uuid), null, null , secret);
-        task.setRuns(List.of(persistedRun));
-        task = taskRepository.saveAndFlush(task);
         persistedRun.setTask(task);
-        persistedRun = runRepository.saveAndFlush(persistedRun);
+        persistedRun = runRepository.save(persistedRun);
+
         createStorage(uuid);
     }
 
@@ -337,9 +341,10 @@ public class RunTaskStepDefinitions {
 
     // successful fetch of task run outputs archive in a finished task run
     @Given("the task run {string} has output parameters: {string} of type {string} with value {int}")
-    public void the_task_run_has_output_parameters_of_type_with_value_and_of_type_with_value(String runId, String name, String type, Integer value) throws FileStorageException {
+    public void the_task_run_has_output_parameters_of_type_with_value_and_of_type_with_value(String runId, String name, String type, Integer value) throws FileStorageException, IOException {
         // Outputs
         integerPersistenceRepository.deleteAll();
+        checksumRepository.deleteAll();
         IntegerPersistence result = new IntegerPersistence();
         // name, String.valueOf(value), persistedRun.getId()
         result.setParameterName(name);
@@ -362,7 +367,28 @@ public class RunTaskStepDefinitions {
             );
 
             storageHandler.saveStorageData(outputsStorage, outputFileData);
+
+            // calculate CRC32
+            String reference = "task-run-outputs-" + runId + "-" + name;
+            Checksum crc32 = new Checksum(UUID.randomUUID(), reference, calculateFileCRC32(outputFileData.peek().getData()));
+            checksumRepository.save(crc32);
         }
+    }
+
+    public long calculateFileCRC32(File file) throws IOException {
+        java.util.zip.Checksum crc32 = new CRC32();
+        // Use try-with-resources to ensure the input stream is closed automatically
+        // BufferedInputStream is used for efficient reading in chunks
+        try (InputStream is = new BufferedInputStream(new FileInputStream(file))) {
+            byte[] buffer = new byte[8192]; // Define a buffer size (e.g., 8KB)
+            int bytesRead;
+
+            // Read the file chunk by chunk and update the CRC32 checksum
+            while ((bytesRead = is.read(buffer)) != -1) {
+                crc32.update(buffer, 0, bytesRead);
+            }
+        }
+        return crc32.getValue(); // Return the final CRC32 value
     }
 
     @When("user calls the endpoint to fetch with {string} HTTP method GET")
@@ -438,14 +464,10 @@ public class RunTaskStepDefinitions {
         runRepository.deleteAll();
         taskRepository.deleteAll();
         Task task = TestTaskBuilder.buildHardcodedAddInteger();
-        task = taskRepository.save(task);
         persistedRun = new Run(UUID.fromString(runId), null, null);
-        persistedRun = runRepository.save(persistedRun);
-        task.setRuns(List.of(persistedRun));
-        task = taskRepository.saveAndFlush(task);
-        task.setRuns(List.of(persistedRun));
         persistedRun.setTask(task);
-        taskRepository.saveAndFlush(task);
+        persistedRun = runRepository.save(persistedRun);
+        taskRepository.save(task);
         persistedRun = runRepository.findById(persistedRun.getId()).get();
 
     }
@@ -678,7 +700,6 @@ public class RunTaskStepDefinitions {
 
         String bundleFilename = namespace + "-" + version + ".zip";
         persistedTask = TestTaskBuilder.buildTaskFromResource(bundleFilename);
-        persistedTask = taskRepository.save(persistedTask);
     }
 
     @And("The task is assigned {string} RAM, {string} CPUs, and {string} GPUs")
@@ -686,7 +707,6 @@ public class RunTaskStepDefinitions {
         persistedTask.setRam(ram);
         persistedTask.setCpus(Integer.parseInt(cpus));
         persistedTask.setGpus(Integer.parseInt(gpus));
-        persistedTask = taskRepository.saveAndFlush(persistedTask);
     }
 
     @And("the task has requested {string} RAM, {string} CPUs, and {string} GPUs")
@@ -699,9 +719,7 @@ public class RunTaskStepDefinitions {
     @And("a task run has been created with {string}")
     public void createTaskRun(String uuid) {
         persistedRun = new Run(UUID.fromString(uuid), TaskRunState.CREATED, persistedTask);
-//        persistedRun = runRepository.save(persistedRun);
-        persistedTask.setRuns(List.of(persistedRun));
-        persistedTask = taskRepository.saveAndFlush(persistedTask);
+        persistedRun = runRepository.save(persistedRun);
 
     }
 

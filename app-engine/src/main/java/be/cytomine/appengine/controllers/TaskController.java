@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.List;
 import java.util.Optional;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.FileSystemResource;
@@ -43,10 +44,10 @@ public class TaskController {
 
     @PostMapping(path = "tasks")
     public ResponseEntity<?> upload(
-        @RequestParam MultipartFile task
+        HttpServletRequest request
     ) throws TaskServiceException, ValidationException, BundleArchiveException {
         log.info("Task Upload POST");
-        Optional<TaskDescription> taskDescription = taskService.uploadTask(task);
+        Optional<TaskDescription> taskDescription = taskService.uploadTask(request);
         log.info("Task Upload POST Ended");
         return ResponseEntity.ok(taskDescription);
     }

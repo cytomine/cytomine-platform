@@ -1,7 +1,9 @@
 package be.cytomine.appengine.unit.services;
 
+import java.io.File;
 import java.nio.file.Files;
 
+import be.cytomine.appengine.utils.DescriptorHelper;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.BeforeAll;
@@ -12,12 +14,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import be.cytomine.appengine.dto.inputs.task.UploadTaskArchive;
 import be.cytomine.appengine.exceptions.ValidationException;
 import be.cytomine.appengine.models.task.Task;
 import be.cytomine.appengine.repositories.TaskRepository;
 import be.cytomine.appengine.services.TaskValidationService;
 import be.cytomine.appengine.utils.TaskUtils;
+import org.springframework.core.io.ClassPathResource;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -37,78 +39,61 @@ public class TaskValidationServiceTest {
 
     private static Task task;
 
-    private static UploadTaskArchive archive;
+    private static JsonNode descriptorFileAsJson;
 
     @BeforeAll
     public static void setUp() throws Exception {
         task = TaskUtils.createTestTask(false);
-        archive = TaskUtils.createTestUploadTaskArchive();
+        File descriptorFile = new ClassPathResource("artifacts/descriptor.yml").getFile();
+        descriptorFileAsJson = DescriptorHelper.parseDescriptor(descriptorFile);
     }
 
     @DisplayName("Successfully return void when no duplicates")
     @Test
     public void checkIsNotDuplicateShouldReturnVoid() throws Exception {
-        String namespace = archive.getDescriptorFileAsJson().get("namespace").textValue();
-        String version = archive.getDescriptorFileAsJson().get("version").textValue();
+        String namespace = descriptorFileAsJson.get("namespace").textValue();
+        String version = descriptorFileAsJson.get("version").textValue();
         when(taskRepository.findByNamespaceAndVersion(namespace, version)).thenReturn(null);
 
-        assertDoesNotThrow(() -> taskValidationService.checkIsNotDuplicate(archive));
+        assertDoesNotThrow(() -> taskValidationService.checkIsNotDuplicate(descriptorFileAsJson));
         verify(taskRepository, times(1)).findByNamespaceAndVersion(namespace, version);
     }
 
     @DisplayName("Successfully throw 'ValidationException' when duplicates")
     @Test
     public void checkIsNotDuplicateShouldThrowValidationException() {
-        String namespace = archive.getDescriptorFileAsJson().get("namespace").textValue();
-        String version = archive.getDescriptorFileAsJson().get("version").textValue();
+        String namespace = descriptorFileAsJson.get("namespace").textValue();
+        String version = descriptorFileAsJson.get("version").textValue();
         when(taskRepository.findByNamespaceAndVersion(namespace, version)).thenReturn(task);
 
         ValidationException exception = assertThrows(
             ValidationException.class,
-            () -> taskValidationService.checkIsNotDuplicate(archive)
+            () -> taskValidationService.checkIsNotDuplicate(descriptorFileAsJson)
         );
         assertEquals("Task already exists.", exception.getMessage());
         verify(taskRepository, times(1)).findByNamespaceAndVersion(namespace, version);
     }
 
-    @DisplayName("Successfully return void when image is valid")
-    @Test
-    public void validateImageShouldReturnVoid() throws Exception {
-        assertDoesNotThrow(() -> taskValidationService.validateImage(archive));
-    }
-
-    @DisplayName("Fail to validate image and throw 'ValidationException'")
-    @Test
-    public void validateImageShouldThrowValidationException() throws Exception {
-        UploadTaskArchive missing = TaskUtils.createTestUploadTaskArchive();
-        missing.setDockerImage(Files.createTempFile("docker-image", ".tar").toFile());
-
-        ValidationException exception = assertThrows(
-            ValidationException.class,
-            () -> taskValidationService.validateImage(missing)
-        );
-        assertEquals("image is not invalid manifest is missing", exception.getMessage());
-    }
-
     @DisplayName("Successfully validate the descriptor")
     @Test
     public void validateDescriptorFileShouldReturnVoid() throws Exception {
-        assertDoesNotThrow(() -> taskValidationService.validateDescriptorFile(archive));
+        File descriptorFile = new ClassPathResource("artifacts/descriptor.yml").getFile();
+        descriptorFileAsJson = DescriptorHelper.parseDescriptor(descriptorFile);
+
+        assertDoesNotThrow(() -> taskValidationService.validateDescriptorFile(descriptorFileAsJson));
     }
 
     @DisplayName("Fail to validate the descriptor throw 'ValidationException'")
     @Test
     public void validateDescriptorFileShouldThrowValidationException() throws Exception {
-        UploadTaskArchive invalid = TaskUtils.createTestUploadTaskArchive();
-        JsonNode descriptor = invalid.getDescriptorFileAsJson();
+        JsonNode descriptor = descriptorFileAsJson;
 
         ObjectNode node = (ObjectNode) descriptor;
         node.put("name", "a");
-        invalid.setDescriptorFileAsJson(descriptor);
 
         ValidationException exception = assertThrows(
             ValidationException.class,
-            () -> taskValidationService.validateDescriptorFile(invalid)
+            () -> taskValidationService.validateDescriptorFile(node)
         );
         assertEquals("schema validation failed for descriptor.yml", exception.getMessage());
     }

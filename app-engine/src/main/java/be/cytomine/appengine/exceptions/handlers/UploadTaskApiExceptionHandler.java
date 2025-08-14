@@ -95,6 +95,7 @@ public class UploadTaskApiExceptionHandler {
     @ExceptionHandler({ NullPointerException.class })
     public final ResponseEntity<AppEngineError> handleNullpointerException(Exception e) {
         // TODO temp handler remove later
+        e.printStackTrace();
         String message = "missing properties in descriptor.yml";
         log.info("Bundle/Archive processing failure [{}]", message);
 

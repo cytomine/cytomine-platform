@@ -8,6 +8,7 @@ spring:
       max-file-size: 15GB
       max-request-size: 15GB
       location: /tmp/appengine/uploads
+      enabled: false
   datasource:
     password: ${DB_PASSWORD:password}
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:appengine}
@@ -36,7 +37,7 @@ spring:
     serialization:
       fail-on-empty-beans: false
 storage:
-  base-path: ${STORAGE_BASE_PATH:/tmp/appengine/storage}
+  base-path: /tmp/appengine/storage
   impl: ${STORAGE_IMPL:filesystem} # possible values [filesystem]
   input:
     charset: UTF_8 # possible values [UTF_8,US_ASCII,ISO_8859_1,UTF_16LE,UTF_16BE,UTF_16] and UTF_8 is default
@@ -54,8 +55,11 @@ scheduler:
     cpus: 1
     ram: 4Gi
   helper-containers-resources:
-    cpu: 200m
-    ram: 200Mi
+    cpu: 1
+    ram: 1Gi
+  run:
+    mode: ${SCHEDULER_RUN_MODE:local} # possible values [local,cluster]
+    storage-base-path: ${RUN_STORAGE_BASE_PATH:/data} # directory in host
 registry-client:
   authenticated: false
   user: user #ignored

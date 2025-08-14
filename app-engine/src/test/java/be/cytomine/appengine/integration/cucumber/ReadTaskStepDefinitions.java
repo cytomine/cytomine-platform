@@ -105,7 +105,7 @@ public class ReadTaskStepDefinitions {
 
     @Then("App Engine retrieves relevant data from the database")
     public void app_engine_retrieves_relevant_data_from_the_database() {
-        // response should contain a list of two task description
+        // response should contain a list of two task descriptions
         Assertions.assertNotNull(tasks);
         Assertions.assertEquals(tasks.size(), 2);
     }
@@ -390,7 +390,7 @@ public class ReadTaskStepDefinitions {
     @When("user calls the endpoint {string} with {string} and {int} HTTP method GET")
     public void userCallsTheEndpointWithAndAndHTTPMethodGET(String link, String inputName, int indexes) {
 
-        String uuid = persistedTask.getRuns().stream().findFirst().get().getId().toString();
+        String uuid = persistedRun.getId().toString();
         try {
             resource = apiClient.retrieveInputPart(uuid, inputName, indexes);
         } catch (RestClientResponseException e) {
@@ -404,7 +404,7 @@ public class ReadTaskStepDefinitions {
     public void inputWithCollectionItemWithIndexIsAlreadyProvisioned(String inputName, int indexes)
         throws JsonProcessingException
     {
-        String uuid = persistedTask.getRuns().stream().findFirst().get().getId().toString();
+        String uuid = persistedRun.getId().toString();
         apiClient.provisionInputPart(uuid, inputName, "integer", "100", indexes);
     }
 
@@ -418,9 +418,6 @@ public class ReadTaskStepDefinitions {
     public void a_task_run_has_been_created_for_this_task() throws FileStorageException {
         persistedRun = new Run(UUID.randomUUID(), TaskRunState.CREATED, null);
         persistedRun = taskRunRepository.save(persistedRun);
-        persistedTask.setRuns(List.of(persistedRun));
-        persistedTask = taskRepository.saveAndFlush(persistedTask);
-        persistedTask.setRuns(List.of(persistedRun));
         persistedRun.setTask(persistedTask);
         persistedRun = taskRunRepository.saveAndFlush(persistedRun);
         Storage runStorage = new Storage("task-run-inputs-" + persistedRun.getId().toString());

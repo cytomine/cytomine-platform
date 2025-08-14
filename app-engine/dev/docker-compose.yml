@@ -7,6 +7,7 @@ services:
     profiles:
       - db
       - default
+      - full
     environment:
       POSTGRES_PASSWORD: password
       POSTGRES_USER: docker
@@ -16,6 +17,9 @@ services:
       APPENGINE_USER: appengine
     ports:
       - 5432:5432
+    networks:
+      - appengine_network
+
 
   registry:
     image: registry:latest
@@ -24,13 +28,44 @@ services:
     profiles:
       - registry
       - default
+      - full
+    depends_on:
+      - postgres
     environment:
       REGISTRY_STORAGE_DELETE_ENABLED: true
       REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY: /data
     volumes:
       - registry_data:/data
+    networks:
+      - appengine_network
 
+  app-engine:
+    image: <appe-engine-image>
+    ports:
+      - 8080:8080
+    profiles:
+      - full
+      - appengine
+    volumes:
+      - <path/in/host>:/data
+    environment:
+      RUN_STORAGE_BASE_PATH: <path/in/host>
+      REGISTRY_HTTP_SCHEME: http
+      REGISTRY_URL: registry
+      REGISTRY_HOST: registry
+      REGISTRY_PORT: 5000
+      REGISTRY_SCHEME: http
+      DB_HOST: postgres
+      SCHEDULER_MASTER_URL: <https://scheduler:16443>
+      SCHEDULER_OAUTH_TOKEN: <scheduler-token>
+    networks:
+      - appengine_network
 
 volumes:
   postgres_data:
   registry_data:
+  appengine_data:
+
+networks:
+  appengine_network:
+    driver: bridge

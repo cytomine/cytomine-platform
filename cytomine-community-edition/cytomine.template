@@ -58,6 +58,11 @@ global:
       SCHEDULER_OAUTH_TOKEN: changeme
       # The username should be admin
       SCHEDULER_USERNAME: admin
+      # possible values [local,cluster] local is default
+      SCHEDULER_RUN_MODE: local
+      # app engine storage directory in host
+      RUN_STORAGE_BASE_PATH: ./data/app-engine
+
 
 # -------------------------------------------------- #
 # Only update variables below if you know what you are doing
